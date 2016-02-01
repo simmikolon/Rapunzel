@@ -15,8 +15,8 @@ class RPGameSceneViewController: RPSKViewController {
         
         super.viewDidLoad()
 
-        let screenSize: CGRect = UIScreen.mainScreen().bounds
-        let gameScene = RPGameScene(size: CGSizeMake(screenSize.width, screenSize.height))
+        //let screenSize: CGRect = UIScreen.mainScreen().bounds
+        let gameScene = RPGameScene(size: CGSizeMake(320.0, 568.0))
         let skView = self.view as! SKView
         
         skView.showsFPS = true

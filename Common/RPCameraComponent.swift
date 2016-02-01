@@ -7,31 +7,30 @@
 //
 
 import SpriteKit
+import GameplayKit
 
 struct RPCameraNodeSettings {
+    
     static let AreaSizeHalf: CGFloat = 80.0
-    static let CameraFloatingOffsetDivider: CGFloat = 10.0
     static let CameraAreaTop: CGFloat = 100.0
     static let CameraAreaBottom: CGFloat = 250.0
 }
 
-protocol RPCameraNodeDelegate: class {
-    func cameraNodeDidFinishUpdating(theCamera cameraNode: RPCameraNode)
-}
+class RPCameraComponent: GKComponent {
 
-class RPCameraNode: SKCameraNode, UpdateableNode {
-
-    weak var delegate: RPCameraNodeDelegate?
-    weak var playerSpriteNode: RPPlayerSpriteNode?
+    weak var node: RPNode?
+    
+    let cameraNode = SKCameraNode()
     
     var cameraOffset = CGPoint(x: 0.0, y: 0.0)
     var cameraPositionOld = CGPoint(x: 0.0, y: 0.0)
     
-    func setup() {
+    init(focusedNode node: RPNode? = nil) {
         
+        self.node = node
     }
     
-    func update(currentTime: NSTimeInterval) {
+    override func updateWithDeltaTime(seconds: NSTimeInterval) {
         
         func deltaX() -> CGFloat {
             
@@ -40,14 +39,14 @@ class RPCameraNode: SKCameraNode, UpdateableNode {
             
             var deltaX: CGFloat = 0.0
             
-            if playerSpriteNode!.position.x < areaBorderLeft {
+            if node!.position.x < areaBorderLeft {
                 
-                deltaX = playerSpriteNode!.position.x - areaBorderLeft
+                deltaX = node!.position.x - areaBorderLeft
                 cameraOffset.x += deltaX
                 
-            } else if playerSpriteNode!.position.x > areaBorderRight {
+            } else if node!.position.x > areaBorderRight {
                 
-                deltaX = playerSpriteNode!.position.x - areaBorderRight
+                deltaX = node!.position.x - areaBorderRight
                 cameraOffset.x += deltaX
             }
             
@@ -55,37 +54,32 @@ class RPCameraNode: SKCameraNode, UpdateableNode {
         }
         
         func deltaY() -> CGFloat {
-         
+            
             let areaBorderBottom = cameraOffset.y - RPCameraNodeSettings.CameraAreaBottom
             let areaBorderTop = cameraOffset.y + RPCameraNodeSettings.CameraAreaTop
             
             var deltaY: CGFloat = 0.0
             
-            if playerSpriteNode!.position.y < areaBorderBottom {
+            if node!.position.y < areaBorderBottom {
                 
-                deltaY = playerSpriteNode!.position.y - areaBorderBottom
+                deltaY = node!.position.y - areaBorderBottom
                 cameraOffset.y += deltaY
                 
-            } else if playerSpriteNode!.position.y > areaBorderTop {
+            } else if node!.position.y > areaBorderTop {
                 
-                deltaY = playerSpriteNode!.position.y - areaBorderTop
+                deltaY = node!.position.y - areaBorderTop
                 cameraOffset.y += deltaY
             }
             
             return deltaY
         }
         
-        let cameraPositionNew = CGPoint(x: position.x + deltaX(), y: position.y + deltaY())
+        let cameraPositionNew = CGPoint(x: cameraNode.position.x + deltaX(), y: cameraNode.position.y + deltaY())
         
         if cameraPositionNew != cameraPositionOld {
             
-            position = cameraPositionNew
+            cameraNode.position = cameraPositionNew
             cameraPositionOld = cameraPositionNew
         }
-    }
-    
-    func didFinishUpdate() {
-        
-        delegate?.cameraNodeDidFinishUpdating(theCamera: self)
     }
 }

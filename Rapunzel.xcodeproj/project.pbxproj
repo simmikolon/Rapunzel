@@ -7,57 +7,93 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A04557E1C5CAD5E007B5BBB /* RPStateMachineComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A04557D1C5CAD5E007B5BBB /* RPStateMachineComponent.swift */; };
+		4A0455801C5CADE0007B5BBB /* RPPlayerJumpingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A04557F1C5CADE0007B5BBB /* RPPlayerJumpingState.swift */; };
+		4A0455821C5CADE9007B5BBB /* RPPlayerFallingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0455811C5CADE9007B5BBB /* RPPlayerFallingState.swift */; };
+		4A0455851C5CAEEA007B5BBB /* RPPlayerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0455841C5CAEEA007B5BBB /* RPPlayerState.swift */; };
+		4A0455881C5CB04D007B5BBB /* RPPlayerStandingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0455871C5CB04D007B5BBB /* RPPlayerStandingState.swift */; };
+		4A04558A1C5CB629007B5BBB /* RPPlayerBoostState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0455891C5CB629007B5BBB /* RPPlayerBoostState.swift */; };
+		4A19804F1C5D215400B83179 /* RPPlayerBouncingDownState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A19804E1C5D215400B83179 /* RPPlayerBouncingDownState.swift */; };
+		4A1980511C5D216500B83179 /* RPPlayerBouncingUpState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1980501C5D216500B83179 /* RPPlayerBouncingUpState.swift */; };
+		4A29A4761C5F5959000FC9C2 /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 4A29A4751C5F5959000FC9C2 /* Assets */; };
+		4A6A5B0E1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */; };
+		4A82F0621C5DFD52007B5EEA /* RPCameraLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A82F0611C5DFD52007B5EEA /* RPCameraLayerEntity.swift */; };
+		4A9482881C575FE30032598B /* RPLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9482871C575FE30032598B /* RPLayerEntity.swift */; };
 		4A9CC8511C29581800DF6259 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8501C29581800DF6259 /* AppDelegate.swift */; };
 		4A9CC85A1C29581800DF6259 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A9CC8581C29581800DF6259 /* Main.storyboard */; };
 		4A9CC85C1C29581800DF6259 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A9CC85B1C29581800DF6259 /* Assets.xcassets */; };
 		4A9CC85F1C29581800DF6259 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A9CC85D1C29581800DF6259 /* LaunchScreen.storyboard */; };
-		4A9CC8791C29583700DF6259 /* RPActionLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8661C29583700DF6259 /* RPActionLayer.swift */; };
-		4A9CC87A1C29583700DF6259 /* RPCameraNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8671C29583700DF6259 /* RPCameraNode.swift */; };
-		4A9CC87B1C29583700DF6259 /* RPEmitterLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8681C29583700DF6259 /* RPEmitterLayer.swift */; };
+		4A9CC8791C29583700DF6259 /* RPActionLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8661C29583700DF6259 /* RPActionLayerEntity.swift */; };
+		4A9CC87A1C29583700DF6259 /* RPCameraComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8671C29583700DF6259 /* RPCameraComponent.swift */; };
 		4A9CC87C1C29583700DF6259 /* RPGameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8691C29583700DF6259 /* RPGameScene.swift */; };
 		4A9CC87D1C29583700DF6259 /* RPGameSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86A1C29583700DF6259 /* RPGameSceneViewController.swift */; };
-		4A9CC87E1C29583700DF6259 /* RPImageLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86B1C29583700DF6259 /* RPImageLayer.swift */; };
-		4A9CC87F1C29583700DF6259 /* RPInputHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86C1C29583700DF6259 /* RPInputHandler.swift */; };
-		4A9CC8801C29583700DF6259 /* RPLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86D1C29583700DF6259 /* RPLayer.swift */; };
+		4A9CC8801C29583700DF6259 /* RPLayerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86D1C29583700DF6259 /* RPLayerComponent.swift */; };
 		4A9CC8811C29583700DF6259 /* RPNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86E1C29583700DF6259 /* RPNode.swift */; };
 		4A9CC8821C29583700DF6259 /* RPObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC86F1C29583700DF6259 /* RPObject.swift */; };
-		4A9CC8831C29583700DF6259 /* RPParticleSpriteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8701C29583700DF6259 /* RPParticleSpriteNode.swift */; };
 		4A9CC8841C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8711C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift */; };
-		4A9CC8851C29583700DF6259 /* RPPlatformSpriteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8721C29583700DF6259 /* RPPlatformSpriteNode.swift */; };
-		4A9CC8861C29583700DF6259 /* RPPlayerSpriteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8731C29583700DF6259 /* RPPlayerSpriteNode.swift */; };
 		4A9CC8871C29583700DF6259 /* RPScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8741C29583700DF6259 /* RPScene.swift */; };
 		4A9CC8881C29583700DF6259 /* RPSKView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8751C29583700DF6259 /* RPSKView.swift */; };
 		4A9CC8891C29583700DF6259 /* RPSKViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8761C29583700DF6259 /* RPSKViewController.swift */; };
 		4A9CC88A1C29583700DF6259 /* RPSpriteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8771C29583700DF6259 /* RPSpriteNode.swift */; };
-		4A9CC88B1C29583700DF6259 /* RPWorldNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8781C29583700DF6259 /* RPWorldNode.swift */; };
+		4A9CC88B1C29583700DF6259 /* RPWorldEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9CC8781C29583700DF6259 /* RPWorldEntity.swift */; };
+		4AD773FC1C58FC52005FB348 /* RPResourceLoadableType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD773FB1C58FC52005FB348 /* RPResourceLoadableType.swift */; };
+		4AD773FF1C59111C005FB348 /* RPPlatformLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD773FE1C59111C005FB348 /* RPPlatformLayerEntity.swift */; };
+		4AD774021C591193005FB348 /* RPPlatformEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD774011C591193005FB348 /* RPPlatformEntity.swift */; };
+		4AD774041C5915CD005FB348 /* RPEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD774031C5915CD005FB348 /* RPEntity.swift */; };
+		4ADD0B2A1C57CD59005C1FDC /* RPParallaxScrollingComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADD0B291C57CD59005C1FDC /* RPParallaxScrollingComponent.swift */; };
+		4AE2298C1C5636C8002D8A90 /* RPAnimationComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE2298B1C5636C8002D8A90 /* RPAnimationComponent.swift */; };
+		4AEDECE71C58B51A00F01C5F /* RPDebugSpriteComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEDECE61C58B51A00F01C5F /* RPDebugSpriteComponent.swift */; };
+		4AF001A31C58024F00205BCF /* RPInputComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF001A21C58024F00205BCF /* RPInputComponent.swift */; };
+		4AFD549C1C56ABF40063B314 /* RPColliderType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFD549B1C56ABF40063B314 /* RPColliderType.swift */; };
+		4AFD54A01C56B7C50063B314 /* RPPhysicsComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFD549D1C56B7C50063B314 /* RPPhysicsComponent.swift */; };
+		4AFD54A11C56B7C50063B314 /* RPPlayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFD549E1C56B7C50063B314 /* RPPlayerEntity.swift */; };
+		4AFD54A21C56B7C50063B314 /* RPRenderComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFD549F1C56B7C50063B314 /* RPRenderComponent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4A04557D1C5CAD5E007B5BBB /* RPStateMachineComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPStateMachineComponent.swift; path = Common/RPStateMachineComponent.swift; sourceTree = "<group>"; };
+		4A04557F1C5CADE0007B5BBB /* RPPlayerJumpingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerJumpingState.swift; path = Common/RPPlayerJumpingState.swift; sourceTree = "<group>"; };
+		4A0455811C5CADE9007B5BBB /* RPPlayerFallingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerFallingState.swift; path = Common/RPPlayerFallingState.swift; sourceTree = "<group>"; };
+		4A0455841C5CAEEA007B5BBB /* RPPlayerState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerState.swift; path = Common/RPPlayerState.swift; sourceTree = "<group>"; };
+		4A0455871C5CB04D007B5BBB /* RPPlayerStandingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerStandingState.swift; path = Common/RPPlayerStandingState.swift; sourceTree = "<group>"; };
+		4A0455891C5CB629007B5BBB /* RPPlayerBoostState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerBoostState.swift; path = Common/RPPlayerBoostState.swift; sourceTree = "<group>"; };
+		4A19804E1C5D215400B83179 /* RPPlayerBouncingDownState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerBouncingDownState.swift; path = Common/RPPlayerBouncingDownState.swift; sourceTree = "<group>"; };
+		4A1980501C5D216500B83179 /* RPPlayerBouncingUpState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerBouncingUpState.swift; path = Common/RPPlayerBouncingUpState.swift; sourceTree = "<group>"; };
+		4A29A4751C5F5959000FC9C2 /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Assets; sourceTree = "<group>"; };
+		4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPGravityPhysicsComponent.swift; path = Common/RPGravityPhysicsComponent.swift; sourceTree = "<group>"; };
+		4A82F0611C5DFD52007B5EEA /* RPCameraLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPCameraLayerEntity.swift; path = Common/RPCameraLayerEntity.swift; sourceTree = "<group>"; };
+		4A9482871C575FE30032598B /* RPLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPLayerEntity.swift; path = Common/RPLayerEntity.swift; sourceTree = "<group>"; };
 		4A9CC84D1C29581800DF6259 /* Rapunzel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rapunzel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A9CC8501C29581800DF6259 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4A9CC8591C29581800DF6259 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		4A9CC85B1C29581800DF6259 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4A9CC85E1C29581800DF6259 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		4A9CC8601C29581800DF6259 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4A9CC8661C29583700DF6259 /* RPActionLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPActionLayer.swift; sourceTree = "<group>"; };
-		4A9CC8671C29583700DF6259 /* RPCameraNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPCameraNode.swift; sourceTree = "<group>"; };
-		4A9CC8681C29583700DF6259 /* RPEmitterLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPEmitterLayer.swift; sourceTree = "<group>"; };
-		4A9CC8691C29583700DF6259 /* RPGameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPGameScene.swift; sourceTree = "<group>"; };
-		4A9CC86A1C29583700DF6259 /* RPGameSceneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPGameSceneViewController.swift; sourceTree = "<group>"; };
-		4A9CC86B1C29583700DF6259 /* RPImageLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPImageLayer.swift; sourceTree = "<group>"; };
-		4A9CC86C1C29583700DF6259 /* RPInputHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPInputHandler.swift; sourceTree = "<group>"; };
-		4A9CC86D1C29583700DF6259 /* RPLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPLayer.swift; sourceTree = "<group>"; };
-		4A9CC86E1C29583700DF6259 /* RPNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPNode.swift; sourceTree = "<group>"; };
-		4A9CC86F1C29583700DF6259 /* RPObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPObject.swift; sourceTree = "<group>"; };
-		4A9CC8701C29583700DF6259 /* RPParticleSpriteNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPParticleSpriteNode.swift; sourceTree = "<group>"; };
-		4A9CC8711C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPhysicsWorldContactDelegate.swift; sourceTree = "<group>"; };
-		4A9CC8721C29583700DF6259 /* RPPlatformSpriteNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPlatformSpriteNode.swift; sourceTree = "<group>"; };
-		4A9CC8731C29583700DF6259 /* RPPlayerSpriteNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPlayerSpriteNode.swift; sourceTree = "<group>"; };
-		4A9CC8741C29583700DF6259 /* RPScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPScene.swift; sourceTree = "<group>"; };
-		4A9CC8751C29583700DF6259 /* RPSKView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPSKView.swift; sourceTree = "<group>"; };
-		4A9CC8761C29583700DF6259 /* RPSKViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPSKViewController.swift; sourceTree = "<group>"; };
-		4A9CC8771C29583700DF6259 /* RPSpriteNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPSpriteNode.swift; sourceTree = "<group>"; };
-		4A9CC8781C29583700DF6259 /* RPWorldNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPWorldNode.swift; sourceTree = "<group>"; };
+		4A9CC8661C29583700DF6259 /* RPActionLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPActionLayerEntity.swift; path = Common/RPActionLayerEntity.swift; sourceTree = "<group>"; };
+		4A9CC8671C29583700DF6259 /* RPCameraComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPCameraComponent.swift; path = Common/RPCameraComponent.swift; sourceTree = "<group>"; };
+		4A9CC8691C29583700DF6259 /* RPGameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPGameScene.swift; path = Common/RPGameScene.swift; sourceTree = "<group>"; };
+		4A9CC86A1C29583700DF6259 /* RPGameSceneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPGameSceneViewController.swift; path = Common/RPGameSceneViewController.swift; sourceTree = "<group>"; };
+		4A9CC86D1C29583700DF6259 /* RPLayerComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPLayerComponent.swift; path = Common/RPLayerComponent.swift; sourceTree = "<group>"; };
+		4A9CC86E1C29583700DF6259 /* RPNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPNode.swift; path = Common/RPNode.swift; sourceTree = "<group>"; };
+		4A9CC86F1C29583700DF6259 /* RPObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPObject.swift; path = Common/RPObject.swift; sourceTree = "<group>"; };
+		4A9CC8711C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPhysicsWorldContactDelegate.swift; path = Common/RPPhysicsWorldContactDelegate.swift; sourceTree = "<group>"; };
+		4A9CC8741C29583700DF6259 /* RPScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPScene.swift; path = Common/RPScene.swift; sourceTree = "<group>"; };
+		4A9CC8751C29583700DF6259 /* RPSKView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPSKView.swift; path = Common/RPSKView.swift; sourceTree = "<group>"; };
+		4A9CC8761C29583700DF6259 /* RPSKViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPSKViewController.swift; path = Common/RPSKViewController.swift; sourceTree = "<group>"; };
+		4A9CC8771C29583700DF6259 /* RPSpriteNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPSpriteNode.swift; path = Common/RPSpriteNode.swift; sourceTree = "<group>"; };
+		4A9CC8781C29583700DF6259 /* RPWorldEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPWorldEntity.swift; path = Common/RPWorldEntity.swift; sourceTree = "<group>"; };
+		4AD773FB1C58FC52005FB348 /* RPResourceLoadableType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPResourceLoadableType.swift; path = Common/RPResourceLoadableType.swift; sourceTree = "<group>"; };
+		4AD773FE1C59111C005FB348 /* RPPlatformLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlatformLayerEntity.swift; path = Common/RPPlatformLayerEntity.swift; sourceTree = "<group>"; };
+		4AD774011C591193005FB348 /* RPPlatformEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlatformEntity.swift; path = Common/RPPlatformEntity.swift; sourceTree = "<group>"; };
+		4AD774031C5915CD005FB348 /* RPEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPEntity.swift; path = Common/RPEntity.swift; sourceTree = "<group>"; };
+		4ADD0B291C57CD59005C1FDC /* RPParallaxScrollingComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPParallaxScrollingComponent.swift; path = Common/RPParallaxScrollingComponent.swift; sourceTree = "<group>"; };
+		4AE2298B1C5636C8002D8A90 /* RPAnimationComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPAnimationComponent.swift; path = Common/RPAnimationComponent.swift; sourceTree = "<group>"; };
+		4AEDECE61C58B51A00F01C5F /* RPDebugSpriteComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPDebugSpriteComponent.swift; path = Common/RPDebugSpriteComponent.swift; sourceTree = "<group>"; };
+		4AF001A21C58024F00205BCF /* RPInputComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPInputComponent.swift; path = Common/RPInputComponent.swift; sourceTree = "<group>"; };
+		4AFD549B1C56ABF40063B314 /* RPColliderType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPColliderType.swift; path = Common/RPColliderType.swift; sourceTree = "<group>"; };
+		4AFD549D1C56B7C50063B314 /* RPPhysicsComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPhysicsComponent.swift; path = Common/RPPhysicsComponent.swift; sourceTree = "<group>"; };
+		4AFD549E1C56B7C50063B314 /* RPPlayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerEntity.swift; path = Common/RPPlayerEntity.swift; sourceTree = "<group>"; };
+		4AFD549F1C56B7C50063B314 /* RPRenderComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPRenderComponent.swift; path = Common/RPRenderComponent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,15 +107,34 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4A0455831C5CAE01007B5BBB /* Player States */ = {
+			isa = PBXGroup;
+			children = (
+				4A0455841C5CAEEA007B5BBB /* RPPlayerState.swift */,
+				4A04557F1C5CADE0007B5BBB /* RPPlayerJumpingState.swift */,
+				4A0455811C5CADE9007B5BBB /* RPPlayerFallingState.swift */,
+				4A0455871C5CB04D007B5BBB /* RPPlayerStandingState.swift */,
+				4A0455891C5CB629007B5BBB /* RPPlayerBoostState.swift */,
+				4A19804E1C5D215400B83179 /* RPPlayerBouncingDownState.swift */,
+				4A1980501C5D216500B83179 /* RPPlayerBouncingUpState.swift */,
+			);
+			name = "Player States";
+			sourceTree = "<group>";
+		};
+		4A0455861C5CAF34007B5BBB /* Player */ = {
+			isa = PBXGroup;
+			children = (
+				4AFD549E1C56B7C50063B314 /* RPPlayerEntity.swift */,
+				4A0455831C5CAE01007B5BBB /* Player States */,
+			);
+			name = Player;
+			sourceTree = "<group>";
+		};
 		4A9CC8441C29581800DF6259 = {
 			isa = PBXGroup;
 			children = (
-				4A9CC88C1C29585500DF6259 /* Base Classes */,
-				4A9CC88D1C29589900DF6259 /* Layers */,
-				4A9CC8911C2958D700DF6259 /* Nodes */,
-				4A9CC8901C2958C800DF6259 /* Game Scene */,
-				4A9CC88E1C2958AB00DF6259 /* Handler */,
-				4A9CC88F1C2958B900DF6259 /* Sprites */,
+				4AEA936C1C5FAAB6009AD815 /* Assets */,
+				4AEA936B1C5FAAA5009AD815 /* Common */,
 				4A9CC84F1C29581800DF6259 /* Rapunzel */,
 				4A9CC84E1C29581800DF6259 /* Products */,
 			);
@@ -118,34 +173,13 @@
 			name = "Base Classes";
 			sourceTree = "<group>";
 		};
-		4A9CC88D1C29589900DF6259 /* Layers */ = {
+		4A9CC88E1C2958AB00DF6259 /* Collision */ = {
 			isa = PBXGroup;
 			children = (
-				4A9CC8661C29583700DF6259 /* RPActionLayer.swift */,
-				4A9CC8681C29583700DF6259 /* RPEmitterLayer.swift */,
-				4A9CC86B1C29583700DF6259 /* RPImageLayer.swift */,
-				4A9CC86D1C29583700DF6259 /* RPLayer.swift */,
-			);
-			name = Layers;
-			sourceTree = "<group>";
-		};
-		4A9CC88E1C2958AB00DF6259 /* Handler */ = {
-			isa = PBXGroup;
-			children = (
-				4A9CC86C1C29583700DF6259 /* RPInputHandler.swift */,
+				4AFD549B1C56ABF40063B314 /* RPColliderType.swift */,
 				4A9CC8711C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift */,
 			);
-			name = Handler;
-			sourceTree = "<group>";
-		};
-		4A9CC88F1C2958B900DF6259 /* Sprites */ = {
-			isa = PBXGroup;
-			children = (
-				4A9CC8701C29583700DF6259 /* RPParticleSpriteNode.swift */,
-				4A9CC8721C29583700DF6259 /* RPPlatformSpriteNode.swift */,
-				4A9CC8731C29583700DF6259 /* RPPlayerSpriteNode.swift */,
-			);
-			name = Sprites;
+			name = Collision;
 			sourceTree = "<group>";
 		};
 		4A9CC8901C2958C800DF6259 /* Game Scene */ = {
@@ -157,13 +191,73 @@
 			name = "Game Scene";
 			sourceTree = "<group>";
 		};
-		4A9CC8911C2958D700DF6259 /* Nodes */ = {
+		4AD773FD1C58FC8E005FB348 /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
-				4A9CC8671C29583700DF6259 /* RPCameraNode.swift */,
-				4A9CC8781C29583700DF6259 /* RPWorldNode.swift */,
+				4AD773FB1C58FC52005FB348 /* RPResourceLoadableType.swift */,
 			);
-			name = Nodes;
+			name = Protocols;
+			sourceTree = "<group>";
+		};
+		4AD774001C59117D005FB348 /* Layers */ = {
+			isa = PBXGroup;
+			children = (
+				4A9CC8661C29583700DF6259 /* RPActionLayerEntity.swift */,
+				4A9482871C575FE30032598B /* RPLayerEntity.swift */,
+				4AD773FE1C59111C005FB348 /* RPPlatformLayerEntity.swift */,
+				4A82F0611C5DFD52007B5EEA /* RPCameraLayerEntity.swift */,
+			);
+			name = Layers;
+			sourceTree = "<group>";
+		};
+		4AE2298F1C5636EC002D8A90 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				4A9CC8671C29583700DF6259 /* RPCameraComponent.swift */,
+				4A9CC86D1C29583700DF6259 /* RPLayerComponent.swift */,
+				4AFD549D1C56B7C50063B314 /* RPPhysicsComponent.swift */,
+				4AFD549F1C56B7C50063B314 /* RPRenderComponent.swift */,
+				4AE2298B1C5636C8002D8A90 /* RPAnimationComponent.swift */,
+				4ADD0B291C57CD59005C1FDC /* RPParallaxScrollingComponent.swift */,
+				4AF001A21C58024F00205BCF /* RPInputComponent.swift */,
+				4AEDECE61C58B51A00F01C5F /* RPDebugSpriteComponent.swift */,
+				4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */,
+				4A04557D1C5CAD5E007B5BBB /* RPStateMachineComponent.swift */,
+			);
+			name = Components;
+			sourceTree = "<group>";
+		};
+		4AEA936B1C5FAAA5009AD815 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				4AD773FD1C58FC8E005FB348 /* Protocols */,
+				4AFD54A31C56B7F80063B314 /* Entities */,
+				4AE2298F1C5636EC002D8A90 /* Components */,
+				4A9CC88C1C29585500DF6259 /* Base Classes */,
+				4A9CC8901C2958C800DF6259 /* Game Scene */,
+				4A9CC88E1C2958AB00DF6259 /* Collision */,
+			);
+			name = Common;
+			sourceTree = "<group>";
+		};
+		4AEA936C1C5FAAB6009AD815 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				4A29A4751C5F5959000FC9C2 /* Assets */,
+			);
+			name = Assets;
+			sourceTree = "<group>";
+		};
+		4AFD54A31C56B7F80063B314 /* Entities */ = {
+			isa = PBXGroup;
+			children = (
+				4AD774001C59117D005FB348 /* Layers */,
+				4A0455861C5CAF34007B5BBB /* Player */,
+				4A9CC8781C29583700DF6259 /* RPWorldEntity.swift */,
+				4AD774011C591193005FB348 /* RPPlatformEntity.swift */,
+				4AD774031C5915CD005FB348 /* RPEntity.swift */,
+			);
+			name = Entities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -226,6 +320,7 @@
 			files = (
 				4A9CC85F1C29581800DF6259 /* LaunchScreen.storyboard in Resources */,
 				4A9CC85C1C29581800DF6259 /* Assets.xcassets in Resources */,
+				4A29A4761C5F5959000FC9C2 /* Assets in Resources */,
 				4A9CC85A1C29581800DF6259 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,25 +333,42 @@
 			buildActionMask = 2147483647;
 			files = (
 				4A9CC87C1C29583700DF6259 /* RPGameScene.swift in Sources */,
-				4A9CC87E1C29583700DF6259 /* RPImageLayer.swift in Sources */,
 				4A9CC8881C29583700DF6259 /* RPSKView.swift in Sources */,
+				4AFD54A11C56B7C50063B314 /* RPPlayerEntity.swift in Sources */,
 				4A9CC8821C29583700DF6259 /* RPObject.swift in Sources */,
+				4AE2298C1C5636C8002D8A90 /* RPAnimationComponent.swift in Sources */,
+				4A0455821C5CADE9007B5BBB /* RPPlayerFallingState.swift in Sources */,
 				4A9CC8811C29583700DF6259 /* RPNode.swift in Sources */,
 				4A9CC87D1C29583700DF6259 /* RPGameSceneViewController.swift in Sources */,
-				4A9CC88B1C29583700DF6259 /* RPWorldNode.swift in Sources */,
-				4A9CC8801C29583700DF6259 /* RPLayer.swift in Sources */,
-				4A9CC87A1C29583700DF6259 /* RPCameraNode.swift in Sources */,
-				4A9CC8851C29583700DF6259 /* RPPlatformSpriteNode.swift in Sources */,
+				4A9482881C575FE30032598B /* RPLayerEntity.swift in Sources */,
+				4A9CC88B1C29583700DF6259 /* RPWorldEntity.swift in Sources */,
+				4A19804F1C5D215400B83179 /* RPPlayerBouncingDownState.swift in Sources */,
+				4AEDECE71C58B51A00F01C5F /* RPDebugSpriteComponent.swift in Sources */,
+				4A9CC8801C29583700DF6259 /* RPLayerComponent.swift in Sources */,
+				4A9CC87A1C29583700DF6259 /* RPCameraComponent.swift in Sources */,
+				4A82F0621C5DFD52007B5EEA /* RPCameraLayerEntity.swift in Sources */,
+				4AD774041C5915CD005FB348 /* RPEntity.swift in Sources */,
+				4AD773FF1C59111C005FB348 /* RPPlatformLayerEntity.swift in Sources */,
+				4AFD549C1C56ABF40063B314 /* RPColliderType.swift in Sources */,
+				4AFD54A01C56B7C50063B314 /* RPPhysicsComponent.swift in Sources */,
+				4A04558A1C5CB629007B5BBB /* RPPlayerBoostState.swift in Sources */,
 				4A9CC8511C29581800DF6259 /* AppDelegate.swift in Sources */,
+				4AFD54A21C56B7C50063B314 /* RPRenderComponent.swift in Sources */,
 				4A9CC8841C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift in Sources */,
-				4A9CC87F1C29583700DF6259 /* RPInputHandler.swift in Sources */,
-				4A9CC87B1C29583700DF6259 /* RPEmitterLayer.swift in Sources */,
-				4A9CC8831C29583700DF6259 /* RPParticleSpriteNode.swift in Sources */,
-				4A9CC8791C29583700DF6259 /* RPActionLayer.swift in Sources */,
+				4A1980511C5D216500B83179 /* RPPlayerBouncingUpState.swift in Sources */,
+				4A6A5B0E1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift in Sources */,
+				4ADD0B2A1C57CD59005C1FDC /* RPParallaxScrollingComponent.swift in Sources */,
+				4AF001A31C58024F00205BCF /* RPInputComponent.swift in Sources */,
+				4A0455851C5CAEEA007B5BBB /* RPPlayerState.swift in Sources */,
+				4A9CC8791C29583700DF6259 /* RPActionLayerEntity.swift in Sources */,
 				4A9CC8871C29583700DF6259 /* RPScene.swift in Sources */,
 				4A9CC88A1C29583700DF6259 /* RPSpriteNode.swift in Sources */,
+				4A04557E1C5CAD5E007B5BBB /* RPStateMachineComponent.swift in Sources */,
+				4AD773FC1C58FC52005FB348 /* RPResourceLoadableType.swift in Sources */,
+				4AD774021C591193005FB348 /* RPPlatformEntity.swift in Sources */,
+				4A0455801C5CADE0007B5BBB /* RPPlayerJumpingState.swift in Sources */,
 				4A9CC8891C29583700DF6259 /* RPSKViewController.swift in Sources */,
-				4A9CC8861C29583700DF6259 /* RPPlayerSpriteNode.swift in Sources */,
+				4A0455881C5CB04D007B5BBB /* RPPlayerStandingState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +518,7 @@
 				4A9CC8651C29581800DF6259 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -7,16 +7,15 @@
 //
 
 import SpriteKit
+import GameplayKit
 
-class RPLayer: RPNode, UpdateableNode {
+class RPLayerComponent: GKComponent {
     
+    let node = RPNode()
     var parallaxFactor: CGFloat = 1.0
     
-    func didFinishUpdate() {
+    func addChild(child: SKNode) {
         
-    }
-    
-    func update(currentTime: NSTimeInterval) {
-        
+        self.node.addChild(child)
     }
 }

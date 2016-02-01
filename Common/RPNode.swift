@@ -1,5 +1,5 @@
 //
-//  RPScene.swift
+//  RPNode.swift
 //  RapunzelSwift
 //
 //  Created by Simon Kemper on 13.11.15.
@@ -7,13 +7,11 @@
 //
 
 import SpriteKit
+import GameplayKit
 
-protocol UpdateableNode {
-    func update(currentTime: NSTimeInterval)
-    func didFinishUpdate()
-}
-
-class RPScene: SKScene {
+class RPNode: SKNode {
+    
+    weak var entity: GKEntity!
 
     func setup() {
         

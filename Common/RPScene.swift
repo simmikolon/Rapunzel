@@ -1,5 +1,5 @@
 //
-//  RPSpriteNode.swift
+//  RPScene.swift
 //  RapunzelSwift
 //
 //  Created by Simon Kemper on 13.11.15.
@@ -8,13 +8,16 @@
 
 import SpriteKit
 
-class RPSpriteNode: SKSpriteNode, ContactableNode {
-
-    func setup() {
-        
-    }
+class RPScene: SKScene {
     
-    func didBeginContact(withNode node: SKNode) {
+    func setup() {
+
+    }
+}
+
+extension RPScene {
+    
+    func textureManagerDidFinishPreloadingTextures() {
         
     }
 }
