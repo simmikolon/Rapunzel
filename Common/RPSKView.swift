@@ -9,7 +9,9 @@
 import SpriteKit
 
 class RPSKView: SKView {
-
+    
+    #if os(iOS)
     @IBOutlet weak var panGestureRecognizer: UIPanGestureRecognizer?
     @IBOutlet weak var tapGestureRecognizer: UITapGestureRecognizer?
+    #endif
 }

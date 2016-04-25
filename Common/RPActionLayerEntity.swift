@@ -10,5 +10,9 @@ import SpriteKit
 import GameplayKit
 
 class RPActionLayerEntity: RPLayerEntity {
-    
+/*
+    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+        super.updateWithDeltaTime(seconds)
+        print("ACTION: \(parallaxFactor) Position: \(renderComponent.node.position.y)")
+    }*/
 }

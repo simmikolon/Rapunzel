@@ -6,13 +6,27 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+
+#if os(iOS)
+    import UIKit
+#else
+    import Foundation
+#endif
+
 import GameplayKit
 
 protocol RPInputComponentDelegate: class {
     
     func didTap()
     func didChangeMotion(xAcceleration: CGFloat)
+    func keyLeftDown()
+    func keyLeftUp()
+    func keyRightDown()
+    func keyRightUp()
+}
+
+protocol ControllableEntity {
+    
 }
 
 class RPInputComponent: GKComponent {
@@ -23,7 +37,8 @@ class RPInputComponent: GKComponent {
         super.init()
     }
     
-    init(withDelegate delegate: RPInputComponentDelegate) {
+    init(delegate: RPInputComponentDelegate) {
+        
         super.init()
         self.delegate = delegate
     }
@@ -36,5 +51,25 @@ class RPInputComponent: GKComponent {
     func touchesBegan() {
 
         delegate?.didTap()
+    }
+    
+    func keyLeftDown() {
+        
+        delegate?.keyLeftDown()
+    }
+    
+    func keyRightDown() {
+        
+        delegate?.keyRightDown()
+    }
+    
+    func keyLeftUp() {
+        
+        delegate?.keyLeftUp()
+    }
+    
+    func keyRightUp() {
+        
+        delegate?.keyRightUp()
     }
 }

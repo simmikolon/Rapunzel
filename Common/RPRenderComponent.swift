@@ -6,7 +6,7 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 import SpriteKit
 import GameplayKit
 

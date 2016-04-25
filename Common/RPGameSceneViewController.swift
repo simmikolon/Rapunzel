@@ -6,8 +6,23 @@
 //  Copyright © 2015 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+#if os(iOS)
+    import UIKit
+#else
+    import Foundation
+#endif
+
 import SpriteKit
+
+struct RPGameSceneSettings {
+    #if os(iOS)
+    static let width: CGFloat = 768
+    static let height: CGFloat = 1364
+    #else
+    static let width: CGFloat = 1364
+    static let height: CGFloat = 2423//768
+    #endif
+}
 
 class RPGameSceneViewController: RPSKViewController {
 
@@ -15,12 +30,13 @@ class RPGameSceneViewController: RPSKViewController {
         
         super.viewDidLoad()
 
-        //let screenSize: CGRect = UIScreen.mainScreen().bounds
-        let gameScene = RPGameScene(size: CGSizeMake(320.0, 568.0))
+        let screenSize = CGSize(width: RPGameSceneSettings.width, height: RPGameSceneSettings.height)
+        let gameScene = RPGameScene(size: screenSize)
         let skView = self.view as! SKView
         
         skView.showsFPS = true
         skView.showsNodeCount = true
+        skView.showsDrawCount = true
         skView.ignoresSiblingOrder = true
         
         gameScene.scaleMode = .AspectFill

@@ -11,7 +11,7 @@ import GameplayKit
 
 struct RPWorldNodeSettings {
     
-    static let SmoothingFactor: CGFloat = 8.0
+    static let SmoothingFactor: CGFloat = 4.0
 }
 
 class RPWorldEntity: GKEntity {

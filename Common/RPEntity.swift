@@ -6,15 +6,10 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 import GameplayKit
-
-protocol RPEntityDelegate: class {
-    
-    func entityDidAddComponent(withEntity entity: GKEntity, andComponent component: GKComponent)
-}
+import SpriteKit
 
 class RPEntity: GKEntity {
 
-    weak var delegate: RPEntityDelegate?
 }

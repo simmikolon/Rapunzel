@@ -6,7 +6,7 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 import SpriteKit
 import GameplayKit
 
@@ -27,14 +27,15 @@ enum RPPlayerAnimationName: String {
         FallingDown.rawValue,
         JumpUp.rawValue,
         BoostingUp.rawValue
-        
     ]
 }
 
-class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, RPInputComponentDelegate {
+class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, RPInputComponentDelegate, RPPlayerStateDelegate {
     
-    static var textureSize = CGSize(width: 32, height: 32)
+    static var textureSize = CGSize(width: 104, height: 232)
     static var animations: [String: RPAnimation]!
+    
+    weak var playerStateDelegate: RPPlayerStateDelegate?
     
     // MARK: Components
     
@@ -48,9 +49,13 @@ class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, R
     
     override init() {
         
-        physicsComponent = RPGravityPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 32, height: 32)), colliderType: .PlayerBot)
+        /* Component Initialisation before super.init() */
+        
+        physicsComponent = RPGravityPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 30, height: 232)), colliderType: .PlayerBot)
         renderComponent = RPRenderComponent()
         inputComponent = RPInputComponent()
+        
+        /* Animation Component */
         
         guard let animations = RPPlayerEntity.animations else { fatalError() }
         
@@ -61,23 +66,29 @@ class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, R
         
         super.init()
         
-        renderComponent.node.entity = self;
+        /* State Machine */
         
         stateMachineComponent = RPStateMachineComponent(states: [
             
-            RPPlayerStandingState(entity: self),
-            RPPlayerFallingState(entity: self),
-            RPPlayerBouncingDownState(entity: self),
-            RPPlayerBouncingUpState(entity: self),
-            RPPlayerJumpingState(entity: self),
-            RPPlayerBoostState(entity: self)
+            RPPlayerStandingState(entity: self, delegate: self),
+            RPPlayerFallingState(entity: self, delegate: self),
+            RPPlayerBouncingDownState(entity: self, delegate: self),
+            RPPlayerBouncingUpState(entity: self, delegate: self),
+            RPPlayerJumpingState(entity: self, delegate: self),
+            RPPlayerBoostState(entity: self, delegate: self),
+            RPPlayerBottomCollisionState(entity: self, delegate: self)
             
             ])
         
         stateMachineComponent.enterInitialState()
         
-        renderComponent.node.entity = self;
+        /* Render Component Setup after super.init() */
+        
+        renderComponent.node.entity = self
+        renderComponent.node.entity = self
         renderComponent.node.physicsBody = physicsComponent.physicsBody
+        
+        /* Input Component */
         
         inputComponent.delegate = self;
 
@@ -89,6 +100,7 @@ class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, R
     }
     
     // MARK: Input Component Delegate Methods
+    // TODO: Out-Sourcing input Methods as States and implement State Machine into InputComponent!
     
     func didTap() {
         
@@ -98,6 +110,44 @@ class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, R
     func didChangeMotion(xAcceleration: CGFloat) {
 
         physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)
+    }
+    
+    /**/
+    
+    var isKeyRightDown = false
+    var isKeyLeftDown = false
+    
+    func keyRightDown() {
+        
+        isKeyRightDown = true
+        isKeyLeftDown = false
+    }
+    
+    func keyRightUp() {
+        
+        isKeyRightDown = false
+    }
+    
+    func keyLeftDown() {
+        
+        isKeyLeftDown = true
+        isKeyRightDown = false
+    }
+    
+    func keyLeftUp() {
+        
+        isKeyLeftDown = false
+    }
+    
+    // MARK: Player State Delegate
+    
+    func playerDidFallDown() {
+        
+        guard let playerStateDelegate = self.playerStateDelegate else {
+            fatalError("Player Needs Delegate!")
+        }
+        
+        playerStateDelegate.playerDidFallDown()
     }
 }
 
@@ -130,7 +180,7 @@ extension RPPlayerEntity {
             
             for var i = 0; i < atlases.count; ++i {
                 
-                animations[RPPlayerAnimationName.atlasNames[i]] = RPAnimationComponent.animationsFromAtlas(atlases[i], animationName: RPPlayerAnimationName.atlasNames[i])
+                animations[RPPlayerAnimationName.atlasNames[i]] = RPAnimationComponent.animationsFromAtlas(atlases[i])
             }
             
             completionHandler()

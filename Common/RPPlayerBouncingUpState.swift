@@ -13,10 +13,6 @@ class RPPlayerBouncingUpState: RPPlayerState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-        
-        let action = SKAction.scaleYTo(1.0, duration: 0.05)
-        
-        entity.animationComponent.node.runAction(action)
         entity.animationComponent.requestedAnimation = RPPlayerAnimationName.BounceUp.rawValue
     }
     
@@ -25,7 +21,7 @@ class RPPlayerBouncingUpState: RPPlayerState {
         
         // Debug:
         
-        if elapsedTime >= 0.05 {
+        if elapsedTime >= 0.25 {
             self.stateMachine?.enterState(RPPlayerJumpingState.self)
         }
     }
@@ -33,14 +29,10 @@ class RPPlayerBouncingUpState: RPPlayerState {
     override func isValidNextState(stateClass: AnyClass) -> Bool {
         
         switch stateClass {
-        case is RPPlayerBoostState.Type, is RPPlayerJumpingState.Type:
+        case is RPPlayerBoostState.Type, is RPPlayerJumpingState.Type, is RPPlayerBottomCollisionState.Type:
             return true
         default:
             return false
         }
-    }
-    
-    override func willExitWithNextState(nextState: GKState) {
-        super.willExitWithNextState(nextState)
     }
 }

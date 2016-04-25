@@ -6,7 +6,11 @@
 //  Copyright © 2015 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+#if os(iOS)
+    import UIKit
+#else
+    import Foundation
+#endif
 
 class RPObject: NSObject {
 

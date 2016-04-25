@@ -27,6 +27,8 @@ struct RPColliderType: OptionSetType, Hashable, CustomDebugStringConvertible {
     static var Obstacle: RPColliderType  { return self.init(rawValue: 1 << 0) }
     static var PlayerBot: RPColliderType { return self.init(rawValue: 1 << 1) }
     static var TaskBot: RPColliderType   { return self.init(rawValue: 1 << 2) }
+    static var BottomCollidablePlatform: RPColliderType   { return self.init(rawValue: 1 << 3) }
+    static var NormalPlatform: RPColliderType { return self.init(rawValue: 1 << 4) }
 
     // MARK: Hashable
     

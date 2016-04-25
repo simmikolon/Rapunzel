@@ -17,7 +17,7 @@ class RPDebugSpriteComponent: GKComponent {
 
         if node != nil {
             
-            self.node = SKSpriteNode(color: UIColor.whiteColor(), size: CGSize(width: length, height: 32))
+            self.node = SKSpriteNode(color: SKColor.whiteColor(), size: CGSize(width: length, height: 32))
             node?.addChild(self.node)
         }
     }

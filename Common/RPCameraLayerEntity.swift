@@ -14,12 +14,16 @@ class RPCameraLayerEntity: RPLayerEntity {
     var cameraComponent: RPCameraComponent!
     
     init(withParallaxFactor factor: CGFloat = 1.0, focusedNode node: RPNode) {
-        
         cameraComponent = RPCameraComponent(focusedNode: node)
-        
-        super.init(withParallaxFactor: factor, cameraNode: cameraComponent.cameraNode)
-        
+        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent)
         addComponent(cameraComponent)
         self.renderComponent.addChild(cameraComponent.cameraNode)
+        self.name = "RPCameraLayerEntity"
     }
+    
+    /*
+    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+        super.updateWithDeltaTime(seconds)
+        print("CAMERA: \(parallaxFactor) Position: \(renderComponent.node.position.y)")
+    }*/
 }

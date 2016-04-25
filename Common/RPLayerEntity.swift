@@ -6,7 +6,7 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 import GameplayKit
 import SpriteKit
 
@@ -16,14 +16,17 @@ class RPLayerEntity: RPEntity {
     let renderComponent: RPRenderComponent
     var parallaxScrollingComponent: RPParallaxScrollingComponent!
     
-    init(withParallaxFactor factor: CGFloat = 1.0, cameraNode: SKCameraNode) {
+    var name = "RPLayerEntity"
+    
+    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
         
         renderComponent = RPRenderComponent()
+        renderComponent.node.zPosition = zPosition
         
         super.init()
         
         parallaxFactor = factor
-        parallaxScrollingComponent = RPParallaxScrollingComponent(withLayerEntity: self, cameraNode: cameraNode)
+        parallaxScrollingComponent = RPParallaxScrollingComponent(withLayerEntity: self, cameraComponent: cameraComponent)
         
         addComponent(renderComponent)
         addComponent(parallaxScrollingComponent)

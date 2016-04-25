@@ -43,7 +43,7 @@ class RPStateMachineComponent: GKComponent, ContactNotifiableType {
     
     func contactWithEntityDidBegin(entity: GKEntity) {
         
-        if let state = stateMachine.currentState as? RPPlayerState {
+        if let state = stateMachine.currentState as? RPState {
             
             state.contactWithEntityDidBegin(entity)
         }
@@ -51,9 +51,17 @@ class RPStateMachineComponent: GKComponent, ContactNotifiableType {
     
     func contactWithEntityDidEnd(entity: GKEntity) {
 
-        if let state = stateMachine.currentState as? RPPlayerState {
+        if let state = stateMachine.currentState as? RPState {
             
             state.contactWithEntityDidEnd(entity)
         }
+    }
+    
+    // MARK: Deinitialization
+    
+    deinit {
+        
+        /* Debug Output to see if Entity was deallocated properly */
+        print("Deinitialization: \(self.dynamicType)")
     }
 }

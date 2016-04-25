@@ -6,7 +6,7 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 import SpriteKit
 import GameplayKit
 
@@ -16,7 +16,7 @@ enum AnimationState: String {
 
 struct RPAnimation {
     
-    let animationName: String
+    //let animationName: String
     let textures: [SKTexture]
     let repeatTexturesForever: Bool
 }
@@ -97,17 +97,20 @@ class RPAnimationComponent: GKComponent {
 
 extension RPAnimationComponent {
     
-    class func animationsFromAtlas(atlas: SKTextureAtlas, animationName: String, repeatTexturesForever: Bool = true, playBackwards: Bool = false) -> RPAnimation {
+    class func animationsFromAtlas(atlas: SKTextureAtlas, repeatTexturesForever: Bool = false, playBackwards: Bool = false) -> RPAnimation {
         
         var textures = [SKTexture]()
         
-        for textureName: String in atlas.textureNames {
+        let sortedTextureNames = atlas.textureNames.sort { $0 < $1 }
+        
+        for textureName: String in sortedTextureNames {
             textures.append(atlas.textureNamed(textureName))
+            print(textureName)
         }
         
         let animation = RPAnimation(
             
-            animationName: animationName,
+            //animationName: animationName,
             textures: textures,
             repeatTexturesForever: repeatTexturesForever
         )

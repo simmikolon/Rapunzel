@@ -9,9 +9,19 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>RapunzelOSX.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>4A1896741C7EF7FE00743F58</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>4A9CC84C1C29581800DF6259</key>
 		<dict>
 			<key>primary</key>

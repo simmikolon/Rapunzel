@@ -14,10 +14,7 @@ class RPPlayerStandingState: RPPlayerState {
     
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-    }
-    
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+        self.entity.physicsComponent.physicsBody.pinned = true
     }
     
     override func isValidNextState(stateClass: AnyClass) -> Bool {
@@ -33,13 +30,6 @@ class RPPlayerStandingState: RPPlayerState {
     
     override func willExitWithNextState(nextState: GKState) {
         super.willExitWithNextState(nextState)
-    }
-    
-    override func contactWithEntityDidBegin(entity: GKEntity) {
-        
-    }
-    
-    override func contactWithEntityDidEnd(entity: GKEntity) {
-        
+        self.entity.physicsComponent.physicsBody.pinned = false
     }
 }
