@@ -11,7 +11,7 @@ import GameplayKit
 
 class RPCameraLayerEntity: RPLayerEntity {
 
-    var cameraComponent: RPCameraComponent!
+    let cameraComponent: RPCameraComponent
     
     init(withParallaxFactor factor: CGFloat = 1.0, focusedNode node: RPNode) {
         cameraComponent = RPCameraComponent(focusedNode: node)

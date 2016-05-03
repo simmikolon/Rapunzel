@@ -93,7 +93,7 @@ class RPCameraComponent: GKComponent {
         
         return deltaY
     }
-    
+
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
 
         super.updateWithDeltaTime(seconds)
@@ -101,6 +101,8 @@ class RPCameraComponent: GKComponent {
         let cameraPositionNew = CGPoint(x: cameraNode.position.x, y: cameraNode.position.y + deltaY)
         
         if cameraPositionNew != cameraPositionOld {
+            
+            //node!.parent?.position = cameraNode.parent!.position
             
             cameraNode.position = cameraPositionNew
             cameraPositionOld = cameraPositionNew

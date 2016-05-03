@@ -84,6 +84,8 @@
 		4A4C2F3A1C7F135700310E22 /* RPHairLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4C2F381C7F135700310E22 /* RPHairLayerEntity.swift */; };
 		4A4C2F3C1C7F155E00310E22 /* SSVignette.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 4A4C2F3B1C7F155E00310E22 /* SSVignette.fsh */; };
 		4A4C2F3D1C7F155E00310E22 /* SSVignette.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 4A4C2F3B1C7F155E00310E22 /* SSVignette.fsh */; };
+		4A509FA91CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */; };
+		4A509FAA1CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */; };
 		4A566F741C692D450029FC6A /* RPPatternEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A566F731C692D450029FC6A /* RPPatternEntity.swift */; };
 		4A6A5B0E1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */; };
 		4A755F641C60C69700F4DE76 /* RPPlatformBottomHitState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A755F631C60C69700F4DE76 /* RPPlatformBottomHitState.swift */; };
@@ -124,6 +126,8 @@
 		4AA7064B1C8EF10D00483657 /* RPBranchLeft.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706491C8EF10D00483657 /* RPBranchLeft.png */; };
 		4AA7064C1C8EF22100483657 /* RPBranchRight.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706481C8EF10D00483657 /* RPBranchRight.png */; };
 		4AA7064D1C8EF22100483657 /* RPBranchLeft.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706491C8EF10D00483657 /* RPBranchLeft.png */; };
+		4AC26EBA1CD3C78600B3F98A /* RPLifecycleComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */; };
+		4AC26EBB1CD3C88000B3F98A /* RPLifecycleComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */; };
 		4AC3987F1C858C1300B40E19 /* RPCameraEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC3987E1C858C1300B40E19 /* RPCameraEntity.swift */; };
 		4AC398801C85925400B40E19 /* RPCameraEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC3987E1C858C1300B40E19 /* RPCameraEntity.swift */; };
 		4AC4ED321C88CEA50014291E /* RPBranchPlatformEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC4ED311C88CEA50014291E /* RPBranchPlatformEntity.swift */; };
@@ -140,6 +144,8 @@
 		4AD773FF1C59111C005FB348 /* RPPlatformLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD773FE1C59111C005FB348 /* RPPlatformLayerEntity.swift */; };
 		4AD774021C591193005FB348 /* RPPlatformEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD774011C591193005FB348 /* RPPlatformEntity.swift */; };
 		4AD774041C5915CD005FB348 /* RPEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD774031C5915CD005FB348 /* RPEntity.swift */; };
+		4ADAB0431CD8F09D003804E0 /* RPLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADAB0421CD8F09D003804E0 /* RPLevel.swift */; };
+		4ADAB0441CD8F0D4003804E0 /* RPLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADAB0421CD8F09D003804E0 /* RPLevel.swift */; };
 		4ADD0B2A1C57CD59005C1FDC /* RPParallaxScrollingComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADD0B291C57CD59005C1FDC /* RPParallaxScrollingComponent.swift */; };
 		4AE2298C1C5636C8002D8A90 /* RPAnimationComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE2298B1C5636C8002D8A90 /* RPAnimationComponent.swift */; };
 		4AE560B21C879CE80093C09D /* RPGameOverScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE560B11C879CE80093C09D /* RPGameOverScene.swift */; };
@@ -182,6 +188,7 @@
 		4A30DC421C88915E00F47043 /* RPPlayerBottomCollisionState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPlayerBottomCollisionState.swift; sourceTree = "<group>"; };
 		4A4C2F381C7F135700310E22 /* RPHairLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPHairLayerEntity.swift; sourceTree = "<group>"; };
 		4A4C2F3B1C7F155E00310E22 /* SSVignette.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SSVignette.fsh; sourceTree = "<group>"; };
+		4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPEntityManagerComponent.swift; sourceTree = "<group>"; };
 		4A566F731C692D450029FC6A /* RPPatternEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPatternEntity.swift; sourceTree = "<group>"; };
 		4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPGravityPhysicsComponent.swift; path = Common/RPGravityPhysicsComponent.swift; sourceTree = "<group>"; };
 		4A755F631C60C69700F4DE76 /* RPPlatformBottomHitState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPlatformBottomHitState.swift; sourceTree = "<group>"; };
@@ -215,6 +222,7 @@
 		4A9E454B1C805794000418AE /* RPFarBackgroundLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPFarBackgroundLayerEntity.swift; sourceTree = "<group>"; };
 		4AA706481C8EF10D00483657 /* RPBranchRight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = RPBranchRight.png; path = "../../Game Assets/Rapunzel/Prototype Assets/RPBranchRight.png"; sourceTree = "<group>"; };
 		4AA706491C8EF10D00483657 /* RPBranchLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = RPBranchLeft.png; path = "../../Game Assets/Rapunzel/Prototype Assets/RPBranchLeft.png"; sourceTree = "<group>"; };
+		4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPLifecycleComponent.swift; sourceTree = "<group>"; };
 		4AC3987E1C858C1300B40E19 /* RPCameraEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPCameraEntity.swift; sourceTree = "<group>"; };
 		4AC4ED311C88CEA50014291E /* RPBranchPlatformEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPBranchPlatformEntity.swift; sourceTree = "<group>"; };
 		4AC4ED341C88D76C0014291E /* RPLeftBranchPlatformEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPLeftBranchPlatformEntity.swift; sourceTree = "<group>"; };
@@ -228,6 +236,7 @@
 		4AD773FE1C59111C005FB348 /* RPPlatformLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlatformLayerEntity.swift; path = Common/RPPlatformLayerEntity.swift; sourceTree = "<group>"; };
 		4AD774011C591193005FB348 /* RPPlatformEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlatformEntity.swift; path = Common/RPPlatformEntity.swift; sourceTree = "<group>"; };
 		4AD774031C5915CD005FB348 /* RPEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPEntity.swift; path = Common/RPEntity.swift; sourceTree = "<group>"; };
+		4ADAB0421CD8F09D003804E0 /* RPLevel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPLevel.swift; sourceTree = "<group>"; };
 		4ADD0B291C57CD59005C1FDC /* RPParallaxScrollingComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPParallaxScrollingComponent.swift; path = Common/RPParallaxScrollingComponent.swift; sourceTree = "<group>"; };
 		4AE2298B1C5636C8002D8A90 /* RPAnimationComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPAnimationComponent.swift; path = Common/RPAnimationComponent.swift; sourceTree = "<group>"; };
 		4AE560B11C879CE80093C09D /* RPGameOverScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPGameOverScene.swift; sourceTree = "<group>"; };
@@ -463,6 +472,8 @@
 				4A04557D1C5CAD5E007B5BBB /* RPStateMachineComponent.swift */,
 				4A7C4CDB1C8D815F00C76BBB /* RPTileComponent.swift */,
 				4AE810D11CC3EC3F006ED49D /* RPDebugOutputComponent.swift */,
+				4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */,
+				4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -477,6 +488,7 @@
 				4A9CC8901C2958C800DF6259 /* Game Scene */,
 				4A9CC88E1C2958AB00DF6259 /* Collision */,
 				4A76271F1CCE9FE5003812E5 /* Pattern */,
+				4ADAB0421CD8F09D003804E0 /* RPLevel.swift */,
 			);
 			name = Common;
 			sourceTree = "<group>";
@@ -613,11 +625,13 @@
 				4A9B3EA91CCD4E7B00E5CDB4 /* RPPatternControllerComponent.swift in Sources */,
 				4A18968A1C7EF85500743F58 /* RPPlatformEntity.swift in Sources */,
 				4A18967A1C7EF7FE00743F58 /* GameScene.swift in Sources */,
+				4ADAB0441CD8F0D4003804E0 /* RPLevel.swift in Sources */,
 				4AE810D31CC3ECC1006ED49D /* RPDebugOutputComponent.swift in Sources */,
 				4A18969C1C7EF85500743F58 /* RPPlayerFallingState.swift in Sources */,
 				4A1896A61C7EF85500743F58 /* RPRenderComponent.swift in Sources */,
 				4A1896BB1C7EFA4C00743F58 /* RPSKViewController.swift in Sources */,
 				4A1896BA1C7EFA3000743F58 /* RPGameSceneViewController.swift in Sources */,
+				4AC26EBB1CD3C88000B3F98A /* RPLifecycleComponent.swift in Sources */,
 				4A1896911C7EF85500743F58 /* RPActionLayerEntity.swift in Sources */,
 				4A1896891C7EF85500743F58 /* RPDebugPlatformEntity.swift in Sources */,
 				4A1896A81C7EF85500743F58 /* RPInputComponent.swift in Sources */,
@@ -645,6 +659,7 @@
 				4A1896951C7EF85500743F58 /* RPTreeLayerEntity.swift in Sources */,
 				4A1896961C7EF85500743F58 /* RPTowerLayerEntity.swift in Sources */,
 				4A1896861C7EF82000743F58 /* RPAnimationComponent.swift in Sources */,
+				4A509FAA1CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */,
 				4A1896981C7EF85500743F58 /* RPParticleLayerEntity.swift in Sources */,
 				4A1896AB1C7EF85500743F58 /* RPStateMachineComponent.swift in Sources */,
 				4A1896A91C7EF85500743F58 /* RPDebugSpriteComponent.swift in Sources */,
@@ -696,6 +711,7 @@
 				4A9482881C575FE30032598B /* RPLayerEntity.swift in Sources */,
 				4A17A2E71C6139B300A65859 /* RPPlatformBreakingState.swift in Sources */,
 				4A9CC88B1C29583700DF6259 /* RPWorldEntity.swift in Sources */,
+				4A509FA91CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */,
 				4A19804F1C5D215400B83179 /* RPPlayerBouncingDownState.swift in Sources */,
 				4AEDECE71C58B51A00F01C5F /* RPDebugSpriteComponent.swift in Sources */,
 				4A9CC8801C29583700DF6259 /* RPLayerComponent.swift in Sources */,
@@ -711,6 +727,7 @@
 				4A826B8D1CC23D3C00D51E52 /* RPTileEntity.swift in Sources */,
 				4A82F0621C5DFD52007B5EEA /* RPCameraLayerEntity.swift in Sources */,
 				4A7627171CCE9FCB003812E5 /* RPBeat.swift in Sources */,
+				4AC26EBA1CD3C78600B3F98A /* RPLifecycleComponent.swift in Sources */,
 				4AD774041C5915CD005FB348 /* RPEntity.swift in Sources */,
 				4A30DC431C88915E00F47043 /* RPPlayerBottomCollisionState.swift in Sources */,
 				4AE810D21CC3EC3F006ED49D /* RPDebugOutputComponent.swift in Sources */,
@@ -745,6 +762,7 @@
 				4A0455801C5CADE0007B5BBB /* RPPlayerJumpingState.swift in Sources */,
 				4A9CC8891C29583700DF6259 /* RPSKViewController.swift in Sources */,
 				4A566F741C692D450029FC6A /* RPPatternEntity.swift in Sources */,
+				4ADAB0431CD8F09D003804E0 /* RPLevel.swift in Sources */,
 				4A0455881C5CB04D007B5BBB /* RPPlayerStandingState.swift in Sources */,
 				4AC4ED321C88CEA50014291E /* RPBranchPlatformEntity.swift in Sources */,
 				4AE560B21C879CE80093C09D /* RPGameOverScene.swift in Sources */,

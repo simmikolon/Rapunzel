@@ -22,7 +22,7 @@ protocol RPPlatformEntityDelegate: class {
     func didRemovePlatform(platform: RPPlatformEntity)
 }
 
-class RPPlatformEntity: RPEntity, ContactNotifiableType {
+class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDelegate {
     
     static var textureSize = CGSize(width: 444, height: 132)
     
@@ -115,6 +115,11 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType {
         addComponent(renderComponent)
         addComponent(animationComponent)
         addComponent(stateMachineComponent)
+        
+        /* Lifecycle Component */
+        
+        let lifecycleComponent = RPLifecycleComponent(withEntity: self, delegate: self)
+        addComponent(lifecycleComponent)
     }
     
     // MARK: Management Functions
@@ -131,16 +136,16 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType {
         
         /* Remove all Components assigned to this Entity */
         
-        self.removeComponentForClass(RPRenderComponent)
-        self.removeComponentForClass(RPPhysicsComponent)
-        self.removeComponentForClass(RPAnimationComponent)
-        self.removeComponentForClass(RPStateMachineComponent)
+        //self.removeComponentForClass(RPRenderComponent)
+        //self.removeComponentForClass(RPPhysicsComponent)
+        //self.removeComponentForClass(RPAnimationComponent)
+        //self.removeComponentForClass(RPStateMachineComponent)
         
         /* Inform Delegate that this Entity has just left */
         
-        guard let delegate = self.delegate else { fatalError("No Delegate Set!") }
-
-        delegate.didRemovePlatform(self)
+        if let delegate = self.delegate {
+            delegate.didRemovePlatform(self)
+        }
     }
 
     // MARK: Deinitialization
@@ -151,23 +156,12 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType {
         print("Deinitialization: \(self.dynamicType)")
     }
     
-    // MARK: Prototyping Stuff
+    // MARK: - RPLifecycleComponent
     
-    /* Prototyping Stuff */
-    
-    /*
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    func nodeDidExitScreen(node node: SKNode) {
         
-        if let positionInScene = renderComponent.node.scene?.convertPoint(renderComponent.node.position, fromNode: renderComponent.node.parent!) {
-        
-            if positionInScene.y < -(renderComponent.node.scene!.size.height / 2) {
-                
-                remove()
-            }
-        }
+        remove()
     }
-    */
 }
 
 extension RPPlatformEntity {

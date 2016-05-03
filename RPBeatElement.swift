@@ -6,6 +6,8 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
+import SpriteKit
+
 enum RPBeatElementType {
     case LeftTreePlatform
     case RightTreePlatform
@@ -16,8 +18,12 @@ struct RPBeatElement {
     
     let type: RPBeatElementType
     
-    init(withType type: RPBeatElementType = .Empty) {
+    /// Closure that passes code that will be called when the RPBeatElement is being created by an RPPatternControllerComponent
+    let creationHandler: (offset: CGFloat) -> RPPlatformEntity
+    
+    init(withType type: RPBeatElementType = .Empty, creationHandler: (offset: CGFloat) -> RPPlatformEntity) {
         
         self.type = type
+        self.creationHandler = creationHandler
     }
 }

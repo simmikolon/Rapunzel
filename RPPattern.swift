@@ -12,6 +12,8 @@ class RPPattern {
     var cursor: Int = 0
     private var numberOfBeats: Int = 0
     
+    var lowerCursor: Int = 0
+    
     init(withNumberOfBeats numberOfBeats: Int = 16) {
         
         beats = Array(count: numberOfBeats, repeatedValue: RPBeat(withType: .Empty))
@@ -26,5 +28,15 @@ class RPPattern {
     func decreaseCursor() {
         cursor -= 1
         if cursor < 0 { cursor = numberOfBeats-1 }
+    }
+    
+    func increaseLowerCursor() {
+        lowerCursor += 1
+        if lowerCursor >= numberOfBeats { lowerCursor = 0 }
+    }
+    
+    func decreaseLowerCursor() {
+        lowerCursor -= 1
+        if lowerCursor < 0 { lowerCursor = numberOfBeats-1 }
     }
 }

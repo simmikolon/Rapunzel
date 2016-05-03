@@ -20,7 +20,7 @@ struct RPInputHandlerSettings {
     static let AccelerometerUpdateInterval = 0.1
 }
 
-class RPGameScene: RPScene, RPPlayerStateDelegate {
+class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
     
     // MARK: Class Methods
     
@@ -29,6 +29,17 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
     // MARK: Instance Methods
     
     var entities = [GKEntity]()
+    var entityGarbage = [GKEntity]()
+    
+    let componentSystems = [GKComponentSystem(componentClass: RPRenderComponent.self),
+                            GKComponentSystem(componentClass: RPCameraComponent.self),
+                            GKComponentSystem(componentClass: RPParallaxScrollingComponent.self),
+                            GKComponentSystem(componentClass: RPAnimationComponent.self),
+                            GKComponentSystem(componentClass: RPStateMachineComponent.self),
+                            GKComponentSystem(componentClass: RPTileComponent.self),
+                            GKComponentSystem(componentClass: RPLifecycleComponent.self),
+                            GKComponentSystem(componentClass: RPPatternControllerComponent.self),
+                            GKComponentSystem(componentClass: RPInputComponent.self)]
     
     let contactDelegate = RPPhysicsWorldContactDelegate()
     
@@ -40,16 +51,8 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
     // MARK: Constant Entities
     
     let worldEntity = RPWorldEntity()
-    
-    // MARK: Component Systems
-    
-    let inputSystem = GKComponentSystem(componentClass: RPInputComponent.self)
-    let animationSystem = GKComponentSystem(componentClass: RPAnimationComponent.self)
-    let cameraSystem = GKComponentSystem(componentClass: RPCameraComponent.self)
-    let parallaxScrollingSystem = GKComponentSystem(componentClass: RPParallaxScrollingComponent.self)
-    let intelligenceSystem = GKComponentSystem(componentClass: RPStateMachineComponent.self)
-    
-    // MARK: Initialisation
+    var treeLayerEntity: RPTreeLayerEntity!
+    var hairLayerEntity: RPHairLayerEntity!
     
     override init(size: CGSize) {
         super.init(size: size)
@@ -97,101 +100,155 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         
         self.paused = true
         self.entities.removeAll()
-
-        //let screenSize = CGSize(width: RPGameSceneSettings.width, height: RPGameSceneSettings.height)
+    }
+    
+    var demoPattern: RPPattern {
         
-        //self.view!.presentScene(RPGameOverScene(size: screenSize))
+        let pattern = RPPattern(withNumberOfBeats: 2)
+        
+        pattern.beats[0] = RPBeat(withType: .NotEmpty)
+        pattern.beats[0].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
+            offset in
+            
+            let platform = RPLeftBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = 320
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = self
+            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
+            self.addEntity(platform)
+            self.treeLayerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        }))
+        pattern.beats[0].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
+            offset in
+            
+            let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = 20
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = self
+            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
+            self.addEntity(platform)
+            self.hairLayerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        }))
+        
+        /**/
+        
+        pattern.beats[1] = RPBeat(withType: .NotEmpty)
+        pattern.beats[1].elements.append(RPBeatElement(withType: RPBeatElementType.RightTreePlatform, creationHandler: {
+            offset in
+            
+            let platform = RPBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = -320
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = self
+            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
+            self.addEntity(platform)
+            self.treeLayerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        }))
+        pattern.beats[1].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
+            offset in
+            
+            let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = -20
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = self
+            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
+            self.addEntity(platform)
+            self.hairLayerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        }))
+        
+        
+        return pattern
     }
     
     func buildLevel() {
         
         /* 1. Ertellen von RPWorldEntity */
         
-        self.entities.append(worldEntity)
+        addEntity(worldEntity)
         self.addChild(worldEntity.renderComponent.node)
-        
-        
         
         /* 2. Erstellen von RPPlayerEntity */
         
         let playerEntity = RPPlayerEntity()
-        self.entities.append(playerEntity)
+        addEntity(playerEntity)
         playerEntity.renderComponent.node.zPosition = 60
         playerEntity.renderComponent.node.position = CGPoint(x: 0, y: 150)
         playerEntity.playerStateDelegate = self
-        self.inputSystem.addComponent(playerEntity.inputComponent)
-        
-        
-        
+    
         /* 3. Camera Entity erstellen und Hinzufügen */
         
         let cameraEntity = RPCameraEntity(withFocusedNode: playerEntity.renderComponent.node)
-        self.entities.append(cameraEntity)
-        
-        
+        addEntity(cameraEntity)
         
         /* 4. Ertellen von RPActionLayerEntity */
+        // TODO: ActionLayer wird Player Layer
         
         let actionLayerEntity = RPActionLayerEntity(cameraComponent: cameraEntity.cameraComponent, zPosition: 5)
-        self.entities.append(actionLayerEntity)
+        addEntity(actionLayerEntity)
         worldEntity.renderComponent.addChild(actionLayerEntity.renderComponent.node)
-        
         actionLayerEntity.renderComponent.addChild(playerEntity.renderComponent.node)
         actionLayerEntity.renderComponent.addChild(cameraEntity.cameraComponent.cameraNode)
-        
-        
-        
+
         /* Background Layer */
-        
         /* Erstellung von Far Background Layer */
         
         let farBackgroundLayerEntity = RPFarBackgroundLayerEntity(withParallaxFactor: 8.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -5)
-        self.entities.append(farBackgroundLayerEntity)
+        addEntity(farBackgroundLayerEntity)
         self.worldEntity.renderComponent.addChild(farBackgroundLayerEntity.renderComponent.node)
         
         /* Erstellen von Background Layer */
         
         let backgroundLayerEntity = RPBackgroundLayerEntity(withParallaxFactor: 3.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -3)
-        self.entities.append(backgroundLayerEntity)
+        addEntity(backgroundLayerEntity)
         self.worldEntity.renderComponent.addChild(backgroundLayerEntity.renderComponent.node)
         
         /* Erstellen von Tower Layer */
         
         let towerLayerEntity = RPTowerLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -2)
-        self.entities.append(towerLayerEntity)
+        addEntity(towerLayerEntity)
         self.worldEntity.renderComponent.addChild(towerLayerEntity.renderComponent.node)
         
         /* Erstellen von Hair Layer */
         
-        let hairLayerEntity = RPHairLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -1)
-        self.entities.append(hairLayerEntity)
+        hairLayerEntity = RPHairLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -1)
+        addEntity(hairLayerEntity)
         self.worldEntity.renderComponent.addChild(hairLayerEntity.renderComponent.node)
         
         /* Erstellen von Tree Layer */
         
-        let treeLayerEntity = RPTreeLayerEntity(withParallaxFactor: 1.5, cameraComponent: cameraEntity.cameraComponent, zPosition: 1)
-        self.entities.append(treeLayerEntity)
+        treeLayerEntity = RPTreeLayerEntity(withParallaxFactor: 1.5, cameraComponent: cameraEntity.cameraComponent, zPosition: 1)
+        addEntity(treeLayerEntity)
         self.worldEntity.renderComponent.addChild(treeLayerEntity.renderComponent.node)
         
         /* Erstellen von Particle Layer */
         
         var particleLayerEntity = RPParticleLayerEntity(withParallaxFactor: 4.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -2, numberOfColumns: 2, numberOfRows: 2, damping: 25.0)
-        self.entities.append(particleLayerEntity)
+        addEntity(particleLayerEntity)
         self.worldEntity.renderComponent.addChild(particleLayerEntity.renderComponent.node)
         
         /* Erstellen von Particle Layer */
         
         particleLayerEntity = RPParticleLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: 2, numberOfColumns: 2, numberOfRows: 2, damping: 15.0)
-        self.entities.append(particleLayerEntity)
+        addEntity(particleLayerEntity)
         self.worldEntity.renderComponent.addChild(particleLayerEntity.renderComponent.node)
         
-        /* Erstellen von RPPlatformLayerEntity */
-        /*
-        let platformLayerEntity = RPPlatformLayerEntity(withParallaxFactor: 2.0, cameraNode: cameraEntity.cameraComponent.cameraNode, zPosition: 0)
-        self.entities.append(platformLayerEntity)
-        self.platformLayerEntity = platformLayerEntity
-        worldEntity.renderComponent.addChild(platformLayerEntity.renderComponent.node)*/
-
+        /* Pattern Controller Component erstellen */
+        
+        // TODO: ActionLayer wird Player Layer
+        let patternControllerComponent = RPPatternControllerComponent(withLayerEntity: actionLayerEntity, pattern: demoPattern)
+        addComponent(patternControllerComponent)
     }
     
     func setupScene() {
@@ -199,7 +256,7 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         self.backgroundColor = SKColor(red: 30/255, green: 60/255, blue: 63/255, alpha: 1)
         self.anchorPoint = CGPoint(x: 0.5, y: 0)
         
-        //self.physicsWorld.speed = 1.25
+        //self.physicsWorld.speed = 0.5
         //self.physicsWorld.gravity = CGVector(dx: 0, dy: 0)
         
         self.setupCollisions()
@@ -248,6 +305,49 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         }
     }
     
+    // MARK: - Entity Management
+    
+    func addEntity(entity: GKEntity) {
+        entities.append(entity)
+        
+        for componentSystem in componentSystems {
+            componentSystem.addComponentWithEntity(entity)
+        }
+    }
+    
+    func addComponent(component: GKComponent) {
+        
+        if let index = componentSystems.indexOf({$0.componentClass == component.dynamicType}) {
+            componentSystems[index].addComponent(component)
+        }
+    }
+    
+    func removeEntity(entity: GKEntity) {
+        
+        if let index = entities.indexOf(entity) {
+            entities.removeAtIndex(index)
+        }
+        
+        for componentSystem in componentSystems {
+            componentSystem.removeComponentWithEntity(entity)
+        }
+    }
+    
+    func flushEntities() {
+        
+        for entity in entityGarbage {
+            removeEntity(entity)
+        }
+        
+        entityGarbage.removeAll()
+    }
+    
+    // MARK: - Platform Delegate
+    
+    func didRemovePlatform(platform: RPPlatformEntity) {
+        entityGarbage.append(platform)
+    }
+    
     // MARK: View Callbacks
     
     override func didMoveToView(view: SKView) {
@@ -258,6 +358,13 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         
         contactDelegate.setup()
         physicsWorld.contactDelegate = contactDelegate
+    }
+    
+    func updateComponentSystems(withCurrentTime time: NSTimeInterval) {
+        
+        for componentSystem in componentSystems {
+            componentSystem.updateWithDeltaTime(time)
+        }
     }
     
     override func update(currentTime: NSTimeInterval) {
@@ -273,13 +380,11 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         
         //if worldEntity.renderComponent.node.paused { return }
         
-        //self.cameraSystem.updateWithDeltaTime(deltaTime)
-        //self.parallaxScrollingSystem.updateWithDeltaTime(deltaTime)
-        //self.intelligenceSystem.updateWithDeltaTime(deltaTime)
+        updateComponentSystems(withCurrentTime: currentTime)
         
-        for entity: GKEntity in self.entities {
-            entity.updateWithDeltaTime(deltaTime)
-        }
+        /* Releasing of unused entities is done after enumeration over component systems */
+        
+        flushEntities()
     }
     
     #if os(iOS)
@@ -334,33 +439,59 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         switch theEvent.keyCode {
             
         case 49:
-            for component: GKComponent in self.inputSystem.components {
+            
+            for componentSystem in componentSystems {
                 
-                if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                if componentSystem.componentClass == RPInputComponent.self {
                     
-                    inputComponent.touchesBegan()
+                    for component: GKComponent in componentSystem.components {
+                        
+                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                            
+                            inputComponent.touchesBegan()
+                        }
+                    }
                 }
             }
+            
             break
             
         case 123:
-            for component: GKComponent in self.inputSystem.components {
+            
+            for componentSystem in componentSystems {
                 
-                if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                if componentSystem.componentClass == RPInputComponent.self {
                     
-                    inputComponent.keyLeftDown()
+                    for component: GKComponent in componentSystem.components {
+                        
+                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                            
+                            inputComponent.keyLeftDown()
+                        }
+                    }
                 }
             }
+            
             break
             
         case 124:
-            for component: GKComponent in self.inputSystem.components {
+            
+            for componentSystem in componentSystems {
                 
-                if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                if componentSystem.componentClass == RPInputComponent.self {
                     
-                    inputComponent.keyRightDown()
+                    for component: GKComponent in componentSystem.components {
+                        
+                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                            
+                            inputComponent.keyRightDown()
+                        }
+                    }
+                    
                 }
             }
+            
+
             break
             
         default:
@@ -374,23 +505,39 @@ class RPGameScene: RPScene, RPPlayerStateDelegate {
         switch theEvent.keyCode {
             
         case 123:
-            for component: GKComponent in self.inputSystem.components {
+            
+            for componentSystem in componentSystems {
                 
-                if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                if componentSystem.componentClass == RPInputComponent.self {
                     
-                    inputComponent.keyLeftUp()
+                    for component: GKComponent in componentSystem.components {
+                        
+                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                            
+                            inputComponent.keyLeftUp()
+                        }
+                    }
                 }
             }
+            
             break
             
         case 124:
-            for component: GKComponent in self.inputSystem.components {
+            
+            for componentSystem in componentSystems {
                 
-                if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                if componentSystem.componentClass == RPInputComponent.self {
                     
-                    inputComponent.keyRightUp()
+                    for component: GKComponent in componentSystem.components {
+                        
+                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                            
+                            inputComponent.keyRightUp()
+                        }
+                    }
                 }
             }
+            
             break
             
         default:
