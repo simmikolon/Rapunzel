@@ -84,8 +84,6 @@
 		4A4C2F3A1C7F135700310E22 /* RPHairLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4C2F381C7F135700310E22 /* RPHairLayerEntity.swift */; };
 		4A4C2F3C1C7F155E00310E22 /* SSVignette.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 4A4C2F3B1C7F155E00310E22 /* SSVignette.fsh */; };
 		4A4C2F3D1C7F155E00310E22 /* SSVignette.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 4A4C2F3B1C7F155E00310E22 /* SSVignette.fsh */; };
-		4A509FA91CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */; };
-		4A509FAA1CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */; };
 		4A566F741C692D450029FC6A /* RPPatternEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A566F731C692D450029FC6A /* RPPatternEntity.swift */; };
 		4A6A5B0E1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */; };
 		4A755F641C60C69700F4DE76 /* RPPlatformBottomHitState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A755F631C60C69700F4DE76 /* RPPlatformBottomHitState.swift */; };
@@ -188,7 +186,6 @@
 		4A30DC421C88915E00F47043 /* RPPlayerBottomCollisionState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPlayerBottomCollisionState.swift; sourceTree = "<group>"; };
 		4A4C2F381C7F135700310E22 /* RPHairLayerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPHairLayerEntity.swift; sourceTree = "<group>"; };
 		4A4C2F3B1C7F155E00310E22 /* SSVignette.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SSVignette.fsh; sourceTree = "<group>"; };
-		4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPEntityManagerComponent.swift; sourceTree = "<group>"; };
 		4A566F731C692D450029FC6A /* RPPatternEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPatternEntity.swift; sourceTree = "<group>"; };
 		4A6A5B0D1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPGravityPhysicsComponent.swift; path = Common/RPGravityPhysicsComponent.swift; sourceTree = "<group>"; };
 		4A755F631C60C69700F4DE76 /* RPPlatformBottomHitState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPlatformBottomHitState.swift; sourceTree = "<group>"; };
@@ -473,7 +470,6 @@
 				4A7C4CDB1C8D815F00C76BBB /* RPTileComponent.swift */,
 				4AE810D11CC3EC3F006ED49D /* RPDebugOutputComponent.swift */,
 				4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */,
-				4A509FA81CD6077F00A4E5F5 /* RPEntityManagerComponent.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -659,7 +655,6 @@
 				4A1896951C7EF85500743F58 /* RPTreeLayerEntity.swift in Sources */,
 				4A1896961C7EF85500743F58 /* RPTowerLayerEntity.swift in Sources */,
 				4A1896861C7EF82000743F58 /* RPAnimationComponent.swift in Sources */,
-				4A509FAA1CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */,
 				4A1896981C7EF85500743F58 /* RPParticleLayerEntity.swift in Sources */,
 				4A1896AB1C7EF85500743F58 /* RPStateMachineComponent.swift in Sources */,
 				4A1896A91C7EF85500743F58 /* RPDebugSpriteComponent.swift in Sources */,
@@ -711,7 +706,6 @@
 				4A9482881C575FE30032598B /* RPLayerEntity.swift in Sources */,
 				4A17A2E71C6139B300A65859 /* RPPlatformBreakingState.swift in Sources */,
 				4A9CC88B1C29583700DF6259 /* RPWorldEntity.swift in Sources */,
-				4A509FA91CD6077F00A4E5F5 /* RPEntityManagerComponent.swift in Sources */,
 				4A19804F1C5D215400B83179 /* RPPlayerBouncingDownState.swift in Sources */,
 				4AEDECE71C58B51A00F01C5F /* RPDebugSpriteComponent.swift in Sources */,
 				4A9CC8801C29583700DF6259 /* RPLayerComponent.swift in Sources */,

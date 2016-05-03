@@ -28,22 +28,11 @@ class RPTreeLayerEntity: RPLayerEntity, RPResourceLoadableType {
         return tileComponent
     }
     
-    /* Prototyping */
-    /// Wird entfernt!!!
-    var entityManagerComponent: RPEntityManagerComponent {
-        guard let entityManagerComponent = self.componentForClass(RPEntityManagerComponent) else { fatalError() }
-        return entityManagerComponent
-    }
-    
     // MARK: - Initialisation
     
     override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
-        
-        // TODO: Entfernen!!!
-        let entityManagerComponent = RPEntityManagerComponent()
-        addComponent(entityManagerComponent)
         
         let tileComponent = RPTileComponent(withEntity: self, tileSet: RPTreeLayerEntity.tileSet)
         addComponent(tileComponent)
