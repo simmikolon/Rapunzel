@@ -12,4 +12,5 @@ import SpriteKit
 
 class RPEntity: GKEntity {
 
+    var name = ""
 }

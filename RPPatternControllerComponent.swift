@@ -18,6 +18,7 @@ struct RPPatternSettings {
 class RPPatternControllerComponent: GKComponent {
     
     unowned let renderComponent: RPRenderComponent
+    unowned let layerEntity: RPLayerEntity
     
     var offset: CGFloat = 0
     var pattern: RPPattern
@@ -29,8 +30,8 @@ class RPPatternControllerComponent: GKComponent {
 
     init(withLayerEntity layerEntity: RPLayerEntity, pattern: RPPattern) {
         
-        guard let renderComponent = layerEntity.componentForClass(RPRenderComponent) else { fatalError() }
-        self.renderComponent = renderComponent
+        self.renderComponent = layerEntity.renderComponent
+        self.layerEntity = layerEntity
         self.pattern = pattern
         
         super.init()
@@ -45,7 +46,7 @@ class RPPatternControllerComponent: GKComponent {
         if beat.type != .Empty {
             
             for element in beat.elements {
-                element.creationHandler(offset: offset)
+                element.creationHandler(offset: offset, layerEntity: layerEntity)
             }
         }
         

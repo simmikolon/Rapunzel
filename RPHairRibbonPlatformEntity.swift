@@ -51,7 +51,7 @@ class RPHairRibbonPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
 extension RPHairRibbonPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
-        return true
+        return animations == nil
     }
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {

@@ -30,9 +30,9 @@ class RPTreeLayerEntity: RPLayerEntity, RPResourceLoadableType {
     
     // MARK: - Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0, pattern: RPPattern) {
         
-        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
+        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition, pattern: pattern)
         
         let tileComponent = RPTileComponent(withEntity: self, tileSet: RPTreeLayerEntity.tileSet)
         addComponent(tileComponent)
@@ -44,7 +44,7 @@ class RPTreeLayerEntity: RPLayerEntity, RPResourceLoadableType {
 extension RPTreeLayerEntity {
     
     static var resourcesNeedLoading: Bool {
-        return true
+        return tileAtlas == nil
     }
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {

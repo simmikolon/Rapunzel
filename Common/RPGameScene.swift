@@ -20,41 +20,43 @@ struct RPInputHandlerSettings {
     static let AccelerometerUpdateInterval = 0.1
 }
 
-class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
+class RPGameScene: RPScene, RPPlayerStateDelegate {
     
     // MARK: Class Methods
     
     static weak var sharedGameScene: RPGameScene!
     
-    // MARK: Instance Methods
+    var levelEntity: RPLevelEntity!
     
-    var entities = [GKEntity]()
-    var entityGarbage = [GKEntity]()
+    // MARK: - State Machine
     
-    let componentSystems = [GKComponentSystem(componentClass: RPRenderComponent.self),
-                            GKComponentSystem(componentClass: RPCameraComponent.self),
-                            GKComponentSystem(componentClass: RPParallaxScrollingComponent.self),
-                            GKComponentSystem(componentClass: RPAnimationComponent.self),
-                            GKComponentSystem(componentClass: RPStateMachineComponent.self),
-                            GKComponentSystem(componentClass: RPTileComponent.self),
-                            GKComponentSystem(componentClass: RPLifecycleComponent.self),
-                            GKComponentSystem(componentClass: RPPatternControllerComponent.self),
-                            GKComponentSystem(componentClass: RPInputComponent.self)]
+    lazy var stateMachine: GKStateMachine = {
+        
+        return GKStateMachine(states: [
+            RPGameSceneInitState(withGameScene: self),
+            RPGameSceneResourceLoadingState(withGameScene: self),
+            RPGameSceneFinishLoadingResourcesState(withGameScene: self),
+            RPGameSceneCreateLevelEntityState(withGameScene: self)
+        ])
+    }()
+    
+    // MARK: - Data Source
+    
+    let dataSource: RPLevelDataSource = RPDemoLevelDataSource()
+    
+    // MARK: - Contact Delegate
     
     let contactDelegate = RPPhysicsWorldContactDelegate()
+    
+    // MARK: - Properties
     
     private var lastUpdateTimeInterval: NSTimeInterval = 0
     private let maximumUpdateDeltaTime: NSTimeInterval = 1.0 / 60.0
     
-    var platformLayerEntity: RPPlatformLayerEntity!
-    
-    // MARK: Constant Entities
-    
-    let worldEntity = RPWorldEntity()
-    var treeLayerEntity: RPTreeLayerEntity!
-    var hairLayerEntity: RPHairLayerEntity!
+    // MARK: - Initialisation
     
     override init(size: CGSize) {
+        
         super.init(size: size)
         RPGameScene.sharedGameScene = self
     }
@@ -98,254 +100,22 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
     
     func playerDidFallDown() {
         
-        self.paused = true
-        self.entities.removeAll()
-    }
-    
-    var demoPattern: RPPattern {
-        
-        let pattern = RPPattern(withNumberOfBeats: 2)
-        
-        pattern.beats[0] = RPBeat(withType: .NotEmpty)
-        pattern.beats[0].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
-            offset in
-            
-            let platform = RPLeftBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 320
-            platform.renderComponent.node.position.y = offset
-            platform.renderComponent.node.zPosition = 1
-            platform.delegate = self
-            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
-            self.addEntity(platform)
-            self.treeLayerEntity.renderComponent.addChild(platform.renderComponent.node)
-            return platform
-            
-        }))
-        pattern.beats[0].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
-            offset in
-            
-            let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 20
-            platform.renderComponent.node.position.y = offset
-            platform.renderComponent.node.zPosition = 1
-            platform.delegate = self
-            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
-            self.addEntity(platform)
-            self.hairLayerEntity.renderComponent.addChild(platform.renderComponent.node)
-            return platform
-            
-        }))
-        
-        /**/
-        
-        pattern.beats[1] = RPBeat(withType: .NotEmpty)
-        pattern.beats[1].elements.append(RPBeatElement(withType: RPBeatElementType.RightTreePlatform, creationHandler: {
-            offset in
-            
-            let platform = RPBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = -320
-            platform.renderComponent.node.position.y = offset
-            platform.renderComponent.node.zPosition = 1
-            platform.delegate = self
-            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
-            self.addEntity(platform)
-            self.treeLayerEntity.renderComponent.addChild(platform.renderComponent.node)
-            return platform
-            
-        }))
-        pattern.beats[1].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
-            offset in
-            
-            let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = -20
-            platform.renderComponent.node.position.y = offset
-            platform.renderComponent.node.zPosition = 1
-            platform.delegate = self
-            //self.treeLayerEntity.entityManagerComponent.entities.append(platform)
-            self.addEntity(platform)
-            self.hairLayerEntity.renderComponent.addChild(platform.renderComponent.node)
-            return platform
-            
-        }))
-        
-        
-        return pattern
-    }
-    
-    func buildLevel() {
-        
-        /* 1. Ertellen von RPWorldEntity */
-        
-        addEntity(worldEntity)
-        self.addChild(worldEntity.renderComponent.node)
-        
-        /* 2. Erstellen von RPPlayerEntity */
-        
-        let playerEntity = RPPlayerEntity()
-        addEntity(playerEntity)
-        playerEntity.renderComponent.node.zPosition = 60
-        playerEntity.renderComponent.node.position = CGPoint(x: 0, y: 150)
-        playerEntity.playerStateDelegate = self
-    
-        /* 3. Camera Entity erstellen und Hinzufügen */
-        
-        let cameraEntity = RPCameraEntity(withFocusedNode: playerEntity.renderComponent.node)
-        addEntity(cameraEntity)
-        
-        /* 4. Ertellen von RPActionLayerEntity */
-        // TODO: ActionLayer wird Player Layer
-        
-        let actionLayerEntity = RPActionLayerEntity(cameraComponent: cameraEntity.cameraComponent, zPosition: 5)
-        addEntity(actionLayerEntity)
-        worldEntity.renderComponent.addChild(actionLayerEntity.renderComponent.node)
-        actionLayerEntity.renderComponent.addChild(playerEntity.renderComponent.node)
-        actionLayerEntity.renderComponent.addChild(cameraEntity.cameraComponent.cameraNode)
-
-        /* Background Layer */
-        /* Erstellung von Far Background Layer */
-        
-        let farBackgroundLayerEntity = RPFarBackgroundLayerEntity(withParallaxFactor: 8.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -5)
-        addEntity(farBackgroundLayerEntity)
-        self.worldEntity.renderComponent.addChild(farBackgroundLayerEntity.renderComponent.node)
-        
-        /* Erstellen von Background Layer */
-        
-        let backgroundLayerEntity = RPBackgroundLayerEntity(withParallaxFactor: 3.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -3)
-        addEntity(backgroundLayerEntity)
-        self.worldEntity.renderComponent.addChild(backgroundLayerEntity.renderComponent.node)
-        
-        /* Erstellen von Tower Layer */
-        
-        let towerLayerEntity = RPTowerLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -2)
-        addEntity(towerLayerEntity)
-        self.worldEntity.renderComponent.addChild(towerLayerEntity.renderComponent.node)
-        
-        /* Erstellen von Hair Layer */
-        
-        hairLayerEntity = RPHairLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -1)
-        addEntity(hairLayerEntity)
-        self.worldEntity.renderComponent.addChild(hairLayerEntity.renderComponent.node)
-        
-        /* Erstellen von Tree Layer */
-        
-        treeLayerEntity = RPTreeLayerEntity(withParallaxFactor: 1.5, cameraComponent: cameraEntity.cameraComponent, zPosition: 1)
-        addEntity(treeLayerEntity)
-        self.worldEntity.renderComponent.addChild(treeLayerEntity.renderComponent.node)
-        
-        /* Erstellen von Particle Layer */
-        
-        var particleLayerEntity = RPParticleLayerEntity(withParallaxFactor: 4.0, cameraComponent: cameraEntity.cameraComponent, zPosition: -2, numberOfColumns: 2, numberOfRows: 2, damping: 25.0)
-        addEntity(particleLayerEntity)
-        self.worldEntity.renderComponent.addChild(particleLayerEntity.renderComponent.node)
-        
-        /* Erstellen von Particle Layer */
-        
-        particleLayerEntity = RPParticleLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraEntity.cameraComponent, zPosition: 2, numberOfColumns: 2, numberOfRows: 2, damping: 15.0)
-        addEntity(particleLayerEntity)
-        self.worldEntity.renderComponent.addChild(particleLayerEntity.renderComponent.node)
-        
-        /* Pattern Controller Component erstellen */
-        
-        // TODO: ActionLayer wird Player Layer
-        let patternControllerComponent = RPPatternControllerComponent(withLayerEntity: actionLayerEntity, pattern: demoPattern)
-        addComponent(patternControllerComponent)
+        paused = true
     }
     
     func setupScene() {
         
-        self.backgroundColor = SKColor(red: 30/255, green: 60/255, blue: 63/255, alpha: 1)
-        self.anchorPoint = CGPoint(x: 0.5, y: 0)
+        backgroundColor = SKColor(red: 30/255, green: 60/255, blue: 63/255, alpha: 1)
+        anchorPoint = CGPoint(x: 0.5, y: 0)
         
-        //self.physicsWorld.speed = 0.5
-        //self.physicsWorld.gravity = CGVector(dx: 0, dy: 0)
-        
-        self.setupCollisions()
-        self.setupPhysicsWorldContactDelegate()
+        setupCollisions()
+        setupPhysicsWorldContactDelegate()
         
         #if os(iOS)
-        self.initCoreMotion()
+        initCoreMotion()
         #endif
         
-        RPDebugPlatformEntity.loadResourcesWithCompletionHandler { () -> () in
-         
-            RPPlayerEntity.loadResourcesWithCompletionHandler { () -> () in
-                
-                RPTreeLayerEntity.loadResourcesWithCompletionHandler({ () -> () in
-                    
-                    RPTowerLayerEntity.loadResourcesWithCompletionHandler({ () -> () in
-                        
-                        RPBackgroundLayerEntity.loadResourcesWithCompletionHandler({ () -> () in
-                          
-                            RPHairLayerEntity.loadResourcesWithCompletionHandler({ () -> () in
-                                
-                                RPHairRibbonPlatformEntity.loadResourcesWithCompletionHandler({ () -> () in
-                                    
-                                    RPFarBackgroundLayerEntity.loadResourcesWithCompletionHandler({ () -> () in
-                                        
-                                        //RPLightRayLayerEntity.loadResourcesWithCompletionHandler({ () -> () in
-                                          
-                                            RPBranchPlatformEntity.loadResourcesWithCompletionHandler({ () -> () in
-                                              
-                                                RPLeftBranchPlatformEntity.loadResourcesWithCompletionHandler({ () -> () in
-                                                  
-                                                    self.runAction(SKAction.waitForDuration(2.0), completion: { () -> Void in
-                                                        self.buildLevel()
-                                                    })
-                                                    
-                                                })
-                                            })
-                                        //})
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            }
-        }
-    }
-    
-    // MARK: - Entity Management
-    
-    func addEntity(entity: GKEntity) {
-        entities.append(entity)
-        
-        for componentSystem in componentSystems {
-            componentSystem.addComponentWithEntity(entity)
-        }
-    }
-    
-    func addComponent(component: GKComponent) {
-        
-        if let index = componentSystems.indexOf({$0.componentClass == component.dynamicType}) {
-            componentSystems[index].addComponent(component)
-        }
-    }
-    
-    func removeEntity(entity: GKEntity) {
-        
-        if let index = entities.indexOf(entity) {
-            entities.removeAtIndex(index)
-        }
-        
-        for componentSystem in componentSystems {
-            componentSystem.removeComponentWithEntity(entity)
-        }
-    }
-    
-    func flushEntities() {
-        
-        for entity in entityGarbage {
-            removeEntity(entity)
-        }
-        
-        entityGarbage.removeAll()
-    }
-    
-    // MARK: - Platform Delegate
-    
-    func didRemovePlatform(platform: RPPlatformEntity) {
-        entityGarbage.append(platform)
+        stateMachine.enterState(RPGameSceneInitState.self)
     }
     
     // MARK: View Callbacks
@@ -360,13 +130,6 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
         physicsWorld.contactDelegate = contactDelegate
     }
     
-    func updateComponentSystems(withCurrentTime time: NSTimeInterval) {
-        
-        for componentSystem in componentSystems {
-            componentSystem.updateWithDeltaTime(time)
-        }
-    }
-    
     override func update(currentTime: NSTimeInterval) {
         
         super.update(currentTime)
@@ -378,13 +141,10 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
 
         lastUpdateTimeInterval = currentTime
         
-        //if worldEntity.renderComponent.node.paused { return }
-        
-        updateComponentSystems(withCurrentTime: currentTime)
-        
-        /* Releasing of unused entities is done after enumeration over component systems */
-        
-        flushEntities()
+        if let levelEntity = self.levelEntity {
+         
+            levelEntity.updateWithDeltaTime(currentTime)
+        }
     }
     
     #if os(iOS)
@@ -403,11 +163,20 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
             self.xAcceleration = (CGFloat(acceleration.x) * 0.5) + (self.xAcceleration * 0.75)
             let xAcceleration = self.xAcceleration * RPInputHandlerSettings.AccelerationMultiplier
             
-            for component: GKComponent in self.inputSystem.components {
-                
-                if let inputComponent: RPInputComponent = component as? RPInputComponent {
+            if let levelEntity = self.levelEntity {
+             
+                for componentSystem in levelEntity.entityManagerComponent.componentSystems {
                     
-                    inputComponent.didChangeMotion(xAcceleration)
+                    if componentSystem.componentClass == RPInputComponent.self {
+                        
+                        for component: GKComponent in componentSystem.components {
+                            
+                            if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                                
+                                inputComponent.didChangeMotion(xAcceleration)
+                            }
+                        }
+                    }
                 }
             }
         })
@@ -415,11 +184,17 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
-        for component: GKComponent in self.inputSystem.components {
+        for componentSystem in levelEntity.entityManagerComponent.componentSystems {
             
-            if let inputComponent: RPInputComponent = component as? RPInputComponent {
-                
-                inputComponent.touchesBegan()
+            if componentSystem.componentClass == RPInputComponent.self {
+         
+                for component: GKComponent in componentSystem.components {
+                    
+                    if let inputComponent: RPInputComponent = component as? RPInputComponent {
+                        
+                        inputComponent.touchesBegan()
+                    }
+                }
             }
         }
     }
@@ -440,7 +215,7 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
             
         case 49:
             
-            for componentSystem in componentSystems {
+            for componentSystem in levelEntity.entityManagerComponent.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -458,7 +233,7 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
             
         case 123:
             
-            for componentSystem in componentSystems {
+            for componentSystem in levelEntity.entityManagerComponent.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -476,7 +251,7 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
             
         case 124:
             
-            for componentSystem in componentSystems {
+            for componentSystem in levelEntity.entityManagerComponent.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -506,7 +281,7 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
             
         case 123:
             
-            for componentSystem in componentSystems {
+            for componentSystem in levelEntity.entityManagerComponent.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -524,7 +299,7 @@ class RPGameScene: RPScene, RPPlayerStateDelegate, RPPlatformEntityDelegate {
             
         case 124:
             
-            for componentSystem in componentSystems {
+            for componentSystem in levelEntity.entityManagerComponent.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     

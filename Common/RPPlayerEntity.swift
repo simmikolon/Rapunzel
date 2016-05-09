@@ -30,7 +30,7 @@ enum RPPlayerAnimationName: String {
     ]
 }
 
-class RPPlayerEntity: GKEntity, ContactNotifiableType, RPResourceLoadableType, RPInputComponentDelegate, RPPlayerStateDelegate {
+class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, RPInputComponentDelegate, RPPlayerStateDelegate {
     
     static var textureSize = CGSize(width: 104, height: 232)
     static var animations: [String: RPAnimation]!
@@ -167,7 +167,7 @@ extension RPPlayerEntity {
 extension RPPlayerEntity {
     
     static var resourcesNeedLoading: Bool {
-        return true
+        return animations == nil
     }
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {

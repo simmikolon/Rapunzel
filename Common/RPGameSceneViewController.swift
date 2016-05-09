@@ -19,8 +19,8 @@ struct RPGameSceneSettings {
     static let width: CGFloat = 768
     static let height: CGFloat = 1364
     #else
-    static let width: CGFloat = 1364
-    static let height: CGFloat = 2423//768
+    static let width: CGFloat = 768
+    static let height: CGFloat = 1364//768
     #endif
 }
 

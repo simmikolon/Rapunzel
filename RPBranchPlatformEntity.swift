@@ -42,7 +42,7 @@ class RPBranchPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
 extension RPBranchPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
-        return true
+        return animations == nil
     }
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {

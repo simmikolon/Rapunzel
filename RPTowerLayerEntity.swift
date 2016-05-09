@@ -21,7 +21,7 @@ class RPTowerLayerEntity: RPLayerEntity, RPResourceLoadableType {
     
     // MARK: Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         
@@ -36,7 +36,7 @@ class RPTowerLayerEntity: RPLayerEntity, RPResourceLoadableType {
 extension RPTowerLayerEntity {
     
     static var resourcesNeedLoading: Bool {
-        return true
+        return atlas == nil
     }
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {

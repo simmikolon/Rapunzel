@@ -10,13 +10,13 @@ import SpriteKit
 import GameplayKit
 
 class RPActionLayerEntity: RPLayerEntity {
-    
+    /*
     var patternControllerComponent: RPPatternControllerComponent {
         
         guard let patternControllerComponent = self.componentForClass(RPPatternControllerComponent) else { fatalError() }
         return patternControllerComponent
     }
-    
+    */
     /*
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
         super.updateWithDeltaTime(seconds)

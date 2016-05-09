@@ -21,9 +21,9 @@ class RPHairLayerEntity: RPLayerEntity, RPResourceLoadableType {
     
     // MARK: Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0, pattern: RPPattern) {
         
-        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
+        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition, pattern: pattern)
         
         self.tileComponent = RPTileComponent(withEntity: self, tileSet: RPHairLayerEntity.tileSet, offset: 250.0)
         
@@ -36,7 +36,7 @@ class RPHairLayerEntity: RPLayerEntity, RPResourceLoadableType {
 extension RPHairLayerEntity {
     
     static var resourcesNeedLoading: Bool {
-        return true
+        return atlas == nil
     }
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
