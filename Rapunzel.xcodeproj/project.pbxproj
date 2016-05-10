@@ -327,6 +327,16 @@
 			name = "Debug Platform";
 			sourceTree = "<group>";
 		};
+		4A2ABFA91CE267F000ED6546 /* Game Scene Managing Components */ = {
+			isa = PBXGroup;
+			children = (
+				4A00FD2F1CE1E81C0053B552 /* RPInputManager.swift */,
+				4AC037B31CE08B8800406777 /* RPEntityManager.swift */,
+				4A00FD221CE1DF2C0053B552 /* RPPatternManager.swift */,
+			);
+			name = "Game Scene Managing Components";
+			sourceTree = "<group>";
+		};
 		4A3057271CE0DECD0065B30F /* Game Scene States */ = {
 			isa = PBXGroup;
 			children = (
@@ -357,9 +367,6 @@
 		4A76271F1CCE9FE5003812E5 /* Pattern */ = {
 			isa = PBXGroup;
 			children = (
-				4A00FD2F1CE1E81C0053B552 /* RPInputManager.swift */,
-				4AC037B31CE08B8800406777 /* RPEntityManager.swift */,
-				4A00FD221CE1DF2C0053B552 /* RPPatternManager.swift */,
 				4A7627161CCE9FCB003812E5 /* RPBeat.swift */,
 				4A7627191CCE9FD9003812E5 /* RPBeatElement.swift */,
 				4A76271C1CCE9FDF003812E5 /* RPPattern.swift */,
@@ -431,7 +438,6 @@
 			children = (
 				4A742ED11CE11FA200E18B83 /* Operation.swift */,
 				4A742ED21CE11FA200E18B83 /* LoadResourcesOperation.swift */,
-				4A3057271CE0DECD0065B30F /* Game Scene States */,
 				4A9CC8691C29583700DF6259 /* RPGameScene.swift */,
 				4A1896BC1C7EFBAF00743F58 /* RPGameScene+iOS.swift */,
 				4A9CC86A1C29583700DF6259 /* RPGameSceneViewController.swift */,
@@ -440,14 +446,13 @@
 			name = "Game Scene";
 			sourceTree = "<group>";
 		};
-		4AC037AF1CE0794C00406777 /* Level */ = {
+		4AC037AF1CE0794C00406777 /* Level Data Source */ = {
 			isa = PBXGroup;
 			children = (
-				4ADAB0421CD8F09D003804E0 /* RPLevelEntity.swift */,
 				4AC037A91CE078DA00406777 /* RPLevelDataSource.swift */,
 				4AC037AC1CE0790C00406777 /* RPDemoLevelDataSource.swift */,
 			);
-			name = Level;
+			name = "Level Data Source";
 			sourceTree = "<group>";
 		};
 		4ACAB9FB1C6098FD0092A51F /* Platforms */ = {
@@ -536,9 +541,11 @@
 				4AE2298F1C5636EC002D8A90 /* Components */,
 				4A9CC88C1C29585500DF6259 /* Base Classes */,
 				4A9CC8901C2958C800DF6259 /* Game Scene */,
+				4A2ABFA91CE267F000ED6546 /* Game Scene Managing Components */,
+				4A3057271CE0DECD0065B30F /* Game Scene States */,
 				4A9CC88E1C2958AB00DF6259 /* Collision */,
 				4A76271F1CCE9FE5003812E5 /* Pattern */,
-				4AC037AF1CE0794C00406777 /* Level */,
+				4AC037AF1CE0794C00406777 /* Level Data Source */,
 			);
 			name = Common;
 			sourceTree = "<group>";
@@ -550,6 +557,7 @@
 				4AD774001C59117D005FB348 /* Layers */,
 				4A0455861C5CAF34007B5BBB /* Player */,
 				4AC3987E1C858C1300B40E19 /* RPCameraEntity.swift */,
+				4ADAB0421CD8F09D003804E0 /* RPLevelEntity.swift */,
 				4A826B8C1CC23D3C00D51E52 /* RPTileEntity.swift */,
 			);
 			name = Entities;
@@ -1016,6 +1024,7 @@
 				4A417F501CE22CC70000A972 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4A9CC8481C29581800DF6259 /* Build configuration list for PBXProject "Rapunzel" */ = {
 			isa = XCConfigurationList;
