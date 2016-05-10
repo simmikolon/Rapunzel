@@ -17,7 +17,7 @@ struct RPPatternSettings {
 
 class RPPatternControllerComponent: GKComponent {
     
-    unowned let renderComponent: RPRenderComponent
+    unowned let renderComponent: SKNode
     unowned let layerEntity: RPLayerEntity
     
     var offset: CGFloat = 0
@@ -30,7 +30,7 @@ class RPPatternControllerComponent: GKComponent {
 
     init(withLayerEntity layerEntity: RPLayerEntity, pattern: RPPattern) {
         
-        self.renderComponent = layerEntity.renderComponent
+        self.renderComponent = layerEntity.parallaxScrollingComponent.cameraComponent.cameraNode.parent!
         self.layerEntity = layerEntity
         self.pattern = pattern
         
@@ -75,7 +75,7 @@ class RPPatternControllerComponent: GKComponent {
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
         super.updateWithDeltaTime(seconds)
         
-        let scrollingDelta = renderComponent.node.scene?.convertPoint(renderComponent.node.position, fromNode: renderComponent.node.parent!)
+        let scrollingDelta = renderComponent.scene?.convertPoint(renderComponent.position, fromNode: renderComponent.parent!)
     
         if scrollingDelta!.y - lastScrollingDelta < -RPPatternSettings.lengthOfBeat {
             didScrollUpOneBeat()
