@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A00FD231CE1DF2C0053B552 /* RPPatternControllerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD221CE1DF2C0053B552 /* RPPatternControllerEntity.swift */; };
+		4A00FD241CE1DF2C0053B552 /* RPPatternControllerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD221CE1DF2C0053B552 /* RPPatternControllerEntity.swift */; };
+		4A00FD261CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD251CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift */; };
+		4A00FD271CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD251CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift */; };
+		4A00FD281CE1E3670053B552 /* RPGameScene+iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1896BC1C7EFBAF00743F58 /* RPGameScene+iOS.swift */; };
+		4A00FD2A1CE1E5130053B552 /* RPGameScenePlayingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD291CE1E5130053B552 /* RPGameScenePlayingState.swift */; };
+		4A00FD2B1CE1E5130053B552 /* RPGameScenePlayingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD291CE1E5130053B552 /* RPGameScenePlayingState.swift */; };
+		4A00FD2D1CE1E5BB0053B552 /* RPGameScenePauseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD2C1CE1E5BB0053B552 /* RPGameScenePauseState.swift */; };
+		4A00FD2E1CE1E5BB0053B552 /* RPGameScenePauseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD2C1CE1E5BB0053B552 /* RPGameScenePauseState.swift */; };
+		4A00FD301CE1E81C0053B552 /* RPInputManagerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD2F1CE1E81C0053B552 /* RPInputManagerEntity.swift */; };
+		4A00FD311CE1E81C0053B552 /* RPInputManagerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A00FD2F1CE1E81C0053B552 /* RPInputManagerEntity.swift */; };
 		4A04557E1C5CAD5E007B5BBB /* RPStateMachineComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A04557D1C5CAD5E007B5BBB /* RPStateMachineComponent.swift */; };
 		4A0455801C5CADE0007B5BBB /* RPPlayerJumpingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A04557F1C5CADE0007B5BBB /* RPPlayerJumpingState.swift */; };
 		4A0455821C5CADE9007B5BBB /* RPPlayerFallingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0455811C5CADE9007B5BBB /* RPPlayerFallingState.swift */; };
@@ -143,8 +154,6 @@
 		4AC037AB1CE078FC00406777 /* RPLevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037A91CE078DA00406777 /* RPLevelDataSource.swift */; };
 		4AC037AD1CE0790C00406777 /* RPDemoLevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037AC1CE0790C00406777 /* RPDemoLevelDataSource.swift */; };
 		4AC037AE1CE0790C00406777 /* RPDemoLevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037AC1CE0790C00406777 /* RPDemoLevelDataSource.swift */; };
-		4AC037B11CE07C6600406777 /* RPDemoLevelEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037B01CE07C6600406777 /* RPDemoLevelEntity.swift */; };
-		4AC037B21CE07C6600406777 /* RPDemoLevelEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037B01CE07C6600406777 /* RPDemoLevelEntity.swift */; };
 		4AC037B41CE08B8800406777 /* RPEntityManagerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037B31CE08B8800406777 /* RPEntityManagerComponent.swift */; };
 		4AC037B51CE08B8800406777 /* RPEntityManagerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037B31CE08B8800406777 /* RPEntityManagerComponent.swift */; };
 		4AC26EBA1CD3C78600B3F98A /* RPLifecycleComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */; };
@@ -184,6 +193,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4A00FD221CE1DF2C0053B552 /* RPPatternControllerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPPatternControllerEntity.swift; sourceTree = "<group>"; };
+		4A00FD251CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPGameSceneDidMoveToViewState.swift; sourceTree = "<group>"; };
+		4A00FD291CE1E5130053B552 /* RPGameScenePlayingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPGameScenePlayingState.swift; sourceTree = "<group>"; };
+		4A00FD2C1CE1E5BB0053B552 /* RPGameScenePauseState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPGameScenePauseState.swift; sourceTree = "<group>"; };
+		4A00FD2F1CE1E81C0053B552 /* RPInputManagerEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPInputManagerEntity.swift; sourceTree = "<group>"; };
 		4A04557D1C5CAD5E007B5BBB /* RPStateMachineComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPStateMachineComponent.swift; path = Common/RPStateMachineComponent.swift; sourceTree = "<group>"; };
 		4A04557F1C5CADE0007B5BBB /* RPPlayerJumpingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerJumpingState.swift; path = Common/RPPlayerJumpingState.swift; sourceTree = "<group>"; };
 		4A0455811C5CADE9007B5BBB /* RPPlayerFallingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RPPlayerFallingState.swift; path = Common/RPPlayerFallingState.swift; sourceTree = "<group>"; };
@@ -251,7 +265,6 @@
 		4AA706491C8EF10D00483657 /* RPBranchLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = RPBranchLeft.png; path = "../../Game Assets/Rapunzel/Prototype Assets/RPBranchLeft.png"; sourceTree = "<group>"; };
 		4AC037A91CE078DA00406777 /* RPLevelDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPLevelDataSource.swift; sourceTree = "<group>"; };
 		4AC037AC1CE0790C00406777 /* RPDemoLevelDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPDemoLevelDataSource.swift; sourceTree = "<group>"; };
-		4AC037B01CE07C6600406777 /* RPDemoLevelEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPDemoLevelEntity.swift; sourceTree = "<group>"; };
 		4AC037B31CE08B8800406777 /* RPEntityManagerComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPEntityManagerComponent.swift; sourceTree = "<group>"; };
 		4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPLifecycleComponent.swift; sourceTree = "<group>"; };
 		4AC3987E1C858C1300B40E19 /* RPCameraEntity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RPCameraEntity.swift; sourceTree = "<group>"; };
@@ -352,9 +365,12 @@
 			children = (
 				4A30571E1CE0DDE70065B30F /* RPGameSceneState.swift */,
 				4A3057211CE0DE040065B30F /* RPGameSceneInitState.swift */,
+				4A00FD251CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift */,
 				4A3057241CE0DE510065B30F /* RPGameSceneResourceLoadingState.swift */,
 				4A742ED71CE1232800E18B83 /* RPGameSceneFinishLoadingResourcesState.swift */,
 				4A742EDA1CE1279600E18B83 /* RPGameSceneCreateLevelEntityState.swift */,
+				4A00FD291CE1E5130053B552 /* RPGameScenePlayingState.swift */,
+				4A00FD2C1CE1E5BB0053B552 /* RPGameScenePauseState.swift */,
 			);
 			name = "Game Scene States";
 			sourceTree = "<group>";
@@ -362,7 +378,7 @@
 		4A76271F1CCE9FE5003812E5 /* Pattern */ = {
 			isa = PBXGroup;
 			children = (
-				4A9B3EA71CCD4DF500E5CDB4 /* RPPatternControllerComponent.swift */,
+				4A00FD221CE1DF2C0053B552 /* RPPatternControllerEntity.swift */,
 				4A7627161CCE9FCB003812E5 /* RPBeat.swift */,
 				4A7627191CCE9FD9003812E5 /* RPBeatElement.swift */,
 				4A76271C1CCE9FDF003812E5 /* RPPattern.swift */,
@@ -441,6 +457,7 @@
 				4A1896BC1C7EFBAF00743F58 /* RPGameScene+iOS.swift */,
 				4A9CC86A1C29583700DF6259 /* RPGameSceneViewController.swift */,
 				4AE560B11C879CE80093C09D /* RPGameOverScene.swift */,
+				4A00FD2F1CE1E81C0053B552 /* RPInputManagerEntity.swift */,
 			);
 			name = "Game Scene";
 			sourceTree = "<group>";
@@ -451,7 +468,6 @@
 				4ADAB0421CD8F09D003804E0 /* RPLevelEntity.swift */,
 				4AC037A91CE078DA00406777 /* RPLevelDataSource.swift */,
 				4AC037AC1CE0790C00406777 /* RPDemoLevelDataSource.swift */,
-				4AC037B01CE07C6600406777 /* RPDemoLevelEntity.swift */,
 			);
 			name = Level;
 			sourceTree = "<group>";
@@ -533,6 +549,7 @@
 				4AC26EB91CD3C78600B3F98A /* RPLifecycleComponent.swift */,
 				4AC037B31CE08B8800406777 /* RPEntityManagerComponent.swift */,
 				4A30571B1CE0DCD50065B30F /* RPOperationQueueComponent.swift */,
+				4A9B3EA71CCD4DF500E5CDB4 /* RPPatternControllerComponent.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -689,18 +706,20 @@
 				4A1896A61C7EF85500743F58 /* RPRenderComponent.swift in Sources */,
 				4A3057261CE0DE510065B30F /* RPGameSceneResourceLoadingState.swift in Sources */,
 				4A1896BB1C7EFA4C00743F58 /* RPSKViewController.swift in Sources */,
+				4A00FD241CE1DF2C0053B552 /* RPPatternControllerEntity.swift in Sources */,
 				4A1896BA1C7EFA3000743F58 /* RPGameSceneViewController.swift in Sources */,
 				4AC26EBB1CD3C88000B3F98A /* RPLifecycleComponent.swift in Sources */,
 				4A1896911C7EF85500743F58 /* RPActionLayerEntity.swift in Sources */,
 				4A1896891C7EF85500743F58 /* RPDebugPlatformEntity.swift in Sources */,
 				4A1896A81C7EF85500743F58 /* RPInputComponent.swift in Sources */,
 				4A742ED61CE11FA200E18B83 /* LoadResourcesOperation.swift in Sources */,
+				4A00FD271CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift in Sources */,
 				4A18969F1C7EF85500743F58 /* RPPlayerBouncingDownState.swift in Sources */,
+				4A00FD2B1CE1E5130053B552 /* RPGameScenePlayingState.swift in Sources */,
 				4A1896881C7EF85500743F58 /* RPPatternEntity.swift in Sources */,
 				4A7627181CCE9FCB003812E5 /* RPBeat.swift in Sources */,
 				4A1896B11C7EF85500743F58 /* RPObject.swift in Sources */,
 				4A1896A41C7EF85500743F58 /* RPLayerComponent.swift in Sources */,
-				4AC037B21CE07C6600406777 /* RPDemoLevelEntity.swift in Sources */,
 				4A18969B1C7EF85500743F58 /* RPPlayerJumpingState.swift in Sources */,
 				4A1896941C7EF85500743F58 /* RPCameraLayerEntity.swift in Sources */,
 				4A1896B51C7EF85500743F58 /* RPState.swift in Sources */,
@@ -716,15 +735,18 @@
 				4A76271B1CCE9FD9003812E5 /* RPBeatElement.swift in Sources */,
 				4A9E454D1C8058EB000418AE /* RPFarBackgroundLayerEntity.swift in Sources */,
 				4A1896A31C7EF85500743F58 /* RPCameraComponent.swift in Sources */,
+				4A00FD281CE1E3670053B552 /* RPGameScene+iOS.swift in Sources */,
 				4A1896A01C7EF85500743F58 /* RPPlayerBouncingUpState.swift in Sources */,
 				4A1896A71C7EF85500743F58 /* RPParallaxScrollingComponent.swift in Sources */,
 				4A30DC441C8891F100F47043 /* RPPlayerBottomCollisionState.swift in Sources */,
 				4A3057231CE0DE040065B30F /* RPGameSceneInitState.swift in Sources */,
+				4A00FD311CE1E81C0053B552 /* RPInputManagerEntity.swift in Sources */,
 				4A1896951C7EF85500743F58 /* RPTreeLayerEntity.swift in Sources */,
 				4A1896961C7EF85500743F58 /* RPTowerLayerEntity.swift in Sources */,
 				4A1896861C7EF82000743F58 /* RPAnimationComponent.swift in Sources */,
 				4A1896981C7EF85500743F58 /* RPParticleLayerEntity.swift in Sources */,
 				4A1896AB1C7EF85500743F58 /* RPStateMachineComponent.swift in Sources */,
+				4A00FD2E1CE1E5BB0053B552 /* RPGameScenePauseState.swift in Sources */,
 				4A1896A91C7EF85500743F58 /* RPDebugSpriteComponent.swift in Sources */,
 				4AC398801C85925400B40E19 /* RPCameraEntity.swift in Sources */,
 				4A1896AE1C7EF85500743F58 /* RPParticleSpriteNode.swift in Sources */,
@@ -784,6 +806,7 @@
 				4A19804F1C5D215400B83179 /* RPPlayerBouncingDownState.swift in Sources */,
 				4AEDECE71C58B51A00F01C5F /* RPDebugSpriteComponent.swift in Sources */,
 				4A9CC8801C29583700DF6259 /* RPLayerComponent.swift in Sources */,
+				4A00FD2A1CE1E5130053B552 /* RPGameScenePlayingState.swift in Sources */,
 				4A9CC87A1C29583700DF6259 /* RPCameraComponent.swift in Sources */,
 				4AC4ED351C88D76C0014291E /* RPLeftBranchPlatformEntity.swift in Sources */,
 				4A7C4CDC1C8D815F00C76BBB /* RPTileComponent.swift in Sources */,
@@ -809,13 +832,17 @@
 				4AC6BDBC1CDA3C29000C4906 /* RPLevelEntity.swift in Sources */,
 				4AFD54A01C56B7C50063B314 /* RPPhysicsComponent.swift in Sources */,
 				4A04558A1C5CB629007B5BBB /* RPPlayerBoostState.swift in Sources */,
+				4A00FD301CE1E81C0053B552 /* RPInputManagerEntity.swift in Sources */,
 				4A9CC8511C29581800DF6259 /* AppDelegate.swift in Sources */,
 				4AFD54A21C56B7C50063B314 /* RPRenderComponent.swift in Sources */,
 				4ACABA021C609D2C0092A51F /* RPPlatformNormalState.swift in Sources */,
+				4A00FD231CE1DF2C0053B552 /* RPPatternControllerEntity.swift in Sources */,
 				4A9CC8841C29583700DF6259 /* RPPhysicsWorldContactDelegate.swift in Sources */,
+				4A00FD2D1CE1E5BB0053B552 /* RPGameScenePauseState.swift in Sources */,
 				4A1980511C5D216500B83179 /* RPPlayerBouncingUpState.swift in Sources */,
 				4A755F641C60C69700F4DE76 /* RPPlatformBottomHitState.swift in Sources */,
 				4AFDD2521C7E453400F24447 /* RPTowerLayerEntity.swift in Sources */,
+				4A00FD261CE1E2810053B552 /* RPGameSceneDidMoveToViewState.swift in Sources */,
 				4A6A5B0E1C5BC49900B87CE7 /* RPGravityPhysicsComponent.swift in Sources */,
 				4ADD0B2A1C57CD59005C1FDC /* RPParallaxScrollingComponent.swift in Sources */,
 				4A1896701C7EEE7000743F58 /* RPParticleSpriteNode.swift in Sources */,
@@ -842,7 +869,6 @@
 				4A566F741C692D450029FC6A /* RPPatternEntity.swift in Sources */,
 				4A0455881C5CB04D007B5BBB /* RPPlayerStandingState.swift in Sources */,
 				4AC4ED321C88CEA50014291E /* RPBranchPlatformEntity.swift in Sources */,
-				4AC037B11CE07C6600406777 /* RPDemoLevelEntity.swift in Sources */,
 				4AE560B21C879CE80093C09D /* RPGameOverScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

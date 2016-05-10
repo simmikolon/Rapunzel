@@ -19,11 +19,6 @@ struct RPBeatElement {
     let type: RPBeatElementType
     
     /// Closure that passes code that will be called when the RPBeatElement is being created by an RPPatternControllerComponent
-    let creationHandler: (offset: CGFloat, layerEntity: RPLayerEntity) -> RPPlatformEntity
-    
-    init(withType type: RPBeatElementType = .Empty, creationHandler: (offset: CGFloat, layerEntity: RPLayerEntity) -> RPPlatformEntity) {
-        
-        self.type = type
-        self.creationHandler = creationHandler
-    }
+    let creationHandler: (offset: CGFloat, entityManagerComponent: RPEntityManagerComponent) -> RPPlatformEntity
+
 }

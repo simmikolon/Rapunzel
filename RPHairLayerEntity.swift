@@ -21,9 +21,9 @@ class RPHairLayerEntity: RPLayerEntity, RPResourceLoadableType {
     
     // MARK: Initialisation
     
-    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0, pattern: RPPattern) {
+    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
         
-        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition, pattern: pattern)
+        super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         
         self.tileComponent = RPTileComponent(withEntity: self, tileSet: RPHairLayerEntity.tileSet, offset: 250.0)
         

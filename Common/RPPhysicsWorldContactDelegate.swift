@@ -32,6 +32,41 @@ class RPPhysicsWorldContactDelegate: RPObject, SKPhysicsContactDelegate {
     
     // MARK: SKPhysicsContactDelegate
     
+    override init() {
+        
+        func setupCollisions() {
+            
+            RPColliderType.definedCollisions[.PlayerBot] = [
+                .TaskBot,
+                //.NormalPlatform,
+                //.BottomCollidablePlatform
+            ]
+            
+            RPColliderType.definedCollisions[.NormalPlatform] = [
+                .PlayerBot,
+                .TaskBot
+            ]
+            
+            RPColliderType.requestedContactNotifications[.PlayerBot] = [
+                .TaskBot,
+                .NormalPlatform,
+                .BottomCollidablePlatform
+            ]
+            
+            RPColliderType.requestedContactNotifications[.NormalPlatform] = [
+                .TaskBot,
+                .PlayerBot
+            ]
+            
+            RPColliderType.requestedContactNotifications[.BottomCollidablePlatform] = [
+                .TaskBot,
+                .PlayerBot
+            ]
+        }
+        
+        setupCollisions()
+    }
+    
     func didBeginContact(contact: SKPhysicsContact) {
         handleContact(contact) { (ContactNotifiableType: ContactNotifiableType, otherEntity: GKEntity) in
             ContactNotifiableType.contactWithEntityDidBegin(otherEntity)

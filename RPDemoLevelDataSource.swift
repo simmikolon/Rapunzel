@@ -27,142 +27,127 @@ class RPDemoLevelDataSource: RPLevelDataSource {
         RPPlayerEntity.self
     ]
     
+    func demoPattern() -> RPPattern {
+        
+        let pattern = RPPattern(withNumberOfBeats: 2)
+        
+        pattern.beats[0] = RPBeat(withType: .NotEmpty)
+        pattern.beats[0].elements.append(RPBeatElement(type: .LeftTreePlatform) { (offset, entityManagerComponent) -> RPPlatformEntity in
+            
+            guard let layerEntity = entityManagerComponent.entity(withName: "RPHairLayerEntity") as? RPLayerEntity else {
+                fatalError()
+            }
+            
+            let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = 20
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = entityManagerComponent
+            entityManagerComponent.addEntity(platform)
+            layerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        })
+        
+        pattern.beats[0].elements.append(RPBeatElement(type: .LeftTreePlatform) { (offset, entityManagerComponent) -> RPPlatformEntity in
+
+            guard let layerEntity = entityManagerComponent.entity(withName: "RPTreeLayerEntity") as? RPLayerEntity else {
+                fatalError()
+            }
+            
+            let platform = RPLeftBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = 320
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = entityManagerComponent
+            entityManagerComponent.addEntity(platform)
+            layerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        })
+        
+        /**/
+        
+        pattern.beats[1] = RPBeat(withType: .NotEmpty)
+        pattern.beats[1].elements.append(RPBeatElement(type: .LeftTreePlatform) { (offset, entityManagerComponent) -> RPPlatformEntity in
+            
+            guard let layerEntity = entityManagerComponent.entity(withName: "RPHairLayerEntity") as? RPLayerEntity else {
+                fatalError()
+            }
+            
+            let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = -20
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = entityManagerComponent
+            entityManagerComponent.addEntity(platform)
+            layerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        })
+        
+        pattern.beats[1].elements.append(RPBeatElement(type: .LeftTreePlatform) { (offset, entityManagerComponent) -> RPPlatformEntity in
+            
+            guard let layerEntity = entityManagerComponent.entity(withName: "RPTreeLayerEntity") as? RPLayerEntity else {
+                fatalError()
+            }
+            
+            let platform = RPBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
+            platform.renderComponent.node.position.x = -320
+            platform.renderComponent.node.position.y = offset
+            platform.renderComponent.node.zPosition = 1
+            platform.delegate = entityManagerComponent
+            entityManagerComponent.addEntity(platform)
+            layerEntity.renderComponent.addChild(platform.renderComponent.node)
+            return platform
+            
+        })
+        
+        return pattern
+    }
+    
     init() {
         
         _levelLayers = [
             
-            RPLevelLayer(name: "ASD", creationHandler: { (levelEntity) -> RPLayerEntity in
-                
-                let pattern = RPPattern(withNumberOfBeats: 2)
-                
-                pattern.beats[0] = RPBeat(withType: .NotEmpty)
-                pattern.beats[0].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
-                    offset, layerEntity in
-                    
-                    let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-                    platform.renderComponent.node.position.x = 20
-                    platform.renderComponent.node.position.y = offset
-                    platform.renderComponent.node.zPosition = 1
-                    platform.delegate = layerEntity.entityManagerComponent
-                    layerEntity.entityManagerComponent.addEntity(platform)
-                    layerEntity.renderComponent.addChild(platform.renderComponent.node)
-                    return platform
-                    
-                }))
-                
-                /**/
-                
-                pattern.beats[1] = RPBeat(withType: .NotEmpty)
-                pattern.beats[1].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
-                    offset, layerEntity in
-                    
-                    let platform = RPHairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-                    platform.renderComponent.node.position.x = -20
-                    platform.renderComponent.node.position.y = offset
-                    platform.renderComponent.node.zPosition = 1
-                    platform.delegate = layerEntity.entityManagerComponent
-                    layerEntity.entityManagerComponent.addEntity(platform)
-                    layerEntity.renderComponent.addChild(platform.renderComponent.node)
-                    return platform
-                    
-                }))
-                
-                let layerEntity = RPHairLayerEntity(withParallaxFactor: 2.0, cameraComponent: levelEntity.cameraEntity.cameraComponent, zPosition: -1, pattern: pattern)
+            RPLevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> RPLayerEntity in
+
+                let layerEntity = RPHairLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraComponent, zPosition: -1)
                 layerEntity.name = "RPHairLayerEntity"
                 return layerEntity
                 
-            }, loadingHandler: { (completionHandler: () -> ()) -> Void in
-                
-                RPHairLayerEntity.loadResourcesWithCompletionHandler({
-                    completionHandler()
-                })
-                
             }),
             
-            RPLevelLayer(name: "ASD", creationHandler: { (levelEntity) -> RPLayerEntity in
+            RPLevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> RPLayerEntity in
                 
-                let layerEntity = RPTowerLayerEntity(withParallaxFactor: 2.0, cameraComponent: levelEntity.cameraEntity.cameraComponent, zPosition: -2)
+                let layerEntity = RPTowerLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraComponent, zPosition: -2)
                 layerEntity.name = "RPTowerLayerEntity"
                 return layerEntity
                 
-            }, loadingHandler: { (completionHandler: () -> ()) -> Void in
-                
-                RPTowerLayerEntity.loadResourcesWithCompletionHandler({ 
-                    completionHandler()
-                })
             }),
             
-            RPLevelLayer(name: "ASD", creationHandler: { (levelEntity) -> RPLayerEntity in
-                
-                let pattern = RPPattern(withNumberOfBeats: 2)
-                
-                pattern.beats[0] = RPBeat(withType: .NotEmpty)
-                pattern.beats[0].elements.append(RPBeatElement(withType: RPBeatElementType.LeftTreePlatform, creationHandler: {
-                    offset, layerEntity in
-                    
-                    let platform = RPLeftBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
-                    platform.renderComponent.node.position.x = 320
-                    platform.renderComponent.node.position.y = offset
-                    platform.renderComponent.node.zPosition = 1
-                    platform.delegate = layerEntity.entityManagerComponent
-                    layerEntity.entityManagerComponent.addEntity(platform)
-                    layerEntity.renderComponent.addChild(platform.renderComponent.node)
-                    return platform
-                    
-                }))
-                
-                /**/
-                
-                pattern.beats[1] = RPBeat(withType: .NotEmpty)
-                pattern.beats[1].elements.append(RPBeatElement(withType: RPBeatElementType.RightTreePlatform, creationHandler: {
-                    offset, layerEntity in
-                    
-                    let platform = RPBranchPlatformEntity(isBreakable: false, isBottomCollidable: false)
-                    platform.renderComponent.node.position.x = -320
-                    platform.renderComponent.node.position.y = offset
-                    platform.renderComponent.node.zPosition = 1
-                    platform.delegate = layerEntity.entityManagerComponent
-                    layerEntity.entityManagerComponent.addEntity(platform)
-                    layerEntity.renderComponent.addChild(platform.renderComponent.node)
-                    return platform
-                    
-                }))
-                
-                let layerEntity = RPTreeLayerEntity(withParallaxFactor: 1.5, cameraComponent: levelEntity.cameraEntity.cameraComponent, zPosition: 1, pattern: pattern)
+            RPLevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> RPLayerEntity in
+
+                let layerEntity = RPTreeLayerEntity(withParallaxFactor: 1.5, cameraComponent: cameraComponent, zPosition: 1)
                 layerEntity.name = "RPTreeLayerEntity"
                 return layerEntity
                 
-            }, loadingHandler: { (completionHandler: () -> ()) -> Void in
-                
-                RPTreeLayerEntity.loadResourcesWithCompletionHandler({ 
-                    completionHandler()
-                })
             }),
             
-            RPLevelLayer(name: "ASD", creationHandler: { (levelEntity) -> RPLayerEntity in
+            RPLevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> RPLayerEntity in
                 
-                let layerEntity = RPBackgroundLayerEntity(withParallaxFactor: 3.0, cameraComponent: levelEntity.cameraEntity.cameraComponent, zPosition: -3)
+                let layerEntity = RPBackgroundLayerEntity(withParallaxFactor: 3.0, cameraComponent: cameraComponent, zPosition: -3)
                 layerEntity.name = "RPBackgroundLayerEntity"
                 return layerEntity
                 
-            }, loadingHandler: { (completionHandler: () -> ()) -> Void in
-                
-                RPBackgroundLayerEntity.loadResourcesWithCompletionHandler({ 
-                    completionHandler()
-                })
             }),
             
-            RPLevelLayer(name: "ASD", creationHandler: { (levelEntity) -> RPLayerEntity in
+            RPLevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> RPLayerEntity in
                 
-                let layerEntity = RPFarBackgroundLayerEntity(withParallaxFactor: 8.0, cameraComponent: levelEntity.cameraEntity.cameraComponent, zPosition: -5)
+                let layerEntity = RPFarBackgroundLayerEntity(withParallaxFactor: 8.0, cameraComponent: cameraComponent, zPosition: -5)
                 layerEntity.name = "RPFarBackgroundLayerEntity"
                 return layerEntity
                 
-            }, loadingHandler: { (completionHandler: () -> ()) -> Void in
-                
-                RPFarBackgroundLayerEntity.loadResourcesWithCompletionHandler({ 
-                    completionHandler()
-                })
             })
         ]
     }

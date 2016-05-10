@@ -19,13 +19,13 @@ class RPEntityManagerComponent: GKComponent, RPPlatformEntityDelegate {
     // MARK: - Component Systems
     
     let componentSystems = [GKComponentSystem(componentClass: RPRenderComponent.self),
+                            GKComponentSystem(componentClass: RPPatternControllerComponent.self),
                             GKComponentSystem(componentClass: RPCameraComponent.self),
                             GKComponentSystem(componentClass: RPParallaxScrollingComponent.self),
                             GKComponentSystem(componentClass: RPAnimationComponent.self),
                             GKComponentSystem(componentClass: RPStateMachineComponent.self),
                             GKComponentSystem(componentClass: RPTileComponent.self),
                             GKComponentSystem(componentClass: RPLifecycleComponent.self),
-                            GKComponentSystem(componentClass: RPPatternControllerComponent.self),
                             GKComponentSystem(componentClass: RPInputComponent.self),
                             GKComponentSystem(componentClass: RPEntityManagerComponent.self)]
     

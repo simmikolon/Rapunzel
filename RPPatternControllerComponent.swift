@@ -18,7 +18,7 @@ struct RPPatternSettings {
 class RPPatternControllerComponent: GKComponent {
     
     unowned let renderComponent: RPRenderComponent
-    unowned let layerEntity: RPLayerEntity
+    unowned let entityManagerComponent: RPEntityManagerComponent
     
     var offset: CGFloat = 0
     var pattern: RPPattern
@@ -28,10 +28,10 @@ class RPPatternControllerComponent: GKComponent {
     
     private var lastScrollingDelta: CGFloat = 0
 
-    init(withLayerEntity layerEntity: RPLayerEntity, pattern: RPPattern) {
+    init(withLayerEntity layerEntity: RPLayerEntity, pattern: RPPattern, entityManagerComponent: RPEntityManagerComponent) {
         
+        self.entityManagerComponent = entityManagerComponent
         self.renderComponent = layerEntity.renderComponent
-        self.layerEntity = layerEntity
         self.pattern = pattern
         
         super.init()
@@ -46,7 +46,7 @@ class RPPatternControllerComponent: GKComponent {
         if beat.type != .Empty {
             
             for element in beat.elements {
-                element.creationHandler(offset: offset, layerEntity: layerEntity)
+                element.creationHandler(offset: offset, entityManagerComponent: entityManagerComponent)
             }
         }
         
@@ -76,7 +76,7 @@ class RPPatternControllerComponent: GKComponent {
         super.updateWithDeltaTime(seconds)
         
         let scrollingDelta = renderComponent.node.scene?.convertPoint(renderComponent.node.position, fromNode: renderComponent.node.parent!)
-    
+        
         if scrollingDelta!.y - lastScrollingDelta < -RPPatternSettings.lengthOfBeat {
             didScrollUpOneBeat()
             lastScrollingDelta = scrollingDelta!.y

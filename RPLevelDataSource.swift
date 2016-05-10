@@ -10,4 +10,5 @@ protocol RPLevelDataSource: class {
     
     func levelLayers() -> [RPLevelLayer]
     var loadableTypes: [RPResourceLoadableType.Type] { get }
+    func demoPattern() -> RPPattern
 }

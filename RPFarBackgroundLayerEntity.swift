@@ -21,7 +21,7 @@ class RPFarBackgroundLayerEntity: RPLayerEntity, RPResourceLoadableType {
     
     // MARK: Initialisation
     
-    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         

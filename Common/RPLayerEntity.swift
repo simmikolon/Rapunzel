@@ -16,29 +16,17 @@ class RPLayerEntity: RPEntity {
     let renderComponent: RPRenderComponent
     var parallaxScrollingComponent: RPParallaxScrollingComponent!
     
-    let entityManagerComponent: RPEntityManagerComponent
-    var patternControllerComponent: RPPatternControllerComponent!
-    
-    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0, pattern: RPPattern? = nil) {
+    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
         
         renderComponent = RPRenderComponent()
         renderComponent.node.zPosition = zPosition
-        
-        entityManagerComponent = RPEntityManagerComponent()
         
         super.init()
         
         parallaxFactor = factor
         parallaxScrollingComponent = RPParallaxScrollingComponent(withLayerEntity: self, cameraComponent: cameraComponent)
         
-        if let pattern = pattern {
-         
-            patternControllerComponent = RPPatternControllerComponent(withLayerEntity: self, pattern: pattern)
-            addComponent(patternControllerComponent)
-        }
-        
         addComponent(renderComponent)
         addComponent(parallaxScrollingComponent)
-        addComponent(entityManagerComponent)
     }
 }
