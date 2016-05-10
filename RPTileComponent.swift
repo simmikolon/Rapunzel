@@ -139,7 +139,7 @@ class RPTileComponent: GKComponent {
         
         for tileNode in self.tileNodes {
             
-            let absolutePosition = RPGameScene.sharedGameScene.convertPoint(tileNode.position, fromNode: tileNode.parent!)
+            let absolutePosition = renderComponent.node.scene!.convertPoint(tileNode.position, fromNode: tileNode.parent!)
             
             /* Camera is moving up */
             

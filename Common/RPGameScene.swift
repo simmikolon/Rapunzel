@@ -9,18 +9,30 @@
 import SpriteKit
 import GameplayKit
 
+struct RPGameSceneSettings {
+    static let width: CGFloat = 768
+    static let height: CGFloat = 1364
+    static let SmoothingFactor: CGFloat = 4.0
+}
+
 class RPGameScene: RPScene {
     
-    // MARK: Class Methods
+    // MARK: - Scene Managing Components
     
-    static weak var sharedGameScene: RPGameScene!
+    let entityManager = RPEntityManager()
+    let dataSource: RPLevelDataSource = RPDemoLevelDataSource()
+    let contactDelegate = RPPhysicsWorldContactDelegate()
     
-    // MARK: - State Machine
+    lazy var inputManager: RPInputManager = {
+       
+        let inputManager = RPInputManager(withEntityManager: self.entityManager)
+        return inputManager
+        
+    }()
     
     lazy var stateMachine: GKStateMachine = {
         
         return GKStateMachine(states: [
-            
             RPGameSceneInitState(withGameScene: self),
             RPGameSceneDidMoveToViewState(withGameScene: self),
             RPGameSceneResourceLoadingState(withGameScene: self),
@@ -28,31 +40,22 @@ class RPGameScene: RPScene {
             RPGameSceneCreateLevelEntityState(withGameScene: self),
             RPGameScenePlayingState(withGameScene: self),
             RPGameScenePauseState(withGameScene: self)
-            
         ])
         
     }()
     
-    // MARK: - Properties
+    lazy var patternManager: RPPatternManager = {
     
-    let entityManagerComponent = RPEntityManagerComponent()
-    let dataSource: RPLevelDataSource = RPDemoLevelDataSource()
-    let contactDelegate = RPPhysicsWorldContactDelegate()
-    
-    private var lastUpdateTimeInterval: NSTimeInterval = 0
-    private let maximumUpdateDeltaTime: NSTimeInterval = 1.0 / 60.0
-    
-    // MARK: - Initialisation
-    
-    override init(size: CGSize) {
-        super.init(size: size)
-        RPGameScene.sharedGameScene = self
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        RPGameScene.sharedGameScene = self
-    }
+        guard let playerLayerEntity = self.entityManager.entity(withName: "RPPlayerLayerEntity") as? RPLayerEntity else {
+            fatalError()
+        }
+        
+        let patternManager = RPPatternManager(withLayerEntity: playerLayerEntity,
+                                              pattern: self.dataSource.demoPattern(),
+                                              delegate: self.entityManager)
+        
+        return patternManager
+    }()
     
     // MARK: View Callbacks
     
@@ -62,12 +65,15 @@ class RPGameScene: RPScene {
     
     // MARK: - Lifecycle
     
+    private var lastUpdateTimeInterval: NSTimeInterval = 0
+    private let maximumUpdateDeltaTime: NSTimeInterval = 1.0 / 60.0
+    
     override func update(currentTime: NSTimeInterval) {
         super.update(currentTime)
         guard view != nil else { return }
         stateMachine.updateWithDeltaTime(deltaTime(currentTime))
     }
-    
+
     private func deltaTime(currentTime: NSTimeInterval) -> NSTimeInterval {
         var deltaTime = currentTime - lastUpdateTimeInterval
         deltaTime = deltaTime > maximumUpdateDeltaTime ? maximumUpdateDeltaTime : deltaTime

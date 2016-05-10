@@ -27,7 +27,7 @@ class RPParallaxScrollingComponent: GKComponent {
         
         let absoluteCameraPosition = cameraComponent.cameraNode.scene?.convertPoint(cameraComponent.cameraNode.position,
                                                                                     fromNode: cameraComponent.cameraNode.parent!)
-        let factor = RPWorldNodeSettings.SmoothingFactor + layerEntity!.parallaxFactor
+        let factor = RPGameSceneSettings.SmoothingFactor + layerEntity!.parallaxFactor
         
         /* Since Rapunzel is now a vertical-only scroller there is no need to calculate offset for the x axis anymore */
         

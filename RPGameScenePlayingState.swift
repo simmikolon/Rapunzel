@@ -13,10 +13,15 @@ class RPGameScenePlayingState: RPGameSceneState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
+        #if os(iOS)
+            gameScene.inputManager.startMotionUpdates()
+        #endif
     }
     
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
         super.updateWithDeltaTime(seconds)
-        gameScene.entityManagerComponent.updateWithDeltaTime(seconds)
+        gameScene.patternManager.update()
+        gameScene.entityManager.updateComponentSystems(withCurrentTime: seconds)
+        gameScene.entityManager.flushEntities()
     }
 }

@@ -27,7 +27,7 @@ class RPDemoLevelDataSource: RPLevelDataSource {
         RPPlayerEntity.self
     ]
     
-    func demoPattern() -> RPPattern {
+    lazy var _pattern: RPPattern = {
         
         let pattern = RPPattern(withNumberOfBeats: 2)
         
@@ -47,10 +47,10 @@ class RPDemoLevelDataSource: RPLevelDataSource {
             layerEntity.renderComponent.addChild(platform.renderComponent.node)
             return platform
             
-        })
+            })
         
         pattern.beats[0].elements.append(RPBeatElement(type: .LeftTreePlatform) { (offset, entityManagerComponent) -> RPPlatformEntity in
-
+            
             guard let layerEntity = entityManagerComponent.entity(withName: "RPTreeLayerEntity") as? RPLayerEntity else {
                 fatalError()
             }
@@ -64,7 +64,7 @@ class RPDemoLevelDataSource: RPLevelDataSource {
             layerEntity.renderComponent.addChild(platform.renderComponent.node)
             return platform
             
-        })
+            })
         
         /**/
         
@@ -84,7 +84,7 @@ class RPDemoLevelDataSource: RPLevelDataSource {
             layerEntity.renderComponent.addChild(platform.renderComponent.node)
             return platform
             
-        })
+            })
         
         pattern.beats[1].elements.append(RPBeatElement(type: .LeftTreePlatform) { (offset, entityManagerComponent) -> RPPlatformEntity in
             
@@ -101,9 +101,14 @@ class RPDemoLevelDataSource: RPLevelDataSource {
             layerEntity.renderComponent.addChild(platform.renderComponent.node)
             return platform
             
-        })
+            })
         
         return pattern
+    }()
+    
+    func demoPattern() -> RPPattern {
+        
+        return _pattern
     }
     
     init() {

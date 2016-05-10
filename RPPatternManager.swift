@@ -1,8 +1,8 @@
 //
-//  RPPatternControllerComponent.swift
+//  RPPatternControllerEntity.swift
 //  Rapunzel
 //
-//  Created by Simon Kemper on 24.04.16.
+//  Created by Simon Kemper on 10.05.16.
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
@@ -15,43 +15,56 @@ struct RPPatternSettings {
     static let lengthOfBeat: CGFloat = 300
 }
 
-class RPPatternControllerComponent: GKComponent {
+protocol RPPatternManagerDelegate: class {
     
+    func createBeatElement(beatElement: RPBeatElement, offset: CGFloat)
+}
+
+class RPPatternManager {
+
     unowned let renderComponent: RPRenderComponent
-    unowned let entityManagerComponent: RPEntityManagerComponent
+    
+    weak var delegate: RPPatternManagerDelegate?
+    weak var pattern: RPPattern?
     
     var offset: CGFloat = 0
-    var pattern: RPPattern
-    
     var upperBeat: Int = 0
     var lowerBeat: Int = 0
     
     private var lastScrollingDelta: CGFloat = 0
-
-    init(withLayerEntity layerEntity: RPLayerEntity, pattern: RPPattern, entityManagerComponent: RPEntityManagerComponent) {
+    
+    init(withLayerEntity layerEntity: RPLayerEntity, pattern: RPPattern? = nil, delegate: RPPatternManagerDelegate? = nil) {
         
-        self.entityManagerComponent = entityManagerComponent
+        self.delegate = delegate
         self.renderComponent = layerEntity.renderComponent
         self.pattern = pattern
         
-        super.init()
-        
-        createStartupPatternBeats()
+        if self.pattern != nil {
+            
+            createStartupPatternBeats()
+        }
     }
     
     func addBeat() {
         
-        let beat = pattern.beats[pattern.cursor]
-        
-        if beat.type != .Empty {
+        if let pattern = self.pattern {
             
-            for element in beat.elements {
-                element.creationHandler(offset: offset, entityManagerComponent: entityManagerComponent)
+            let beat = pattern.beats[pattern.cursor]
+            
+            if beat.type != .Empty {
+                
+                for element in beat.elements {
+                    
+                    if let delegate = self.delegate {
+                        
+                        delegate.createBeatElement(element, offset: offset)
+                    }
+                }
             }
+            
+            pattern.increaseCursor()
+            offset += RPPatternSettings.lengthOfBeat
         }
-        
-        pattern.increaseCursor()
-        offset += RPPatternSettings.lengthOfBeat
     }
     
     func createStartupPatternBeats() {
@@ -69,11 +82,10 @@ class RPPatternControllerComponent: GKComponent {
     
     func didScrollDownOneBeat() {
     }
-
+    
     // MARK: - Lifecycle
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    func update() {
         
         let scrollingDelta = renderComponent.node.scene?.convertPoint(renderComponent.node.position, fromNode: renderComponent.node.parent!)
         
@@ -81,7 +93,7 @@ class RPPatternControllerComponent: GKComponent {
             didScrollUpOneBeat()
             lastScrollingDelta = scrollingDelta!.y
         }
-        
+            
         else if scrollingDelta!.y - lastScrollingDelta > RPPatternSettings.lengthOfBeat {
             didScrollDownOneBeat()
             lastScrollingDelta = scrollingDelta!.y

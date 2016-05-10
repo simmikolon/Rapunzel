@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-class RPEntityManagerComponent: GKComponent, RPPlatformEntityDelegate {
+class RPEntityManager: RPPlatformEntityDelegate, RPPatternManagerDelegate {
     
     // MARK: - Properties
     
@@ -19,15 +19,13 @@ class RPEntityManagerComponent: GKComponent, RPPlatformEntityDelegate {
     // MARK: - Component Systems
     
     let componentSystems = [GKComponentSystem(componentClass: RPRenderComponent.self),
-                            GKComponentSystem(componentClass: RPPatternControllerComponent.self),
                             GKComponentSystem(componentClass: RPCameraComponent.self),
                             GKComponentSystem(componentClass: RPParallaxScrollingComponent.self),
                             GKComponentSystem(componentClass: RPAnimationComponent.self),
                             GKComponentSystem(componentClass: RPStateMachineComponent.self),
                             GKComponentSystem(componentClass: RPTileComponent.self),
                             GKComponentSystem(componentClass: RPLifecycleComponent.self),
-                            GKComponentSystem(componentClass: RPInputComponent.self),
-                            GKComponentSystem(componentClass: RPEntityManagerComponent.self)]
+                            GKComponentSystem(componentClass: RPInputComponent.self)]
     
     // MARK: - Entity Management
     
@@ -56,29 +54,15 @@ class RPEntityManagerComponent: GKComponent, RPPlatformEntityDelegate {
         }
     }
     
-    private func flushEntities() {
+    func flushEntities() {
         for entity in entityGarbage { removeEntity(entity) }
         entityGarbage.removeAll()
     }
     
-    // MARK: - Lifecycle
-    
-    private func updateComponentSystems(withCurrentTime time: NSTimeInterval) {
+    func updateComponentSystems(withCurrentTime time: NSTimeInterval) {
         for componentSystem in componentSystems {
             componentSystem.updateWithDeltaTime(time)
         }
-    }
-    
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
-        
-        /* Forward update into Component Systems */
-        
-        updateComponentSystems(withCurrentTime: seconds)
-        
-        /* Releasing of unused entities is done after enumeration over component systems */
-        
-        flushEntities()
     }
     
     // MARK: - Platform Entity Delegate Methods
@@ -86,4 +70,39 @@ class RPEntityManagerComponent: GKComponent, RPPlatformEntityDelegate {
     func didRemovePlatform(platform: RPPlatformEntity) {
         shouldRemoveEntity(platform)
     }
+    
+    // MARK: - RPPatternManagerDelegate
+    
+    func createBeatElement(beatElement: RPBeatElement, offset: CGFloat) {
+        
+        let _ = beatElement.creationHandler(offset: offset, entityManager: self)
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**/

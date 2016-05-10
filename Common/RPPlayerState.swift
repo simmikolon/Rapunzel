@@ -94,20 +94,20 @@ class RPPlayerState: RPState {
             /* We could avoid this and skip conversion when putting all active elements on the same parallax layer */
             /* Due to Game Design choises this is currently not the case. So we have to convert! */
             
-            let platformPosition = RPGameScene.sharedGameScene.convertPoint(platformEntity.renderComponent.node.position,
+            let platformPosition = self.entity.renderComponent.node.scene?.convertPoint(platformEntity.renderComponent.node.position,
                 fromNode: platformEntity.renderComponent.node.parent!)
             
-            var playerPosition = RPGameScene.sharedGameScene.convertPoint(self.entity.renderComponent.node.position,
+            var playerPosition = self.entity.renderComponent.node.scene?.convertPoint(self.entity.renderComponent.node.position,
                 fromNode: self.entity.renderComponent.node.parent!)
             
             /* Unfortunately the Anchor-Point is not where the players pogo-feet are so we'll have to calculate the offset */
             /* To check for "feet on ground" we have to substract half the size of the texture as an offset */
             
-            playerPosition.y -= self.entity.animationComponent.node.size.height * 0.5
+            playerPosition!.y -= self.entity.animationComponent.node.size.height * 0.5
             
             /* Now let's see if the players position is ahead of the platforms position */
             
-            if playerPosition.y > platformPosition.y {
+            if playerPosition!.y > platformPosition!.y {
                 
                 /* If that's true, it's ok to jump */
 
@@ -118,11 +118,11 @@ class RPPlayerState: RPState {
             
             /* Now we have to add size of sprite to the position as an offset to move anchoir point virtually to the head of sprite */
             
-            playerPosition.y += self.entity.animationComponent.node.size.height
+            playerPosition!.y += self.entity.animationComponent.node.size.height
             
             /* Now let's see if player is beyond platform */
                 
-            if playerPosition.y < platformPosition.y {
+            if playerPosition!.y < platformPosition!.y {
                 
                 /* And platform is bottomCollidable */
 

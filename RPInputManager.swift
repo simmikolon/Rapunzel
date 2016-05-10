@@ -6,7 +6,9 @@
 //  Copyright © 2016 Simon Kemper. All rights reserved.
 //
 
+#if os(iOS)
 import CoreMotion
+#endif
 import GameplayKit
 import SpriteKit
 
@@ -16,19 +18,17 @@ struct RPInputHandlerSettings {
     static let AccelerometerUpdateInterval = 0.1
 }
 
-class RPInputManagerEntity: RPEntity {
-
+class RPInputManager {
+#if os(iOS)
     let motionManager = CMMotionManager()
     var xAcceleration: CGFloat = 0.0
     var isStopped = true
     
-    unowned let entityManagerComponent: RPEntityManagerComponent
+    unowned let entityManager: RPEntityManager
     
-    init(withEntityManagerComponent entityManagerComponent: RPEntityManagerComponent) {
+    init(withEntityManager entityManager: RPEntityManager) {
         
-        self.entityManagerComponent = entityManagerComponent
-        super.init()
-        startMotionUpdates()
+        self.entityManager = entityManager
     }
     
     func stopMotionUpdates() {
@@ -53,7 +53,7 @@ class RPInputManagerEntity: RPEntity {
                 self.xAcceleration = (CGFloat(acceleration.x) * 0.5) + (self.xAcceleration * 0.75)
                 let xAcceleration = self.xAcceleration * RPInputHandlerSettings.AccelerationMultiplier
                 
-                for componentSystem in self.entityManagerComponent.componentSystems {
+                for componentSystem in self.entityManager.componentSystems {
                     
                     if componentSystem.componentClass == RPInputComponent.self {
                         
@@ -71,4 +71,6 @@ class RPInputManagerEntity: RPEntity {
             isStopped = false
         }
     }
+    
+    #endif
 }

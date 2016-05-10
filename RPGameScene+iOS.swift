@@ -15,7 +15,7 @@ extension RPGameScene {
 
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
-        for componentSystem in entityManagerComponent.componentSystems {
+        for componentSystem in entityManager.componentSystems {
             
             if componentSystem.componentClass == RPInputComponent.self {
          
@@ -46,7 +46,7 @@ extension RPGameScene {
             
         case 49:
             
-            for componentSystem in entityManagerComponent.componentSystems {
+            for componentSystem in entityManager.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -64,7 +64,7 @@ extension RPGameScene {
             
         case 123:
             
-            for componentSystem in entityManagerComponent.componentSystems {
+            for componentSystem in entityManager.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -82,7 +82,7 @@ extension RPGameScene {
             
         case 124:
             
-            for componentSystem in entityManagerComponent.componentSystems {
+            for componentSystem in entityManager.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -112,7 +112,7 @@ extension RPGameScene {
             
         case 123:
             
-            for componentSystem in entityManagerComponent.componentSystems {
+            for componentSystem in entityManager.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     
@@ -130,7 +130,7 @@ extension RPGameScene {
             
         case 124:
             
-            for componentSystem in entityManagerComponent.componentSystems {
+            for componentSystem in entityManager.componentSystems {
                 
                 if componentSystem.componentClass == RPInputComponent.self {
                     

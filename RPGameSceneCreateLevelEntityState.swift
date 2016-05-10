@@ -46,10 +46,10 @@ class RPGameSceneCreateLevelEntityState: RPGameSceneState {
         
         /* Statische Entities hinzufügen */
         
-        gameScene.entityManagerComponent.addEntity(levelEntity)
-        gameScene.entityManagerComponent.addEntity(playerEntity)
-        gameScene.entityManagerComponent.addEntity(cameraEntity)
-        gameScene.entityManagerComponent.addEntity(playerLayerEntity)
+        gameScene.entityManager.addEntity(levelEntity)
+        gameScene.entityManager.addEntity(playerEntity)
+        gameScene.entityManager.addEntity(cameraEntity)
+        gameScene.entityManager.addEntity(playerLayerEntity)
         
         /* Dynamische Entities hinzufügen */
         
@@ -57,23 +57,7 @@ class RPGameSceneCreateLevelEntityState: RPGameSceneState {
             
             let layerEntity = levelLayer.creationHandler(cameraEntity.cameraComponent)
             levelEntity.renderComponent.addChild(layerEntity.renderComponent.node)
-            gameScene.entityManagerComponent.addEntity(layerEntity)
+            gameScene.entityManager.addEntity(layerEntity)
         }
-        
-        /* Pattern Controller Component initialisieren */
-        
-        let patternControllerEntity = RPPatternControllerEntity(withLayerEntity: playerLayerEntity,
-                                                                pattern: gameScene.dataSource.demoPattern(),
-                                                                entityManagerComponent: gameScene.entityManagerComponent)
-        
-        patternControllerEntity.name = "RPPatternControllerEntity"
-        
-        gameScene.entityManagerComponent.addEntity(patternControllerEntity)
-        
-        /* Input Manager Entity */
-        
-        let inputManagerEntity = RPInputManagerEntity(withEntityManagerComponent: gameScene.entityManagerComponent)
-        inputManagerEntity.name = "RPInputManagerEntity"
-        gameScene.entityManagerComponent.addEntity(inputManagerEntity)
     }
 }
