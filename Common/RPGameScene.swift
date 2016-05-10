@@ -22,13 +22,14 @@ class RPGameScene: RPScene {
     let entityManager = RPEntityManager()
     let dataSource: RPLevelDataSource = RPDemoLevelDataSource()
     let contactDelegate = RPPhysicsWorldContactDelegate()
-    
+    #if os(iOS)
     lazy var inputManager: RPInputManager = {
        
         let inputManager = RPInputManager(withEntityManager: self.entityManager)
         return inputManager
         
     }()
+    #endif
     
     lazy var stateMachine: GKStateMachine = {
         
