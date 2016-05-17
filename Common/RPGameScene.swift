@@ -22,17 +22,13 @@ class RPGameScene: RPScene {
     let entityManager = RPEntityManager()
     let dataSource: RPLevelDataSource = RPDemoLevelDataSource()
     let contactDelegate = RPPhysicsWorldContactDelegate()
-    #if os(iOS)
+    
     lazy var inputManager: RPInputManager = {
-       
         let inputManager = RPInputManager(withEntityManager: self.entityManager)
         return inputManager
-        
     }()
-    #endif
     
     lazy var stateMachine: GKStateMachine = {
-        
         return GKStateMachine(states: [
             RPGameSceneInitState(withGameScene: self),
             RPGameSceneDidMoveToViewState(withGameScene: self),
@@ -42,11 +38,10 @@ class RPGameScene: RPScene {
             RPGameScenePlayingState(withGameScene: self),
             RPGameScenePauseState(withGameScene: self)
         ])
-        
     }()
     
     lazy var patternManager: RPPatternManager = {
-    
+        
         guard let playerLayerEntity = self.entityManager.entity(withName: "RPPlayerLayerEntity") as? RPLayerEntity else {
             fatalError()
         }
@@ -61,6 +56,7 @@ class RPGameScene: RPScene {
     // MARK: View Callbacks
     
     override func didMoveToView(view: SKView) {
+        super.didMoveToView(view)
         stateMachine.enterState(RPGameSceneDidMoveToViewState.self)
     }
     

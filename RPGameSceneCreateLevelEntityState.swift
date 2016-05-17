@@ -30,6 +30,8 @@ class RPGameSceneCreateLevelEntityState: RPGameSceneState {
         playerEntity.renderComponent.node.position = CGPoint(x: 0, y: 150)
         playerEntity.name = "RPPlayerEntity"
         
+        gameScene.inputManager.inputSource.delegate = playerEntity.inputComponent
+        
         /* Camera Entity erstellen und Hinzufügen */
         
         let cameraEntity = RPCameraEntity(withFocusedNode: playerEntity.renderComponent.node)

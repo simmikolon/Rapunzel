@@ -15,61 +15,56 @@
 
 import GameplayKit
 
-protocol RPInputComponentDelegate: class {
+class RPInputComponent: GKComponent, RPInputSourceDelegate {
     
-    func didTap()
-    func didChangeMotion(xAcceleration: CGFloat)
-    func keyLeftDown()
-    func keyLeftUp()
-    func keyRightDown()
-    func keyRightUp()
-}
-
-protocol ControllableEntity {
-    
-}
-
-class RPInputComponent: GKComponent {
-    
-    weak var delegate: RPInputComponentDelegate?
-    
-    override init() {
-        super.init()
-    }
-    
-    init(delegate: RPInputComponentDelegate) {
+    var stateMachineComponent: RPStateMachineComponent {
         
-        super.init()
-        self.delegate = delegate
+        guard let stateMachineComponent = entity?.componentForClass(RPStateMachineComponent.self) else {
+            fatalError()
+        }
+        
+        return stateMachineComponent
     }
     
-    func didChangeMotion(xAcceleration: CGFloat) {
+    var renderComponent: RPRenderComponent {
         
-        self.delegate?.didChangeMotion(xAcceleration)
-    }
-
-    func touchesBegan() {
-
-        delegate?.didTap()
-    }
-    
-    func keyLeftDown() {
+        guard let renderComponent = entity?.componentForClass(RPRenderComponent.self) else {
+            fatalError()
+        }
         
-        delegate?.keyLeftDown()
+        return renderComponent
     }
     
-    func keyRightDown() {
+    var physicsComponent: RPPhysicsComponent {
         
-        delegate?.keyRightDown()
+        guard let physicsComponent = entity?.componentForClass(RPGravityPhysicsComponent.self) else {
+            fatalError()
+        }
+        
+        return physicsComponent
     }
     
-    func keyLeftUp() {
+    var xAcceleration: CGFloat = 0.0
+    var displacement: CGFloat = 0.0
+    
+    func inputSource(inputSource: RPInputSource, didUpdateDisplacement: float2) {
         
-        delegate?.keyLeftUp()
+        self.displacement = CGFloat(didUpdateDisplacement.x)
     }
     
-    func keyRightUp() {
+    func inputSourceDidBeginUsingSpecialPower(inputSource: RPInputSource) {
         
-        delegate?.keyRightUp()
+        self.stateMachineComponent.stateMachine.enterState(RPPlayerBoostState.self)
+    }
+    
+    func inputSourceDidEndUsingSpecialPower(inputSource: RPInputSource) {}
+    func inputSourceDidBeginAttack(inputSource: RPInputSource) {}
+    func inputSourceDidEndAttack(inputSource: RPInputSource) {}
+    
+    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+        super.updateWithDeltaTime(seconds)
+        self.xAcceleration = (CGFloat(displacement) * 0.5) + (self.xAcceleration * 0.75)
+        let xAcceleration = self.xAcceleration * RPInputHandlerSettings.AccelerationMultiplier
+        physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)
     }
 }

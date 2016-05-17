@@ -25,7 +25,7 @@ class RPPatternManager {
     unowned let renderComponent: RPRenderComponent
     
     weak var delegate: RPPatternManagerDelegate?
-    weak var pattern: RPPattern?
+    weak var pattern: RPPattern? 
     
     var offset: CGFloat = 0
     var upperBeat: Int = 0

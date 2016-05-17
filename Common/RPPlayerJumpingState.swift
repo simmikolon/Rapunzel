@@ -18,7 +18,7 @@ class RPPlayerJumpingState: RPPlayerState {
         super.didEnterWithPreviousState(previousState)
 
         self.entity.physicsComponent.physicsBody.collisionBitMask = RPColliderType.PlayerBot.collisionMask
-        self.entity.physicsComponent.physicsBody.velocity = CGVectorMake(self.entity.physicsComponent.physicsBody.velocity.dx, 1500.0)
+        self.entity.physicsComponent.physicsBody.velocity = CGVectorMake(self.entity.physicsComponent.physicsBody.velocity.dx, 1900.0)
 
         entity.animationComponent.requestedAnimation = RPPlayerAnimationName.JumpUp.rawValue
     }

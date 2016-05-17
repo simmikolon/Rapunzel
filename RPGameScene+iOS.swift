@@ -10,6 +10,10 @@ import SpriteKit
 import GameplayKit
 
 extension RPGameScene {
+    
+    var keyboardInputSource: RPKeyboardInputSource {
+        return inputManager.inputSource as! RPKeyboardInputSource
+    }
 
     #if os(iOS)
 
@@ -40,114 +44,21 @@ extension RPGameScene {
     
     #else
     
-    override func keyDown(theEvent: NSEvent) {
+    override func keyDown(event: NSEvent) {
         
-        switch theEvent.keyCode {
-            
-        case 49:
-            
-            for componentSystem in entityManager.componentSystems {
-                
-                if componentSystem.componentClass == RPInputComponent.self {
-                    
-                    for component: GKComponent in componentSystem.components {
-                        
-                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
-                            
-                            inputComponent.touchesBegan()
-                        }
-                    }
-                }
-            }
-            
-            break
-            
-        case 123:
-            
-            for componentSystem in entityManager.componentSystems {
-                
-                if componentSystem.componentClass == RPInputComponent.self {
-                    
-                    for component: GKComponent in componentSystem.components {
-                        
-                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
-                            
-                            inputComponent.keyLeftDown()
-                        }
-                    }
-                }
-            }
-            
-            break
-            
-        case 124:
-            
-            for componentSystem in entityManager.componentSystems {
-                
-                if componentSystem.componentClass == RPInputComponent.self {
-                    
-                    for component: GKComponent in componentSystem.components {
-                        
-                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
-                            
-                            inputComponent.keyRightDown()
-                        }
-                    }
-                    
-                }
-            }
-            
-
-            break
-            
-        default:
-            break
+        guard let characters = event.charactersIgnoringModifiers?.characters else { return }
+        
+        for character in characters {
+            keyboardInputSource.handleKeyDownForCharacter(character)
         }
-
     }
     
-    override func keyUp(theEvent: NSEvent) {
+    override func keyUp(event: NSEvent) {
         
-        switch theEvent.keyCode {
-            
-        case 123:
-            
-            for componentSystem in entityManager.componentSystems {
-                
-                if componentSystem.componentClass == RPInputComponent.self {
-                    
-                    for component: GKComponent in componentSystem.components {
-                        
-                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
-                            
-                            inputComponent.keyLeftUp()
-                        }
-                    }
-                }
-            }
-            
-            break
-            
-        case 124:
-            
-            for componentSystem in entityManager.componentSystems {
-                
-                if componentSystem.componentClass == RPInputComponent.self {
-                    
-                    for component: GKComponent in componentSystem.components {
-                        
-                        if let inputComponent: RPInputComponent = component as? RPInputComponent {
-                            
-                            inputComponent.keyRightUp()
-                        }
-                    }
-                }
-            }
-            
-            break
-            
-        default:
-            break
+        guard let characters = event.charactersIgnoringModifiers?.characters else { return }
+        
+        for character in characters {
+            keyboardInputSource.handleKeyUpForCharacter(character)
         }
     }
     

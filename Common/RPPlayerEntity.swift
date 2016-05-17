@@ -30,7 +30,7 @@ enum RPPlayerAnimationName: String {
     ]
 }
 
-class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, RPInputComponentDelegate, RPPlayerStateDelegate {
+class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, RPPlayerStateDelegate {
     
     static var textureSize = CGSize(width: 104, height: 232)
     static var animations: [String: RPAnimation]!
@@ -89,8 +89,6 @@ class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, R
         renderComponent.node.physicsBody = physicsComponent.physicsBody
         
         /* Input Component */
-        
-        inputComponent.delegate = self;
 
         addComponent(physicsComponent)
         addComponent(renderComponent)
@@ -109,7 +107,7 @@ class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, R
     
     func didChangeMotion(xAcceleration: CGFloat) {
 
-        physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)
+        //physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)
     }
     
     /**/
@@ -178,7 +176,7 @@ extension RPPlayerEntity {
             
             animations = [:]
             
-            for var i = 0; i < atlases.count; ++i {
+            for i in 0 ..< atlases.count {
                 
                 animations[RPPlayerAnimationName.atlasNames[i]] = RPAnimationComponent.animationsFromAtlas(atlases[i])
             }

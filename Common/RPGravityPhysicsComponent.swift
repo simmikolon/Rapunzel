@@ -9,11 +9,13 @@
 import SpriteKit
 import GameplayKit
 
-class RPGravityPhysicsComponent: GKComponent {
+class RPGravityPhysicsComponent: RPPhysicsComponent {
 
-    var physicsBody: SKPhysicsBody
+    // var physicsBody: SKPhysicsBody
     
-    init(physicsBody: SKPhysicsBody, colliderType: RPColliderType) {
+    override init(physicsBody: SKPhysicsBody, colliderType: RPColliderType) {
+        
+        super.init(physicsBody: physicsBody, colliderType: colliderType)
         
         self.physicsBody = physicsBody
         self.physicsBody.affectedByGravity = true
