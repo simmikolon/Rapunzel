@@ -1,5 +1,5 @@
 //
-//  RPPlatformNormalState.swift
+//  PlatformNormalState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,11 +9,11 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlatformNormalState: RPPlatformState {
+class PlatformNormalState: PlatformState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-        entity.animationComponent.requestedAnimation = RPPlatformAnimationName.Normal.rawValue
+        entity.animationComponent.requestedAnimation = PlatformAnimationName.Normal.rawValue
     }
     
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
@@ -24,7 +24,7 @@ class RPPlatformNormalState: RPPlatformState {
         
         switch stateClass {
             
-            case is RPPlatformNormalState.Type:
+            case is PlatformNormalState.Type:
                 return false
             
             default:
@@ -39,7 +39,7 @@ class RPPlatformNormalState: RPPlatformState {
     
     override func contactWithEntityDidBegin(entity: GKEntity) {
         
-        guard let renderComponent = entity.componentForClass(RPRenderComponent) else {
+        guard let renderComponent = entity.componentForClass(RenderComponent) else {
             fatalError("Collided node has no RenderComponent!")
         }
         
@@ -49,28 +49,28 @@ class RPPlatformNormalState: RPPlatformState {
             
             if self.entity.breakable {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(RPPlatformBreakingState)
+                self.entity.stateMachineComponent.stateMachine.enterState(PlatformBreakingState)
                 
             } else {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(RPPlatformBottomHitState)
+                self.entity.stateMachineComponent.stateMachine.enterState(PlatformBottomHitState)
             }
             
         } else if (!bottomCollision) {
             
             if self.entity.breakable {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(RPPlatformBreakingState)
+                self.entity.stateMachineComponent.stateMachine.enterState(PlatformBreakingState)
                 
             } else {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(RPPlatformJumpingOnState)
+                self.entity.stateMachineComponent.stateMachine.enterState(PlatformJumpingOnState)
             }
         }
     }
     
     override func contactWithEntityDidEnd(entity: GKEntity) {
         
-        //self.entity.stateMachineComponent.stateMachine.enterState(RPDebugPlatformJumpingOffState)
+        //self.entity.stateMachineComponent.stateMachine.enterState(DebugPlatformJumpingOffState)
     }
 }

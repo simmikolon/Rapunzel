@@ -16,19 +16,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var window: NSWindow!
     @IBOutlet weak var skView: SKView!
     
+    var sceneManager: SceneManager!
+    
     func applicationDidFinishLaunching(aNotification: NSNotification) {
+
+        let keyboardInputSource = KeyboardInputSource()
+        let inputManager = InputManager(nativeControlInputSource: keyboardInputSource)
         
-        let screenSize = CGSize(width: 768, height: 1364)
-        let gameScene = RPGameScene(size: screenSize)
-        
-        skView.showsFPS = true
-        skView.showsNodeCount = true
-        skView.ignoresSiblingOrder = true
-        
-        gameScene.scaleMode = .AspectFit
-        gameScene.setup()
-        
-        skView.presentScene(gameScene)
+        sceneManager = SceneManager(presentingView: skView, inputManager: inputManager)
+        sceneManager.transitionToSceneWithSceneIdentifier(.Home)
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(sender: NSApplication) -> Bool {

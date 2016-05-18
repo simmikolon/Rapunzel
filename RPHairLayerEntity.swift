@@ -1,5 +1,5 @@
 //
-//  RPHairLayerEntity.swift
+//  HairLayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 25.02.16.
@@ -9,31 +9,31 @@
 import SpriteKit
 import GameplayKit
 
-class RPHairLayerEntity: RPLayerEntity, RPResourceLoadableType {
+class HairLayerEntity: LayerEntity, ResourceLoadableType {
     
     static var tileSize = CGSize(width: 1364, height: 192)
     static var atlas: SKTextureAtlas!
-    static var tileSet: RPTileSet!
+    static var tileSet: TileSet!
     
     // MARK: Components
     
-    var tileComponent: RPTileComponent!
+    var tileComponent: TileComponent!
     
     // MARK: Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: CameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         
-        self.tileComponent = RPTileComponent(withEntity: self, tileSet: RPHairLayerEntity.tileSet, offset: 250.0)
+        self.tileComponent = TileComponent(withEntity: self, tileSet: HairLayerEntity.tileSet, offset: 250.0)
         
         addComponent(self.tileComponent)
         
-        self.name = "RPHairLayerEntity"
+        self.name = "HairLayerEntity"
     }
 }
 
-extension RPHairLayerEntity {
+extension HairLayerEntity {
     
     static var resourcesNeedLoading: Bool {
         return atlas == nil
@@ -44,7 +44,7 @@ extension RPHairLayerEntity {
         atlas = SKTextureAtlas(named: "RPHairLayer")
         atlas.preloadWithCompletionHandler { () -> Void in
             
-            tileSet = RPTileComponent.tileSetFromAtlas(atlas)
+            tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()
         }
     }

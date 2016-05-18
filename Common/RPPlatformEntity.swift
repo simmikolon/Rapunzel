@@ -1,5 +1,5 @@
 //
-//  RPPlatformEntity.swift
+//  PlatformEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 27.01.16.
@@ -10,32 +10,32 @@
 import GameplayKit
 import SpriteKit
 
-enum RPPlatformAnimationName: String {
+enum PlatformAnimationName: String {
     
-    case Normal = "RPPlatformNormal"
-    case JumpingOn = "RPPlatformJumpingOn"
-    case JumpingOff = "RPPlatformJumpingOff"
-    case BottomHit = "RPPlatformBottomHit"
+    case Normal = "PlatformNormal"
+    case JumpingOn = "PlatformJumpingOn"
+    case JumpingOff = "PlatformJumpingOff"
+    case BottomHit = "PlatformBottomHit"
 }
 
-protocol RPPlatformEntityDelegate: class {
-    func didRemovePlatform(platform: RPPlatformEntity)
+protocol PlatformEntityDelegate: class {
+    func didRemovePlatform(platform: PlatformEntity)
 }
 
-class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDelegate {
+class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate {
     
     static var textureSize = CGSize(width: 444, height: 132)
     
     /* Our Delegate who needs to know whenever a Platform Entity has left the screen */
     
-    weak var delegate: RPPlatformEntityDelegate?
+    weak var delegate: PlatformEntityDelegate?
     
     // MARK: Components
     
-    let renderComponent: RPRenderComponent
-    let physicsComponent: RPPhysicsComponent
-    var stateMachineComponent: RPStateMachineComponent!
-    let animationComponent: RPAnimationComponent
+    let renderComponent: RenderComponent
+    let physicsComponent: PhysicsComponent
+    var stateMachineComponent: StateMachineComponent!
+    let animationComponent: AnimationComponent
     
     // MARK: Platform Configuration Variables
     
@@ -44,7 +44,7 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
     
     // MARK: Initialisation
     
-    init(isBreakable breakable: Bool = false, isBottomCollidable bottomCollidable: Bool = false, animations: [String: RPAnimation]) {
+    init(isBreakable breakable: Bool = false, isBottomCollidable bottomCollidable: Bool = false, animations: [String: Animation]) {
         
         /* Platform Configuration */
         
@@ -53,16 +53,16 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
         
         /* Create Render Component */
         
-        renderComponent = RPRenderComponent()
+        renderComponent = RenderComponent()
 
         /* Chose Collider Type based on self.bottomCollidable & create Physics Component */
         
-        let colliderType: RPColliderType = (self.bottomCollidable) ? .BottomCollidablePlatform : .NormalPlatform
-        physicsComponent = RPPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 444, height: 132)), colliderType: colliderType)
+        let colliderType: ColliderType = (self.bottomCollidable) ? .BottomCollidablePlatform : .NormalPlatform
+        physicsComponent = PhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 444, height: 132)), colliderType: colliderType)
         
         /* Create Animation Component and take over the animations from self.init( . . .) */
         
-        animationComponent = RPAnimationComponent(textureSize: RPPlatformEntity.textureSize, animations: animations)
+        animationComponent = AnimationComponent(textureSize: PlatformEntity.textureSize, animations: animations)
         
         /* Add the Animation Components Node to the Render Components Node */
         
@@ -85,23 +85,23 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
         
         /* Set the initial Animation */
         
-        animationComponent.requestedAnimation = RPPlatformAnimationName.Normal.rawValue
+        animationComponent.requestedAnimation = PlatformAnimationName.Normal.rawValue
         
         /* Initialization of the default classes State Machine Component and GKState Subclasses  */
         /* We need to carry over self into our State Machine Component so we need to Initialize this after calling super.init() */
-        /* Since .stateMachineComponent being an optional we can Subclass RPPlatformEntity and assign a different State Machine */
+        /* Since .stateMachineComponent being an optional we can Subclass PlatformEntity and assign a different State Machine */
         /* Doing this we can define individual States for individual Subclasses. */
         /* Assigning has to be done in Subclass and will override defaulted forcing defaulted to be released */
         
-        stateMachineComponent = RPStateMachineComponent(states: [
+        stateMachineComponent = StateMachineComponent(states: [
             
             /* Creation of GKSate Subclasses for this Entity */
             
-            RPPlatformNormalState(entity: self),
-            RPPlatformJumpingOnState(entity: self),
-            RPPlatformJumpingOffState(entity: self),
-            RPPlatformBottomHitState(entity: self),
-            RPPlatformBreakingState(entity: self)
+            PlatformNormalState(entity: self),
+            PlatformJumpingOnState(entity: self),
+            PlatformJumpingOffState(entity: self),
+            PlatformBottomHitState(entity: self),
+            PlatformBreakingState(entity: self)
             
             ])
         
@@ -118,7 +118,7 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
         
         /* Lifecycle Component */
         
-        let lifecycleComponent = RPLifecycleComponent(withEntity: self, delegate: self)
+        let lifecycleComponent = LifecycleComponent(withEntity: self, delegate: self)
         addComponent(lifecycleComponent)
     }
     
@@ -136,10 +136,10 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
         
         /* Remove all Components assigned to this Entity */
         
-        //self.removeComponentForClass(RPRenderComponent)
-        //self.removeComponentForClass(RPPhysicsComponent)
-        //self.removeComponentForClass(RPAnimationComponent)
-        //self.removeComponentForClass(RPStateMachineComponent)
+        //self.removeComponentForClass(RenderComponent)
+        //self.removeComponentForClass(PhysicsComponent)
+        //self.removeComponentForClass(AnimationComponent)
+        //self.removeComponentForClass(StateMachineComponent)
         
         /* Inform Delegate that this Entity has just left */
         
@@ -156,7 +156,7 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
         print("Deinitialization: \(self.dynamicType)")
     }
     
-    // MARK: - RPLifecycleComponent
+    // MARK: - LifecycleComponent
     
     func nodeDidExitScreen(node node: SKNode) {
         
@@ -164,7 +164,7 @@ class RPPlatformEntity: RPEntity, ContactNotifiableType, RPLifecycleComponentDel
     }
 }
 
-extension RPPlatformEntity {
+extension PlatformEntity {
     
     /* Forwarding Collision Even into State Machine Component */
     

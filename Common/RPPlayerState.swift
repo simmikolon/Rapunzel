@@ -1,5 +1,5 @@
 //
-//  RPPlayerState.swift
+//  PlayerState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 30.01.16.
@@ -9,22 +9,22 @@
 import SpriteKit
 import GameplayKit
 
-protocol RPPlayerStateDelegate: class {
+protocol PlayerStateDelegate: class {
     
     func playerDidFallDown()
 }
 
-class RPPlayerState: RPState {
+class PlayerState: State {
     
-    static var allowedStates = [RPPlayerState:[RPPlayerState]]()
+    static var allowedStates = [PlayerState:[PlayerState]]()
     var elapsedTime: NSTimeInterval = 0.0
     
-    weak var delegate: RPPlayerStateDelegate!
-    unowned var entity: RPPlayerEntity
+    weak var delegate: PlayerStateDelegate!
+    unowned var entity: PlayerEntity
     
     // MARK: Initializers
     
-    required init(entity: RPPlayerEntity, delegate: RPPlayerStateDelegate) {
+    required init(entity: PlayerEntity, delegate: PlayerStateDelegate) {
         self.entity = entity
         self.delegate = delegate
     }
@@ -36,15 +36,15 @@ class RPPlayerState: RPState {
     
     private func checkIfPlayerIsFallingDown() {
         if self.entity.physicsComponent.physicsBody.velocity.dy < 0 {
-            self.entity.stateMachineComponent.stateMachine.enterState(RPPlayerFallingState.self)
+            self.entity.stateMachineComponent.stateMachine.enterState(PlayerFallingState.self)
         }
     }
     
     private func checkIfPlayerIsOutOfScreen() {
-        if entity.renderComponent.node.position.x <= -RPGameSceneSettings.width/2 {
-            entity.renderComponent.node.position.x = RPGameSceneSettings.width/2
-        } else if entity.renderComponent.node.position.x >= RPGameSceneSettings.width/2 {
-            entity.renderComponent.node.position.x = -RPGameSceneSettings.width/2
+        if entity.renderComponent.node.position.x <= -GameSceneSettings.width/2 {
+            entity.renderComponent.node.position.x = GameSceneSettings.width/2
+        } else if entity.renderComponent.node.position.x >= GameSceneSettings.width/2 {
+            entity.renderComponent.node.position.x = -GameSceneSettings.width/2
         }
     }
     
@@ -85,9 +85,9 @@ class RPPlayerState: RPState {
 
         /* We'll have to find out if the platform is under the princes feet */
         
-        if entity is RPPlatformEntity {
+        if entity is PlatformEntity {
             
-            let platformEntity = entity as! RPPlatformEntity
+            let platformEntity = entity as! PlatformEntity
             
             /* Due to parallaxing we have to convert positions in to absolute screen positions */
             /* If we would take the coordinates without conversion the parallaxing would lead to wrong coordinates */
@@ -111,7 +111,7 @@ class RPPlayerState: RPState {
                 
                 /* If that's true, it's ok to jump */
 
-                self.stateMachine?.enterState(RPPlayerBouncingDownState.self)
+                self.stateMachine?.enterState(PlayerBouncingDownState.self)
             }
                 
             /* In case the player is beyond a platform */
@@ -130,7 +130,7 @@ class RPPlayerState: RPState {
                     
                     /* Switch State to bottom collision */
 
-                    self.stateMachine?.enterState(RPPlayerBottomCollisionState.self)
+                    self.stateMachine?.enterState(PlayerBottomCollisionState.self)
                 }
             }
         }

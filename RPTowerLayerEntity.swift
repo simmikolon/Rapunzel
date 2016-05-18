@@ -1,5 +1,5 @@
 //
-//  RPTowerLayerEntity.swift
+//  TowerLayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 24.02.16.
@@ -9,31 +9,31 @@
 import SpriteKit
 import GameplayKit
 
-class RPTowerLayerEntity: RPLayerEntity, RPResourceLoadableType {
+class TowerLayerEntity: LayerEntity, ResourceLoadableType {
     
     static var tileSize = CGSize(width: 1364, height: 192)
     static var atlas: SKTextureAtlas!
-    static var tileSet: RPTileSet!
+    static var tileSet: TileSet!
     
     // MARK: Components
     
-    var tileComponent: RPTileComponent!
+    var tileComponent: TileComponent!
     
     // MARK: Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: CameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         
-        self.tileComponent = RPTileComponent(withEntity: self, tileSet: RPTowerLayerEntity.tileSet)
+        self.tileComponent = TileComponent(withEntity: self, tileSet: TowerLayerEntity.tileSet)
         
         addComponent(self.tileComponent)
         
-        self.name = "RPTowerLayerEntity"
+        self.name = "TowerLayerEntity"
     }
 }
 
-extension RPTowerLayerEntity {
+extension TowerLayerEntity {
     
     static var resourcesNeedLoading: Bool {
         return atlas == nil
@@ -44,7 +44,7 @@ extension RPTowerLayerEntity {
         atlas = SKTextureAtlas(named: "RPTowerLayer")
         atlas.preloadWithCompletionHandler { () -> Void in
 
-            tileSet = RPTileComponent.tileSetFromAtlas(atlas)
+            tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()
         }
     }

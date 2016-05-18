@@ -1,5 +1,5 @@
 //
-//  RPHairRibbonPlatformEntity.swift
+//  HairRibbonPlatformEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 25.02.16.
@@ -9,7 +9,7 @@
 import GameplayKit
 import SpriteKit
 
-enum RPHairRibbonPlatformAnimationName: String {
+enum HairRibbonPlatformAnimationName: String {
     
     case Normal = "RPHairRibbonNormal"
     case JumpingOn = "RPHairRibbonJumpingOn"
@@ -25,13 +25,13 @@ enum RPHairRibbonPlatformAnimationName: String {
     ]
 }
 
-class RPHairRibbonPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
+class HairRibbonPlatformEntity: PlatformEntity, ResourceLoadableType {
     
-    static var animations: [String: RPAnimation]!
+    static var animations: [String: Animation]!
     
     init(isBreakable breakable: Bool, isBottomCollidable bottomCollidable: Bool) {
         
-        guard let animations = RPHairRibbonPlatformEntity.animations else {
+        guard let animations = HairRibbonPlatformEntity.animations else {
             fatalError()
         }
         
@@ -41,14 +41,14 @@ class RPHairRibbonPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
         
         self.animationComponent.node.size = CGSize(width: 128, height: 76)
         
-        let colliderType: RPColliderType = (self.bottomCollidable) ? .BottomCollidablePlatform : .NormalPlatform
-        let physicsComponent = RPPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 100, height: 32)), colliderType: colliderType)
+        let colliderType: ColliderType = (self.bottomCollidable) ? .BottomCollidablePlatform : .NormalPlatform
+        let physicsComponent = PhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 100, height: 32)), colliderType: colliderType)
         self.addComponent(physicsComponent)
         self.renderComponent.node.physicsBody = physicsComponent.physicsBody
     }
 }
 
-extension RPHairRibbonPlatformEntity {
+extension HairRibbonPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
         return animations == nil
@@ -56,16 +56,16 @@ extension RPHairRibbonPlatformEntity {
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
         
-        SKTextureAtlas.preloadTextureAtlasesNamed(RPHairRibbonPlatformAnimationName.atlasNames) { error, atlases in
+        SKTextureAtlas.preloadTextureAtlasesNamed(HairRibbonPlatformAnimationName.atlasNames) { error, atlases in
             
             if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
             
             animations = [:]
             
-            animations[RPPlatformAnimationName.Normal.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[0])
-            animations[RPPlatformAnimationName.JumpingOn.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[1])
-            animations[RPPlatformAnimationName.JumpingOff.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[2])
-            animations[RPPlatformAnimationName.BottomHit.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[3])
+            animations[PlatformAnimationName.Normal.rawValue] = AnimationComponent.animationsFromAtlas(atlases[0])
+            animations[PlatformAnimationName.JumpingOn.rawValue] = AnimationComponent.animationsFromAtlas(atlases[1])
+            animations[PlatformAnimationName.JumpingOff.rawValue] = AnimationComponent.animationsFromAtlas(atlases[2])
+            animations[PlatformAnimationName.BottomHit.rawValue] = AnimationComponent.animationsFromAtlas(atlases[3])
             
             completionHandler()
         }

@@ -1,5 +1,5 @@
 //
-//  RPPlatformJumpingOnState.swift
+//  PlatformJumpingOnState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,11 +9,11 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlatformJumpingOnState: RPPlatformState {
+class PlatformJumpingOnState: PlatformState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-        entity.animationComponent.requestedAnimation = RPPlatformAnimationName.JumpingOn.rawValue
+        entity.animationComponent.requestedAnimation = PlatformAnimationName.JumpingOn.rawValue
     }
     
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
@@ -21,7 +21,7 @@ class RPPlatformJumpingOnState: RPPlatformState {
         
         if elapsedTime >= 0.15 {
             
-            entity.stateMachineComponent.stateMachine.enterState(RPPlatformNormalState)
+            entity.stateMachineComponent.stateMachine.enterState(PlatformNormalState)
         }
     }
     
@@ -35,11 +35,11 @@ class RPPlatformJumpingOnState: RPPlatformState {
     
     override func contactWithEntityDidBegin(entity: GKEntity) {
         
-        self.entity.stateMachineComponent.stateMachine.enterState(RPPlatformJumpingOnState)
+        self.entity.stateMachineComponent.stateMachine.enterState(PlatformJumpingOnState)
     }
     
     override func contactWithEntityDidEnd(entity: GKEntity) {
         
-        //self.entity.stateMachineComponent.stateMachine.enterState(RPDebugPlatformJumpingOffState)
+        //self.entity.stateMachineComponent.stateMachine.enterState(DebugPlatformJumpingOffState)
     }
 }

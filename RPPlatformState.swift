@@ -1,5 +1,5 @@
 //
-//  RPPlatformState.swift
+//  PlatformState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,15 +9,15 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlatformState: RPState {
+class PlatformState: State {
 
     var elapsedTime: NSTimeInterval = 0.0
     
-    unowned var entity: RPPlatformEntity
+    unowned var entity: PlatformEntity
     
     // MARK: Initializers
     
-    required init(entity: RPPlatformEntity) {
+    required init(entity: PlatformEntity) {
         
         self.entity = entity
     }

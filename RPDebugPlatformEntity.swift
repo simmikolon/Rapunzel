@@ -1,5 +1,5 @@
 //
-//  RPDebugPlatformEntity.swift
+//  DebugPlatformEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,12 +9,12 @@
 import GameplayKit
 import SpriteKit
 
-enum RPDebugPlatformAnimationName: String {
+enum DebugPlatformAnimationName: String {
     
-    case Normal = "RPDebugPlatformNormal"
-    case JumpingOn = "RPDebugPlatformJumpingOn"
-    case JumpingOff = "RPDebugPlatformJumpingOff"
-    case BottomHit = "RPDebugPlatformBottomHit"
+    case Normal = "DebugPlatformNormal"
+    case JumpingOn = "DebugPlatformJumpingOn"
+    case JumpingOff = "DebugPlatformJumpingOff"
+    case BottomHit = "DebugPlatformBottomHit"
     
     static let atlasNames = [
         
@@ -25,13 +25,13 @@ enum RPDebugPlatformAnimationName: String {
     ]
 }
 
-class RPDebugPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
+class DebugPlatformEntity: PlatformEntity, ResourceLoadableType {
     
-    static var animations: [String: RPAnimation]!
+    static var animations: [String: Animation]!
     
     init(isBreakable breakable: Bool, isBottomCollidable bottomCollidable: Bool) {
         
-        guard let animations = RPDebugPlatformEntity.animations else {
+        guard let animations = DebugPlatformEntity.animations else {
             fatalError()
         }
         
@@ -39,7 +39,7 @@ class RPDebugPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
     }
 }
 
-extension RPDebugPlatformEntity {
+extension DebugPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
         return true
@@ -47,16 +47,16 @@ extension RPDebugPlatformEntity {
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
         
-        SKTextureAtlas.preloadTextureAtlasesNamed(RPDebugPlatformAnimationName.atlasNames) { error, atlases in
+        SKTextureAtlas.preloadTextureAtlasesNamed(DebugPlatformAnimationName.atlasNames) { error, atlases in
             
             if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
             
             animations = [:]
             
-            animations[RPPlatformAnimationName.Normal.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[0])
-            animations[RPPlatformAnimationName.JumpingOn.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[1])
-            animations[RPPlatformAnimationName.JumpingOff.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[2])
-            animations[RPPlatformAnimationName.BottomHit.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[3])
+            animations[PlatformAnimationName.Normal.rawValue] = AnimationComponent.animationsFromAtlas(atlases[0])
+            animations[PlatformAnimationName.JumpingOn.rawValue] = AnimationComponent.animationsFromAtlas(atlases[1])
+            animations[PlatformAnimationName.JumpingOff.rawValue] = AnimationComponent.animationsFromAtlas(atlases[2])
+            animations[PlatformAnimationName.BottomHit.rawValue] = AnimationComponent.animationsFromAtlas(atlases[3])
             
             completionHandler()
         }

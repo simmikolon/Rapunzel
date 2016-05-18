@@ -1,5 +1,5 @@
 //
-//  RPPlatformJumpingOffState.swift
+//  PlatformJumpingOffState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlatformJumpingOffState: RPPlatformState {
+class PlatformJumpingOffState: PlatformState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
@@ -20,7 +20,7 @@ class RPPlatformJumpingOffState: RPPlatformState {
         
         if elapsedTime >= 0.5 {
             
-            entity.stateMachineComponent.stateMachine.enterState(RPPlatformNormalState)
+            entity.stateMachineComponent.stateMachine.enterState(PlatformNormalState)
         }
     }
     

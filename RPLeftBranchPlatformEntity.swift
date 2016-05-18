@@ -1,5 +1,5 @@
 //
-//  RPLeftBranchPlatformEntity.swift
+//  LeftBranchPlatformEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 03.03.16.
@@ -9,7 +9,7 @@
 import GameplayKit
 import SpriteKit
 
-enum RPLeftBranchPlatformAnimationName: String {
+enum LeftBranchPlatformAnimationName: String {
     
     case Normal = "RPBranchPlatformLeftNormal"
     case JumpingOn = "RPBranchPlatformLeftJumpingOn"
@@ -25,24 +25,24 @@ enum RPLeftBranchPlatformAnimationName: String {
     ]
 }
 
-class RPLeftBranchPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
+class LeftBranchPlatformEntity: PlatformEntity, ResourceLoadableType {
     
-    static var animations: [String: RPAnimation]!
+    static var animations: [String: Animation]!
     
     init(isBreakable breakable: Bool, isBottomCollidable bottomCollidable: Bool) {
         
-        guard let animations = RPLeftBranchPlatformEntity.animations else {
+        guard let animations = LeftBranchPlatformEntity.animations else {
             fatalError()
         }
         
         super.init(isBreakable: breakable, isBottomCollidable: bottomCollidable, animations: animations)
         
-        //let debugComponent = RPDebugOutputComponent(withEntity: self, andName: "RPBranchPlatform")
+        //let debugComponent = DebugOutputComponent(withEntity: self, andName: "BranchPlatform")
         //self.addComponent(debugComponent)
     }
 }
 
-extension RPLeftBranchPlatformEntity {
+extension LeftBranchPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
         return animations == nil
@@ -50,16 +50,16 @@ extension RPLeftBranchPlatformEntity {
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
         
-        SKTextureAtlas.preloadTextureAtlasesNamed(RPLeftBranchPlatformAnimationName.atlasNames) { error, atlases in
+        SKTextureAtlas.preloadTextureAtlasesNamed(LeftBranchPlatformAnimationName.atlasNames) { error, atlases in
             
             if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
             
             animations = [:]
             
-            animations[RPPlatformAnimationName.Normal.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[0])
-            animations[RPPlatformAnimationName.JumpingOn.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[1])
-            animations[RPPlatformAnimationName.JumpingOff.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[2])
-            animations[RPPlatformAnimationName.BottomHit.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[3])
+            animations[PlatformAnimationName.Normal.rawValue] = AnimationComponent.animationsFromAtlas(atlases[0])
+            animations[PlatformAnimationName.JumpingOn.rawValue] = AnimationComponent.animationsFromAtlas(atlases[1])
+            animations[PlatformAnimationName.JumpingOff.rawValue] = AnimationComponent.animationsFromAtlas(atlases[2])
+            animations[PlatformAnimationName.BottomHit.rawValue] = AnimationComponent.animationsFromAtlas(atlases[3])
             
             completionHandler()
         }

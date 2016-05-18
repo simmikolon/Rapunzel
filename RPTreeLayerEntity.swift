@@ -1,5 +1,5 @@
 //
-//  RPTreeLayerEntity.swift
+//  TreeLayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 24.02.16.
@@ -9,39 +9,39 @@
 import SpriteKit
 import GameplayKit
 
-enum RPTreePlatformPosition: CGFloat {
+enum TreePlatformPosition: CGFloat {
     
     case Left = -320
     case Right = 320
 }
 
-class RPTreeLayerEntity: RPLayerEntity, RPResourceLoadableType {
+class TreeLayerEntity: LayerEntity, ResourceLoadableType {
     
     static var tileSize = CGSize(width: 1364, height: 192)
     static var tileAtlas: SKTextureAtlas!
-    static var tileSet: RPTileSet!
+    static var tileSet: TileSet!
     
     // MARK: - Components
     
-    var tileComponent: RPTileComponent {
-        guard let tileComponent = componentForClass(RPTileComponent) else { fatalError() }
+    var tileComponent: TileComponent {
+        guard let tileComponent = componentForClass(TileComponent) else { fatalError() }
         return tileComponent
     }
     
     // MARK: - Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: CameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         
-        let tileComponent = RPTileComponent(withEntity: self, tileSet: RPTreeLayerEntity.tileSet)
+        let tileComponent = TileComponent(withEntity: self, tileSet: TreeLayerEntity.tileSet)
         addComponent(tileComponent)
 
-        self.name = "RPTreeLayerEntity"
+        self.name = "TreeLayerEntity"
     }
 }
 
-extension RPTreeLayerEntity {
+extension TreeLayerEntity {
     
     static var resourcesNeedLoading: Bool {
         return tileAtlas == nil
@@ -52,7 +52,7 @@ extension RPTreeLayerEntity {
         tileAtlas = SKTextureAtlas(named: "RPTreeLayer")
         tileAtlas.preloadWithCompletionHandler { () -> Void in
             
-            tileSet = RPTileComponent.tileSetFromAtlas(tileAtlas)
+            tileSet = TileComponent.tileSetFromAtlas(tileAtlas)
             completionHandler()
         }
     }

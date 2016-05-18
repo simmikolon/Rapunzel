@@ -1,5 +1,5 @@
 //
-//  RPSKView.swift
+//  SKView.swift
 //  RapunzelSwift
 //
 //  Created by Simon Kemper on 13.11.15.

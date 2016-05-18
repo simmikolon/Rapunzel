@@ -1,5 +1,5 @@
 //
-//  RPPlatformBottomHitState.swift
+//  PlatformBottomHitState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,11 +9,11 @@
 import GameplayKit
 import SpriteKit
 
-class RPPlatformBottomHitState: RPPlatformState {
+class PlatformBottomHitState: PlatformState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-        self.entity.animationComponent.requestedAnimation = RPPlatformAnimationName.BottomHit.rawValue
+        self.entity.animationComponent.requestedAnimation = PlatformAnimationName.BottomHit.rawValue
     }
     
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
@@ -21,7 +21,7 @@ class RPPlatformBottomHitState: RPPlatformState {
         
         if elapsedTime >= 0.25 {
             
-            entity.stateMachineComponent.stateMachine.enterState(RPPlatformNormalState)
+            entity.stateMachineComponent.stateMachine.enterState(PlatformNormalState)
         }
     }
     

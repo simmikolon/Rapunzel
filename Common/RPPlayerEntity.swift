@@ -1,5 +1,5 @@
 //
-//  RPPlayerEntity.swift
+//  PlayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 25.01.16.
@@ -10,7 +10,7 @@
 import SpriteKit
 import GameplayKit
 
-enum RPPlayerAnimationName: String {
+enum PlayerAnimationName: String {
 
     case BounceDown = "RPPlayerBounceDown"
     case BounceUp = "RPPlayerBounceUp"
@@ -30,20 +30,20 @@ enum RPPlayerAnimationName: String {
     ]
 }
 
-class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, RPPlayerStateDelegate {
+class PlayerEntity: Entity, ContactNotifiableType, ResourceLoadableType, PlayerStateDelegate {
     
     static var textureSize = CGSize(width: 104, height: 232)
-    static var animations: [String: RPAnimation]!
+    static var animations: [String: Animation]!
     
-    weak var playerStateDelegate: RPPlayerStateDelegate?
+    weak var playerStateDelegate: PlayerStateDelegate?
     
     // MARK: Components
     
-    let renderComponent: RPRenderComponent
-    let physicsComponent: RPGravityPhysicsComponent
-    let inputComponent: RPInputComponent
-    var stateMachineComponent: RPStateMachineComponent!
-    let animationComponent: RPAnimationComponent
+    let renderComponent: RenderComponent
+    let physicsComponent: GravityPhysicsComponent
+    let inputComponent: InputComponent
+    var stateMachineComponent: StateMachineComponent!
+    let animationComponent: AnimationComponent
     
     // MARK: Initialisation
     
@@ -51,16 +51,16 @@ class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, R
         
         /* Component Initialisation before super.init() */
         
-        physicsComponent = RPGravityPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 30, height: 232)), colliderType: .PlayerBot)
-        renderComponent = RPRenderComponent()
-        inputComponent = RPInputComponent()
+        physicsComponent = GravityPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 30, height: 232)), colliderType: .PlayerBot)
+        renderComponent = RenderComponent()
+        inputComponent = InputComponent()
         
         /* Animation Component */
         
-        guard let animations = RPPlayerEntity.animations else { fatalError() }
+        guard let animations = PlayerEntity.animations else { fatalError() }
         
-        animationComponent = RPAnimationComponent(textureSize: RPPlayerEntity.textureSize, animations: animations)
-        animationComponent.requestedAnimation = RPPlayerAnimationName.Standing.rawValue
+        animationComponent = AnimationComponent(textureSize: PlayerEntity.textureSize, animations: animations)
+        animationComponent.requestedAnimation = PlayerAnimationName.Standing.rawValue
         
         renderComponent.addChild(animationComponent.node)
         
@@ -68,15 +68,15 @@ class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, R
         
         /* State Machine */
         
-        stateMachineComponent = RPStateMachineComponent(states: [
+        stateMachineComponent = StateMachineComponent(states: [
             
-            RPPlayerStandingState(entity: self, delegate: self),
-            RPPlayerFallingState(entity: self, delegate: self),
-            RPPlayerBouncingDownState(entity: self, delegate: self),
-            RPPlayerBouncingUpState(entity: self, delegate: self),
-            RPPlayerJumpingState(entity: self, delegate: self),
-            RPPlayerBoostState(entity: self, delegate: self),
-            RPPlayerBottomCollisionState(entity: self, delegate: self)
+            PlayerStandingState(entity: self, delegate: self),
+            PlayerFallingState(entity: self, delegate: self),
+            PlayerBouncingDownState(entity: self, delegate: self),
+            PlayerBouncingUpState(entity: self, delegate: self),
+            PlayerJumpingState(entity: self, delegate: self),
+            PlayerBoostState(entity: self, delegate: self),
+            PlayerBottomCollisionState(entity: self, delegate: self)
             
             ])
         
@@ -102,7 +102,7 @@ class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, R
     
     func didTap() {
         
-        self.stateMachineComponent.stateMachine.enterState(RPPlayerBoostState.self)
+        self.stateMachineComponent.stateMachine.enterState(PlayerBoostState.self)
     }
     
     func didChangeMotion(xAcceleration: CGFloat) {
@@ -149,7 +149,7 @@ class RPPlayerEntity: RPEntity, ContactNotifiableType, RPResourceLoadableType, R
     }
 }
 
-extension RPPlayerEntity {
+extension PlayerEntity {
     
     func contactWithEntityDidBegin(entity: GKEntity) {
         
@@ -162,7 +162,7 @@ extension RPPlayerEntity {
     }
 }
 
-extension RPPlayerEntity {
+extension PlayerEntity {
     
     static var resourcesNeedLoading: Bool {
         return animations == nil
@@ -170,7 +170,7 @@ extension RPPlayerEntity {
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
         
-        SKTextureAtlas.preloadTextureAtlasesNamed(RPPlayerAnimationName.atlasNames) { error, atlases in
+        SKTextureAtlas.preloadTextureAtlasesNamed(PlayerAnimationName.atlasNames) { error, atlases in
             
             if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
             
@@ -178,7 +178,7 @@ extension RPPlayerEntity {
             
             for i in 0 ..< atlases.count {
                 
-                animations[RPPlayerAnimationName.atlasNames[i]] = RPAnimationComponent.animationsFromAtlas(atlases[i])
+                animations[PlayerAnimationName.atlasNames[i]] = AnimationComponent.animationsFromAtlas(atlases[i])
             }
             
             completionHandler()

@@ -1,5 +1,5 @@
 //
-//  RPRamp.swift
+//  Ramp.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 17.05.16.
@@ -8,13 +8,13 @@
 
 import Foundation
 
-protocol RPRampDelegate: class {
-    func ramp(ramp: RPRamp, didChangeRampFactor rampFactor: Float)
+protocol RampDelegate: class {
+    func ramp(ramp: Ramp, didChangeRampFactor rampFactor: Float)
 }
 
-class RPRamp {
+class Ramp {
     
-    weak var delegate: RPRampDelegate?
+    weak var delegate: RampDelegate?
     
     private var rampTimer: NSTimer?
     private var rampFactor: Float = 0.0

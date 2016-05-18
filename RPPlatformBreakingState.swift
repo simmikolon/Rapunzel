@@ -1,5 +1,5 @@
 //
-//  RPPlatformBreakingState.swift
+//  PlatformBreakingState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 02.02.16.
@@ -9,7 +9,7 @@
 import GameplayKit
 import SpriteKit
 
-class RPPlatformBreakingState: RPPlatformState {
+class PlatformBreakingState: PlatformState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)

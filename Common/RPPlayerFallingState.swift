@@ -1,5 +1,5 @@
 //
-//  RPPlayerFallingState.swift
+//  PlayerFallingState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 30.01.16.
@@ -9,16 +9,16 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlayerFallingState: RPPlayerState {
+class PlayerFallingState: PlayerState {
 
     // MARK: GKState Life Cycle
     
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-        if (previousState is RPPlayerJumpingState) || (previousState is RPPlayerBoostState) {
-            self.entity.physicsComponent.physicsBody.collisionBitMask = RPColliderType.PlayerBot.collisionMask
+        if (previousState is PlayerJumpingState) || (previousState is PlayerBoostState) {
+            self.entity.physicsComponent.physicsBody.collisionBitMask = ColliderType.PlayerBot.collisionMask
         }
-        entity.animationComponent.requestedAnimation = RPPlayerAnimationName.FallingDown.rawValue
+        entity.animationComponent.requestedAnimation = PlayerAnimationName.FallingDown.rawValue
     }
     
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
@@ -34,7 +34,7 @@ class RPPlayerFallingState: RPPlayerState {
     
     override func isValidNextState(stateClass: AnyClass) -> Bool {
         switch stateClass {
-        case is RPPlayerBoostState.Type, is RPPlayerBouncingDownState.Type, is RPPlayerBottomCollisionState.Type:
+        case is PlayerBoostState.Type, is PlayerBouncingDownState.Type, is PlayerBottomCollisionState.Type:
             return true
         default:
             return false

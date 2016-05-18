@@ -1,5 +1,5 @@
 //
-//  RPLayerEntity.swift
+//  LayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 26.01.16.
@@ -10,21 +10,21 @@
 import GameplayKit
 import SpriteKit
 
-class RPLayerEntity: RPEntity {
+class LayerEntity: Entity {
 
     var parallaxFactor: CGFloat = 1.0
-    let renderComponent: RPRenderComponent
-    var parallaxScrollingComponent: RPParallaxScrollingComponent!
+    let renderComponent: RenderComponent
+    var parallaxScrollingComponent: ParallaxScrollingComponent!
     
-    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: CameraComponent, zPosition: CGFloat = 0.0) {
         
-        renderComponent = RPRenderComponent()
+        renderComponent = RenderComponent()
         renderComponent.node.zPosition = zPosition
         
         super.init()
         
         parallaxFactor = factor
-        parallaxScrollingComponent = RPParallaxScrollingComponent(withLayerEntity: self, cameraComponent: cameraComponent)
+        parallaxScrollingComponent = ParallaxScrollingComponent(withLayerEntity: self, cameraComponent: cameraComponent)
         
         addComponent(renderComponent)
         addComponent(parallaxScrollingComponent)

@@ -1,5 +1,5 @@
 //
-//  RPPlayerBouncingDownState.swift
+//  PlayerBouncingDownState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 30.01.16.
@@ -9,11 +9,11 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlayerBouncingDownState: RPPlayerState {
+class PlayerBouncingDownState: PlayerState {
 
     override func didEnterWithPreviousState(previousState: GKState?) {
         super.didEnterWithPreviousState(previousState)
-        entity.animationComponent.requestedAnimation = RPPlayerAnimationName.BounceDown.rawValue
+        entity.animationComponent.requestedAnimation = PlayerAnimationName.BounceDown.rawValue
     }
     
     override func updateWithDeltaTime(seconds: NSTimeInterval) {
@@ -22,14 +22,14 @@ class RPPlayerBouncingDownState: RPPlayerState {
         // Debug:
         
         if elapsedTime >= 0.01 {
-            self.stateMachine?.enterState(RPPlayerJumpingState.self)
+            self.stateMachine?.enterState(PlayerJumpingState.self)
         }
     }
     
     override func isValidNextState(stateClass: AnyClass) -> Bool {
         
         switch stateClass {
-        case is RPPlayerBoostState.Type, is RPPlayerJumpingState.Type, is RPPlayerBottomCollisionState.Type:
+        case is PlayerBoostState.Type, is PlayerJumpingState.Type, is PlayerBottomCollisionState.Type:
             return true
         default:
             return false

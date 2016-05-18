@@ -1,5 +1,5 @@
 //
-//  RPCameraLayer.swift
+//  CameraLayer.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 31.01.16.
@@ -9,21 +9,15 @@
 import SpriteKit
 import GameplayKit
 
-class RPCameraLayerEntity: RPLayerEntity {
+class CameraLayerEntity: LayerEntity {
 
-    let cameraComponent: RPCameraComponent
+    let cameraComponent: CameraComponent
     
-    init(withParallaxFactor factor: CGFloat = 1.0, focusedNode node: RPNode) {
-        cameraComponent = RPCameraComponent(focusedNode: node)
+    init(withParallaxFactor factor: CGFloat = 1.0, focusedNode node: Node) {
+        cameraComponent = CameraComponent(focusedNode: node)
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent)
         addComponent(cameraComponent)
         self.renderComponent.addChild(cameraComponent.cameraNode)
-        self.name = "RPCameraLayerEntity"
+        self.name = "CameraLayerEntity"
     }
-    
-    /*
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
-        print("CAMERA: \(parallaxFactor) Position: \(renderComponent.node.position.y)")
-    }*/
 }

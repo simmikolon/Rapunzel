@@ -1,5 +1,5 @@
 //
-//  RPActionLayer.swift
+//  ActionLayer.swift
 //  RapunzelSwift
 //
 //  Created by Simon Kemper on 17.11.15.
@@ -9,11 +9,11 @@
 import SpriteKit
 import GameplayKit
 
-class RPActionLayerEntity: RPLayerEntity {
+class ActionLayerEntity: LayerEntity {
     /*
-    var patternControllerComponent: RPPatternControllerComponent {
+    var patternControllerComponent: PatternControllerComponent {
         
-        guard let patternControllerComponent = self.componentForClass(RPPatternControllerComponent) else { fatalError() }
+        guard let patternControllerComponent = self.componentForClass(PatternControllerComponent) else { fatalError() }
         return patternControllerComponent
     }
     */

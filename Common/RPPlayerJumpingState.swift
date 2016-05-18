@@ -1,5 +1,5 @@
 //
-//  RPPlayerJumpingState.swift
+//  PlayerJumpingState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 30.01.16.
@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-class RPPlayerJumpingState: RPPlayerState {
+class PlayerJumpingState: PlayerState {
     
     // MARK: GKState Life Cycle
     
@@ -17,21 +17,21 @@ class RPPlayerJumpingState: RPPlayerState {
         
         super.didEnterWithPreviousState(previousState)
 
-        self.entity.physicsComponent.physicsBody.collisionBitMask = RPColliderType.PlayerBot.collisionMask
-        self.entity.physicsComponent.physicsBody.velocity = CGVectorMake(self.entity.physicsComponent.physicsBody.velocity.dx, 1900.0)
+        self.entity.physicsComponent.physicsBody.collisionBitMask = ColliderType.PlayerBot.collisionMask
+        self.entity.physicsComponent.physicsBody.velocity = CGVectorMake(self.entity.physicsComponent.physicsBody.velocity.dx, 1750.0)
 
-        entity.animationComponent.requestedAnimation = RPPlayerAnimationName.JumpUp.rawValue
+        entity.animationComponent.requestedAnimation = PlayerAnimationName.JumpUp.rawValue
     }
     
     override func isValidNextState(stateClass: AnyClass) -> Bool {
         
-        if stateClass is RPPlayerBoostState.Type {
+        if stateClass is PlayerBoostState.Type {
             return true
         }
-        if stateClass is RPPlayerFallingState.Type {
+        if stateClass is PlayerFallingState.Type {
             return true
         }
-        if stateClass is RPPlayerBottomCollisionState.Type {
+        if stateClass is PlayerBottomCollisionState.Type {
             return true
         }
         

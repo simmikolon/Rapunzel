@@ -1,5 +1,5 @@
 //
-//  RPBranchPlatformEntity.swift
+//  BranchPlatformEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 03.03.16.
@@ -9,7 +9,7 @@
 import GameplayKit
 import SpriteKit
 
-enum RPBranchPlatformAnimationName: String {
+enum BranchPlatformAnimationName: String {
     
     case Normal = "RPBranchPlatformNormal"
     case JumpingOn = "RPBranchPlatformJumpingOn"
@@ -25,13 +25,13 @@ enum RPBranchPlatformAnimationName: String {
     ]
 }
 
-class RPBranchPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
+class BranchPlatformEntity: PlatformEntity, ResourceLoadableType {
     
-    static var animations: [String: RPAnimation]!
+    static var animations: [String: Animation]!
     
     init(isBreakable breakable: Bool, isBottomCollidable bottomCollidable: Bool) {
         
-        guard let animations = RPBranchPlatformEntity.animations else {
+        guard let animations = BranchPlatformEntity.animations else {
             fatalError()
         }
         
@@ -39,7 +39,7 @@ class RPBranchPlatformEntity: RPPlatformEntity, RPResourceLoadableType {
     }
 }
 
-extension RPBranchPlatformEntity {
+extension BranchPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
         return animations == nil
@@ -47,16 +47,16 @@ extension RPBranchPlatformEntity {
     
     static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
         
-        SKTextureAtlas.preloadTextureAtlasesNamed(RPBranchPlatformAnimationName.atlasNames) { error, atlases in
+        SKTextureAtlas.preloadTextureAtlasesNamed(BranchPlatformAnimationName.atlasNames) { error, atlases in
             
             if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
             
             animations = [:]
             
-            animations[RPPlatformAnimationName.Normal.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[0])
-            animations[RPPlatformAnimationName.JumpingOn.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[1])
-            animations[RPPlatformAnimationName.JumpingOff.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[2])
-            animations[RPPlatformAnimationName.BottomHit.rawValue] = RPAnimationComponent.animationsFromAtlas(atlases[3])
+            animations[PlatformAnimationName.Normal.rawValue] = AnimationComponent.animationsFromAtlas(atlases[0])
+            animations[PlatformAnimationName.JumpingOn.rawValue] = AnimationComponent.animationsFromAtlas(atlases[1])
+            animations[PlatformAnimationName.JumpingOff.rawValue] = AnimationComponent.animationsFromAtlas(atlases[2])
+            animations[PlatformAnimationName.BottomHit.rawValue] = AnimationComponent.animationsFromAtlas(atlases[3])
             
             completionHandler()
         }

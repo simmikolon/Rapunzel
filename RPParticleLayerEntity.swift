@@ -1,5 +1,5 @@
 //
-//  RPParticleLayerEntity.swift
+//  ParticleLayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 25.02.16.
@@ -10,7 +10,7 @@
 import SpriteKit
 import GameplayKit
 
-class RPParticleLayerEntity: RPLayerEntity {
+class ParticleLayerEntity: LayerEntity {
     
     var columnOffset = CGFloat(0.0)
     var rowOffset = CGFloat(0.0)
@@ -20,13 +20,13 @@ class RPParticleLayerEntity: RPLayerEntity {
     var maxAlpha: CGFloat = 1.0
     var particleSize: CGFloat = 25.0
     
-    init(withParallaxFactor factor: CGFloat, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0, numberOfColumns: Int, numberOfRows: Int, damping: CGFloat = 15.0) {
+    init(withParallaxFactor factor: CGFloat, cameraComponent: CameraComponent, zPosition: CGFloat = 0.0, numberOfColumns: Int, numberOfRows: Int, damping: CGFloat = 15.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         self.damping = damping
         populate(numberOfColumns: numberOfColumns, numberOfRows: numberOfRows)
         
-        self.name = "RPParticleLayerEntity"
+        self.name = "ParticleLayerEntity"
     }
     
     func random(firstNum: CGFloat, max secondNum: CGFloat) -> CGFloat {
@@ -35,8 +35,8 @@ class RPParticleLayerEntity: RPLayerEntity {
     
     func populate(numberOfColumns numColumns: Int, numberOfRows numRows: Int) {
         
-        columnOffset = RPGameSceneSettings.width / CGFloat(numColumns)
-        rowOffset = RPGameSceneSettings.height / CGFloat(numRows)
+        columnOffset = GameSceneSettings.width / CGFloat(numColumns)
+        rowOffset = GameSceneSettings.height / CGFloat(numRows)
         
         for var column = 0; column < numColumns; ++column {
             
@@ -48,7 +48,7 @@ class RPParticleLayerEntity: RPLayerEntity {
                 xPos = random(xPos, max: xPos + columnOffset)
                 yPos = random(yPos, max: yPos + rowOffset)
                 
-                let particle = RPParticleSpriteNode(color: SKColor.greenColor(), size: CGSize(width: particleSize, height: particleSize))
+                let particle = ParticleSpriteNode(color: SKColor.greenColor(), size: CGSize(width: particleSize, height: particleSize))
                 
                 particle.damping = damping
                 particle.minAlpha = minAlpha
@@ -72,7 +72,7 @@ class RPParticleLayerEntity: RPLayerEntity {
         for node: SKNode in renderComponent.node.children {
             
             let positionInScene = renderComponent.node.scene!.convertPoint(node.position, fromNode: node.parent!)
-            let particleNode = node as! RPParticleSpriteNode
+            let particleNode = node as! ParticleSpriteNode
             
             node.physicsBody?.applyForce(CGVector(dx: 0.5, dy: 0.0))
             
@@ -86,7 +86,7 @@ class RPParticleLayerEntity: RPLayerEntity {
                 particleNode.position = CGPoint(x: xPos, y: yPos)
             }
             
-            if positionInScene.y > RPGameSceneSettings.height {
+            if positionInScene.y > GameSceneSettings.height {
                 
                 var xPos = columnOffset * CGFloat(particleNode.column)
                 xPos -= 682

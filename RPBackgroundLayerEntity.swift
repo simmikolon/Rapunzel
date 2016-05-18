@@ -1,5 +1,5 @@
 //
-//  RPBackgroundLayerEntity.swift
+//  BackgroundLayerEntity.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 24.02.16.
@@ -9,31 +9,31 @@
 import SpriteKit
 import GameplayKit
 
-class RPBackgroundLayerEntity: RPLayerEntity, RPResourceLoadableType {
+class BackgroundLayerEntity: LayerEntity, ResourceLoadableType {
     
     static var tileSize = CGSize(width: 1364, height: 192)
     static var atlas: SKTextureAtlas!
-    static var tileSet: RPTileSet!
+    static var tileSet: TileSet!
     
     // MARK: Components
     
-    var tileComponent: RPTileComponent!
+    var tileComponent: TileComponent!
     
     // MARK: Initialisation
     
-    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: RPCameraComponent, zPosition: CGFloat = 0.0) {
+    override init(withParallaxFactor factor: CGFloat = 1.0, cameraComponent: CameraComponent, zPosition: CGFloat = 0.0) {
         
         super.init(withParallaxFactor: factor, cameraComponent: cameraComponent, zPosition: zPosition)
         
-        self.tileComponent = RPTileComponent(withEntity: self, tileSet: RPBackgroundLayerEntity.tileSet)
+        self.tileComponent = TileComponent(withEntity: self, tileSet: BackgroundLayerEntity.tileSet)
         
         addComponent(self.tileComponent)
         
-        self.name = "RPBackgroundLayerEntity"
+        self.name = "BackgroundLayerEntity"
     }
 }
 
-extension RPBackgroundLayerEntity {
+extension BackgroundLayerEntity {
     
     static var resourcesNeedLoading: Bool {
         return atlas == nil
@@ -44,7 +44,7 @@ extension RPBackgroundLayerEntity {
         atlas = SKTextureAtlas(named: "RPBackgroundLayer")
         atlas.preloadWithCompletionHandler { () -> Void in
             
-            tileSet = RPTileComponent.tileSetFromAtlas(atlas)
+            tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()
         }
     }

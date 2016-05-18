@@ -13,13 +13,13 @@ class LoadResourcesOperation: Operation, NSProgressReporting {
     // MARK: Properties
     
     /// A class that conforms to the `ResourceLoadableType` protocol.
-    let loadableType: RPResourceLoadableType.Type
+    let loadableType: ResourceLoadableType.Type
     
     let progress: NSProgress
     
     // MARK: Initialization
     
-    init(loadableType: RPResourceLoadableType.Type) {
+    init(loadableType: ResourceLoadableType.Type) {
         self.loadableType = loadableType
         
         progress = NSProgress(totalUnitCount: 1)

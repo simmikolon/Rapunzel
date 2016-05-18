@@ -1,5 +1,5 @@
 //
-//  RPPlayerStandingState.swift
+//  PlayerStandingState.swift
 //  Rapunzel
 //
 //  Created by Simon Kemper on 30.01.16.
@@ -8,7 +8,7 @@
 
 import GameplayKit
 
-class RPPlayerStandingState: RPPlayerState {
+class PlayerStandingState: PlayerState {
 
     // MARK: GKState Life Cycle
     
@@ -18,10 +18,10 @@ class RPPlayerStandingState: RPPlayerState {
     }
     
     override func isValidNextState(stateClass: AnyClass) -> Bool {
-        if stateClass is RPPlayerBoostState.Type {
+        if stateClass is PlayerBoostState.Type {
             return true
         }
-        if stateClass is RPPlayerJumpingState.Type {
+        if stateClass is PlayerJumpingState.Type {
             return true
         }
         
