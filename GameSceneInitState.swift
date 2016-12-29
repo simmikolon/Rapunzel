@@ -12,8 +12,8 @@ class GameSceneInitState: GameSceneState {
 
     // MARK: - Lifecycle
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
-        gameScene.stateMachine.enterState(GameSceneResourceLoadingState.self)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
+        gameScene.stateMachine.enter(GameSceneResourceLoadingState.self)
     }
 }

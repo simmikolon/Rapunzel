@@ -21,16 +21,22 @@ class DebugOutputComponent: GKComponent {
         
         /* We could also guard that assignment to make sure the entity has a physics component */
         
-        guard let renderComponent = entity.componentForClass(RenderComponent) else {
+        guard let renderComponent = entity.component(ofType: RenderComponent.self) else {
             fatalError("Entity has no Physics Component!")
         }
         
         self.renderComponent = renderComponent
         self.name = name
+        
+        super.init()
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         
         print("\(self.name): \(self.renderComponent.node.position.y) Gravity: \(self.renderComponent.node.physicsBody?.velocity.dy)")
     }

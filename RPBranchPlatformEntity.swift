@@ -36,6 +36,12 @@ class BranchPlatformEntity: PlatformEntity, ResourceLoadableType {
         }
         
         super.init(isBreakable: breakable, isBottomCollidable: bottomCollidable, animations: animations)
+        
+        animationComponent.requestedAnimation = PlatformAnimationName.Normal.rawValue
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -45,7 +51,7 @@ extension BranchPlatformEntity {
         return animations == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         SKTextureAtlas.preloadTextureAtlasesNamed(BranchPlatformAnimationName.atlasNames) { error, atlases in
             

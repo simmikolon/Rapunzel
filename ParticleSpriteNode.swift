@@ -8,7 +8,7 @@
 
 import SpriteKit
 
-func randomBetweenNumbers(firstNum: CGFloat, secondNum: CGFloat) -> CGFloat{
+func randomBetweenNumbers(_ firstNum: CGFloat, secondNum: CGFloat) -> CGFloat{
     return CGFloat(arc4random()) / CGFloat(UINT32_MAX) * abs(firstNum - secondNum) + min(firstNum, secondNum)
 }
 
@@ -22,7 +22,7 @@ class ParticleSpriteNode: SpriteNode {
     
     override func setup() {
         
-        let body = SKPhysicsBody(rectangleOfSize: CGSize(width: 2.5, height: 2.5))
+        let body = SKPhysicsBody(rectangleOf: CGSize(width: 2.5, height: 2.5))
         body.affectedByGravity = true
         body.mass = 0.001
         body.linearDamping = damping
@@ -39,20 +39,20 @@ class ParticleSpriteNode: SpriteNode {
     func startBlink() {
         
         let durationInterval = randomBetweenNumbers(0.0, secondNum: 5.0)
-        let durationAction = SKAction.waitForDuration(NSTimeInterval(durationInterval))
+        let durationAction = SKAction.wait(forDuration: TimeInterval(durationInterval))
         
-        let fadeMinAction = SKAction.fadeAlphaTo(minAlpha, duration: 0.75)
-        let fadeMaxAction = SKAction.fadeAlphaTo(maxAlpha, duration: 0.75)
+        let fadeMinAction = SKAction.fadeAlpha(to: minAlpha, duration: 0.75)
+        let fadeMaxAction = SKAction.fadeAlpha(to: maxAlpha, duration: 0.75)
         
-        fadeMinAction.timingMode = SKActionTimingMode.EaseOut
-        fadeMaxAction.timingMode = SKActionTimingMode.EaseIn
+        fadeMinAction.timingMode = SKActionTimingMode.easeOut
+        fadeMaxAction.timingMode = SKActionTimingMode.easeIn
         
         let sequenceAction = SKAction.sequence([fadeMinAction, fadeMaxAction])
-        let repeatAction = SKAction.repeatActionForever(sequenceAction)
+        let repeatAction = SKAction.repeatForever(sequenceAction)
         
-        runAction(durationAction) { () -> Void in
+        run(durationAction, completion: { () -> Void in
             
-            self.runAction(repeatAction)
-        }
+            self.run(repeatAction)
+        }) 
     }
 }

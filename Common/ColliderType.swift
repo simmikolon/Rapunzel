@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-struct ColliderType: OptionSetType, Hashable, CustomDebugStringConvertible {
+struct ColliderType: OptionSet, Hashable, CustomDebugStringConvertible {
     // MARK: Static properties
     
     /// A dictionary to specify which `ColliderType`s should be notified of contacts with other `ColliderType`s.
@@ -29,7 +29,8 @@ struct ColliderType: OptionSetType, Hashable, CustomDebugStringConvertible {
     static var TaskBot: ColliderType   { return self.init(rawValue: 1 << 2) }
     static var BottomCollidablePlatform: ColliderType   { return self.init(rawValue: 1 << 3) }
     static var NormalPlatform: ColliderType { return self.init(rawValue: 1 << 4) }
-
+    static var CollectableEntity: ColliderType { return self.init(rawValue: 1 << 5) }
+    
     // MARK: Hashable
     
     var hashValue: Int {
@@ -89,7 +90,7 @@ struct ColliderType: OptionSetType, Hashable, CustomDebugStringConvertible {
         Returns `true` if the `ContactNotifiableType` associated with this `ColliderType` should be
         notified of contact with the passed `ColliderType`.
     */
-    func notifyOnContactWithColliderType(colliderType: ColliderType) -> Bool {
+    func notifyOnContactWithColliderType(_ colliderType: ColliderType) -> Bool {
         if let requestedContacts = ColliderType.requestedContactNotifications[self] {
             return requestedContacts.contains(colliderType)
         }

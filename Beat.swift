@@ -7,8 +7,8 @@
 //
 
 enum BeatType {
-    case Empty
-    case NotEmpty
+    case empty
+    case notEmpty
 }
 
 struct Beat {
@@ -16,7 +16,7 @@ struct Beat {
     var elements: [BeatElement]
     let type: BeatType
     
-    init(withType type: BeatType = .Empty) {
+    init(withType type: BeatType = .empty) {
         
         elements = []
         self.type = type

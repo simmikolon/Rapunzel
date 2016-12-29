@@ -11,9 +11,10 @@ import GameplayKit
 
 class Node: SKNode {
     
-    weak var entity: GKEntity!
+    /* Apple has adapted this in SpriteKit */
+    //weak var entity: GKEntity!
 
     func setup() {
-        
+      
     }
 }

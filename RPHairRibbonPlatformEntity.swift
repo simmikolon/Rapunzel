@@ -42,9 +42,13 @@ class HairRibbonPlatformEntity: PlatformEntity, ResourceLoadableType {
         self.animationComponent.node.size = CGSize(width: 128, height: 76)
         
         let colliderType: ColliderType = (self.bottomCollidable) ? .BottomCollidablePlatform : .NormalPlatform
-        let physicsComponent = PhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 100, height: 32)), colliderType: colliderType)
+        let physicsComponent = PhysicsComponent(physicsBody: SKPhysicsBody(rectangleOf: CGSize(width: 100, height: 32)), colliderType: colliderType)
         self.addComponent(physicsComponent)
         self.renderComponent.node.physicsBody = physicsComponent.physicsBody
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -54,7 +58,7 @@ extension HairRibbonPlatformEntity {
         return animations == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         SKTextureAtlas.preloadTextureAtlasesNamed(HairRibbonPlatformAnimationName.atlasNames) { error, atlases in
             

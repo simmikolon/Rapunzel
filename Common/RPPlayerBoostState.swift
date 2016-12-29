@@ -11,16 +11,16 @@ import GameplayKit
 
 class PlayerBoostState: PlayerState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
+    override func didEnter(from previousState: GKState?) {
         
-        super.didEnterWithPreviousState(previousState)
+        super.didEnter(from: previousState)
         
         self.entity.physicsComponent.physicsBody.collisionBitMask = ColliderType.PlayerBot.collisionMask
         self.entity.physicsComponent.physicsBody.applyImpulse(CGVector(dx: 0, dy: 500))
         self.entity.animationComponent.requestedAnimation = PlayerAnimationName.BoostingUp.rawValue
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return true
     }
 }

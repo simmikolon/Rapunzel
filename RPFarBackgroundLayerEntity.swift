@@ -31,6 +31,10 @@ class FarBackgroundLayerEntity: LayerEntity, ResourceLoadableType {
         
         self.name = "FarBackgroundLayer"
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension FarBackgroundLayerEntity {
@@ -39,10 +43,10 @@ extension FarBackgroundLayerEntity {
         return atlas == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         atlas = SKTextureAtlas(named: "RPFarBackgroundLayer")
-        atlas.preloadWithCompletionHandler { () -> Void in
+        atlas.preload { () -> Void in
             
             tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()

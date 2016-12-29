@@ -12,30 +12,31 @@ class Scene: SKScene, InputManagerDelegate, InputSourceGameStateDelegate {
     
     weak var sceneManager: SceneManager!
     
+    override func didMove(to view: SKView) {
+        super.didMove(to: view)
+        sceneManager.inputManager.delegate = self
+    }
+    
     // MARK: GameInputDelegate
     
-    func inputManagerDidUpdateControlInputSources(inputManager: InputManager) {
-        
-        // Ensure all player controlInputSources delegate game actions to `BaseScene`.
-        for controlInputSource in inputManager.controlInputSources {
-            controlInputSource.gameStateDelegate = self
-        }
-        
-        #if os(iOS)
-            /*
-             On iOS, show or hide touch controls and focus based navigation when
-             game controllers are connected or disconnected.
-             */
-            touchControlInputNode.hideThumbStickNodes = sceneManager.inputManager.isGameControllerConnected
-            resetFocus()
-        #endif
+    func inputManagerDidUpdateControlInputSources(_ inputManager: InputManager) {
+
     }
     
-    func inputSourceDidToggleResumeState(controlInputSource: InputSource) {
+    func inputSourceDidToggleResumeState(_ controlInputSource: InputSource) {
         
     }
     
-    func inputSourceDidTogglePauseState(controlInputSource: InputSource) {
+    func inputSourceDidTogglePauseState(_ controlInputSource: InputSource) {
         
     }
+    
+    func inputSourceDidSelect(_ controlInputSource: InputSource) {
+        
+    }
+    
+    func inputSource(_ controlInputSource: InputSource, didSpecifyDirection: ControlInputDirection) {
+        
+    }
+
 }

@@ -29,7 +29,11 @@ class ParticleLayerEntity: LayerEntity {
         self.name = "ParticleLayerEntity"
     }
     
-    func random(firstNum: CGFloat, max secondNum: CGFloat) -> CGFloat {
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func random(_ firstNum: CGFloat, max secondNum: CGFloat) -> CGFloat {
         return CGFloat(arc4random()) / CGFloat(UINT32_MAX) * abs(firstNum - secondNum) + min(firstNum, secondNum)
     }
     
@@ -37,10 +41,10 @@ class ParticleLayerEntity: LayerEntity {
         
         columnOffset = GameSceneSettings.width / CGFloat(numColumns)
         rowOffset = GameSceneSettings.height / CGFloat(numRows)
-        
-        for var column = 0; column < numColumns; ++column {
+        /*
+        for column in 0 ..< numColumns += 1 {
             
-            for var row = 0; row < numRows; ++row {
+            for row in 0 ..< numRows += 1 {
                 
                 var xPos = (columnOffset * CGFloat(column)) - 682
                 var yPos = rowOffset * CGFloat(row)
@@ -48,7 +52,7 @@ class ParticleLayerEntity: LayerEntity {
                 xPos = random(xPos, max: xPos + columnOffset)
                 yPos = random(yPos, max: yPos + rowOffset)
                 
-                let particle = ParticleSpriteNode(color: SKColor.greenColor(), size: CGSize(width: particleSize, height: particleSize))
+                let particle = ParticleSpriteNode(color: SKColor.green, size: CGSize(width: particleSize, height: particleSize))
                 
                 particle.damping = damping
                 particle.minAlpha = minAlpha
@@ -61,17 +65,17 @@ class ParticleLayerEntity: LayerEntity {
                 
                 renderComponent.addChild(particle)
             }
-        }
+        }*/
         
     }
 
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         
-        super.updateWithDeltaTime(seconds)
+        super.update(deltaTime: seconds)
         
         for node: SKNode in renderComponent.node.children {
             
-            let positionInScene = renderComponent.node.scene!.convertPoint(node.position, fromNode: node.parent!)
+            let positionInScene = renderComponent.node.scene!.convert(node.position, from: node.parent!)
             let particleNode = node as! ParticleSpriteNode
             
             node.physicsBody?.applyForce(CGVector(dx: 0.5, dy: 0.0))

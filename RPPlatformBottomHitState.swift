@@ -11,33 +11,33 @@ import SpriteKit
 
 class PlatformBottomHitState: PlatformState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         self.entity.animationComponent.requestedAnimation = PlatformAnimationName.BottomHit.rawValue
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         
         if elapsedTime >= 0.25 {
             
-            entity.stateMachineComponent.stateMachine.enterState(PlatformNormalState)
+            entity.stateMachineComponent.stateMachine.enter(PlatformNormalState)
         }
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return true
     }
     
-    override func willExitWithNextState(nextState: GKState) {
-        super.willExitWithNextState(nextState)
+    override func willExit(to nextState: GKState) {
+        super.willExit(to: nextState)
     }
     
-    override func contactWithEntityDidBegin(entity: GKEntity) {
+    override func contactWithEntityDidBegin(_ entity: GKEntity) {
         
     }
     
-    override func contactWithEntityDidEnd(entity: GKEntity) {
+    override func contactWithEntityDidEnd(_ entity: GKEntity) {
         
     }
 }

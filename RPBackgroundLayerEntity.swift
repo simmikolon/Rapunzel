@@ -31,6 +31,10 @@ class BackgroundLayerEntity: LayerEntity, ResourceLoadableType {
         
         self.name = "BackgroundLayerEntity"
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension BackgroundLayerEntity {
@@ -39,10 +43,10 @@ extension BackgroundLayerEntity {
         return atlas == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         atlas = SKTextureAtlas(named: "RPBackgroundLayer")
-        atlas.preloadWithCompletionHandler { () -> Void in
+        atlas.preload { () -> Void in
             
             tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()

@@ -14,7 +14,7 @@ class LayerComponent: GKComponent {
     let node = Node()
     var parallaxFactor: CGFloat = 1.0
     
-    func addChild(child: SKNode) {
+    func addChild(_ child: SKNode) {
         
         self.node.addChild(child)
     }

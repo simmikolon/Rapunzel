@@ -12,11 +12,11 @@ import GameplayKit
 struct CameraNodeSettings {
     
     static let AreaSizeHalf: CGFloat = 80.0
-    static let CameraAreaTop: CGFloat = 500//100.0
-    static let CameraAreaBottom: CGFloat = 0//250.0
+    static let CameraAreaTop: CGFloat = 350//800//100.0
+    static let CameraAreaBottom: CGFloat = 100//250.0
 }
 
-struct CameraState : OptionSetType {
+struct CameraState : OptionSet {
     
     let rawValue: Int
     
@@ -35,17 +35,23 @@ class CameraComponent: GKComponent {
     
     var cameraOffset = CGPoint(x: 0.0, y: 0.0)
     var cameraPositionOld = CGPoint(x: 0.0, y: 0.0)
-    var elapsedSeconds: NSTimeInterval = 0
+    var elapsedSeconds: TimeInterval = 0
     
     var cameraState = CameraState.Resting.rawValue
     
     init(focusedNode node: Node? = nil) {
+        
+        super.init()
         
         guard let node = node else {
             fatalError()
         }
         
         self.node = node
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     var deltaX: CGFloat {
@@ -94,9 +100,9 @@ class CameraComponent: GKComponent {
         return deltaY
     }
 
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
 
-        super.updateWithDeltaTime(seconds)
+        super.update(deltaTime: seconds)
 
         let cameraPositionNew = CGPoint(x: cameraNode.position.x, y: cameraNode.position.y + deltaY)
         

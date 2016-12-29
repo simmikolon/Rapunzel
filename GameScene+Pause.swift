@@ -20,19 +20,19 @@ extension GameScene {
      app enters the background. Override to check if an `overlay` node is
      being presented to determine if the game should be paused.
      */
-    override var paused: Bool {
+    override var isPaused: Bool {
         
         get {
             
-            return super.paused
+            return super.isPaused
         }
         
         set {
             
-            super.paused = newValue
+            super.isPaused = newValue
             
-            if super.paused {
-                stateMachine.enterState(GameScenePauseState.self)
+            if super.isPaused {
+                //stateMachine.enterState(GameScenePauseState.self)
             }
             else {
                 
@@ -44,12 +44,12 @@ extension GameScene {
     var pauseNotificationNames: [String] {
         #if os(OSX)
             return [
-                NSApplicationWillResignActiveNotification,
-                NSWindowDidMiniaturizeNotification
+                NSNotification.Name.NSApplicationWillResignActive.rawValue,
+                NSNotification.Name.NSWindowDidMiniaturize.rawValue
             ]
         #else
             return [
-                UIApplicationWillResignActiveNotification
+                NSNotification.Name.UIApplicationWillResignActive.rawValue
             ]
         #endif
     }
@@ -62,18 +62,18 @@ extension GameScene {
      */
     func registerForPauseNotifications() {
         for notificationName in pauseNotificationNames {
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameScene.pauseGame), name: notificationName, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(GameScene.pauseGame), name: NSNotification.Name(rawValue: notificationName), object: nil)
         }
     }
     
     func pauseGame() {
-        paused = true
-        stateMachine.enterState(GameScenePauseState.self)
+        //paused = true
+        //stateMachine.enterState(GameScenePauseState.self)
     }
     
     func unregisterForPauseNotifications() {
         for notificationName in pauseNotificationNames {
-            NSNotificationCenter.defaultCenter().removeObserver(self, name: notificationName, object: nil)
+            NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: notificationName), object: nil)
         }
     }
 

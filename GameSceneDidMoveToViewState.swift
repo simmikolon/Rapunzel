@@ -11,12 +11,12 @@ import SpriteKit
 
 class GameSceneDidMoveToViewState: GameSceneState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         
         if previousState is GameScenePauseState {
             
-            gameScene.stateMachine.enterState(GameScenePlayingState.self)
+            gameScene.stateMachine.enter(GameScenePlayingState.self)
             
         } else {
             
@@ -29,6 +29,6 @@ class GameSceneDidMoveToViewState: GameSceneState {
         gameScene.physicsWorld.contactDelegate = gameScene.contactDelegate
         gameScene.backgroundColor = SKColor(red: 30/255, green: 60/255, blue: 63/255, alpha: 1)
         gameScene.anchorPoint = CGPoint(x: 0.5, y: 0)
-        gameScene.stateMachine.enterState(GameSceneResourceLoadingState.self)
+        gameScene.stateMachine.enter(GameSceneResourceLoadingState.self)
     }
 }

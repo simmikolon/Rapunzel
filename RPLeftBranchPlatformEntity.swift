@@ -39,22 +39,38 @@ class LeftBranchPlatformEntity: PlatformEntity, ResourceLoadableType {
         
         //let debugComponent = DebugOutputComponent(withEntity: self, andName: "BranchPlatform")
         //self.addComponent(debugComponent)
+        
+        animationComponent.requestedAnimation = PlatformAnimationName.Normal.rawValue
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
 extension LeftBranchPlatformEntity {
     
     static var resourcesNeedLoading: Bool {
+        
         return animations == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         SKTextureAtlas.preloadTextureAtlasesNamed(LeftBranchPlatformAnimationName.atlasNames) { error, atlases in
             
             if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
             
             animations = [:]
+            /*
+            var index = 0
+            
+            for animationName in LeftBranchPlatformAnimationName.atlasNames {
+                
+                animations[animationName] = AnimationComponent.animationsFromAtlas(atlases[index])
+                index += 1
+            }
+            */
             
             animations[PlatformAnimationName.Normal.rawValue] = AnimationComponent.animationsFromAtlas(atlases[0])
             animations[PlatformAnimationName.JumpingOn.rawValue] = AnimationComponent.animationsFromAtlas(atlases[1])
@@ -69,6 +85,5 @@ extension LeftBranchPlatformEntity {
         
         animations = nil
     }
-    
 }
 

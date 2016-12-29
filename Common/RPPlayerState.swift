@@ -17,7 +17,7 @@ protocol PlayerStateDelegate: class {
 class PlayerState: State {
     
     static var allowedStates = [PlayerState:[PlayerState]]()
-    var elapsedTime: NSTimeInterval = 0.0
+    var elapsedTime: TimeInterval = 0.0
     
     weak var delegate: PlayerStateDelegate!
     unowned var entity: PlayerEntity
@@ -29,27 +29,27 @@ class PlayerState: State {
         self.delegate = delegate
     }
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         elapsedTime = 0.0
     }
     
-    private func checkIfPlayerIsFallingDown() {
+    fileprivate func checkIfPlayerIsFallingDown() {
         if self.entity.physicsComponent.physicsBody.velocity.dy < 0 {
-            self.entity.stateMachineComponent.stateMachine.enterState(PlayerFallingState.self)
+            self.entity.stateMachineComponent.stateMachine.enter(PlayerFallingState.self)
         }
     }
     
-    private func checkIfPlayerIsOutOfScreen() {
-        if entity.renderComponent.node.position.x <= -GameSceneSettings.width/2 {
-            entity.renderComponent.node.position.x = GameSceneSettings.width/2
-        } else if entity.renderComponent.node.position.x >= GameSceneSettings.width/2 {
-            entity.renderComponent.node.position.x = -GameSceneSettings.width/2
+    fileprivate func checkIfPlayerIsOutOfScreen() {
+        if entity.renderComponent.node.position.x <= -GameSceneSettings.width {
+            entity.renderComponent.node.position.x = GameSceneSettings.width
+        } else if entity.renderComponent.node.position.x >= GameSceneSettings.width {
+            entity.renderComponent.node.position.x = -GameSceneSettings.width
         }
     }
     
     #if os(OSX)
-    private func handleKeyboardInput() {
+    fileprivate func handleKeyboardInput() {
     
         if self.entity.isKeyLeftDown {
         
@@ -65,9 +65,9 @@ class PlayerState: State {
     }
     #endif
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         
-        super.updateWithDeltaTime(seconds)
+        super.update(deltaTime: seconds)
         
         checkIfPlayerIsFallingDown()
         checkIfPlayerIsOutOfScreen()
@@ -79,7 +79,7 @@ class PlayerState: State {
         elapsedTime += seconds
     }
     
-    override func contactWithEntityDidBegin(entity: GKEntity) {
+    override func contactWithEntityDidBegin(_ entity: GKEntity) {
 
         /* Collision Handling for Entities of Platform-Type */
 
@@ -94,11 +94,11 @@ class PlayerState: State {
             /* We could avoid this and skip conversion when putting all active elements on the same parallax layer */
             /* Due to Game Design choises this is currently not the case. So we have to convert! */
             
-            let platformPosition = self.entity.renderComponent.node.scene?.convertPoint(platformEntity.renderComponent.node.position,
-                fromNode: platformEntity.renderComponent.node.parent!)
+            let platformPosition = self.entity.renderComponent.node.scene?.convert(platformEntity.renderComponent.node.position,
+                from: platformEntity.renderComponent.node.parent!)
             
-            var playerPosition = self.entity.renderComponent.node.scene?.convertPoint(self.entity.renderComponent.node.position,
-                fromNode: self.entity.renderComponent.node.parent!)
+            var playerPosition = self.entity.renderComponent.node.scene?.convert(self.entity.renderComponent.node.position,
+                from: self.entity.renderComponent.node.parent!)
             
             /* Unfortunately the Anchor-Point is not where the players pogo-feet are so we'll have to calculate the offset */
             /* To check for "feet on ground" we have to substract half the size of the texture as an offset */
@@ -111,7 +111,7 @@ class PlayerState: State {
                 
                 /* If that's true, it's ok to jump */
 
-                self.stateMachine?.enterState(PlayerBouncingDownState.self)
+                self.stateMachine?.enter(PlayerBouncingDownState.self)
             }
                 
             /* In case the player is beyond a platform */
@@ -130,13 +130,13 @@ class PlayerState: State {
                     
                     /* Switch State to bottom collision */
 
-                    self.stateMachine?.enterState(PlayerBottomCollisionState.self)
+                    self.stateMachine?.enter(PlayerBottomCollisionState.self)
                 }
             }
         }
     }
     
-    override func contactWithEntityDidEnd(entity: GKEntity) {
+    override func contactWithEntityDidEnd(_ entity: GKEntity) {
         
     }
 }

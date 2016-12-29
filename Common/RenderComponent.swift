@@ -14,7 +14,7 @@ class RenderComponent: GKComponent {
 
     let node = Node()
     
-    func addChild(child: SKNode) {
+    func addChild(_ child: SKNode) {
 
         node.addChild(child)
     }

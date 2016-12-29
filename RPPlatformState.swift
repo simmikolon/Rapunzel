@@ -11,32 +11,31 @@ import GameplayKit
 
 class PlatformState: State {
 
-    var elapsedTime: NSTimeInterval = 0.0
+    var elapsedTime: TimeInterval = 0.0
     
     unowned var entity: PlatformEntity
     
     // MARK: Initializers
     
     required init(entity: PlatformEntity) {
-        
         self.entity = entity
     }
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         elapsedTime = 0.0
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         elapsedTime += seconds
     }
     
-    override func contactWithEntityDidBegin(entity: GKEntity) {
+    override func contactWithEntityDidBegin(_ entity: GKEntity) {
         
     }
     
-    override func contactWithEntityDidEnd(entity: GKEntity) {
+    override func contactWithEntityDidEnd(_ entity: GKEntity) {
         
     }
     
@@ -45,6 +44,6 @@ class PlatformState: State {
     deinit {
         
         /* Debug Output to see if Entity was deallocated properly */
-        print("Deinitialization: \(self.dynamicType)")
+        print("Deinitialization: \(type(of: self))")
     }
 }

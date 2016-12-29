@@ -10,13 +10,13 @@ class Pattern {
     
     var beats: [Beat]
     var cursor: Int = 0
-    private var numberOfBeats: Int = 0
+    fileprivate var numberOfBeats: Int = 0
     
     var lowerCursor: Int = 0
     
     init(withNumberOfBeats numberOfBeats: Int = 16) {
         
-        beats = Array(count: numberOfBeats, repeatedValue: Beat(withType: .Empty))
+        beats = Array(repeating: Beat(withType: .empty), count: numberOfBeats)
         self.numberOfBeats = numberOfBeats
     }
     

@@ -4,52 +4,15 @@
 <array>
 	<dict>
 		<key>sceneType</key>
-		<string>HomeEndScene</string>
+		<string>MenuBetaScene</string>
+		<key>fileName</key>
+		<string>MenuBetaScene</string>
+	</dict>
+	<dict>
+		<key>sceneType</key>
+		<string>GameScene</string>
 		<key>fileName</key>
 		<string>GameScene</string>
-	</dict>
-	<dict>
-		<key>sceneType</key>
-		<string>LevelScene</string>
-		<key>fileName</key>
-		<string>Level1</string>
-		<key>onDemandResourcesTags</key>
-		<array>
-			<string>Level1</string>
-			<string>GroundBot</string>
-			<string>Blue</string>
-		</array>
-	</dict>
-	<dict>
-		<key>sceneType</key>
-		<string>LevelScene</string>
-		<key>fileName</key>
-		<string>Level2</string>
-		<key>onDemandResourcesTags</key>
-		<array>
-			<string>Level2</string>
-			<string>FlyingBot</string>
-			<string>Blue</string>
-		</array>
-	</dict>
-	<dict>
-		<key>sceneType</key>
-		<string>LevelScene</string>
-		<key>fileName</key>
-		<string>Level3</string>
-		<key>onDemandResourcesTags</key>
-		<array>
-			<string>Level3</string>
-			<string>GroundBot</string>
-			<string>FlyingBot</string>
-			<string>Green</string>
-		</array>
-	</dict>
-	<dict>
-		<key>sceneType</key>
-		<string>HomeEndScene</string>
-		<key>fileName</key>
-		<string>EndScene</string>
 	</dict>
 </array>
 </plist>

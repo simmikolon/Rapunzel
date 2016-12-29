@@ -11,7 +11,7 @@ import GameplayKit
 
 class SpriteNode: SKSpriteNode, ContactableNode {
     
-    weak var entity: GKEntity!
+    //weak var entity: GKEntity!
 
     func setup() {
         

@@ -10,8 +10,8 @@ import SpriteKit
 import GameplayKit
 
 struct GameSceneSettings {
-    static let width: CGFloat = 768
-    static let height: CGFloat = 1364
+    static let width: CGFloat = 768//960
+    static let height: CGFloat = 1364//1705
     static let SmoothingFactor: CGFloat = 4.0
 }
 
@@ -35,6 +35,10 @@ class GameScene: Scene {
         ])
     }()
     
+    /* Here we set up the PatternManager which is bound to the player layer */
+    /* Deleting and Creating Pattern-Beats is done based on the movement inside the player layer */
+    /* One single Pattern Manager for all layers - even if they are parallaxed! */
+    
     lazy var patternManager: PatternManager = {
         
         guard let playerLayerEntity = self.entityManager.entity(withName: "PlayerLayerEntity") as? LayerEntity else {
@@ -50,24 +54,31 @@ class GameScene: Scene {
     
     // MARK: View Callbacks
     
-    override func didMoveToView(view: SKView) {
-        super.didMoveToView(view)
-        stateMachine.enterState(GameSceneDidMoveToViewState.self)
+    override func didMove(to view: SKView) {
+        super.didMove(to: view)
+        stateMachine.enter(GameSceneDidMoveToViewState.self)
         registerForPauseNotifications()
+        #if os(iOS)
+        addTouchInputToScene()
+        #endif
+        
+        for inputSource in sceneManager.inputManager.controlInputSources {
+            inputSource.gameStateDelegate = self
+        }
     }
     
     // MARK: - Lifecycle
     
-    private var lastUpdateTimeInterval: NSTimeInterval = 0
-    private let maximumUpdateDeltaTime: NSTimeInterval = 1.0 / 60.0
+    fileprivate var lastUpdateTimeInterval: TimeInterval = 0
+    fileprivate let maximumUpdateDeltaTime: TimeInterval = 1.0 / 60.0
     
-    override func update(currentTime: NSTimeInterval) {
+    override func update(_ currentTime: TimeInterval) {
         super.update(currentTime)
         guard view != nil else { return }
-        stateMachine.updateWithDeltaTime(deltaTime(currentTime))
+        stateMachine.update(deltaTime: deltaTime(currentTime))
     }
 
-    private func deltaTime(currentTime: NSTimeInterval) -> NSTimeInterval {
+    fileprivate func deltaTime(_ currentTime: TimeInterval) -> TimeInterval {
         var deltaTime = currentTime - lastUpdateTimeInterval
         deltaTime = deltaTime > maximumUpdateDeltaTime ? maximumUpdateDeltaTime : deltaTime
         lastUpdateTimeInterval = currentTime
@@ -82,12 +93,17 @@ class GameScene: Scene {
     
     // MARK: - Input Manager Delegate
     
-    override func inputManagerDidUpdateControlInputSources(inputManager: InputManager) {
+    override func inputManagerDidUpdateControlInputSources(_ inputManager: InputManager) {
         super.inputManagerDidUpdateControlInputSources(inputManager)
         for controlInputSource in inputManager.controlInputSources {
             if let playerEntity = entityManager.entity(withName: "PlayerEntity") {
-                controlInputSource.delegate = playerEntity.componentForClass(InputComponent.self)
+                controlInputSource.delegate = playerEntity.component(ofType: InputComponent.self)
             }
         }
+    }
+    
+    override func inputSourceDidTogglePauseState(_ controlInputSource: InputSource) {
+        super.inputSourceDidTogglePauseState(controlInputSource)
+        sceneManager.transitionToSceneWithSceneIdentifier(SceneManager.SceneIdentifier.home)
     }
 }

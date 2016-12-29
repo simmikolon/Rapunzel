@@ -30,7 +30,7 @@ class EntityManager: PlatformEntityDelegate, PatternManagerDelegate {
     // MARK: - Entity Management
     
     func entity(withName name: String) -> Entity? {
-        if let i = entities.indexOf({$0.name == name}) { return entities[i] }
+        if let i = entities.index(where: {$0.name == name}) { return entities[i] }
         return nil
     }
     
@@ -38,19 +38,19 @@ class EntityManager: PlatformEntityDelegate, PatternManagerDelegate {
         entityGarbage.append(entity)
     }
     
-    func addEntity(entity: Entity) {
+    func addEntity(_ entity: Entity) {
         entities.append(entity)
         for componentSystem in componentSystems {
-            componentSystem.addComponentWithEntity(entity)
+            componentSystem.addComponent(foundIn: entity)
         }
     }
     
-    func removeEntity(entity: Entity) {
-        if let index = entities.indexOf(entity) {
-            entities.removeAtIndex(index)
+    func removeEntity(_ entity: Entity) {
+        if let index = entities.index(of: entity) {
+            entities.remove(at: index)
         }
         for componentSystem in componentSystems {
-            componentSystem.removeComponentWithEntity(entity)
+            componentSystem.removeComponent(foundIn: entity)
         }
     }
     
@@ -59,23 +59,23 @@ class EntityManager: PlatformEntityDelegate, PatternManagerDelegate {
         entityGarbage.removeAll()
     }
     
-    func updateComponentSystems(withCurrentTime time: NSTimeInterval) {
+    func updateComponentSystems(withCurrentTime time: TimeInterval) {
         for componentSystem in componentSystems {
-            componentSystem.updateWithDeltaTime(time)
+            componentSystem.update(deltaTime: time)
         }
     }
     
     // MARK: - Platform Entity Delegate Methods
     
     func didRemovePlatform(platform: PlatformEntity) {
-        shouldRemoveEntity(platform)
+        shouldRemoveEntity(entity: platform)
     }
     
     // MARK: - PatternManagerDelegate
     
-    func createBeatElement(beatElement: BeatElement, offset: CGFloat) {
+    func createBeatElement(_ beatElement: BeatElement, offset: CGFloat) {
         
-        let _ = beatElement.creationHandler(offset: offset, entityManager: self)
+        let _ = beatElement.creationHandler(offset, self)
     }
 }
 

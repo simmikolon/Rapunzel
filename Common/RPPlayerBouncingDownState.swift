@@ -11,22 +11,22 @@ import GameplayKit
 
 class PlayerBouncingDownState: PlayerState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         entity.animationComponent.requestedAnimation = PlayerAnimationName.BounceDown.rawValue
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         
         // Debug:
         
         if elapsedTime >= 0.01 {
-            self.stateMachine?.enterState(PlayerJumpingState.self)
+            self.stateMachine?.enter(PlayerJumpingState.self)
         }
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         
         switch stateClass {
         case is PlayerBoostState.Type, is PlayerJumpingState.Type, is PlayerBottomCollisionState.Type:

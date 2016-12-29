@@ -18,16 +18,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     var sceneManager: SceneManager!
     
-    func applicationDidFinishLaunching(aNotification: NSNotification) {
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
 
         let keyboardInputSource = KeyboardInputSource()
         let inputManager = InputManager(nativeControlInputSource: keyboardInputSource)
         
         sceneManager = SceneManager(presentingView: skView, inputManager: inputManager)
-        sceneManager.transitionToSceneWithSceneIdentifier(.Home)
+        sceneManager.transitionToSceneWithSceneIdentifier(.home)
     }
     
-    func applicationShouldTerminateAfterLastWindowClosed(sender: NSApplication) -> Bool {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }
 }

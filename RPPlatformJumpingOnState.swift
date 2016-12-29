@@ -11,34 +11,34 @@ import GameplayKit
 
 class PlatformJumpingOnState: PlatformState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         entity.animationComponent.requestedAnimation = PlatformAnimationName.JumpingOn.rawValue
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         
         if elapsedTime >= 0.15 {
             
-            entity.stateMachineComponent.stateMachine.enterState(PlatformNormalState)
+            entity.stateMachineComponent.stateMachine.enter(PlatformNormalState)
         }
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         return true
     }
     
-    override func willExitWithNextState(nextState: GKState) {
-        super.willExitWithNextState(nextState)
+    override func willExit(to nextState: GKState) {
+        super.willExit(to: nextState)
     }
     
-    override func contactWithEntityDidBegin(entity: GKEntity) {
+    override func contactWithEntityDidBegin(_ entity: GKEntity) {
         
-        self.entity.stateMachineComponent.stateMachine.enterState(PlatformJumpingOnState)
+        self.entity.stateMachineComponent.stateMachine.enter(PlatformJumpingOnState)
     }
     
-    override func contactWithEntityDidEnd(entity: GKEntity) {
+    override func contactWithEntityDidEnd(_ entity: GKEntity) {
         
         //self.entity.stateMachineComponent.stateMachine.enterState(DebugPlatformJumpingOffState)
     }

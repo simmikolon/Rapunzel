@@ -12,10 +12,18 @@ import SpriteKit
 
 enum PlatformAnimationName: String {
     
-    case Normal = "PlatformNormal"
-    case JumpingOn = "PlatformJumpingOn"
-    case JumpingOff = "PlatformJumpingOff"
-    case BottomHit = "PlatformBottomHit"
+    case Normal = "RPPlatformLeftNormal"
+    case JumpingOn = "RPPlatformLeftJumpingOn"
+    case JumpingOff = "RPPlatformLeftJumpingOff"
+    case BottomHit = "RPPlatformLeftBottomHit"
+    
+    static let atlasNames = [
+        
+        Normal.rawValue,
+        JumpingOn.rawValue,
+        JumpingOff.rawValue,
+        BottomHit.rawValue
+    ]
 }
 
 protocol PlatformEntityDelegate: class {
@@ -24,25 +32,50 @@ protocol PlatformEntityDelegate: class {
 
 class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate {
     
-    static var textureSize = CGSize(width: 444, height: 132)
+    static var textureSize = CGSize(width: 256, height: 128)
+    
+    // MARK: - Properties
     
     /* Our Delegate who needs to know whenever a Platform Entity has left the screen */
     
     weak var delegate: PlatformEntityDelegate?
     
-    // MARK: Components
+    fileprivate lazy var _states: [State] = {
+        
+        /* States are being defined with lazy property which can be overriden when subclassing */
+        /* This way we can safely use different states in subclasses without instanciating twice */
+        
+        return [
+            
+            PlatformNormalState(entity: self),
+            PlatformJumpingOnState(entity: self),
+            PlatformJumpingOffState(entity: self),
+            PlatformBottomHitState(entity: self),
+            PlatformBreakingState(entity: self)
+        ]
+    }()
+    
+    func states() -> [State] {
+        
+        /* We are accessing states with this function. When it is being called it forces the lazy */
+        /* property and its content to be instantiated.  */
+        
+        return _states
+    }
+    
+    // MARK: - Components
     
     let renderComponent: RenderComponent
     let physicsComponent: PhysicsComponent
     var stateMachineComponent: StateMachineComponent!
     let animationComponent: AnimationComponent
     
-    // MARK: Platform Configuration Variables
+    // MARK: - Platform Configuration Variables
     
     var breakable: Bool
     var bottomCollidable: Bool
     
-    // MARK: Initialisation
+    // MARK: - Initialisation
     
     init(isBreakable breakable: Bool = false, isBottomCollidable bottomCollidable: Bool = false, animations: [String: Animation]) {
         
@@ -58,7 +91,7 @@ class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate 
         /* Chose Collider Type based on self.bottomCollidable & create Physics Component */
         
         let colliderType: ColliderType = (self.bottomCollidable) ? .BottomCollidablePlatform : .NormalPlatform
-        physicsComponent = PhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 444, height: 132)), colliderType: colliderType)
+        physicsComponent = PhysicsComponent(physicsBody: SKPhysicsBody(rectangleOf: CGSize(width: 256, height: 128)), colliderType: colliderType)
         
         /* Create Animation Component and take over the animations from self.init( . . .) */
         
@@ -85,25 +118,16 @@ class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate 
         
         /* Set the initial Animation */
         
+        //let animationNames = PlatformEntity.animationNames as! PlatformAnimationNames
         animationComponent.requestedAnimation = PlatformAnimationName.Normal.rawValue
         
         /* Initialization of the default classes State Machine Component and GKState Subclasses  */
         /* We need to carry over self into our State Machine Component so we need to Initialize this after calling super.init() */
         /* Since .stateMachineComponent being an optional we can Subclass PlatformEntity and assign a different State Machine */
         /* Doing this we can define individual States for individual Subclasses. */
-        /* Assigning has to be done in Subclass and will override defaulted forcing defaulted to be released */
+        /* This can be done by simply overriding the 'self.states' property within a subclass */
         
-        stateMachineComponent = StateMachineComponent(states: [
-            
-            /* Creation of GKSate Subclasses for this Entity */
-            
-            PlatformNormalState(entity: self),
-            PlatformJumpingOnState(entity: self),
-            PlatformJumpingOffState(entity: self),
-            PlatformBottomHitState(entity: self),
-            PlatformBreakingState(entity: self)
-            
-            ])
+        stateMachineComponent = StateMachineComponent(states: self.states())
         
         /* Setting up the initial State this Entity will be in after Initialization */
         
@@ -121,8 +145,12 @@ class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate 
         let lifecycleComponent = LifecycleComponent(withEntity: self, delegate: self)
         addComponent(lifecycleComponent)
     }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
-    // MARK: Management Functions
+    // MARK: - Management Functions
     
     func remove() {
         
@@ -144,7 +172,7 @@ class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate 
         /* Inform Delegate that this Entity has just left */
         
         if let delegate = self.delegate {
-            delegate.didRemovePlatform(self)
+            delegate.didRemovePlatform(platform: self)
         }
     }
 
@@ -153,12 +181,12 @@ class PlatformEntity: Entity, ContactNotifiableType, LifecycleComponentDelegate 
     deinit {
         
         /* Debug Output to see if Entity was deallocated properly */
-        print("Deinitialization: \(self.dynamicType)")
+        print("Deinitialization: \(type(of: self))")
     }
     
     // MARK: - LifecycleComponent
     
-    func nodeDidExitScreen(node node: SKNode) {
+    func nodeDidExitScreen(_ node: SKNode) {
         
         remove()
     }
@@ -168,12 +196,12 @@ extension PlatformEntity {
     
     /* Forwarding Collision Even into State Machine Component */
     
-    func contactWithEntityDidBegin(entity: GKEntity) {
+    func contactWithEntityDidBegin(_ entity: GKEntity) {
         
         stateMachineComponent.contactWithEntityDidBegin(entity)
     }
     
-    func contactWithEntityDidEnd(entity: GKEntity) {
+    func contactWithEntityDidEnd(_ entity: GKEntity) {
         
         stateMachineComponent.contactWithEntityDidEnd(entity)
     }

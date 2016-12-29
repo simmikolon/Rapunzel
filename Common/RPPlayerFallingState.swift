@@ -13,16 +13,16 @@ class PlayerFallingState: PlayerState {
 
     // MARK: GKState Life Cycle
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         if (previousState is PlayerJumpingState) || (previousState is PlayerBoostState) {
             self.entity.physicsComponent.physicsBody.collisionBitMask = ColliderType.PlayerBot.collisionMask
         }
         entity.animationComponent.requestedAnimation = PlayerAnimationName.FallingDown.rawValue
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         limitSpeedFallingDown()
     }
     
@@ -32,7 +32,7 @@ class PlayerFallingState: PlayerState {
         }
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         switch stateClass {
         case is PlayerBoostState.Type, is PlayerBouncingDownState.Type, is PlayerBottomCollisionState.Type:
             return true

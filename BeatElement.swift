@@ -9,9 +9,9 @@
 import SpriteKit
 
 enum BeatElementType {
-    case LeftTreePlatform
-    case RightTreePlatform
-    case Empty
+    case leftTreePlatform
+    case rightTreePlatform
+    case empty
 }
 
 struct BeatElement {
@@ -19,6 +19,6 @@ struct BeatElement {
     let type: BeatElementType
     
     /// Closure that passes code that will be called when the BeatElement is being created by an PatternControllerComponent
-    let creationHandler: (offset: CGFloat, entityManager: EntityManager) -> PlatformEntity
+    let creationHandler: (CGFloat, EntityManager) -> PlatformEntity
 
 }

@@ -11,13 +11,13 @@ import GameplayKit
 
 class KeyboardInputSource: InputSource, RampDelegate {
     
-    private var downKeys = Set<Character>()
-    private var currentDisplacement = float2()
+    fileprivate var downKeys = Set<Character>()
+    fileprivate var currentDisplacement = float2()
     
-    private static let rightVector = float2(x: 0.225, y: 0)
-    private static let leftVector = float2(x: -0.225, y: 0)
+    fileprivate static let rightVector = float2(x: 1, y: 0)
+    fileprivate static let leftVector = float2(x: -1, y: 0)
     
-    private lazy var ramp: Ramp = {
+    fileprivate lazy var ramp: Ramp = {
         let ramp = Ramp()
         ramp.delegate = self
         return ramp
@@ -27,22 +27,26 @@ class KeyboardInputSource: InputSource, RampDelegate {
     weak var gameStateDelegate: InputSourceGameStateDelegate?
     weak var delegate: InputSourceDelegate?
     
-    private let mapping: [Character: float2] = [
+    fileprivate let mapping: [Character: float2] = [:
         
         /* TODO: Put Mapping into Datasource or read out of game settings to user define mapping */
         
         /* Left arrow */
-        
+        /*
         Character(UnicodeScalar(0xF702)):   KeyboardInputSource.leftVector,
         "a":                                KeyboardInputSource.leftVector,
         
         /* Right arrow */
         
         Character(UnicodeScalar(0xF703)):   KeyboardInputSource.rightVector,
-        "d":                                KeyboardInputSource.rightVector
+        "d":                                KeyboardInputSource.rightVector*/
     ]
     
-    func handleKeyDownForCharacter(character: Character) {
+    func resetControlState() {
+        
+    }
+    
+    func handleKeyDownForCharacter(_ character: Character) {
         
         /* Handle only keys that have not been pressed and add them to the downKeys set */
         
@@ -54,6 +58,11 @@ class KeyboardInputSource: InputSource, RampDelegate {
         if let displacement = relativeDisplacementForCharacter(character) {
             currentDisplacement = displacement
             ramp.rampUp()
+            
+            let directionalVector = float2(x: displacement.y, y: displacement.x)
+            if let direction = ControlInputDirection(vector: directionalVector) {
+                gameStateDelegate?.inputSource(self, didSpecifyDirection: direction)
+            }
         }
         
         else if isSpecialPowerCharacter(character) {
@@ -67,9 +76,13 @@ class KeyboardInputSource: InputSource, RampDelegate {
         else if isResumeCharacter(character) {
             gameStateDelegate?.inputSourceDidToggleResumeState(self)
         }
+        
+        else if isSelectionCharacter(character) {
+            gameStateDelegate?.inputSourceDidSelect(self)
+        }
     }
     
-    func handleKeyUpForCharacter(character: Character) {
+    func handleKeyUpForCharacter(_ character: Character) {
         
         /* Handle only that keys that have previously been added to the set thus been pressed */
         
@@ -87,15 +100,19 @@ class KeyboardInputSource: InputSource, RampDelegate {
         }
     }
     
-    private func isSpecialPowerCharacter(character: Character) -> Bool {
+    fileprivate func isSelectionCharacter(_ character: Character) -> Bool {
+        return ["\r"].contains(character)
+    }
+    
+    fileprivate func isSpecialPowerCharacter(_ character: Character) -> Bool {
         
         /* TODO: Add this to a datasource so we can dynamically generate keyboard character patterns */
         /*       Or Safe this in the Game Settings so user can define keys themselves */
         
-        return ["f", " ", "\r"].contains(character)
+        return ["f", " "].contains(character)
     }
     
-    private func isPauseCharacter(character: Character) -> Bool {
+    fileprivate func isPauseCharacter(_ character: Character) -> Bool {
         
         /* TODO: Add this to a datasource so we can dynamically generate keyboard character patterns */
         /*       Or Safe this in the Game Settings so user can define keys themselves */
@@ -103,7 +120,7 @@ class KeyboardInputSource: InputSource, RampDelegate {
         return ["p"].contains(character)
     }
     
-    private func isResumeCharacter(character: Character) -> Bool {
+    fileprivate func isResumeCharacter(_ character: Character) -> Bool {
         
         /* TODO: Add this to a datasource so we can dynamically generate keyboard character patterns */
         /*       Or Safe this in the Game Settings so user can define keys themselves */
@@ -111,13 +128,14 @@ class KeyboardInputSource: InputSource, RampDelegate {
         return ["r"].contains(character)
     }
     
-    private func relativeDisplacementForCharacter(character: Character) -> float2? {
+    fileprivate func relativeDisplacementForCharacter(_ character: Character) -> float2? {
         return mapping[character]
     }
     
-    func ramp(ramp: Ramp, didChangeRampFactor rampFactor: Float) {
+    func ramp(_ ramp: Ramp, didChangeRampFactor rampFactor: Float) {
         var rampedDisplacement = currentDisplacement
         rampedDisplacement.x *= rampFactor
+        rampedDisplacement.x *= 0.25
         delegate?.inputSource(self, didUpdateDisplacement: rampedDisplacement)
     }
 }

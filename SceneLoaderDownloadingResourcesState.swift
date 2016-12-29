@@ -26,15 +26,15 @@ class SceneLoaderDownloadingResourcesState: GKState {
     
     // MARK: GKState Life Cycle
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         
         // Clear any previous errors, and begin downloading the scene's resources. 
         sceneLoader.error = nil
         beginDownloadingScene()
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         switch stateClass {
             case is SceneLoaderDownloadFailedState.Type, is SceneLoaderResourcesAvailableState.Type, is SceneLoaderPreparingResourcesState.Type:
                 return true
@@ -47,7 +47,7 @@ class SceneLoaderDownloadingResourcesState: GKState {
     // MARK: Downloading Actions
 
     /// Downloads the scene into local storage.
-    private func beginDownloadingScene() {
+    fileprivate func beginDownloadingScene() {
         /*
             Create a new bundle request every time downloading needs to begin 
             because `NSBundleResourceRequest`s are single use objects.
@@ -59,25 +59,25 @@ class SceneLoaderDownloadingResourcesState: GKState {
         sceneLoader.bundleResourceRequest = bundleResourceRequest
         
         // Begin downloading the on demand resources.
-        bundleResourceRequest.beginAccessingResourcesWithCompletionHandler { error in
+        bundleResourceRequest.beginAccessingResources { error in
             
             // Progress to the next appropriate state from the main queue.
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 if let error = error {
                     // Release the resources because we'll need to start a new request.
                     bundleResourceRequest.endAccessingResources()
                     
                     // Set the error on the sceneLoader. 
-                    self.sceneLoader.error = error
+                    self.sceneLoader.error = error as NSError?
                     
-                    self.stateMachine!.enterState(SceneLoaderDownloadFailedState.self)
+                    self.stateMachine!.enter(SceneLoaderDownloadFailedState.self)
                 }
                 else if self.enterPreparingStateWhenFinished {
                     // If requested, proceed to the preparing state immediately.
-                    self.stateMachine!.enterState(SceneLoaderPreparingResourcesState.self)
+                    self.stateMachine!.enter(SceneLoaderPreparingResourcesState.self)
                 }
                 else {
-                    self.stateMachine!.enterState(SceneLoaderResourcesAvailableState.self)
+                    self.stateMachine!.enter(SceneLoaderResourcesAvailableState.self)
                 }
             }
         }

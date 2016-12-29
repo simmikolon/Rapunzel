@@ -10,7 +10,7 @@ import GameController
 
 protocol InputManagerDelegate: class {
     // Called whenever a control input source is updated.
-    func inputManagerDidUpdateControlInputSources(inputManager: InputManager)
+    func inputManagerDidUpdateControlInputSources(_ inputManager: InputManager)
 }
 
 final class InputManager {
@@ -29,11 +29,11 @@ final class InputManager {
     #endif
     
     /// An optional secondary input source for a connected game controller.
-    private(set) var secondaryControlInputSource: GameControllerInputSource?
+    fileprivate(set) var secondaryControlInputSource: GameControllerInputSource?
     
     var isGameControllerConnected: Bool {
         var isGameControllerConnected = false
-        dispatch_sync(controlsQueue) {
+        controlsQueue.sync {
             isGameControllerConnected = (self.secondaryControlInputSource != nil) || (self.nativeControlInputSource is GameControllerInputSource)
         }
         return isGameControllerConnected
@@ -41,7 +41,7 @@ final class InputManager {
 
     var controlInputSources: [InputSource] {
         // Return a non-optional array of `ControlInputSourceType`s.
-        return [nativeControlInputSource, secondaryControlInputSource].flatMap { $0 as InputSource? }
+        return [nativeControlInputSource, secondaryControlInputSource].flatMap { $0 as? InputSource }
     }
 
     weak var delegate: InputManagerDelegate? {
@@ -52,7 +52,7 @@ final class InputManager {
     }
     
     /// An internal queue to protect accessing the player's control input sources.
-    private let controlsQueue = dispatch_queue_create("com.example.apple-samplecode.player.controlsqueue", DISPATCH_QUEUE_SERIAL)
+    fileprivate let controlsQueue = DispatchQueue(label: "com.example.apple-samplecode.player.controlsqueue", attributes: [])
     
     // MARK: Initialization
 
@@ -74,17 +74,27 @@ final class InputManager {
 
     /// Register for `GCGameController` pairing notifications.
     func registerForGameControllerNotifications() {
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(InputManager.handleControllerDidConnectNotification(_:)), name: GCControllerDidConnectNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(InputManager.handleControllerDidDisconnectNotification(_:)), name: GCControllerDidDisconnectNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(self,
+                                                         selector: #selector(InputManager.handleControllerDidConnectNotification(_:)),
+                                                         name: NSNotification.Name.GCControllerDidConnect,
+                                                         object: nil)
+        
+        NotificationCenter.default.addObserver(self,
+                                                         selector: #selector(InputManager.handleControllerDidDisconnectNotification(_:)),
+                                                         name: NSNotification.Name.GCControllerDidDisconnect,
+                                                         object: nil)
     }
     
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: GCControllerDidConnectNotification, object: nil)
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: GCControllerDidDisconnectNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.GCControllerDidConnect, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.GCControllerDidDisconnect, object: nil)
     }
     
-    func updateWithGameController(gameController: GCController) {
-        dispatch_sync(controlsQueue) {
+    func updateWithGameController(_ gameController: GCController) {
+        
+        controlsQueue.sync {
+            
             #if os(tvOS)
             // Assign a controller to the `nativeControlInputSource` if one does not already exist.
             if self.nativeControlInputSource == nil {
@@ -100,26 +110,26 @@ final class InputManager {
             if self.secondaryControlInputSource == nil {
                 let gameControllerInputSource = GameControllerInputSource(gameController: gameController)
                 self.secondaryControlInputSource = gameControllerInputSource
-                gameController.playerIndex = .Index1
+                gameController.playerIndex = .index1
             }
         }
     }
     
     // MARK: GCGameController Notification Handling
     
-    @objc func handleControllerDidConnectNotification(notification: NSNotification) {
+    @objc func handleControllerDidConnectNotification(_ notification: Notification) {
         let connectedGameController = notification.object as! GCController
         
         updateWithGameController(connectedGameController)
         delegate?.inputManagerDidUpdateControlInputSources(self)
     }
     
-    @objc func handleControllerDidDisconnectNotification(notification: NSNotification) {
+    @objc func handleControllerDidDisconnectNotification(_ notification: Notification) {
         let disconnectedGameController = notification.object as! GCController
         
         // Check if the player was being controlled by the disconnected controller.
         if secondaryControlInputSource?.gameController == disconnectedGameController {
-            dispatch_sync(controlsQueue) {
+            controlsQueue.sync {
                 self.secondaryControlInputSource = nil
             }
             

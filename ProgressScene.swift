@@ -19,15 +19,15 @@ class ProgressScene: Scene {
     
     /// Returns the background node from the scene.
     var backgroundNode: SKSpriteNode? {
-        return childNodeWithName("backgroundNode") as? SKSpriteNode
+        return childNode(withName: "backgroundNode") as? SKSpriteNode
     }
     
     var labelNode: SKLabelNode {
-        return backgroundNode!.childNodeWithName("label") as! SKLabelNode
+        return backgroundNode!.childNode(withName: "label") as! SKLabelNode
     }
     
     var progressBarNode: SKSpriteNode {
-        return backgroundNode!.childNodeWithName("progressBar") as! SKSpriteNode
+        return backgroundNode!.childNode(withName: "progressBar") as! SKSpriteNode
     }
     
     /*
@@ -45,18 +45,18 @@ class ProgressScene: Scene {
     var progressBarInitialWidth: CGFloat!
     
     /// Add child progress objects to track downloading and loading states.
-    var progress: NSProgress? {
+    var progress: Progress? {
         didSet {
             // Unregister as an observer on the old value for the "fractionCompleted" property.
             oldValue?.removeObserver(self, forKeyPath: "fractionCompleted", context: &progressSceneKVOContext)
 
             // Register as an observer on the initial and for changes to the "fractionCompleted" property.
-            progress?.addObserver(self, forKeyPath: "fractionCompleted", options: [.New, .Initial], context: &progressSceneKVOContext)
+            progress?.addObserver(self, forKeyPath: "fractionCompleted", options: [.new, .initial], context: &progressSceneKVOContext)
         }
     }
     
     /// A registered observer object for `SceneLoaderDownloadFailedNotification`s.
-    private var downloadFailedObserver: AnyObject?
+    fileprivate var downloadFailedObserver: AnyObject?
     
     // MARK: Initializers
     
@@ -65,7 +65,7 @@ class ProgressScene: Scene {
         progress of on demand resources and the loading progress of bringing
         assets into memory.
     */
-    static func progressSceneWithSceneLoader(sceneLoader: SceneLoader) -> ProgressScene {
+    static func progressSceneWithSceneLoader(_ sceneLoader: SceneLoader) -> ProgressScene {
         // Load the progress scene from its sks file.
         let progressScene = ProgressScene(fileNamed: "ProgressScene")!
         
@@ -76,7 +76,7 @@ class ProgressScene: Scene {
         return progressScene
     }
     
-    func setupWithSceneLoader(sceneLoader: SceneLoader) {
+    func setupWithSceneLoader(_ sceneLoader: SceneLoader) {
         // Set the sceneLoader. This may be in the downloading or preparing state.
         self.sceneLoader = sceneLoader
         
@@ -90,9 +90,9 @@ class ProgressScene: Scene {
         }
         
         // Register for notifications posted when the `SceneDownloader` fails.
-        let defaultCenter = NSNotificationCenter.defaultCenter()
-        downloadFailedObserver = defaultCenter.addObserverForName(SceneLoaderDidFailNotification, object: sceneLoader, queue: NSOperationQueue.mainQueue()) { [unowned self] notification in
-            guard let sceneLoader = notification.object as? SceneLoader, error = sceneLoader.error else { fatalError("The scene loader has no error to show.") }
+        let defaultCenter = NotificationCenter.default
+        downloadFailedObserver = defaultCenter.addObserver(forName: NSNotification.Name(rawValue: SceneLoaderDidFailNotification), object: sceneLoader, queue: OperationQueue.main) { [unowned self] notification in
+            guard let sceneLoader = notification.object as? SceneLoader, let error = sceneLoader.error else { fatalError("The scene loader has no error to show.") }
             
             self.showErrorStateForError(error)
         }
@@ -101,7 +101,7 @@ class ProgressScene: Scene {
     deinit {
         // Unregister as an observer of 'SceneLoaderDownloadFailedNotification' notifications.
         if let downloadFailedObserver = downloadFailedObserver {
-            NSNotificationCenter.defaultCenter().removeObserver(downloadFailedObserver, name: SceneLoaderDidFailNotification, object: sceneLoader)
+            NotificationCenter.default.removeObserver(downloadFailedObserver, name: NSNotification.Name(rawValue: SceneLoaderDidFailNotification), object: sceneLoader)
         }
         
         // Set the progress property to nil which will remove this object as an observer.
@@ -110,8 +110,8 @@ class ProgressScene: Scene {
     
     // MARK: Scene Life Cycle
     
-    override func didMoveToView(view: SKView) {
-        super.didMoveToView(view)
+    override func didMove(to view: SKView) {
+        super.didMove(to: view)
         
         //centerCameraOnPoint(backgroundNode!.position)
 
@@ -129,11 +129,12 @@ class ProgressScene: Scene {
     
     // MARK: Key Value Observing (KVO) for NSProgress
     
-    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String: AnyObject]?, context: UnsafeMutablePointer<Void>) {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
         // Check if this is the KVO notification we need.
+        /*
         if context == &progressSceneKVOContext && keyPath == "fractionCompleted" && object === progress {
             // Update the progress UI on the main queue.
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 guard let progress = self.progress else { return }
         
                 // Update the progress bar to match the amount of progress completed.
@@ -144,8 +145,8 @@ class ProgressScene: Scene {
             }
         }
         else {
-            super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
-        }
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }*/
     }
     
     // MARK: ButtonNodeResponderType
@@ -185,7 +186,7 @@ class ProgressScene: Scene {
     }
     */
     func showDefaultState() {
-        progressBarNode.hidden = false
+        progressBarNode.isHidden = false
         
         // Only display the "Cancel" button.
         //buttonWithIdentifier(.Home)?.hidden = true
@@ -196,7 +197,7 @@ class ProgressScene: Scene {
         //resetFocus()
     }
     
-    func showErrorStateForError(error: NSError) {
+    func showErrorStateForError(_ error: NSError) {
         // A new progress object will have to be created for any subsequent loading attempts.
         progress = nil
         
@@ -206,7 +207,7 @@ class ProgressScene: Scene {
         //buttonWithIdentifier(.Cancel)?.hidden = true
         
         // Hide normal state.
-        progressBarNode.hidden = true
+        progressBarNode.isHidden = true
         progressBarNode.size.width = 0.0
         
         // Reset the button focus.
@@ -221,7 +222,7 @@ class ProgressScene: Scene {
         }
     }
     
-    func showErrorAlert(error: NSError) {
+    func showErrorAlert(_ error: NSError) {
         labelNode.text = NSLocalizedString("Failed", comment: "Displayed when the scene loader fails to load a scene.")
         
         // Display the error description in a native alert.
@@ -229,15 +230,15 @@ class ProgressScene: Scene {
         guard let window = view?.window else { fatalError("Attempting to present an error when the scene is not in a window.") }
         
         let alert = NSAlert(error: error)
-        alert.beginSheetModalForWindow(window, completionHandler: nil)
+        alert.beginSheetModal(for: window, completionHandler: nil)
         #else
         guard let rootViewController = view?.window?.rootViewController else { fatalError("Attempting to present an error when the scene is not in a view controller.") }
         
-        let alert = UIAlertController(title: error.localizedDescription, message: error.localizedRecoverySuggestion, preferredStyle: .Alert)
-        let alertAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+        let alert = UIAlertController(title: error.localizedDescription, message: error.localizedRecoverySuggestion, preferredStyle: .alert)
+        let alertAction = UIAlertAction(title: "OK", style: .default, handler: nil)
         alert.addAction(alertAction)
         
-        rootViewController.presentViewController(alert, animated: true, completion: nil)
+        rootViewController.present(alert, animated: true, completion: nil)
         #endif
     }
 }

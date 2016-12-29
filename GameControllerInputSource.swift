@@ -33,24 +33,24 @@ final class GameControllerInputSource: InputSource {
     
     // MARK: Gamepad Registration Methods
     
-    private func registerPauseEvent() {
+    fileprivate func registerPauseEvent() {
         gameController.controllerPausedHandler = { [unowned self] _ in
             self.gameStateDelegate?.inputSourceDidTogglePauseState(self)
         }
     }
     
-    private func registerAttackEvents() {
+    fileprivate func registerAttackEvents() {
         /// A handler for button press events that trigger an attack action.
         let attackHandler: GCControllerButtonValueChangedHandler = { [unowned self] button, _, pressed in
             if pressed {
                 self.delegate?.inputSourceDidBeginAttack(self)
 
                 #if os(tvOS)
-                if let microGamepad = self.gameController.microGamepad where button == microGamepad.buttonA || button == microGamepad.buttonX {
+                if let microGamepad = self.gameController.microGamepad , button == microGamepad.buttonA || button == microGamepad.buttonX {
                     self.gameStateDelegate?.controlInputSourceDidSelect(self)
                 }
                 #else
-                if let gamepad = self.gameController.gamepad where button == gamepad.buttonA || button == gamepad.buttonX {
+                if let gamepad = self.gameController.gamepad , button == gamepad.buttonA || button == gamepad.buttonX {
                     //self.gameStateDelegate?.controlInputSourceDidSelect(self)
                 }
                 #endif
@@ -90,7 +90,7 @@ final class GameControllerInputSource: InputSource {
         }
     }
     
-    private func registerMovementEvents() {
+    fileprivate func registerMovementEvents() {
         /// An analog movement handler for D-pads and movement thumbsticks.
         let movementHandler: GCControllerDirectionPadValueChangedHandler = { [unowned self] _, xValue, yValue in
             // Move toward the direction of the axis.
@@ -124,7 +124,7 @@ final class GameControllerInputSource: InputSource {
         }
     }
     
-    private func registerRotationEvents() {
+    fileprivate func registerRotationEvents() {
         // `GCExtendedGamepad` right thumbstick controls rotational attack independent of movement direction.
         if let extendedGamepad = gameController.extendedGamepad {
         

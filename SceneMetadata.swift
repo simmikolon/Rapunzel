@@ -51,17 +51,23 @@ struct SceneMetadata {
         let typeIdentifier = sceneConfiguration["sceneType"] as! String
         
         switch typeIdentifier {
+            case "GameScene":
+                sceneType = GameScene.self
+             
             case "LevelScene":
                 sceneType = GameScene.self
             
             case "HomeEndScene":
                 sceneType = GameScene.self
+            
+            case "MenuBetaScene":
+                sceneType = MenuBetaScene.self
 
             default:
                 fatalError("Unidentified sceneType requested.")
         }
         
-        var loadableTypesForScene = [ResourceLoadableType.Type]()
+        let loadableTypesForScene = [ResourceLoadableType.Type]()
         
         // The on demand resource tags for the scene (if needed).
         if let tags = sceneConfiguration["onDemandResourcesTags"] as? [String] {

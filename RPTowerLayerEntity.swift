@@ -31,6 +31,10 @@ class TowerLayerEntity: LayerEntity, ResourceLoadableType {
         
         self.name = "TowerLayerEntity"
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension TowerLayerEntity {
@@ -39,10 +43,10 @@ extension TowerLayerEntity {
         return atlas == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         atlas = SKTextureAtlas(named: "RPTowerLayer")
-        atlas.preloadWithCompletionHandler { () -> Void in
+        atlas.preload { () -> Void in
 
             tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()

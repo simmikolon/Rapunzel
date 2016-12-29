@@ -31,6 +31,10 @@ class HairLayerEntity: LayerEntity, ResourceLoadableType {
         
         self.name = "HairLayerEntity"
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension HairLayerEntity {
@@ -39,16 +43,26 @@ extension HairLayerEntity {
         return atlas == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         atlas = SKTextureAtlas(named: "RPHairLayer")
-        atlas.preloadWithCompletionHandler { () -> Void in
+        atlas.preload { () -> Void in
             
             tileSet = TileComponent.tileSetFromAtlas(atlas)
             completionHandler()
         }
     }
-    
+    /*
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
+        
+        atlas = SKTextureAtlas(named: "RPHairLayer")
+        atlas.preload { () -> Void in
+            
+            tileSet = TileComponent.tileSetFromAtlas(atlas)
+            completionHandler()
+        }
+    }
+    */
     static func purgeResources() {
         
         atlas = nil

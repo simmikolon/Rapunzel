@@ -22,14 +22,14 @@ class GameSceneState: GKState {
     
     // MARK: - Lifecycle
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
     }
     
     // MARK: Deinitialization
     
     deinit {
         
-        print("Deinitialization: \(self.dynamicType)")
+        print("Deinitialization: \(type(of: self))")
     }
 }

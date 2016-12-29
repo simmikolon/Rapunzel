@@ -11,13 +11,13 @@ import GameplayKit
 
 struct PatternSettings {
     
-    static let elementsPerBeat: Int = 5
-    static let lengthOfBeat: CGFloat = 300
+    //static let elementsPerBeat: Int = 5
+    static let lengthOfBeat: CGFloat = 160
 }
 
 protocol PatternManagerDelegate: class {
     
-    func createBeatElement(beatElement: BeatElement, offset: CGFloat)
+    func createBeatElement(_ beatElement: BeatElement, offset: CGFloat)
 }
 
 class PatternManager {
@@ -31,7 +31,7 @@ class PatternManager {
     var upperBeat: Int = 0
     var lowerBeat: Int = 0
     
-    private var lastScrollingDelta: CGFloat = 0
+    fileprivate var lastScrollingDelta: CGFloat = 0
     
     init(withLayerEntity layerEntity: LayerEntity, pattern: Pattern? = nil, delegate: PatternManagerDelegate? = nil) {
         
@@ -51,7 +51,7 @@ class PatternManager {
             
             let beat = pattern.beats[pattern.cursor]
             
-            if beat.type != .Empty {
+            if beat.type != .empty {
                 
                 for element in beat.elements {
                     
@@ -87,7 +87,7 @@ class PatternManager {
     
     func update() {
         
-        let scrollingDelta = renderComponent.node.scene?.convertPoint(renderComponent.node.position, fromNode: renderComponent.node.parent!)
+        let scrollingDelta = renderComponent.node.scene?.convert(renderComponent.node.position, from: renderComponent.node.parent!)
         
         if scrollingDelta!.y - lastScrollingDelta < -PatternSettings.lengthOfBeat {
             didScrollUpOneBeat()

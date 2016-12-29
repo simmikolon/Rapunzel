@@ -11,8 +11,8 @@ import GameplayKit
 
 enum TreePlatformPosition: CGFloat {
     
-    case Left = -320
-    case Right = 320
+    case left = -320
+    case right = 320
 }
 
 class TreeLayerEntity: LayerEntity, ResourceLoadableType {
@@ -24,7 +24,7 @@ class TreeLayerEntity: LayerEntity, ResourceLoadableType {
     // MARK: - Components
     
     var tileComponent: TileComponent {
-        guard let tileComponent = componentForClass(TileComponent) else { fatalError() }
+        guard let tileComponent = component(ofType: TileComponent.self) else { fatalError() }
         return tileComponent
     }
     
@@ -39,6 +39,10 @@ class TreeLayerEntity: LayerEntity, ResourceLoadableType {
 
         self.name = "TreeLayerEntity"
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension TreeLayerEntity {
@@ -47,10 +51,10 @@ extension TreeLayerEntity {
         return tileAtlas == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         tileAtlas = SKTextureAtlas(named: "RPTreeLayer")
-        tileAtlas.preloadWithCompletionHandler { () -> Void in
+        tileAtlas.preload { () -> Void in
             
             tileSet = TileComponent.tileSetFromAtlas(tileAtlas)
             completionHandler()

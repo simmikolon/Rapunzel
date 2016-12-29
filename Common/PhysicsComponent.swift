@@ -17,11 +17,17 @@ class PhysicsComponent: GKComponent {
         
         self.physicsBody = physicsBody
         self.physicsBody.affectedByGravity = false
-        self.physicsBody.dynamic = false
+        self.physicsBody.isDynamic = false
         self.physicsBody.allowsRotation = false
         self.physicsBody.categoryBitMask = colliderType.categoryMask
         self.physicsBody.collisionBitMask = colliderType.collisionMask
         self.physicsBody.contactTestBitMask = colliderType.contactMask
         self.physicsBody.usesPreciseCollisionDetection = true
+        
+        super.init()
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

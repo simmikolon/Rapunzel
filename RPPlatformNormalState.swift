@@ -11,16 +11,16 @@ import GameplayKit
 
 class PlatformNormalState: PlatformState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         entity.animationComponent.requestedAnimation = PlatformAnimationName.Normal.rawValue
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
     }
     
-    override func isValidNextState(stateClass: AnyClass) -> Bool {
+    override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         
         switch stateClass {
             
@@ -32,14 +32,14 @@ class PlatformNormalState: PlatformState {
         }
     }
     
-    override func willExitWithNextState(nextState: GKState) {
+    override func willExit(to nextState: GKState) {
         
-        super.willExitWithNextState(nextState)
+        super.willExit(to: nextState)
     }
     
-    override func contactWithEntityDidBegin(entity: GKEntity) {
+    override func contactWithEntityDidBegin(_ entity: GKEntity) {
         
-        guard let renderComponent = entity.componentForClass(RenderComponent) else {
+        guard let renderComponent = entity.component(ofType: RenderComponent.self) else {
             fatalError("Collided node has no RenderComponent!")
         }
         
@@ -49,27 +49,27 @@ class PlatformNormalState: PlatformState {
             
             if self.entity.breakable {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(PlatformBreakingState)
+                self.entity.stateMachineComponent.stateMachine.enter(PlatformBreakingState.self)
                 
             } else {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(PlatformBottomHitState)
+                self.entity.stateMachineComponent.stateMachine.enter(PlatformBottomHitState.self)
             }
             
         } else if (!bottomCollision) {
             
             if self.entity.breakable {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(PlatformBreakingState)
+                self.entity.stateMachineComponent.stateMachine.enter(PlatformBreakingState.self)
                 
             } else {
                 
-                self.entity.stateMachineComponent.stateMachine.enterState(PlatformJumpingOnState)
+                self.entity.stateMachineComponent.stateMachine.enter(PlatformJumpingOnState.self)
             }
         }
     }
     
-    override func contactWithEntityDidEnd(entity: GKEntity) {
+    override func contactWithEntityDidEnd(_ entity: GKEntity) {
         
         //self.entity.stateMachineComponent.stateMachine.enterState(DebugPlatformJumpingOffState)
     }

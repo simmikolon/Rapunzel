@@ -23,6 +23,14 @@ class LevelEntity: Entity {
         
         renderComponent = RenderComponent()
         super.init()
-        renderComponent.node.entity = self
+        if #available(iOS 10.0, *) {
+            renderComponent.node.entity = self
+        } else {
+            // Fallback on earlier versions
+        }
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

@@ -9,7 +9,7 @@
 
 import Foundation
 
-class LoadSceneOperation: Operation, NSProgressReporting {
+class LoadSceneOperation: Operation, ProgressReporting {
     // MARK: Properties
     
     /// The metadata for the scene to load.
@@ -19,14 +19,14 @@ class LoadSceneOperation: Operation, NSProgressReporting {
     var scene: Scene?
     
     /// Progress used to report on the status of this operation.
-    let progress: NSProgress
+    let progress: Progress
     
     // MARK: Initialization
     
     init(sceneMetadata: SceneMetadata) {
         self.sceneMetadata = sceneMetadata
         
-        progress = NSProgress(totalUnitCount: 1)
+        progress = Progress(totalUnitCount: 1)
         super.init()
     }
     
@@ -34,20 +34,20 @@ class LoadSceneOperation: Operation, NSProgressReporting {
     
     override func start() {
         // If the operation is cancelled there's nothing to do.
-        guard !cancelled else { return }
+        guard !isCancelled else { return }
         
-        if progress.cancelled {
+        if progress.isCancelled {
             // Ensure the operation is marked as `cancelled`.
             cancel()
             return
         }
         
         // Mark the operation as executing.
-        state = .Executing
+        state = .executing
         
         // Load the scene into memory using `SKNode(fileNamed:)`.
         let scene = sceneMetadata.sceneType.init(fileNamed: sceneMetadata.fileName)!
-        scene.scaleMode = .AspectFit
+        scene.scaleMode = .aspectFit
         
         self.scene = scene
 
@@ -57,6 +57,6 @@ class LoadSceneOperation: Operation, NSProgressReporting {
         // Update the progress object's completed unit count.
         progress.completedUnitCount = 1
         
-        state = .Finished
+        state = .finished
     }
 }

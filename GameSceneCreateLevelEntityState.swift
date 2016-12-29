@@ -11,13 +11,13 @@ import SpriteKit
 
 class GameSceneCreateLevelEntityState: GameSceneState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         createScene()
-        gameScene.stateMachine.enterState(GameScenePlayingState.self)
+        gameScene.stateMachine.enter(GameScenePlayingState.self)
     }
     
-    private func createScene() {
+    fileprivate func createScene() {
         
         let levelEntity = LevelEntity()
         levelEntity.name = "LevelEntity"

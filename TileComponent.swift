@@ -28,7 +28,7 @@ class TileComponent: GKComponent {
     
     var previousCameraState = CameraState.Resting.rawValue
     
-    private var tileIndex_: Int = 0
+    fileprivate var tileIndex_: Int = 0
 
     var tileIndex: Int {
 
@@ -50,15 +50,15 @@ class TileComponent: GKComponent {
         }
     }
     
-    private var upperPositionOffset: CGFloat = 0
-    private var lowerPositionOffset: CGFloat = 0
-    private var offset: CGFloat = 0
+    fileprivate var upperPositionOffset: CGFloat = 0
+    fileprivate var lowerPositionOffset: CGFloat = 0
+    fileprivate var offset: CGFloat = 0
     
     // MARK: Initialisation
     
     init(withEntity entity: GKEntity, tileSet: TileSet, offset: CGFloat = 0) {
         
-        guard let renderComponent = entity.componentForClass(RenderComponent) else {
+        guard let renderComponent = entity.component(ofType: RenderComponent.self) else {
             fatalError("No Render Component!")
         }
         
@@ -86,6 +86,10 @@ class TileComponent: GKComponent {
         self.createStartupTiles()
     }
 
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     func createStartupTiles() {
      
         let screenSize = CGSize(width: GameSceneSettings.width, height: GameSceneSettings.height)
@@ -108,7 +112,6 @@ class TileComponent: GKComponent {
         /* If there is a start-tile we have to add this first */
         
         if (tileSet.startTile != nil) {
-            
             let texture = self.tileSet.startTile!
             addTile(withTexture: texture, position: CGPoint(x: 0, y: upperPositionOffset))
         }
@@ -116,7 +119,6 @@ class TileComponent: GKComponent {
         /* Next we fill up the entire screen with tiles */
         
         while (upperPositionOffset < screenSize.height + self.offset) {
-            
             let texture = self.tileSet.tiles[tileIndex]
             addTile(withTexture: texture, position: CGPoint(x: 0, y: upperPositionOffset))
             tileIndex += 1
@@ -126,20 +128,27 @@ class TileComponent: GKComponent {
         /* Since we are moving tiles out of screen back onto screen at the opposite direction */
         /* The additional line makes sure that the whole screen is always covered with tiles */
         
-        let texture = self.tileSet.tiles[tileIndex]
+        var texture = self.tileSet.tiles[tileIndex]
+        addTile(withTexture: texture, position: CGPoint(x: 0, y: upperPositionOffset))
+        tileIndex += 1
+        
+        /* PROTOTYPING: Needed to add additional second line since there was a gap-glitch after changing tiles to a larger size!!!  */
+        /* TODO: Fix this! */
+        
+        texture = self.tileSet.tiles[tileIndex]
         addTile(withTexture: texture, position: CGPoint(x: 0, y: upperPositionOffset))
         tileIndex += 1
     }
     
     // MARK: Lifecylce Methods
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         
-        super.updateWithDeltaTime(seconds)
+        super.update(deltaTime: seconds)
         
         for tileNode in self.tileNodes {
             
-            let absolutePosition = renderComponent.node.scene!.convertPoint(tileNode.position, fromNode: tileNode.parent!)
+            let absolutePosition = renderComponent.node.scene!.convert(tileNode.position, from: tileNode.parent!)
             
             /* Camera is moving up */
             
@@ -168,7 +177,7 @@ class TileComponent: GKComponent {
                     
                     let newTexture = self.tileSet.tiles[tileIndex]
                     
-                    tileNode.runAction(SKAction.setTexture(newTexture, resize: true))
+                    tileNode.run(SKAction.setTexture(newTexture, resize: true))
                     tileNode.position.y = upperPositionOffset
                     
                     /* Add textures size to the position offset */
@@ -180,7 +189,7 @@ class TileComponent: GKComponent {
             
             /* Camera is moving down */
             
-            else {
+            else if cameraComponent.cameraState == CameraState.MovingSouth.rawValue {
                 
                 if absolutePosition.y >= GameSceneSettings.height {
                     
@@ -209,7 +218,7 @@ class TileComponent: GKComponent {
                     
                     lowerPositionOffset -= newTexture.size().height
                     
-                    tileNode.runAction(SKAction.setTexture(newTexture, resize: true))
+                    tileNode.run(SKAction.setTexture(newTexture, resize: true))
                     tileNode.position.y = lowerPositionOffset
                     
                     tileIndex -= 1
@@ -220,16 +229,16 @@ class TileComponent: GKComponent {
     
     // MARK: Class Methods
     
-    class func tileSetFromAtlas(tileAtlas: SKTextureAtlas) -> TileSet {
+    class func tileSetFromAtlas(_ tileAtlas: SKTextureAtlas) -> TileSet {
         
         var textures = [SKTexture]()
         
-        let sortedTextureNames = tileAtlas.textureNames.sort { $0 < $1 }
+        let sortedTextureNames = tileAtlas.textureNames.sorted { $0 < $1 }
         var startTexture: SKTexture?
         
         for textureName: String in sortedTextureNames {
             
-            if textureName.lowercaseString.containsString("bottom") {
+            if textureName.lowercased().contains("bottom") {
                 
                 startTexture = tileAtlas.textureNamed(textureName)
                 

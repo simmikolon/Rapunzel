@@ -37,6 +37,10 @@ class DebugPlatformEntity: PlatformEntity, ResourceLoadableType {
         
         super.init(isBreakable: breakable, isBottomCollidable: bottomCollidable, animations: animations)
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension DebugPlatformEntity {
@@ -45,7 +49,7 @@ extension DebugPlatformEntity {
         return true
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         SKTextureAtlas.preloadTextureAtlasesNamed(DebugPlatformAnimationName.atlasNames) { error, atlases in
             

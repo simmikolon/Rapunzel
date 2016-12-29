@@ -24,8 +24,8 @@ protocol ContactableNode {
 
 protocol ContactNotifiableType {
     
-    func contactWithEntityDidBegin(entity: GKEntity)
-    func contactWithEntityDidEnd(entity: GKEntity)
+    func contactWithEntityDidBegin(_ entity: GKEntity)
+    func contactWithEntityDidEnd(_ entity: GKEntity)
 }
 
 class PhysicsWorldContactDelegate: NSObject, SKPhysicsContactDelegate {
@@ -55,11 +55,15 @@ class PhysicsWorldContactDelegate: NSObject, SKPhysicsContactDelegate {
             
             ColliderType.requestedContactNotifications[.NormalPlatform] = [
                 .TaskBot,
-                .PlayerBot
+                .PlayerBot,
             ]
             
             ColliderType.requestedContactNotifications[.BottomCollidablePlatform] = [
                 .TaskBot,
+                .PlayerBot
+            ]
+            
+            ColliderType.requestedContactNotifications[.CollectableEntity] = [
                 .PlayerBot
             ]
         }
@@ -67,13 +71,13 @@ class PhysicsWorldContactDelegate: NSObject, SKPhysicsContactDelegate {
         setupCollisions()
     }
     
-    func didBeginContact(contact: SKPhysicsContact) {
+    func didBegin(_ contact: SKPhysicsContact) {
         handleContact(contact) { (ContactNotifiableType: ContactNotifiableType, otherEntity: GKEntity) in
             ContactNotifiableType.contactWithEntityDidBegin(otherEntity)
         }
     }
     
-    func didEndContact(contact: SKPhysicsContact) {
+    func didEnd(_ contact: SKPhysicsContact) {
         handleContact(contact) { (ContactNotifiableType: ContactNotifiableType, otherEntity: GKEntity) in
             ContactNotifiableType.contactWithEntityDidEnd(otherEntity)
         }
@@ -81,7 +85,7 @@ class PhysicsWorldContactDelegate: NSObject, SKPhysicsContactDelegate {
     
     // MARK: SKPhysicsContactDelegate convenience
     
-    private func handleContact(contact: SKPhysicsContact, contactCallback: (ContactNotifiableType, GKEntity) -> Void) {
+    fileprivate func handleContact(_ contact: SKPhysicsContact, contactCallback: (ContactNotifiableType, GKEntity) -> Void) {
         // Get the `ColliderType` for each contacted body.
         let colliderTypeA = ColliderType(rawValue: contact.bodyA.categoryBitMask)
         let colliderTypeB = ColliderType(rawValue: contact.bodyB.categoryBitMask)
@@ -93,14 +97,25 @@ class PhysicsWorldContactDelegate: NSObject, SKPhysicsContactDelegate {
         // Make sure that at least one of the entities wants to handle this contact.
         //assert(aWantsCallback || bWantsCallback, "Unhandled physics contact - A = \(colliderTypeA), B = \(colliderTypeB)")
         
-        let entityA = (contact.bodyA.node as? Node)?.entity
-        let entityB = (contact.bodyB.node as? Node)?.entity
+        var entityA: GKEntity?
+        var entityB: GKEntity?
+        
+        if #available(iOS 10.0, *) {
+            entityA = ((contact.bodyA.node as? Node)?.entity)!
+        } else {
+            // Fallback on earlier versions
+        }
+        if #available(iOS 10.0, *) {
+            entityB = ((contact.bodyB.node as? Node)?.entity)!
+        } else {
+            // Fallback on earlier versions
+        }
         
         /*
         If `entityA` is a notifiable type and `colliderTypeA` specifies that it should be notified
         of contact with `colliderTypeB`, call the callback on `entityA`.
         */
-        if let notifiableEntity = entityA as? ContactNotifiableType, otherEntity = entityB where aWantsCallback {
+        if let notifiableEntity = entityA as? ContactNotifiableType, let otherEntity = entityB , aWantsCallback {
             contactCallback(notifiableEntity, otherEntity)
         }
         
@@ -108,7 +123,7 @@ class PhysicsWorldContactDelegate: NSObject, SKPhysicsContactDelegate {
         If `entityB` is a notifiable type and `colliderTypeB` specifies that it should be notified
         of contact with `colliderTypeA`, call the callback on `entityB`.
         */
-        if let notifiableEntity = entityB as? ContactNotifiableType, otherEntity = entityA where bWantsCallback {
+        if let notifiableEntity = entityB as? ContactNotifiableType, let otherEntity = entityA , bWantsCallback {
             contactCallback(notifiableEntity, otherEntity)
         }
     }

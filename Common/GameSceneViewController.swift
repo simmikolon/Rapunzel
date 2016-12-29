@@ -26,5 +26,6 @@ class GameSceneViewController: SKViewController {
         let touchControlInputNode = TouchControlInputNode(frame: view.bounds, thumbStickNodeSize: CGSize(width: 0, height: 0))
         let inputManager = InputManager(nativeControlInputSource: touchControlInputNode)
         sceneManager = SceneManager(presentingView: skView, inputManager: inputManager)
+        sceneManager.transitionToSceneWithSceneIdentifier(.home)
     }
 }

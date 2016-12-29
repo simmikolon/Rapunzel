@@ -9,6 +9,7 @@
 protocol ResourceLoadableType: class {
 
     static var resourcesNeedLoading: Bool { get }
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ())
+    //static func loadResourcesWithCompletionHandler(_ completionHandler: () -> ())
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ())
     static func purgeResources()
 }

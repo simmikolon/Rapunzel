@@ -14,6 +14,7 @@
 #endif
 
 import GameplayKit
+import SpriteKit
 
 struct InputComponentSettings {
     
@@ -24,7 +25,7 @@ class InputComponent: GKComponent, InputSourceDelegate {
     
     var stateMachineComponent: StateMachineComponent {
         
-        guard let stateMachineComponent = entity?.componentForClass(StateMachineComponent.self) else {
+        guard let stateMachineComponent = entity?.component(ofType: StateMachineComponent.self) else {
             fatalError()
         }
         
@@ -33,7 +34,7 @@ class InputComponent: GKComponent, InputSourceDelegate {
     
     var renderComponent: RenderComponent {
         
-        guard let renderComponent = entity?.componentForClass(RenderComponent.self) else {
+        guard let renderComponent = entity?.component(ofType: RenderComponent.self) else {
             fatalError()
         }
         
@@ -42,7 +43,7 @@ class InputComponent: GKComponent, InputSourceDelegate {
     
     var physicsComponent: PhysicsComponent {
         
-        guard let physicsComponent = entity?.componentForClass(GravityPhysicsComponent.self) else {
+        guard let physicsComponent = entity?.component(ofType: GravityPhysicsComponent.self) else {
             fatalError()
         }
         
@@ -52,22 +53,22 @@ class InputComponent: GKComponent, InputSourceDelegate {
     var xAcceleration: CGFloat = 0.0
     var displacement: CGFloat = 0.0
     
-    func inputSource(inputSource: InputSource, didUpdateDisplacement: float2) {
+    func inputSource(_ inputSource: InputSource, didUpdateDisplacement: float2) {
         
         self.displacement = CGFloat(didUpdateDisplacement.x)
     }
     
-    func inputSourceDidBeginUsingSpecialPower(inputSource: InputSource) {
+    func inputSourceDidBeginUsingSpecialPower(_ inputSource: InputSource) {
         
-        self.stateMachineComponent.stateMachine.enterState(PlayerBoostState.self)
+        self.stateMachineComponent.stateMachine.enter(PlayerBoostState.self)
     }
     
-    func inputSourceDidEndUsingSpecialPower(inputSource: InputSource) {}
-    func inputSourceDidBeginAttack(inputSource: InputSource) {}
-    func inputSourceDidEndAttack(inputSource: InputSource) {}
+    func inputSourceDidEndUsingSpecialPower(_ inputSource: InputSource) {}
+    func inputSourceDidBeginAttack(_ inputSource: InputSource) {}
+    func inputSourceDidEndAttack(_ inputSource: InputSource) {}
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         self.xAcceleration = (CGFloat(displacement) * 0.5) + (self.xAcceleration * 0.75)
         let xAcceleration = self.xAcceleration * InputComponentSettings.AccelerationMultiplier
         physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)

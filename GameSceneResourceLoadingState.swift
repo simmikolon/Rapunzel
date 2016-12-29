@@ -10,24 +10,24 @@ import GameplayKit
 
 class GameSceneResourceLoadingState: GameSceneState {
 
-    let operationQueue = NSOperationQueue()
+    let operationQueue = OperationQueue()
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         loadResources()
     }
     
-    private func loadResources() {
+    fileprivate func loadResources() {
         
-        let loadSceneOperation = NSOperation()
+        let loadSceneOperation = Foundation.Operation()
         
         loadSceneOperation.completionBlock = { [unowned self] in
             
             /* Enter the next state on the main queue. */
             
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 
-                let didEnterReadyState = self.gameScene.stateMachine.enterState(GameSceneCreateLevelEntityState.self)
+                let didEnterReadyState = self.gameScene.stateMachine.enter(GameSceneCreateLevelEntityState.self)
                 assert(didEnterReadyState, "Failed to transition to `ReadyState` after resources were prepared.")
             }
         }

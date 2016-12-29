@@ -12,8 +12,8 @@ class GameSceneFinishLoadingResourcesState: GameSceneState {
 
     // MARK: - Lifecycle
     
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
         print("Finished loading resources!")
     }
 }

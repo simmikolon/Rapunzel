@@ -10,7 +10,7 @@ import SpriteKit
 import GameplayKit
 
 protocol LifecycleComponentDelegate: class {
-    func nodeDidExitScreen(node node: SKNode)
+    func nodeDidExitScreen(_ node: SKNode)
 }
 
 class LifecycleComponent: GKComponent {
@@ -20,7 +20,7 @@ class LifecycleComponent: GKComponent {
     
     init(withEntity entity: GKEntity, delegate: LifecycleComponentDelegate) {
         
-        guard let renderComponent = entity.componentForClass(RenderComponent) else {
+        guard let renderComponent = entity.component(ofType: RenderComponent.self) else {
             fatalError()
         }
         
@@ -29,16 +29,20 @@ class LifecycleComponent: GKComponent {
         
         super.init()
     }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
+    override func update(deltaTime seconds: TimeInterval) {
         
-        super.updateWithDeltaTime(seconds)
+        super.update(deltaTime: seconds)
         
-        if let position = node.scene?.convertPoint(node.position, fromNode: node.parent!) {
+        if let position = node.scene?.convert(node.position, from: node.parent!) {
          
-            if position.y < 0 {
+            if position.y < -100 {
                 
-                self.delegate.nodeDidExitScreen(node: node)
+                self.delegate.nodeDidExitScreen(node)
             }
         }
     }

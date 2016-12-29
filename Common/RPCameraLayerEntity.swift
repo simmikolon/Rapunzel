@@ -20,4 +20,8 @@ class CameraLayerEntity: LayerEntity {
         self.renderComponent.addChild(cameraComponent.cameraNode)
         self.name = "CameraLayerEntity"
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }

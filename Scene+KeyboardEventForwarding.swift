@@ -20,16 +20,8 @@ extension Scene {
     }
     
     // MARK: NSResponder
-    
-    override func mouseDown(event: NSEvent) {
-        //keyboardControlInputSource.handleMouseDownEvent()
-    }
-    
-    override func mouseUp(theEvent: NSEvent) {
-        //keyboardControlInputSource.handleMouseUpEvent()
-    }
 
-    override func keyDown(event: NSEvent) {
+    override func keyDown(with event: NSEvent) {
         guard let characters = event.charactersIgnoringModifiers?.characters else { return }
 
         for character in characters {
@@ -37,7 +29,7 @@ extension Scene {
         }
     }
     
-    override func keyUp(event: NSEvent) {
+    override func keyUp(with event: NSEvent) {
         guard let characters = event.charactersIgnoringModifiers?.characters else { return }
         
         for character in characters {

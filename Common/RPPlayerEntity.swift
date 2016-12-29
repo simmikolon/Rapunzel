@@ -30,7 +30,7 @@ enum PlayerAnimationName: String {
     ]
 }
 
-class PlayerEntity: Entity, ContactNotifiableType, ResourceLoadableType, PlayerStateDelegate {
+class PlayerEntity: Entity, ContactNotifiableType, PlayerStateDelegate {
     
     static var textureSize = CGSize(width: 104, height: 232)
     static var animations: [String: Animation]!
@@ -51,7 +51,7 @@ class PlayerEntity: Entity, ContactNotifiableType, ResourceLoadableType, PlayerS
         
         /* Component Initialisation before super.init() */
         
-        physicsComponent = GravityPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOfSize: CGSize(width: 30, height: 232)), colliderType: .PlayerBot)
+        physicsComponent = GravityPhysicsComponent(physicsBody: SKPhysicsBody(rectangleOf: CGSize(width: 30, height: 232)), colliderType: .PlayerBot)
         renderComponent = RenderComponent()
         inputComponent = InputComponent()
         
@@ -84,8 +84,16 @@ class PlayerEntity: Entity, ContactNotifiableType, ResourceLoadableType, PlayerS
         
         /* Render Component Setup after super.init() */
         
-        renderComponent.node.entity = self
-        renderComponent.node.entity = self
+        if #available(iOS 10.0, *) {
+            renderComponent.node.entity = self
+        } else {
+            // Fallback on earlier versions
+        }
+        if #available(iOS 10.0, *) {
+            renderComponent.node.entity = self
+        } else {
+            // Fallback on earlier versions
+        }
         renderComponent.node.physicsBody = physicsComponent.physicsBody
         
         /* Input Component */
@@ -96,18 +104,22 @@ class PlayerEntity: Entity, ContactNotifiableType, ResourceLoadableType, PlayerS
         addComponent(stateMachineComponent)
         addComponent(animationComponent)
     }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: Input Component Delegate Methods
     // TODO: Out-Sourcing input Methods as States and implement State Machine into InputComponent!
     
     func didTap() {
         
-        self.stateMachineComponent.stateMachine.enterState(PlayerBoostState.self)
+        self.stateMachineComponent.stateMachine.enter(PlayerBoostState.self)
     }
     
-    func didChangeMotion(xAcceleration: CGFloat) {
+    func didChangeMotion(_ xAcceleration: CGFloat) {
 
-        //physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)
+        physicsComponent.physicsBody.velocity = CGVector(dx: xAcceleration, dy: physicsComponent.physicsBody.velocity.dy)
     }
     
     /**/
@@ -151,24 +163,24 @@ class PlayerEntity: Entity, ContactNotifiableType, ResourceLoadableType, PlayerS
 
 extension PlayerEntity {
     
-    func contactWithEntityDidBegin(entity: GKEntity) {
+    func contactWithEntityDidBegin(_ entity: GKEntity) {
         
         self.stateMachineComponent.contactWithEntityDidBegin(entity)
     }
     
-    func contactWithEntityDidEnd(entity: GKEntity) {
+    func contactWithEntityDidEnd(_ entity: GKEntity) {
         
         self.stateMachineComponent.contactWithEntityDidEnd(entity)
     }
 }
 
-extension PlayerEntity {
+extension PlayerEntity: ResourceLoadableType {
     
     static var resourcesNeedLoading: Bool {
         return animations == nil
     }
     
-    static func loadResourcesWithCompletionHandler(completionHandler: () -> ()) {
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
         
         SKTextureAtlas.preloadTextureAtlasesNamed(PlayerAnimationName.atlasNames) { error, atlases in
             
@@ -184,6 +196,24 @@ extension PlayerEntity {
             completionHandler()
         }
     }
+    /*
+    static func loadResources(withCompletionHandler completionHandler: @escaping () -> ()) {
+        
+        SKTextureAtlas.preloadTextureAtlasesNamed(PlayerAnimationName.atlasNames) { error, atlases in
+            
+            if let error = error { fatalError("Fatal Error beim Preloading der TextureAtlases: \(error)") }
+            
+            animations = [:]
+            
+            for i in 0 ..< atlases.count {
+                
+                animations[PlayerAnimationName.atlasNames[i]] = AnimationComponent.animationsFromAtlas(atlases[i])
+            }
+            
+            completionHandler()
+        }
+    }
+    */
     
     static func purgeResources() {
 

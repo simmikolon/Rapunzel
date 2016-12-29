@@ -11,12 +11,12 @@ import GameplayKit
 
 class GameScenePlayingState: GameSceneState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
     }
     
-    override func updateWithDeltaTime(seconds: NSTimeInterval) {
-        super.updateWithDeltaTime(seconds)
+    override func update(deltaTime seconds: TimeInterval) {
+        super.update(deltaTime: seconds)
         gameScene.patternManager.update()
         gameScene.entityManager.updateComponentSystems(withCurrentTime: seconds)
         gameScene.entityManager.flushEntities()

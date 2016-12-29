@@ -11,7 +11,7 @@ import GameplayKit
 
 class GameScenePauseState: GameSceneState {
 
-    override func didEnterWithPreviousState(previousState: GKState?) {
-        super.didEnterWithPreviousState(previousState)
+    override func didEnter(from previousState: GKState?) {
+        super.didEnter(from: previousState)
     }
 }

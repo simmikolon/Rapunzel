@@ -9,23 +9,23 @@
 import Foundation
 
 protocol RampDelegate: class {
-    func ramp(ramp: Ramp, didChangeRampFactor rampFactor: Float)
+    func ramp(_ ramp: Ramp, didChangeRampFactor rampFactor: Float)
 }
 
 class Ramp {
     
     weak var delegate: RampDelegate?
     
-    private var rampTimer: NSTimer?
-    private var rampFactor: Float = 0.0
+    fileprivate var rampTimer: Timer?
+    fileprivate var rampFactor: Float = 0.0
     
     var rampIncrement: Float = 0.075
     var rampDecrement: Float = 0.05
     
-    private let rampDownInterval: NSTimeInterval = 0.015
-    private let rampUpInterval: NSTimeInterval = 0.01
+    fileprivate let rampDownInterval: TimeInterval = 0.015
+    fileprivate let rampUpInterval: TimeInterval = 0.01
     
-    init(withIncrement increment: Float = 0.075, decrement: Float = 0.05) {
+    init(withIncrement increment: Float = 0.1, decrement: Float = 0.075) {
         
         rampIncrement = increment
         rampDecrement = decrement
@@ -33,19 +33,19 @@ class Ramp {
     
     func rampUp() {
         stopRampTimer()
-        rampTimer = NSTimer.scheduledTimerWithTimeInterval(rampUpInterval, target: self, selector: #selector(rampUpAction), userInfo: nil, repeats: true)
+        rampTimer = Timer.scheduledTimer(timeInterval: rampUpInterval, target: self, selector: #selector(rampUpAction), userInfo: nil, repeats: true)
     }
     
-    private func stopRampTimer() {
+    fileprivate func stopRampTimer() {
         rampTimer?.invalidate()
     }
     
     func rampDown() {
         stopRampTimer()
-        rampTimer = NSTimer.scheduledTimerWithTimeInterval(rampDownInterval, target: self, selector: #selector(rampDownAction), userInfo: nil, repeats: true)
+        rampTimer = Timer.scheduledTimer(timeInterval: rampDownInterval, target: self, selector: #selector(rampDownAction), userInfo: nil, repeats: true)
     }
     
-    @objc private func rampUpAction() {
+    @objc fileprivate func rampUpAction() {
         rampFactor += rampIncrement
         if rampFactor > 1.0 {
             rampFactor = 1.0
@@ -54,7 +54,7 @@ class Ramp {
         delegate?.ramp(self, didChangeRampFactor: rampFactor)
     }
     
-    @objc private func rampDownAction() {
+    @objc fileprivate func rampDownAction() {
         rampFactor -= rampDecrement
         if rampFactor < 0.0 {
             rampFactor = 0.0
