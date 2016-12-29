@@ -114,8 +114,6 @@
 		4A417F9D1CE22D810000A972 /* LevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037A91CE078DA00406777 /* LevelDataSource.swift */; };
 		4A417F9E1CE22D810000A972 /* DemoLevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037AC1CE0790C00406777 /* DemoLevelDataSource.swift */; };
 		4A417F9F1CE22D860000A972 /* PrototypeAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4ACABA121C60A5360092A51F /* PrototypeAssets.xcassets */; };
-		4A417FA01CE22D8E0000A972 /* RPBranchRight.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706481C8EF10D00483657 /* RPBranchRight.png */; };
-		4A417FA11CE22D8E0000A972 /* RPBranchLeft.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706491C8EF10D00483657 /* RPBranchLeft.png */; };
 		4A417FA41CE22E2A0000A972 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A417FA31CE22E2A0000A972 /* Media.xcassets */; };
 		4A4C2F391C7F135700310E22 /* RPHairLayerEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4C2F381C7F135700310E22 /* RPHairLayerEntity.swift */; };
 		4A5C3A301CEB8F3A00436864 /* KeyboardInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C3A2E1CEB8F3A00436864 /* KeyboardInputSource.swift */; };
@@ -164,8 +162,6 @@
 		4A9F72C21CEC66310030B95A /* PauseScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9F72C01CEC660C0030B95A /* PauseScene.swift */; };
 		4AA2CA341CF43B5F00E0D746 /* WindowEnemyAppearingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA2CA331CF43B5F00E0D746 /* WindowEnemyAppearingState.swift */; };
 		4AA2CA371CF43C4D00E0D746 /* WindowEnemyAppearingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA2CA331CF43B5F00E0D746 /* WindowEnemyAppearingState.swift */; };
-		4AA7064A1C8EF10D00483657 /* RPBranchRight.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706481C8EF10D00483657 /* RPBranchRight.png */; };
-		4AA7064B1C8EF10D00483657 /* RPBranchLeft.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AA706491C8EF10D00483657 /* RPBranchLeft.png */; };
 		4AC037AA1CE078DA00406777 /* LevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037A91CE078DA00406777 /* LevelDataSource.swift */; };
 		4AC037AD1CE0790C00406777 /* DemoLevelDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037AC1CE0790C00406777 /* DemoLevelDataSource.swift */; };
 		4AC037B41CE08B8800406777 /* EntityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC037B31CE08B8800406777 /* EntityManager.swift */; };
@@ -214,8 +210,6 @@
 		4AF001A31C58024F00205BCF /* InputComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF001A21C58024F00205BCF /* InputComponent.swift */; };
 		4AF5201A1CEDE397005E6DE7 /* MenuBetaScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 4AF520191CEDE397005E6DE7 /* MenuBetaScene.sks */; };
 		4AF5201B1CEDE397005E6DE7 /* MenuBetaScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 4AF520191CEDE397005E6DE7 /* MenuBetaScene.sks */; };
-		4AF5201D1CEDE43F005E6DE7 /* Hair Hair Hair.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AF5201C1CEDE43F005E6DE7 /* Hair Hair Hair.png */; };
-		4AF5201E1CEDE43F005E6DE7 /* Hair Hair Hair.png in Resources */ = {isa = PBXBuildFile; fileRef = 4AF5201C1CEDE43F005E6DE7 /* Hair Hair Hair.png */; };
 		4AF520201CEDE5E9005E6DE7 /* MenuBetaScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF5201F1CEDE5E9005E6DE7 /* MenuBetaScene.swift */; };
 		4AF520211CEDE5E9005E6DE7 /* MenuBetaScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF5201F1CEDE5E9005E6DE7 /* MenuBetaScene.swift */; };
 		4AF87F681CEDC9C000EB66AE /* SceneManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACDE67A1CECB42E004803EF /* SceneManager.swift */; };
@@ -306,8 +300,6 @@
 		4A9F72C01CEC660C0030B95A /* PauseScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PauseScene.swift; sourceTree = "<group>"; };
 		4A9F72C61CEC7AD10030B95A /* GameScene+Pause.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "GameScene+Pause.swift"; sourceTree = "<group>"; };
 		4AA2CA331CF43B5F00E0D746 /* WindowEnemyAppearingState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowEnemyAppearingState.swift; sourceTree = "<group>"; };
-		4AA706481C8EF10D00483657 /* RPBranchRight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = RPBranchRight.png; path = "../../Game Assets/Rapunzel/Prototype Assets/RPBranchRight.png"; sourceTree = "<group>"; };
-		4AA706491C8EF10D00483657 /* RPBranchLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = RPBranchLeft.png; path = "../../Game Assets/Rapunzel/Prototype Assets/RPBranchLeft.png"; sourceTree = "<group>"; };
 		4AC037A91CE078DA00406777 /* LevelDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LevelDataSource.swift; sourceTree = "<group>"; };
 		4AC037AC1CE0790C00406777 /* DemoLevelDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoLevelDataSource.swift; sourceTree = "<group>"; };
 		4AC037B31CE08B8800406777 /* EntityManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntityManager.swift; sourceTree = "<group>"; };
@@ -346,7 +338,6 @@
 		4AEDECE61C58B51A00F01C5F /* DebugSpriteComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DebugSpriteComponent.swift; path = Common/DebugSpriteComponent.swift; sourceTree = "<group>"; };
 		4AF001A21C58024F00205BCF /* InputComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = InputComponent.swift; path = Common/InputComponent.swift; sourceTree = "<group>"; };
 		4AF520191CEDE397005E6DE7 /* MenuBetaScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MenuBetaScene.sks; sourceTree = "<group>"; };
-		4AF5201C1CEDE43F005E6DE7 /* Hair Hair Hair.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Hair Hair Hair.png"; sourceTree = "<group>"; };
 		4AF5201F1CEDE5E9005E6DE7 /* MenuBetaScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuBetaScene.swift; sourceTree = "<group>"; };
 		4AF87F6A1CEDCA1000EB66AE /* ProgressScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProgressScene.swift; sourceTree = "<group>"; };
 		4AFD549B1C56ABF40063B314 /* ColliderType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ColliderType.swift; path = Common/ColliderType.swift; sourceTree = "<group>"; };
@@ -478,9 +469,6 @@
 		4A9CC8441C29581800DF6259 = {
 			isa = PBXGroup;
 			children = (
-				4AF5201C1CEDE43F005E6DE7 /* Hair Hair Hair.png */,
-				4AA706481C8EF10D00483657 /* RPBranchRight.png */,
-				4AA706491C8EF10D00483657 /* RPBranchLeft.png */,
 				4ACABA121C60A5360092A51F /* PrototypeAssets.xcassets */,
 				4AEA936B1C5FAAA5009AD815 /* Common */,
 				4A9CC84F1C29581800DF6259 /* Rapunzel */,
@@ -812,13 +800,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A417FA01CE22D8E0000A972 /* RPBranchRight.png in Resources */,
 				4A417F4C1CE22CC70000A972 /* MainMenu.xib in Resources */,
 				4ACDE6881CECB85E004803EF /* SceneConfiguration.plist in Resources */,
 				4ACDE68B1CECB913004803EF /* GameScene.sks in Resources */,
-				4A417FA11CE22D8E0000A972 /* RPBranchLeft.png in Resources */,
 				4A417F9F1CE22D860000A972 /* PrototypeAssets.xcassets in Resources */,
-				4AF5201E1CEDE43F005E6DE7 /* Hair Hair Hair.png in Resources */,
 				4A417FA41CE22E2A0000A972 /* Media.xcassets in Resources */,
 				4AF5201B1CEDE397005E6DE7 /* MenuBetaScene.sks in Resources */,
 			);
@@ -829,15 +814,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				4ACDE6871CECB85E004803EF /* SceneConfiguration.plist in Resources */,
-				4AF5201D1CEDE43F005E6DE7 /* Hair Hair Hair.png in Resources */,
 				4A9CC85F1C29581800DF6259 /* LaunchScreen.storyboard in Resources */,
 				4A9CC85C1C29581800DF6259 /* Assets.xcassets in Resources */,
 				4ACDE68A1CECB913004803EF /* GameScene.sks in Resources */,
 				4ACABA131C60A5360092A51F /* PrototypeAssets.xcassets in Resources */,
 				4A9CC85A1C29581800DF6259 /* Main.storyboard in Resources */,
-				4AA7064A1C8EF10D00483657 /* RPBranchRight.png in Resources */,
 				4AF5201A1CEDE397005E6DE7 /* MenuBetaScene.sks in Resources */,
-				4AA7064B1C8EF10D00483657 /* RPBranchLeft.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

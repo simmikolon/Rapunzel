@@ -436,8 +436,8 @@ class DemoLevelDataSource: LevelDataSource {
                 layerEntity.name = "ActionLayerEntity"
                 return layerEntity
                 
-            })
-            /*
+            }),
+            
             LevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> LayerEntity in
 
                 let layerEntity = HairLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraComponent, zPosition: -1)
@@ -445,8 +445,8 @@ class DemoLevelDataSource: LevelDataSource {
                 return layerEntity
                 
             }),
-            */
-            /*
+            
+            
             LevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> LayerEntity in
                 
                 let layerEntity = TowerLayerEntity(withParallaxFactor: 2.0, cameraComponent: cameraComponent, zPosition: -2)
@@ -454,8 +454,8 @@ class DemoLevelDataSource: LevelDataSource {
                 return layerEntity
                 
             }),
-            */
-            /*
+            
+            
             LevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> LayerEntity in
 
                 let layerEntity = TreeLayerEntity(withParallaxFactor: 1.5, cameraComponent: cameraComponent, zPosition: 1)
@@ -463,8 +463,8 @@ class DemoLevelDataSource: LevelDataSource {
                 return layerEntity
                 
             }),
-            */
-            /*
+            
+            
             LevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> LayerEntity in
                 
                 let layerEntity = BackgroundLayerEntity(withParallaxFactor: 3.0, cameraComponent: cameraComponent, zPosition: -3)
@@ -472,8 +472,8 @@ class DemoLevelDataSource: LevelDataSource {
                 return layerEntity
                 
             }),
-            */
-            /*
+            
+            
             LevelLayer(name: "ASD", creationHandler: { (cameraComponent) -> LayerEntity in
                 
                 let layerEntity = FarBackgroundLayerEntity(withParallaxFactor: 8.0, cameraComponent: cameraComponent, zPosition: -5)
@@ -481,7 +481,7 @@ class DemoLevelDataSource: LevelDataSource {
                 return layerEntity
                 
             })
-            */
+            
         ]
     }
 }
