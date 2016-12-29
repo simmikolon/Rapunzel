@@ -41,7 +41,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = CollectableEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 250
+            platform.renderComponent.node.position.x = 150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -123,7 +123,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = CollectableEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 250
+            platform.renderComponent.node.position.x = 150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -141,7 +141,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = HairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 120
+            platform.renderComponent.node.position.x = 20
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -158,7 +158,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = CollectableEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = -250
+            platform.renderComponent.node.position.x = -150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -187,12 +187,12 @@ class DemoLevelDataSource: LevelDataSource {
             })
         pattern.beats[4].elements.append(BeatElement(type: .leftTreePlatform) { (offset, entityManagerComponent) -> PlatformEntity in
             
-            guard let layerEntity = entityManagerComponent.entity(withName: "ActionLayerEntity") as? LayerEntity else {
+            guard let layerEntity = entityManagerComponent.entity(withName: "TreeLayerEntity") as? LayerEntity else {
                 fatalError()
             }
             
             let platform = LeftBranchPlatformEntity(isBreakable: false, isBottomCollidable: true)
-            platform.renderComponent.node.position.x = 300
+            platform.renderComponent.node.position.x = 200
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -225,7 +225,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = WindowPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = -250
+            platform.renderComponent.node.position.x = -150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -259,7 +259,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = CollectableEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 250
+            platform.renderComponent.node.position.x = 150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -275,7 +275,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = HairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = -220
+            platform.renderComponent.node.position.x = -20
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -309,7 +309,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = CollectableEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 450
+            platform.renderComponent.node.position.x = 150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -325,7 +325,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = WindowPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = -250
+            platform.renderComponent.node.position.x = -150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -341,7 +341,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = WindowPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 650
+            platform.renderComponent.node.position.x = 150
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -358,7 +358,7 @@ class DemoLevelDataSource: LevelDataSource {
             }
             
             let platform = HairRibbonPlatformEntity(isBreakable: false, isBottomCollidable: false)
-            platform.renderComponent.node.position.x = 300
+            platform.renderComponent.node.position.x = 20
             platform.renderComponent.node.position.y = offset
             platform.renderComponent.node.zPosition = 1
             platform.delegate = entityManagerComponent
@@ -371,7 +371,7 @@ class DemoLevelDataSource: LevelDataSource {
         pattern.beats[10] = Beat(withType: .notEmpty)
         pattern.beats[10].elements.append(BeatElement(type: .leftTreePlatform) { (offset, entityManagerComponent) -> PlatformEntity in
             
-            guard let layerEntity = entityManagerComponent.entity(withName: "ActionLayerEntity") as? LayerEntity else {
+            guard let layerEntity = entityManagerComponent.entity(withName: "TreeLayerEntity") as? LayerEntity else {
                 fatalError()
             }
             
