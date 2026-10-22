@@ -1,0 +1,35 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0b1a1c;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: system-ui, sans-serif;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, #16302f 0%, #0b1a1c 70%);
+}
+
+#game {
+  /* Always keep the phone portrait aspect ratio (768:1364 ~ 9:16). */
+  aspect-ratio: 768 / 1364;
+  width: min(100vw, calc(100vh * 768 / 1364));
+  height: auto;
+  max-height: 100vh;
+  display: block;
+  background: #1e3c3f;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.55);
+  touch-action: none;
+}

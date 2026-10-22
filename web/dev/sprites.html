@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Rapunzel sprite sheet</title>
+<style>body{background:#1e3c3f;margin:0;padding:16px;font-family:monospace;color:#cde}canvas{image-rendering:pixelated;display:block}</style>
+</head><body>
+<p>Procedural sprite sheet (dev tool). Every sprite is drawn by code in <code>src/art/</code>.</p>
+<canvas id="sheet"></canvas>
+<script type="module">
+import { buildAllArt } from '../src/art/index.js';
+const art = buildAllArt();
+const items = [];
+const walk = (obj, prefix) => {
+  for (const k of Object.keys(obj)) {
+    const v = obj[k];
+    if (v && v.canvas) items.push({ name: prefix + k, s: v });
+    else if (Array.isArray(v)) v.forEach((e, i) => { if (e && e.canvas) items.push({ name: `${prefix}${k}[${i}]`, s: e }); });
+    else if (v && typeof v === 'object') walk(v, prefix + k + '.');
+  }
+};
+walk(art, '');
+const canvas = document.getElementById('sheet');
+const ctx = canvas.getContext('2d');
+let x = 8, y = 8, rowH = 0, maxW = 1800;
+const pos = [];
+for (const it of items) {
+  const w = it.s.w, h = it.s.h + 18;
+  if (x + w + 8 > maxW) { x = 8; y += rowH + 8; rowH = 0; }
+  pos.push({ it, x, y });
+  x += Math.max(w, 70) + 12; rowH = Math.max(rowH, h);
+}
+canvas.width = maxW; canvas.height = y + rowH + 16;
+ctx.fillStyle = '#1e3c3f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.imageSmoothingEnabled = false;
+for (const { it, x, y } of pos) {
+  ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(x, y, it.s.w, it.s.h);
+  ctx.drawImage(it.s.canvas, x, y);
+  // anchor marker
+  ctx.fillStyle = '#ff2'; ctx.fillRect(x + it.s.ax - 2, y + it.s.ay - 2, 4, 4);
+  ctx.fillStyle = '#cde'; ctx.font = '11px monospace'; ctx.fillText(it.name, x, y + it.s.h + 12);
+}
+window.__sheetReady = true;
+</script></body></html>
