@@ -25,8 +25,9 @@ export const PAL = {
   braid: '#f7d35b', braidHi: '#fff1a8', braidShade: '#d9a62c', braidDark: '#a87a1c',
   ribbon: '#e85d8a', ribbonHi: '#ff9ab8', ribbonDark: '#a83a62',
   bow: '#ff6fa5', bowHi: '#ffd1e3', bowDark: '#c9407a',
-  // stone sill
+  // stone (tower window ledge) and the plank swing
   stoneLight: '#c8d8d2', stone: '#9bb0ad', stoneDark: '#6c8280', stoneShade: '#4b5e5d',
+  plank: '#b9875a', plankHi: '#dbb083', plankDark: '#7a5235', rope: '#d8c38a', ropeDark: '#a68b55',
   // creatures
   crow: '#1b1b2a', crowHi: '#34345a', beak: '#c9b35a', eyeWhite: '#f4f4f4', eyeRed: '#ff3b3b',
   spider: '#3a2342', spiderHi: '#5d3a6e', thread: '#e8e8f0',

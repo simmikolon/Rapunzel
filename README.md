@@ -56,16 +56,18 @@ of SpriteKit physics and GameplayKit:
   new hurt and dead states. Screen wrap-around, the fall speed cap, the
   tap-to-boost input and the 104 x 232 sprite size are the original's.
 * **Platforms**: branches growing from the two trees, ribbons tied to
-  Rapunzel's braid and (new) stone window sills on the tower. The original
-  `breakable` and `bottomCollidable` flags became dry branches that crumble
-  after one bounce and sills that bonk you from below.
+  Rapunzel's braid and (new) plank swings hung between the trees. The
+  original `breakable` and `bottomCollidable` flags became dry branches
+  that crumble after one bounce and swings that bonk you from below.
 * **Beat / pattern level system**: rows are generated ahead of the camera
   from platform slots, like `RPPatternControllerComponent` did with
   300-pt beats, but with altitude-based difficulty (gaps, crumbling
   branches, enemies, pickups) and a reachability guarantee.
 * **Camera** that follows upward only, with smoothing, and the layered
-  parallax scene: far sky, distant forest, tower + braid + trunks, fireflies
-  (`RPParticleLayerEntity`), vignette (`SSVignette.fsh`).
+  parallax scene like the original's layer entities: far sky, distant
+  forest, the tower behind, then the trees, braid, platforms and prince in
+  the front plane, fireflies (`RPParticleLayerEntity`), vignette
+  (`SSVignette.fsh`).
 
 ### What is new
 

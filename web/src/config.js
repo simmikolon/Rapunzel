@@ -18,7 +18,7 @@ export const SPRING_VY = 2650;        // bounce off a ribbon bow
 export const STOMP_VY = 1500;         // bounce off an enemy's head
 export const BOOST_VY = 1500;         // added by a tap (pogo boost)
 export const MAX_FALL_SPEED = 2000;
-export const BONK_VY = -250;          // after hitting a stone sill from below
+export const BONK_VY = -250;          // after hitting a plank swing from below
 export const HURT_VY = 900;           // small hop when hit so you can recover
 
 // Horizontal movement
@@ -43,6 +43,14 @@ export const BOOST_COOLDOWN = 0.18;
 // Camera (original: follow when player climbs 500 px above the camera anchor)
 export const CAMERA_PLAYER_OFFSET = 520;  // player's foot height above view bottom
 export const CAMERA_SMOOTH = 10;          // exponential follow rate (per second)
+export const CAMERA_START_Y = -100;       // view bottom at the start (shows the lawn)
+
+// Parallax factors relative to the prince's plane (1.0). Like the original
+// SpriteKit layers: tower + hair slowest, trees faster (in front of the
+// tower), the prince and everything he touches at full speed.
+export const PARALLAX_FAR = 0.3;
+export const PARALLAX_FOREST = 0.55;
+export const PARALLAX_TOWER = 0.8;
 
 // Level structure (original beat length)
 export const BEAT = 300;

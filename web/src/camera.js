@@ -1,19 +1,18 @@
-import { W, H, CAMERA_PLAYER_OFFSET, CAMERA_SMOOTH, PLAYER_H } from './config.js';
+import { W, H, CAMERA_PLAYER_OFFSET, CAMERA_SMOOTH, CAMERA_START_Y, PLAYER_H } from './config.js';
 import { approach } from './util.js';
 
 // The camera only ever climbs (like Doodle Jump). `y` is the world height of
 // the bottom edge of the view; world y goes up, screen y goes down.
 export class Camera {
   constructor() {
-    this.y = -100;
-    this.target = -100;
-    this.shakeT = 0;
-    this.shakeMag = 0;
-    this.ox = 0; this.oy = 0;
-    this.maxY = -100; // highest view bottom reached (for scoring)
+    this.reset();
   }
 
-  reset() { this.y = -100; this.target = -100; this.shakeT = 0; this.maxY = -100; this.ox = this.oy = 0; }
+  reset() { this.y = CAMERA_START_Y; this.target = CAMERA_START_Y; this.shakeT = 0; this.shakeMag = 0; this.maxY = CAMERA_START_Y; this.ox = this.oy = 0; }
+
+  // View bottom of a parallax layer with factor f, anchored so every layer
+  // lines up with the lawn at the start.
+  layerY(f) { return CAMERA_START_Y + (this.y - CAMERA_START_Y) * f; }
 
   follow(player, dt) {
     const want = player.y - CAMERA_PLAYER_OFFSET;

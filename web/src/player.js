@@ -169,7 +169,7 @@ export class Player {
     this.world.onPlayerLand(this, platform);
   }
 
-  // Head hit the underside of a stone sill.
+  // Head hit the underside of a plank swing.
   bonk(platform) {
     this.y = platform.bottom - PLAYER_H;
     this.vy = BONK_VY;

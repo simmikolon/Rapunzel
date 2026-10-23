@@ -1,14 +1,15 @@
-import { W, H } from './config.js';
+import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js';
 import { TILE_H, TOWER_W, TRUNK_W } from './art/tiles.js';
 import { blit, makeCanvas } from './art/sprite.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, clamp } from './util.js';
 import { PAL as C } from './palette.js';
 
 // Parallax environment. Layers from back to front:
-//   sky gradient (altitude graded) -> stars / moon / clouds (0.3x)
-//   -> distant forest (0.6x, fades out above the canopy)
-//   -> tower bricks, Rapunzel's braid, tree trunks (1.0x, the gameplay layer)
-//   -> fireflies (1.15x, drawn after the actors) -> vignette.
+//   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
+//   -> distant forest (PARALLAX_FOREST, fades out above the canopy)
+//   -> tower bricks (PARALLAX_TOWER, behind the trees)
+//   -> Rapunzel's braid, tree trunks, platforms, prince (1.0, the gameplay plane)
+//   -> fireflies (drawn after the actors) -> vignette.
 
 const SKY = [
   { y: 0,     top: '#173f50', bot: '#1e3c3f' },   // forest
@@ -78,7 +79,7 @@ export class Background {
   }
 
   drawFar(ctx, cam, time) {
-    const camF = cam.y * 0.3;
+    const camF = cam.layerY(PARALLAX_FAR);
     const night = nightAlpha(cam.y);
     if (night > 0) {
       ctx.globalAlpha = night;
@@ -108,7 +109,7 @@ export class Background {
   drawForest(ctx, cam) {
     const a = forestAlpha(cam.y);
     if (a <= 0) return;
-    const camF = cam.y * 0.6;
+    const camF = cam.layerY(PARALLAX_FOREST);
     ctx.globalAlpha = a;
     const first = Math.floor(camF / TILE_H), last = Math.ceil((camF + H) / TILE_H);
     for (let k = first; k <= last; k++) {
@@ -118,24 +119,36 @@ export class Background {
     ctx.globalAlpha = 1;
   }
 
-  drawTowerAndTrees(ctx, cam) {
-    const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
+  // The tower scrolls slower than the prince: it stands behind the trees.
+  drawTower(ctx, cam) {
+    const camF = cam.layerY(PARALLAX_TOWER);
+    const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     const t = this.art.tiles;
     for (let k = first; k <= last; k++) {
       const h = hash(k + 7);
       let v = 0;
       if (k > 0) { const r = h % 100; v = r < 62 ? 0 : r < 80 ? 1 : r < 92 ? 2 : 3; }
       if (v === 2 && hash(k + 6) % 100 >= 92) v = 1; // no two windows stacked
+      blit(ctx, t.tower[v], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
+    }
+    // push the wall back a little and let the trees cast a shadow on it
+    ctx.fillStyle = 'rgba(10,24,30,0.14)';
+    ctx.fillRect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H);
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.fillRect(W / 2 - TOWER_W / 2 + cam.ox, 0, 16, H);
+    ctx.fillRect(W / 2 + TOWER_W / 2 - 16 + cam.ox, 0, 16, H);
+  }
+
+  // Trunks share the prince's plane because the branches grow out of them.
+  drawTrees(ctx, cam) {
+    const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
+    const t = this.art.tiles;
+    for (let k = first; k <= last; k++) {
       const sy = cam.sy(k * TILE_H);
-      blit(ctx, t.tower[v], W / 2 + cam.ox, sy);
       const hl = hash(k * 3 + 1) % 100, hr = hash(k * 5 + 2) % 100;
       blit(ctx, t.trunkL[hl < 55 ? 0 : hl < 75 ? 1 : hl < 88 ? 2 : 3], cam.ox, sy);
       blit(ctx, t.trunkR[hr < 55 ? 0 : hr < 75 ? 1 : hr < 88 ? 2 : 3], W + cam.ox, sy);
     }
-    // soft shadow of the trunks on the tower edge
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    ctx.fillRect(W / 2 - TOWER_W / 2 + cam.ox, 0, 12, H);
-    ctx.fillRect(W / 2 + TOWER_W / 2 - 12 + cam.ox, 0, 12, H);
   }
 
   drawBraid(ctx, cam, time) {
@@ -162,8 +175,9 @@ export class Background {
     this.drawSky(ctx, cam);
     this.drawFar(ctx, cam, time);
     this.drawForest(ctx, cam);
-    this.drawTowerAndTrees(ctx, cam);
+    this.drawTower(ctx, cam);
     this.drawBraid(ctx, cam, time);
+    this.drawTrees(ctx, cam);
     this.drawGround(ctx, cam);
   }
 

@@ -96,7 +96,7 @@ export class World {
     const left = pl.bodyLeft, right = pl.bodyRight;
     const xOverlap = (p) => right > p.left && left < p.right;
 
-    // Platforms: one-way surfaces, plus stone sills that are solid from below.
+    // Platforms: one-way surfaces, plus plank swings that are solid from below.
     if (pl.vy <= 0 && pl.state !== 'bouncing') {
       let best = null;
       for (const p of this.platforms) {
@@ -180,7 +180,8 @@ export class World {
     else { this.audio.bounce(pl.combo); }
     if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
     else if (p.kind === 'ribbon') this.particles.petals(pl.x, pl.y, 4);
-    else this.particles.landingDust(pl.x, pl.y, p.kind === 'ground' ? 1.4 : 1);
+    else if (p.kind === 'swing') this.particles.landingDust(pl.x, pl.y, 0.6);
+    else this.particles.landingDust(pl.x, pl.y, 1.4);
   }
   onPlayerJump(pl, p) {
     if (p && p.dry && p.used) { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
@@ -200,7 +201,7 @@ export class World {
       case 'branchR': s = p.dry ? A.branchRDry : A.branchR; break;
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
-      case 'sill': s = p.flowers ? A.sillFlowers : A.sill; break;
+      case 'swing': s = A.plank; break;
       default: return;
     }
     const cam = this.cam;
@@ -208,13 +209,20 @@ export class World {
     const opts = {};
     if (p.state === 'breaking') { opts.rot = (p.kind === 'branchL' ? -1 : 1) * p.t * 0.9; opts.alpha = clamp(1 - p.t / 0.6, 0, 1); }
     else if (p.wobble) opts.rot = p.wobble * 0.004;
+    if (p.kind === 'swing') {
+      // ropes up into the canopy
+      const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
+      const lean = (opts.rot || 0) * 60;
+      ctx.strokeStyle = '#d8c38a'; ctx.lineWidth = 4;
+      for (const dx of [-94, 94]) { ctx.beginPath(); ctx.moveTo(sx + dx, sy + 4); ctx.lineTo(sx + dx + lean, -40); ctx.stroke(); }
+    }
     blit(ctx, s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
   }
 
   draw(ctx) {
     const cam = this.cam;
     this.bg.drawBack(ctx, cam, this.time);
-    const order = { sill: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2 };
+    const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const p of visible) this.drawPlatform(ctx, p);

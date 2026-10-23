@@ -6,15 +6,15 @@ import { lerp, invLerp, clamp } from './util.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
-// a branch on the right tree, a ribbon on the braid, or a stone sill on the
-// tower. Difficulty is a smooth function of altitude.
+// a branch on the right tree, a ribbon on the braid, or a plank swing hung
+// between the trees. Difficulty is a smooth function of altitude.
 
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, crow: 0.00, spider: 0.00, sill: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35 },
-  { y: 2500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, sill: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30 },
-  { y: 7000,  gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, sill: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26 },
-  { y: 13000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, sill: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22 },
-  { y: 21000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, sill: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35 },
+  { y: 2500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30 },
+  { y: 7000,  gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26 },
+  { y: 13000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22 },
+  { y: 21000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20 },
 ];
 
 function tierAt(y) {
@@ -45,7 +45,7 @@ export class Level {
     this.rowIndex = 0;
     this.lastLayout = null;
     this.rowsSinceHeart = 0;
-    this.lastHadCenter = true;   // the ground counts: no sill right above the start
+    this.lastHadCenter = true;   // the ground counts: no swing right above the start
     this.lastBowY = -1e9;
   }
 
@@ -60,15 +60,15 @@ export class Level {
     const items = [
       ['branchL', 1.0], ['branchR', 1.0], ['ribbon', 1.1],
       ['branchL+ribbon', T.double * 0.7], ['branchR+ribbon', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
-      ['sill', T.sill], ['bow', T.bow],
+      ['swing', T.swing], ['bow', T.bow],
     ];
     let layout = r.weighted(items);
     // avoid the same single slot three times in a row (keeps the climb zig-zagging)
     if (layout === this.lastLayout && this.rowIndex > 1 && r.chance(0.7)) layout = r.weighted(items.filter((it) => it[0] !== layout));
-    // A sill is solid from below: never put one straight above a platform in
+    // A swing is solid from below: never put one straight above a platform in
     // the center lane (you would bounce into its underside), nor within a
     // bow's spring height.
-    if (layout === 'sill' && (this.lastHadCenter || y - this.lastBowY < 1900)) layout = r.pick(['branchL', 'branchR']);
+    if (layout === 'swing' && (this.lastHadCenter || y - this.lastBowY < 1900)) layout = r.pick(['branchL', 'branchR']);
     this.lastLayout = layout;
     return layout;
   }
@@ -79,7 +79,7 @@ export class Level {
     const y = this.nextY;
     const layout = this.pickLayout(T, y);
     const kinds = layout.split('+');
-    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'sill');
+    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing');
     if (kinds.includes('bow')) this.lastBowY = y;
     const platforms = [];
     const canBeDry = kinds.length > 1 || (y - this.lastSafeY) + T.gap[1] * BEAT <= SAFE_GAP;
@@ -87,7 +87,6 @@ export class Level {
     for (const kind of kinds) {
       const opts = {};
       if ((kind === 'branchL' || kind === 'branchR') && canBeDry && r.chance(T.dry)) opts.dry = true;
-      if (kind === 'sill') opts.flowers = r.chance(0.4);
       const p = new Platform(kind, y + (kinds.length > 1 ? r.int(-24, 24) : 0), opts);
       platforms.push(p);
       if (!opts.dry) safe = true;

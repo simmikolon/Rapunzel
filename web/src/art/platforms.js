@@ -61,21 +61,20 @@ function drawRibbon(t, big = false, squash = 0) {
   }
 }
 
-// Stone window sill of the tower. 56 x 11 art px. Solid from below (bonk).
-function drawSill(t, flowers) {
-  const { p, line, disc } = t;
-  p(0, 3, 56, 8, C.stone);
-  p(0, 3, 56, 1, C.stoneLight);
-  p(0, 9, 56, 2, C.stoneDark);
-  p(0, 10, 56, 1, C.stoneShade);
-  // block seams
-  for (let x = 9; x < 56; x += 12) { line(x, 4, x, 10, C.stoneDark); }
-  for (let x = 3; x < 56; x += 12) { p(x, 6, 4, 1, C.stoneLight); }
-  if (flowers) {
-    p(20, 0, 16, 3, C.barkDeep); p(20, 0, 16, 1, C.barkMid);
-    disc(23, 0, 1, C.ribbon); disc(28, -1, 1, C.gold); disc(33, 0, 1, C.ribbonHi);
-    p(22, 1, 1, 1, C.grass); p(27, 1, 1, 1, C.grass); p(32, 1, 1, 1, C.grass);
-  }
+// Plank swing hung on ropes between the trees. 56 x 11 art px. Solid from
+// below (bonk). The ropes are drawn at runtime up to the top of the screen.
+function drawPlank(t) {
+  const { p, line } = t;
+  p(0, 3, 56, 8, C.plank);
+  p(0, 3, 56, 1, C.plankHi);
+  p(0, 9, 56, 2, C.plankDark);
+  line(8, 6, 22, 6, C.plankDark); line(30, 5, 46, 5, C.plankDark);
+  line(12, 8, 26, 8, C.plankHi); line(36, 7, 50, 7, C.plankHi);
+  p(17, 4, 1, 1, C.plankDark); p(38, 9, 1, 1, C.plankDark);
+  // rope ends knotted through the plank
+  p(3, 0, 3, 11, C.rope); p(50, 0, 3, 11, C.rope);
+  p(2, 2, 5, 2, C.ropeDark); p(49, 2, 5, 2, C.ropeDark);
+  p(3, 6, 3, 1, C.ropeDark); p(50, 6, 3, 1, C.ropeDark);
 }
 
 export function buildPlatforms() {
@@ -85,11 +84,10 @@ export function buildPlatforms() {
   const ribbonSquash = makeSprite(34, 20, (t) => drawRibbon(t, false, 2), undefined, { axPx: 17 * 4, ayPx: 2 * 4 });
   const bow = makeSprite(42, 24, (t) => drawRibbon(t, true, 0), undefined, { axPx: 21 * 4, ayPx: 2 * 4 });
   const bowSquash = makeSprite(42, 24, (t) => drawRibbon(t, true, 3), undefined, { axPx: 21 * 4, ayPx: 2 * 4 });
-  const sill = makeSprite(56, 11, (t) => drawSill(t, false), undefined, { axPx: 28 * 4, ayPx: 3 * 4 });
-  const sillFlowers = makeSprite(56, 13, (t) => drawSill(t, true), undefined, { axPx: 28 * 4, ayPx: 5 * 4, shift: [0, 2] });
+  const plank = makeSprite(56, 11, (t) => drawPlank(t), undefined, { axPx: 28 * 4, ayPx: 3 * 4 });
   return {
     branchR, branchL: flipH(branchR),
     branchRDry, branchLDry: flipH(branchRDry),
-    ribbon, ribbonSquash, bow, bowSquash, sill, sillFlowers,
+    ribbon, ribbonSquash, bow, bowSquash, plank,
   };
 }

@@ -6,14 +6,14 @@ import { TAU } from './util.js';
 //   after one bounce (the original "breakable" flag).
 // - ribbon: a bow tied to Rapunzel's braid; it sways with the hair.
 // - bow: a big ribbon bow that works as a spring.
-// - sill: a stone window sill of the tower: landable on top and solid from
-//   below (the original "bottomCollidable" flag -> bonk).
+// - swing: a plank hung on ropes between the trees: landable on top and
+//   solid from below (the original "bottomCollidable" flag -> bonk).
 export const KIND = {
   branchL: { w: 178, cx: -195, surface: 0, bounce: JUMP_VY, trunk: 'L' },
   branchR: { w: 178, cx: 195, surface: 0, bounce: JUMP_VY, trunk: 'R' },
   ribbon:  { w: 104, cx: 0, surface: 0, bounce: JUMP_VY, onBraid: true },
   bow:     { w: 124, cx: 0, surface: 0, bounce: SPRING_VY, onBraid: true },
-  sill:    { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
+  swing:   { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 
@@ -28,7 +28,6 @@ export class Platform {
     this.x = this.baseX;              // current center x (ribbons sway)
     this.y = y;                       // surface height
     this.dry = !!opts.dry;            // breakable
-    this.flowers = !!opts.flowers;
     this.sway = opts.sway || 0;       // horizontal sway amplitude (ribbons)
     this.swayPhase = opts.swayPhase || 0;
     this.state = 'normal';            // normal | jumpedOn | bottomHit | breaking | gone
