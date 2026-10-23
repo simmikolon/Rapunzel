@@ -12,11 +12,13 @@ export const PAL = {
   grassLight: '#4ada62', grass: '#1c8730', grassDark: '#25581f', moss: '#619c00', mossDark: '#116338', leaf: '#3b7335', leafDark: '#1b4015',
   // dry / dead wood
   dryLight: '#b9a58a', dry: '#8d7a62', dryDark: '#5a4a3a',
-  // prince
-  skin: '#f2c9a0', skinShade: '#d9a06e', hair: '#6b3f23', hairHi: '#8a5632',
-  gold: '#f4c542', goldDark: '#b8891a', gem: '#e04545',
-  tunic: '#c23a3a', tunicHi: '#e05a5a', tunicDark: '#8e2727', tights: '#2d4f8a', boots: '#4a2f1e',
-  cape: '#5a2470', capeHi: '#7a3a96',
+  // prince (colors sampled from the original app icon: blue uniform,
+  // purple trousers, dark hair, white hobby-horse head on the pogo stick)
+  skin: '#ffc8a3', skinShade: '#e0a37e', cheek: '#ffab94', hair: '#352e2d', hairHi: '#524643',
+  gold: '#ffee9e', goldDark: '#c9a84a', gem: '#e04545',
+  tunic: '#2865bf', tunicHi: '#4a86de', tunicDark: '#143fa0', tights: '#7c569c', tightsDark: '#5a3f74', boots: '#352e2d',
+  cape: '#8e2727', capeHi: '#b83a3a',
+  horse: '#ffffff', horseShade: '#d9d9e3', mane: '#cc7642', rein: '#cc7642',
   pole: '#8c8c96', poleHi: '#c4c4cc', spring: '#b8b8c2', springHi: '#ececf2', rubber: '#2e2e36', grip: '#3a3a44',
   flame1: '#fff8c2', flame2: '#ffd04a', flame3: '#ff8a3d',
   // rapunzel's hair & ribbons

@@ -73,6 +73,8 @@ function drawPrince(t, o) {
   const spread = o.legSpread ?? 0;
   p(8 + x - spread, legTop, 3, legH, C.tights);
   p(15 + x + spread, legTop, 3, legH, C.tights);
+  p(8 + x - spread, legTop, 1, legH, C.tightsDark);
+  p(17 + x + spread, legTop, 1, legH, C.tightsDark);
   p(7 + x - spread, bootTop, 4, 3, C.boots);
   p(15 + x + spread, bootTop, 4, 3, C.boots);
   p(7 + x - spread, bootTop, 4, 1, C.hairHi);
@@ -81,10 +83,24 @@ function drawPrince(t, o) {
   // --- Body / tunic ----------------------------------------------------------
   p(7 + x, bodyTop, 12, 11, C.tunic);
   p(7 + x, bodyTop, 2, 11, C.tunicDark);
-  p(12 + x, bodyTop + 1, 2, 8, C.tunicHi);
+  p(13 + x, bodyTop + 1, 1, 8, C.tunicDark);        // coat seam
+  p(11 + x, bodyTop + 2, 1, 1, C.gold); p(11 + x, bodyTop + 4, 1, 1, C.gold); p(11 + x, bodyTop + 6, 1, 1, C.gold);
+  p(14 + x, bodyTop + 2, 1, 1, C.gold); p(14 + x, bodyTop + 4, 1, 1, C.gold); p(14 + x, bodyTop + 6, 1, 1, C.gold);
   p(7 + x, bodyTop + 8, 12, 2, C.gold);          // belt
   p(12 + x, bodyTop + 8, 2, 2, C.goldDark);        // buckle
-  p(9 + x, bodyTop, 8, 1, C.skin);                 // collar skin
+  p(7 + x, bodyTop, 3, 1, C.gold); p(16 + x, bodyTop, 3, 1, C.gold);   // epaulettes
+  p(10 + x, bodyTop, 6, 1, C.skin);                // collar skin
+
+  // --- Hobby-horse head (the original app icon's pogo stick) ----------------
+  const hx = 18 + x, hy = handleY - 6;
+  p(hx, hy + 1, 5, 4, C.horse);                    // head
+  p(hx + 4, hy + 2, 3, 3, C.horse);                // muzzle
+  p(hx + 4, hy + 4, 3, 1, C.horseShade);
+  p(hx + 1, hy, 1, 1, C.horse);                    // ear
+  p(hx, hy + 1, 1, 4, C.mane);                     // mane
+  p(hx + 2, hy + 2, 1, 1, C.black);                // eye
+  p(hx + 6, hy + 3, 1, 1, C.cheek);                // nostril
+  p(hx + 1, hy + 5, 5, 1, C.rein);                 // rein
 
   // --- Arms to the handlebar ---------------------------------------------
   p(4 + x, handleY, 18, 1, C.pole);                // handlebar
@@ -132,10 +148,10 @@ function drawPrince(t, o) {
     p(11 + x, headTop + 5, 1, 1, C.black); p(15 + x, headTop + 5, 1, 1, C.black);
   }
   const mouth = o.mouth || 'smile';
-  if (mouth === 'smile') { p(12 + x, headTop + 9, 2, 1, C.tunicDark); p(11 + x, headTop + 8, 1, 1, C.tunicDark); p(14 + x, headTop + 8, 1, 1, C.tunicDark); }
-  else if (mouth === 'o') { p(12 + x, headTop + 8, 2, 2, C.tunicDark); }
-  else if (mouth === 'grit') { p(11 + x, headTop + 9, 4, 1, C.tunicDark); }
-  p(9 + x, headTop + 7, 1, 1, C.tunicHi); p(16 + x, headTop + 7, 1, 1, C.tunicHi); // cheeks
+  if (mouth === 'smile') { p(12 + x, headTop + 9, 2, 1, C.hair); p(11 + x, headTop + 8, 1, 1, C.hair); p(14 + x, headTop + 8, 1, 1, C.hair); }
+  else if (mouth === 'o') { p(12 + x, headTop + 8, 2, 2, C.hair); }
+  else if (mouth === 'grit') { p(11 + x, headTop + 9, 4, 1, C.hair); }
+  p(9 + x, headTop + 7, 1, 1, C.cheek); p(16 + x, headTop + 7, 1, 1, C.cheek); // cheeks
 }
 
 export function buildPrince() {
