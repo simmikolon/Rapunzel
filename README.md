@@ -65,9 +65,13 @@ of SpriteKit physics and GameplayKit:
   branches, enemies, pickups) and a reachability guarantee.
 * **Camera** that follows upward only, with smoothing, and the layered
   parallax scene like the original's layer entities: far sky, distant
-  forest, the tower behind, then the trees, braid, platforms and prince in
-  the front plane, fireflies (`RPParticleLayerEntity`), vignette
-  (`SSVignette.fsh`).
+  forest, then the tower layer (bricks, windows, Rapunzel's braid and the
+  ribbons tied to it), then the tree layer in front (trunks, branches,
+  swings) which the prince shares, fireflies (`RPParticleLayerEntity`),
+  vignette (`SSVignette.fsh`). Ribbons scroll with the tower layer, so
+  like the original their contact position is converted into the prince's
+  plane each frame; the generator places them for the camera height at
+  arrival and caps branch-to-ribbon gaps so they stay reachable.
 
 ### What is new
 

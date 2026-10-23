@@ -46,15 +46,22 @@ export const CAMERA_SMOOTH = 10;          // exponential follow rate (per second
 export const CAMERA_START_Y = -100;       // view bottom at the start (shows the lawn)
 
 // Parallax factors relative to the prince's plane (1.0). Like the original
-// SpriteKit layers: tower + hair slowest, trees faster (in front of the
-// tower), the prince and everything he touches at full speed.
+// SpriteKit layers: the tower with its windows and Rapunzel's hair (and the
+// ribbons tied to it) scroll slower, the trees with their branches and
+// swings are in front and share the prince's plane.
 export const PARALLAX_FAR = 0.3;
 export const PARALLAX_FOREST = 0.55;
-export const PARALLAX_TOWER = 0.8;
+export const PARALLAX_TOWER = 0.9;
+// A ribbon on the tower layer drifts upward relative to the prince as the
+// camera climbs, so a gap from a front-plane platform up to a row with only
+// ribbons is capped to stay reachable even after two boosts in a row
+// (camera up to ~1700 px above the modelled height -> ~170 px of drift).
+export const LAYER_GAP_CAP = 430;      // take-off from a healthy branch / swing
+export const LAYER_GAP_CAP_DRY = 370;  // take-off from a crumbling branch (weaker bounce)
 
 // Level structure (original beat length)
 export const BEAT = 300;
-export const SAFE_GAP = 540;          // max vertical distance between two non-crumbling platforms
+export const SAFE_GAP = 520;          // max vertical distance between two non-crumbling platforms
 export const GROUND_Y = 0;
 
 // Lives

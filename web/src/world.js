@@ -68,8 +68,8 @@ export class World {
     this.toasts = this.toasts.filter((t) => t.life > 0);
     if (idle) { this.player.idleT += dt; this.particles.update(dt); return; }
 
-    const braidX = (y) => this.bg.braidX(y, this.time);
-    for (const p of this.platforms) p.update(dt, this.time, braidX);
+    const braidX = (ly) => this.bg.braidX(ly, this.time);
+    for (const p of this.platforms) p.update(dt, this.time, braidX, this.cam);
 
     const pl = this.player;
     pl.update(dt, this.input);

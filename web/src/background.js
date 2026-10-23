@@ -7,8 +7,8 @@ import { PAL as C } from './palette.js';
 // Parallax environment. Layers from back to front:
 //   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
 //   -> distant forest (PARALLAX_FOREST, fades out above the canopy)
-//   -> tower bricks (PARALLAX_TOWER, behind the trees)
-//   -> Rapunzel's braid, tree trunks, platforms, prince (1.0, the gameplay plane)
+//   -> tower bricks with Rapunzel's braid and its ribbons (PARALLAX_TOWER)
+//   -> tree trunks, branches, swings, prince (1.0, the gameplay plane)
 //   -> fireflies (drawn after the actors) -> vignette.
 
 const SKY = [
@@ -139,7 +139,8 @@ export class Background {
     ctx.fillRect(W / 2 + TOWER_W / 2 - 16 + cam.ox, 0, 16, H);
   }
 
-  // Trunks share the prince's plane because the branches grow out of them.
+  // Trunks are the front layer: they share the prince's plane because the
+  // branches and swings he bounces on hang from them.
   drawTrees(ctx, cam) {
     const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
     const t = this.art.tiles;
@@ -151,15 +152,16 @@ export class Background {
     }
   }
 
+  // The braid hangs down the tower, so it scrolls with the tower layer.
   drawBraid(ctx, cam, time) {
     const t = this.art.tiles;
     const step = 40;
-    const yTop = Math.min(cam.top + 60, 1e9);
-    const start = Math.floor(yTop / step) * step;
-    for (let y = start; y >= Math.max(0, cam.y - 60); y -= step) {
-      const x = this.braidX(y, time);
-      blit(ctx, t.braid, cam.sx(x), cam.sy(y + step));
+    const camF = cam.layerY(PARALLAX_TOWER);
+    const start = Math.floor((camF + H + 60) / step) * step;
+    for (let ly = start; ly >= Math.max(-240, camF - 60); ly -= step) {
+      blit(ctx, t.braid, W / 2 + this.braidX(ly, time) + cam.ox, H - (ly + step - camF) + cam.oy);
     }
+    // the loose end curls up on the lawn (which is in the prince's plane)
     if (cam.y < 60) blit(ctx, t.braidEnd, cam.sx(this.braidX(0, time) + 30), cam.sy(-4));
   }
 
@@ -177,8 +179,8 @@ export class Background {
     this.drawForest(ctx, cam);
     this.drawTower(ctx, cam);
     this.drawBraid(ctx, cam, time);
-    this.drawTrees(ctx, cam);
     this.drawGround(ctx, cam);
+    this.drawTrees(ctx, cam);
   }
 
   updateFireflies(dt, cam, time) {

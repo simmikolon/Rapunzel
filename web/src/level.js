@@ -1,4 +1,4 @@
-import { W, SAFE_GAP, BEAT } from './config.js';
+import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY } from './config.js';
 import { Platform } from './platforms.js';
 import { Crow, Spider } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
@@ -47,6 +47,10 @@ export class Level {
     this.rowsSinceHeart = 0;
     this.lastHadCenter = true;   // the ground counts: no swing right above the start
     this.lastBowY = -1e9;
+    this.prevRowY = 0;           // the ground
+    this.prevRowApex = JUMP_VY * JUMP_VY / (2 * GRAVITY);
+    this.modelCam = CAMERA_START_Y; // highest view bottom the climb so far implies (never descends)
+    this.nextLayout = null;      // layout already chosen for the next row
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -77,17 +81,29 @@ export class Level {
     const r = this.rng;
     const T = tierAt(this.nextY);
     const y = this.nextY;
-    const layout = this.pickLayout(T, y);
+    const layout = this.nextLayout || this.pickLayout(T, y);
+    this.nextLayout = null;
     const kinds = layout.split('+');
     this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing');
     if (kinds.includes('bow')) this.lastBowY = y;
+    const front = kinds.some((k) => k !== 'ribbon' && k !== 'bow');
+    // Ribbons live on the slower tower layer. Their layer height is chosen so
+    // that they are exactly at `y` in the prince's plane at the moment he
+    // arrives, i.e. with the camera where it will be after bouncing off the
+    // previous row (view bottom = previous apex - player offset). The camera
+    // only ever climbs, so the model keeps the highest value so far (a bow
+    // spring lifts it well above the rows that follow).
+    this.modelCam = Math.max(this.modelCam, this.prevRowY + this.prevRowApex - CAMERA_PLAYER_OFFSET);
+    const arrivalCam = this.modelCam;
     const platforms = [];
     const canBeDry = kinds.length > 1 || (y - this.lastSafeY) + T.gap[1] * BEAT <= SAFE_GAP;
     let safe = false;
     for (const kind of kinds) {
       const opts = {};
       if ((kind === 'branchL' || kind === 'branchR') && canBeDry && r.chance(T.dry)) opts.dry = true;
-      const p = new Platform(kind, y + (kinds.length > 1 ? r.int(-24, 24) : 0), opts);
+      const py = y + (kinds.length > 1 ? r.int(-16, 16) : 0);
+      if (kind === 'ribbon' || kind === 'bow') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
+      const p = new Platform(kind, py, opts);
       platforms.push(p);
       if (!opts.dry) safe = true;
     }
@@ -101,8 +117,17 @@ export class Level {
     // --- enemies -----------------------------------------------------------
     let gapMin = T.gap[0] * BEAT, gapMax = T.gap[1] * BEAT;
     if (!safe) gapMax = Math.min(gapMax, SAFE_GAP - (y - this.lastSafeY));
+    // Decide the next row's layout now: from a front-plane row up to a row
+    // that only has tower-layer platforms the effective gap grows while the
+    // camera climbs, so that gap is kept short.
+    const nextLayout = this.pickLayout(tierAt(y + gapMin), y + gapMin);
+    const nextTowerOnly = nextLayout.split('+').every((k) => k === 'ribbon' || k === 'bow');
+    if (front && nextTowerOnly) gapMax = Math.min(gapMax, platforms.some((p) => p.dry) ? LAYER_GAP_CAP_DRY : LAYER_GAP_CAP);
     gapMax = Math.max(gapMax, gapMin);
     const gap = r.range(gapMin, gapMax);
+    this.nextLayout = nextLayout;
+    const bounceVy = kinds.includes('bow') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
+    this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);
 
     if (y > 2200 && r.chance(T.crow)) {
       const dir = r.sign();
