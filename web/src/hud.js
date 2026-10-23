@@ -149,6 +149,22 @@ export class HUD {
     button(ctx, ZONES.sound, null, { glyph: (c, x, y) => drawSpeaker(c, x, y, this.game.muted) });
   }
 
+  // One-line message at the top, used for device hints (e.g. iOS silent switch).
+  drawNotice(ctx, str, t) {
+    const a = clamp(t / 0.4, 0, 1);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(16,32,36,0.8)';
+    roundRect(ctx, 24, 196, W - 48, 64, 12); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = C.uiLine; ctx.stroke();
+    // wrap into two lines if needed
+    ctx.font = `13px ${FONT}`;
+    const words = str.split(' '); const lines = []; let cur = '';
+    for (const w of words) { const test = cur ? cur + ' ' + w : w; if (ctx.measureText(test).width > W - 100 && cur) { lines.push(cur); cur = w; } else cur = test; }
+    if (cur) lines.push(cur);
+    lines.slice(0, 2).forEach((l, i) => text(ctx, l, W / 2, 228 + (i - (lines.length - 1) / 2) * 20, 13, '#ffe9a0', 'center', false));
+    ctx.globalAlpha = 1;
+  }
+
   drawPaused(ctx) {
     ctx.fillStyle = 'rgba(8,16,20,0.55)'; ctx.fillRect(0, 0, W, H);
     text(ctx, 'PAUSED', W / 2, H / 2 - 30, 44, '#fff', 'center');

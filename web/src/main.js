@@ -1,7 +1,7 @@
 import { W, H, STORAGE_KEY } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
-import { audio } from './audio.js';
+import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
 import { HUD } from './hud.js';
 
@@ -23,6 +23,9 @@ class Game {
     this.modeT = 0;
     this.best = 0;
     this.isNewBest = false;
+    this.noticeText = '';
+    this.noticeT = 0;
+    this.iosSoundHintShown = false;
     this.loadSave();
     this.last = performance.now();
     this.acc = 0;
@@ -34,6 +37,15 @@ class Game {
   }
 
   get muted() { return audio.muted; }
+
+  notice(text, seconds = 3.5) { this.noticeText = text; this.noticeT = seconds; }
+
+  // iOS mutes Web Audio with the ring/silent switch; tell the player once.
+  maybeIosSoundHint() {
+    if (!isIOS || audio.muted || this.iosSoundHintShown) return;
+    this.iosSoundHintShown = true;
+    this.notice('No sound? Flip the ring/silent switch on the side of the phone', 4.5);
+  }
 
   loadSave() {
     try { const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); this.best = s.best || 0; } catch (_) { this.best = 0; }
@@ -57,7 +69,7 @@ class Game {
 
   setMode(m) {
     this.mode = m; this.modeT = 0;
-    if (m === 'playing' && !this.world.started) this.world.start();
+    if (m === 'playing' && !this.world.started) { this.world.start(); this.maybeIosSoundHint(); }
   }
 
   frame(now) {
@@ -75,7 +87,13 @@ class Game {
     this.modeT += dt;
     const input = this.input;
     this.hud.layout(this.mode);
-    if (input.consumeMute() || input.consumeButton('sound')) { audio.unlock(); audio.toggleMute(); audio.click(); }
+    if (this.noticeT > 0) this.noticeT -= dt;
+    if (input.consumeMute() || input.consumeButton('sound')) {
+      audio.unlock();
+      const muted = audio.toggleMute();
+      audio.click();
+      if (!muted) this.maybeIosSoundHint();
+    }
 
     switch (this.mode) {
       case 'title': {
@@ -124,6 +142,7 @@ class Game {
       case 'paused': this.hud.drawPlaying(ctx, this.world); this.hud.drawPaused(ctx); break;
       case 'gameover': this.hud.drawPlaying(ctx, this.world); this.hud.drawGameOver(ctx, this.world, this.modeT, this.isNewBest); break;
     }
+    if (this.noticeT > 0) this.hud.drawNotice(ctx, this.noticeText, this.noticeT);
   }
 }
 

@@ -52,7 +52,7 @@ export class Input {
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
       this.anyInteraction && this.anyInteraction();
     });
-    window.addEventListener('keyup', (e) => this.keys.delete(e.code));
+    window.addEventListener('keyup', (e) => { this.keys.delete(e.code); this.anyInteraction && this.anyInteraction(); });
     window.addEventListener('blur', () => { this.keys.clear(); this.pointers.clear(); });
 
     const down = (e) => {
@@ -77,15 +77,19 @@ export class Input {
       const p = this.toLogical(e.clientX, e.clientY);
       pt.x = p.x; pt.y = p.y;
     };
-    const up = (e) => { this.pointers.delete(e.pointerId); };
+    // Audio may only be unlocked from a "real" activation: on iOS that is the
+    // end of a touch or a click, not its start, so fire the hook here too.
+    const up = (e) => { this.pointers.delete(e.pointerId); this.anyInteraction && this.anyInteraction(); };
     c.addEventListener('pointerdown', down);
     c.addEventListener('pointermove', move);
     c.addEventListener('pointerup', up);
     c.addEventListener('pointercancel', up);
     c.addEventListener('contextmenu', (e) => e.preventDefault());
+    c.addEventListener('touchend', () => { this.anyInteraction && this.anyInteraction(); }, { passive: true });
     // The tilt toggle is handled on 'click' because iOS only grants the
     // DeviceOrientation permission from inside a user-gesture handler.
     c.addEventListener('click', (e) => {
+      this.anyInteraction && this.anyInteraction();
       const p = this.toLogical(e.clientX, e.clientY);
       const zone = this.zoneAt(p.x, p.y);
       if (!zone || zone.id !== 'tilt') return;

@@ -2,32 +2,91 @@
 // The context is created lazily on the first user gesture (browser policy).
 import { STORAGE_KEY } from './config.js';
 
+// A 0.1 s silent WAV, built at runtime (no asset file). Playing it through an
+// <audio> element on a user gesture switches iOS's audio session from
+// "ambient" (silenced by the ring/silent switch) to "playback", which is the
+// only way Web Audio output gets past that switch.
+function silentWavUrl() {
+  const rate = 8000, samples = 800;
+  const buf = new ArrayBuffer(44 + samples);
+  const v = new DataView(buf);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + samples, true); str(8, 'WAVE');
+  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, 'data'); v.setUint32(40, samples, true);
+  for (let i = 0; i < samples; i++) v.setUint8(44 + i, 128);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+
+export const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+
 class Synth {
   constructor() {
     this.ctx = null;
     this.master = null;
     this.muted = false;
     this.noiseBuf = null;
+    this.silentEl = null;
+    this.sessionPrimed = false;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      // iOS suspends ("interrupts") the context in the background; the next
+      // gesture will resume it and re-prime the media session.
+      this.sessionPrimed = false;
+      if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+    });
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + '.audio') || '{}');
       this.muted = !!saved.muted;
     } catch (_) { /* ignore */ }
   }
 
+  // Must be called from inside a user-gesture handler (touchend / click /
+  // keyup count on iOS; touchstart alone does not). Safe to call repeatedly.
   unlock() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    this.ctx = new AC();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.5;
-    this.master.connect(this.ctx.destination);
-    // 1 second of white noise, reused by every noisy effect.
-    const len = this.ctx.sampleRate;
-    this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-    const d = this.noiseBuf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.muted ? 0 : 0.5;
+      this.master.connect(this.ctx.destination);
+      // 1 second of white noise, reused by every noisy effect.
+      const len = this.ctx.sampleRate;
+      this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    }
+    // 'suspended' before the first gesture, 'interrupted' after backgrounding on iOS.
+    if (this.ctx.state !== 'running') {
+      this.ctx.resume().catch(() => {});
+      // The classic iOS unlock: start an empty buffer inside the gesture.
+      try {
+        const src = this.ctx.createBufferSource();
+        src.buffer = this.ctx.createBuffer(1, 1, 22050);
+        src.connect(this.ctx.destination);
+        src.start(0);
+      } catch (_) { /* ignore */ }
+    }
+    this.primeSession();
   }
+
+  primeSession() {
+    if (this.sessionPrimed) return;
+    try {
+      if (!this.silentEl) {
+        this.silentEl = document.createElement('audio');
+        this.silentEl.src = silentWavUrl();
+        this.silentEl.setAttribute('playsinline', '');
+        this.silentEl.preload = 'auto';
+      }
+      const p = this.silentEl.play();
+      if (p && p.then) p.then(() => { this.sessionPrimed = true; }).catch(() => {});
+    } catch (_) { /* ignore */ }
+  }
+
+  get running() { return !!this.ctx && this.ctx.state === 'running'; }
 
   setMuted(m) {
     this.muted = m;
