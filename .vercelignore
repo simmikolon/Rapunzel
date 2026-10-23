@@ -1,0 +1,10 @@
+# Only web/ is deployed; the SpriteKit prototype stays out of the upload.
+Common
+Rapunzel
+Rapunzel.xcodeproj
+RapunzelOSX
+*.swift
+*.fsh
+bg.png
+.github
+README.md

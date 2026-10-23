@@ -1,0 +1,15 @@
+{
+  "name": "Rapunzel",
+  "short_name": "Rapunzel",
+  "description": "Bounce the prince up Rapunzel's tower on his pogo stick.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b1a1c",
+  "theme_color": "#1e3c3f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -9,7 +9,7 @@ portrait aspect ratio as the original iOS scene (768 x 1364, about 9:16).
 It is plain JavaScript (ES modules) on a 2D canvas: no build step, no
 dependencies, nothing to install.
 
-### Run it
+### Run it locally
 
 ```sh
 # any static file server works; for example:
@@ -20,9 +20,20 @@ python3 -m http.server 8000 --directory web
 or `npx serve web`. Opening `index.html` directly from the file system
 will not work because ES modules need an HTTP origin.
 
-`.github/workflows/pages.yml` deploys `web/` to GitHub Pages on every push
-to `master` or `web-port`. Enable it once under *Settings → Pages → Source:
-GitHub Actions*. Tilt steering needs HTTPS, which Pages provides.
+### Deploy on Vercel
+
+The repo is a static site with no build step. `vercel.json` at the root
+points Vercel's output directory at `web/`, so nothing needs configuring:
+
+1. Import the GitHub repository at <https://vercel.com/new> and keep the
+   defaults (framework "Other", root directory `.`, no build command).
+2. Every push to the production branch redeploys; other branches get
+   preview URLs.
+
+Or from the command line: `npx vercel` in the repo root (`npx vercel --prod`
+for production). Tilt steering needs HTTPS, which Vercel provides. The game
+ships a web app manifest and icons, so on a phone it can be added to the
+home screen and runs full-screen in portrait.
 
 ### Controls
 
@@ -79,7 +90,8 @@ of SpriteKit physics and GameplayKit:
 The original texture atlases were never committed (they lived in a
 `Game Assets` folder next to the repo), so all sprites and tiles are drawn
 procedurally in `web/src/art/` in the chunky 4-px style of `bg.png`, using
-its palette. `web/dev/sprites.html` shows every generated sprite with its
+its palette. The prince's colors and his hobby-horse pogo stick follow the
+original app icon, which also serves as the web icon (`web/icons/`). `web/dev/sprites.html` shows every generated sprite with its
 anchor. To use hand-drawn art instead, replace the sprite objects returned
 by the `build*` functions in `web/src/art/index.js` with
 `{ canvas: <image>, w, h, ax, ay }` entries of the same anchors.
