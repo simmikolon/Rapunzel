@@ -2,12 +2,15 @@
 
 Rapunzel is a game heavily inspired by some of the drawings made by my five year old daughter. At her age she has already some incredible drawing skill - at least in my opinion. During the last year she fell in love with Rapunzel. For those who don’t know. Rapunzel is a fairy tale / story of a princess kept in a tower by an evil queen. In order to rescue her a prince tries to climb up that tower using Rapunzels hair as a ladder.
 
-## Browser version (`web/`)
+## The game (`web/`)
 
-The game now runs in any modern browser, phone or desktop, with the same
+The game runs in any modern browser, phone or desktop, with the same
 portrait aspect ratio as the original iOS scene (768 x 1364, about 9:16).
 It is plain JavaScript (ES modules) on a 2D canvas: no build step, no
 dependencies, nothing to install.
+
+The original Swift / SpriteKit prototype it grew out of lives on the
+[`swift-prototype`](../../tree/swift-prototype) branch.
 
 ### Run it locally
 
@@ -45,11 +48,10 @@ home screen and runs full-screen in portrait.
 
 `M` toggles sound. The best height is kept in `localStorage`.
 
-### What was ported
+### What was ported from the prototype
 
-The Swift/SpriteKit prototype (everything outside `web/`) is kept as-is.
-The web version re-implements its ideas with a small custom engine instead
-of SpriteKit physics and GameplayKit:
+The web version re-implements the SpriteKit prototype's ideas with a small
+custom engine instead of SpriteKit physics and GameplayKit:
 
 * **The prince on a pogo stick** with the same state machine: standing,
   jumping, falling, bouncing down/up, boost, bottom collision (bonk), plus
@@ -95,9 +97,10 @@ of SpriteKit physics and GameplayKit:
 
 The original texture atlases were never committed (they lived in a
 `Game Assets` folder next to the repo), so all sprites and tiles are drawn
-procedurally in `web/src/art/` in the chunky 4-px style of `bg.png`, using
-its palette. The prince's colors and his hobby-horse pogo stick follow the
-original app icon, which also serves as the web icon (`web/icons/`). `web/dev/sprites.html` shows every generated sprite with its
+procedurally in `web/src/art/` in the chunky 4-px style of the prototype's
+background mock-up, kept as `web/dev/bg.png`, using its palette. The
+prince's colors and his hobby-horse pogo stick follow the original app
+icon, which also serves as the web icon (`web/icons/`). `web/dev/sprites.html` shows every generated sprite with its
 anchor. To use hand-drawn art instead, replace the sprite objects returned
 by the `build*` functions in `web/src/art/index.js` with
 `{ canvas: <image>, w, h, ax, ay }` entries of the same anchors.
