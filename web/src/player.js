@@ -5,7 +5,6 @@ import {
   MAX_HEARTS, INVULNERABLE_TIME, STOMP_VY,
 } from './config.js';
 import { approach, clamp, moveToward, sign } from './util.js';
-import { blit } from './art/sprite.js';
 
 // The prince. Position (x, y) is the tip of the pogo stick (feet), world
 // coordinates with y up. The state machine mirrors the original
@@ -229,16 +228,16 @@ export class Player {
     }
   }
 
-  draw(ctx, cam, art) {
+  draw(g, cam, art) {
     const s = this.currentSprite(art);
     const blink = this.invuln > 0 && this.state !== 'dead' && Math.floor(this.invuln * 14) % 2 === 0;
     const alpha = blink ? 0.35 : 1;
     const bob = this.state === 'standing' ? Math.sin(this.idleT * 3) * 0.03 : 0;
     const opts = { sx: this.sx, sy: this.sy + bob, alpha, rot: this.state === 'dead' ? this.spin : 0 };
     const sx = cam.sx(this.x), sy = cam.sy(this.y);
-    blit(ctx, s, sx, sy, opts);
+    g.blit(s, sx, sy, opts);
     // Draw the wrap-around twin when near the screen edge.
-    if (this.x < -W / 2 + PLAYER_W) blit(ctx, s, sx + W, sy, opts);
-    else if (this.x > W / 2 - PLAYER_W) blit(ctx, s, sx - W, sy, opts);
+    if (this.x < -W / 2 + PLAYER_W) g.blit(s, sx + W, sy, opts);
+    else if (this.x > W / 2 - PLAYER_W) g.blit(s, sx - W, sy, opts);
   }
 }

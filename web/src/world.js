@@ -7,8 +7,8 @@ import { Level } from './level.js';
 import { Background } from './background.js';
 import { Witch } from './enemies.js';
 import { audio } from './audio.js';
+import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp } from './util.js';
-import { blit } from './art/sprite.js';
 
 // One round of the game: entities, collisions, generation, FX callbacks.
 export class World {
@@ -193,7 +193,7 @@ export class World {
   onPlayerDie(pl, cause) { this.audio.gameOver(); this.cam.shake(14, 0.5); }
 
   // ------------------------------------------------------------------- draw
-  drawPlatform(ctx, p) {
+  drawPlatform(g, p) {
     const A = this.art.platforms;
     let s;
     switch (p.kind) {
@@ -213,25 +213,29 @@ export class World {
       // ropes up into the canopy
       const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
       const lean = (opts.rot || 0) * 60;
-      ctx.strokeStyle = '#d8c38a'; ctx.lineWidth = 4;
-      for (const dx of [-94, 94]) { ctx.beginPath(); ctx.moveTo(sx + dx, sy + 4); ctx.lineTo(sx + dx + lean, -40); ctx.stroke(); }
+      for (const dx of [-94, 94]) g.line(sx + dx, sy + 4, sx + dx + lean, -40, C.rope, 4);
     }
-    blit(ctx, s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
+    g.blit(s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
   }
 
-  draw(ctx) {
+  // `g` is the renderer facade (gfx/renderer.js); everything is drawn in
+  // screen coordinates, back to front, into the layer named by g.layer().
+  draw(g) {
     const cam = this.cam;
-    this.bg.drawBack(ctx, cam, this.time);
+    g.layer('bg');
+    this.bg.drawBack(g, cam, this.time);
+    g.layer('world');
     const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
-    for (const p of visible) this.drawPlatform(ctx, p);
-    for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(ctx, cam, this.art);
-    for (const e of this.enemies) e.draw(ctx, cam, this.art);
-    this.player.draw(ctx, cam, this.art);
-    this.particles.draw(ctx, cam);
-    this.bg.drawFront(ctx, cam, this.time);
-    this.bg.drawLighting(ctx, cam);
-    this.bg.drawVignette(ctx);
+    for (const p of visible) this.drawPlatform(g, p);
+    for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
+    for (const e of this.enemies) e.draw(g, cam, this.art);
+    this.player.draw(g, cam, this.art);
+    this.particles.draw(g, cam);
+    this.bg.drawFront(g, cam, this.time);
+    g.layer('light');
+    this.bg.drawLighting(g, cam);
+    this.bg.drawVignette(g);
   }
 }

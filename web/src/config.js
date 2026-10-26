@@ -71,4 +71,18 @@ export const INVULNERABLE_TIME = 1.6;
 // Scoring: 100 px == 1 m of tower climbed
 export const PX_PER_METER = 100;
 
+// --- Post-processing (WebGL renderer, see src/gfx/) ---
+// Presets: 'full' (bloom + CRT), 'bloom', 'off'; F key / the title button cycle
+// them, ?fx=<preset> forces one for a visit.
+export const FX = {
+  // Selective bloom: glowing things are drawn again into a glow layer that
+  // is rendered at `resolution` x the screen, blurred `passes` times with a
+  // 9-tap Gaussian `spread` texels wide and added over the scene x `gain`.
+  bloom: { resolution: 0.5, spread: 1.6, passes: 2, gain: 1.25 },
+  // CRT pass: barrel curvature (corners bend off screen), chromatic
+  // aberration (fraction of the frame at the edges), scanline depth (one
+  // line per art pixel), phosphor mask depth, corner shading, flicker.
+  crt: { curvature: 0.035, aberration: 0.0022, scanline: 0.22, mask: 0.06, vignette: 0.22, flicker: 0.02 },
+};
+
 export const STORAGE_KEY = 'rapunzel.web.v1';

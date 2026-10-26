@@ -22,6 +22,18 @@ html, body {
     radial-gradient(ellipse at 50% 40%, #16302f 0%, #0b1a1c 70%);
 }
 
+#nowebgl {
+  position: absolute;
+  inset: auto 24px;
+  padding: 16px 20px;
+  border: 2px solid #8fd1c7;
+  border-radius: 12px;
+  background: rgba(16, 32, 36, 0.92);
+  color: #ffe9a0;
+  font: 14px/1.5 "Press Start 2P", "Courier New", monospace;
+  text-align: center;
+}
+
 #game {
   /* Always keep the phone portrait aspect ratio (768:1364 ~ 9:16). */
   aspect-ratio: 768 / 1364;

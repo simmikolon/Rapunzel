@@ -1,7 +1,7 @@
 import { W, H, TILT_DEAD_ZONE, TILT_FULL } from './config.js';
 import { clamp, approach } from './util.js';
 
-// Unified input: keyboard (arrows / A D, space / up / W / enter), pointer
+// Unified input: keyboard (arrows / A D, space / up / W / enter, M mute, F effects), pointer
 // (mouse + touch) and device tilt. The game reads `axis` (-1..1), the
 // edge-triggered `boost` / `tap` flags and the list of pointer taps in
 // logical canvas coordinates (for HUD buttons).
@@ -24,6 +24,7 @@ export class Input {
     this.tapQueued = 0;
     this.pauseQueued = 0;
     this.muteQueued = 0;
+    this.fxQueued = 0;
     this.anyInteraction = null; // callback for unlocking audio
     // Regions where a touch acts as a button rather than steering. Set by HUD.
     this.buttonZones = [];      // {id, x, y, w, h}
@@ -49,6 +50,7 @@ export class Input {
       }
       if (e.code === 'Escape' || e.code === 'KeyP') this.pauseQueued++;
       if (e.code === 'KeyM') this.muteQueued++;
+      if (e.code === 'KeyF') this.fxQueued++;
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
       this.anyInteraction && this.anyInteraction();
     });
@@ -170,11 +172,12 @@ export class Input {
   consumeTap() { const v = this.tapQueued > 0; this.tapQueued = 0; return v; }
   consumePause() { const v = this.pauseQueued > 0; this.pauseQueued = 0; return v; }
   consumeMute() { const v = this.muteQueued > 0; this.muteQueued = 0; return v; }
+  consumeFx() { const v = this.fxQueued > 0; this.fxQueued = 0; return v; }
   consumeButton(id) {
     const i = this.buttonHits.indexOf(id);
     if (i < 0) return false;
     this.buttonHits.splice(i, 1);
     return true;
   }
-  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.boostQueued = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; }
+  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.boostQueued = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; }
 }
