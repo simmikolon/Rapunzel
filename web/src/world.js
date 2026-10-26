@@ -1,4 +1,4 @@
-import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W } from './config.js';
+import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS } from './config.js';
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
@@ -41,6 +41,7 @@ export class World {
     this.stomps = 0;
     this.nextWitchY = 12000;
     this.nextMilestone = 100;
+    this.hintShown = false;
     this.toasts = [];
     this.over = false;
     this.overT = 0;
@@ -116,6 +117,7 @@ export class World {
     const r = pl.rect;
     for (const e of this.enemies) {
       if (!e.alive || e.dead || !overlaps(r, e.rect)) continue;
+      if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
       else if (e.hurtful) { pl.hit(e); }
     }
@@ -126,6 +128,14 @@ export class World {
       k.alive = false;
       this.collect(k);
     }
+  }
+
+  // Boosting through an enemy knocks it away instead of hurting the prince.
+  boostPunch(e) {
+    if (e.kind === 'witch') { if (e.phase === 'warn' || e.deflected) return; e.deflect(this); }
+    else e.stomped(this);
+    this.suns += PUNCH_SUNS;
+    this.onBoostPunch(this.player, e);
   }
 
   collect(k) {
@@ -156,14 +166,20 @@ export class World {
   events() {
     const pl = this.player;
     if (!pl.alive) return;
-    // The witch: telegraphed dives from a fixed altitude on.
-    if (pl.maxY > this.nextWitchY && !this.enemies.some((e) => e.kind === 'witch')) {
+    // The witch: telegraphed dives from a fixed altitude on, never during a
+    // breather stretch, and with a long cooldown so she is an event.
+    if (pl.maxY > this.nextWitchY && !this.enemies.some((e) => e.kind === 'witch') && !this.level.pacingAt(pl.maxY).breather) {
       const side = this.rng.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));
       this.audio.witchWarn();
       this.toast('The witch!', '#ff8a8a', 1.4);
-      this.nextWitchY = pl.maxY + this.rng.range(4500, 7000);
+      this.nextWitchY = pl.maxY + this.rng.range(7500, 10500);
+    }
+    // Teach the boost shield the first time an enemy comes into view.
+    if (!this.hintShown && this.enemies.some((e) => e.alive && !e.dead && e.kind !== 'witch' && e.y < this.cam.top && e.y > this.cam.y)) {
+      this.hintShown = true;
+      this.toast('Boost to punch through enemies!', '#ffd98a', 2.6);
     }
     // Height milestones
     if (this.heightM >= this.nextMilestone) {
@@ -189,6 +205,12 @@ export class World {
   onPlayerBoost(pl) { this.audio.boost(); this.particles.sparkles(pl.x, pl.y, 8, '#ffd04a'); }
   onPlayerBonk(pl, p) { this.audio.bonk(); this.particles.stars(pl.x, pl.headY); this.cam.shake(5, 0.2); }
   onPlayerStomp(pl, e) { this.audio.stomp(); this.stomps++; this.cam.shake(3, 0.15); }
+  onBoostPunch(pl, e) {
+    this.audio.stomp(); this.stomps++;
+    this.particles.sparkles(e.x, e.y, 14, '#ffd04a');
+    this.cam.shake(4, 0.15);
+    this.toast(`+${PUNCH_SUNS}`, '#ffe9a0', 0.9);
+  }
   onPlayerHurt(pl, src) { this.audio.hurt(); this.particles.hurtPuff(pl.x, pl.y + 100); this.cam.shake(10, 0.35); }
   onPlayerDie(pl, cause) { this.audio.gameOver(); this.cam.shake(14, 0.5); }
 

@@ -36,6 +36,10 @@ export const PLAYER_BODY_W = 40;      // narrow collision box like the original 
 export const PLAYER_FOOT_INSET = 0;   // pogo tip is the sprite bottom
 
 // Boost meter: 3 charges, refilled by landing on platforms and lanterns.
+// While boosting the prince is shielded: enemies he touches are knocked
+// away instead of hurting him (boost is the game's "go through" verb).
+export const BOOST_SHIELD_TIME = 0.5;
+export const PUNCH_SUNS = 3;          // suns awarded for boosting through an enemy
 export const BOOST_CHARGES = 3;
 export const BOOST_REFILL_PER_LANDING = 0.5; // half a charge per landing
 export const BOOST_COOLDOWN = 0.18;

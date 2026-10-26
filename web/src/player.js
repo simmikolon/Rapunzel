@@ -1,7 +1,7 @@
 import {
   W, GRAVITY, JUMP_VY, BOOST_VY, MAX_FALL_SPEED, BONK_VY, HURT_VY,
   MOVE_SPEED, MOVE_ACCEL, MOVE_DECEL, TILT_SPEED,
-  PLAYER_W, PLAYER_H, PLAYER_BODY_W, BOOST_CHARGES, BOOST_REFILL_PER_LANDING, BOOST_COOLDOWN,
+  PLAYER_W, PLAYER_H, PLAYER_BODY_W, BOOST_CHARGES, BOOST_REFILL_PER_LANDING, BOOST_COOLDOWN, BOOST_SHIELD_TIME,
   MAX_HEARTS, INVULNERABLE_TIME, STOMP_VY,
 } from './config.js';
 import { approach, clamp, moveToward, sign } from './util.js';
@@ -24,6 +24,7 @@ export class Player {
     this.state = 'standing';
     this.stateT = 0;
     this.invuln = 0;
+    this.shield = 0;               // boost shield time left
     this.hearts = MAX_HEARTS;
     this.boost = BOOST_CHARGES;
     this.boostCooldown = 0;
@@ -42,6 +43,7 @@ export class Player {
   get bodyRight() { return this.x + PLAYER_BODY_W / 2; }
   get rect() { return { x: this.bodyLeft, y: this.y + 8, w: PLAYER_BODY_W, h: PLAYER_H - 24 }; }
   get alive() { return this.state !== 'dead'; }
+  get shielded() { return this.shield > 0 && this.state !== 'dead'; }
   get airborne() { return this.state === 'jumping' || this.state === 'falling' || this.state === 'boosting' || this.state === 'hurt' || this.state === 'bonk'; }
 
   setState(s) {
@@ -61,6 +63,7 @@ export class Player {
     this.stateT += dt;
     this.idleT += dt;
     if (this.invuln > 0) this.invuln -= dt;
+    if (this.shield > 0) this.shield -= dt;
     if (this.boostCooldown > 0) this.boostCooldown -= dt;
     this.prevY = this.y;
 
@@ -149,6 +152,7 @@ export class Player {
     this.boostCooldown = BOOST_COOLDOWN;
     this.vy = Math.max(this.vy, 0) * 0.45 + BOOST_VY;
     this.landedOn = null;
+    this.shield = BOOST_SHIELD_TIME;
     this.setState('boosting');
     this.sx = 0.72; this.sy = 1.36;
     this.world.onPlayerBoost(this);
@@ -189,7 +193,7 @@ export class Player {
   }
 
   hit(source) {
-    if (this.invuln > 0 || this.state === 'dead') return false;
+    if (this.invuln > 0 || this.shielded || this.state === 'dead') return false;
     this.hearts -= 1;
     this.invuln = INVULNERABLE_TIME;
     this.vy = HURT_VY;
@@ -211,7 +215,9 @@ export class Player {
     this.world.onPlayerDie(this, cause);
   }
 
-  heal() { this.hearts = Math.min(MAX_HEARTS, this.hearts + 1); }
+  // A heart restores all hearts: with a cap of three, one at a time was
+  // too little to keep up with the attrition higher up.
+  heal() { this.hearts = MAX_HEARTS; }
 
   // --- Rendering ----------------------------------------------------------------
   currentSprite(art) {
@@ -236,6 +242,14 @@ export class Player {
     const bob = this.state === 'standing' ? Math.sin(this.idleT * 3) * 0.03 : 0;
     const opts = { sx: this.sx, sy: this.sy + bob, alpha, rot: this.state === 'dead' ? this.spin : 0 };
     const sx = cam.sx(this.x), sy = cam.sy(this.y);
+    if (this.shielded) {
+      // boost shield: a warm aura around the prince that fades with the timer
+      const k = this.shield / BOOST_SHIELD_TIME;
+      const cy = sy - PLAYER_H * 0.5;
+      const g = ctx.createRadialGradient(sx, cy, 30, sx, cy, 150);
+      g.addColorStop(0, `rgba(255,220,120,${0.45 * k})`); g.addColorStop(0.6, `rgba(255,160,60,${0.2 * k})`); g.addColorStop(1, 'rgba(255,140,40,0)');
+      ctx.fillStyle = g; ctx.fillRect(sx - 150, cy - 150, 300, 300);
+    }
     blit(ctx, s, sx, sy, opts);
     // Draw the wrap-around twin when near the screen edge.
     if (this.x < -W / 2 + PLAYER_W) blit(ctx, s, sx + W, sy, opts);

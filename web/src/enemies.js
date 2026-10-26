@@ -142,10 +142,26 @@ export class Witch extends Enemy {
     this.divesLeft = dives;
   }
   get stompable() { return false; }
+  // Boosted into: she is thrown off her broom's course and leaves.
+  deflect(world) {
+    const p = world.player;
+    this.phase = 'leave'; this.phaseT = 0;
+    this.hurtful = false; this.deflected = true;
+    this.dir = this.x >= p.x ? 1 : -1;
+    this.vx = this.dir * 1000; this.vy = 450;
+    this.spin = 0;
+    world.audio.witchSwoosh();
+  }
   update(dt, world) {
     this.t += dt; this.phaseT += dt;
     const p = world.player;
     this.frame = Math.floor(this.t * 7) % 2;
+    if (this.phase === 'leave') {
+      this.x += this.vx * dt; this.y += this.vy * dt; this.vy -= 600 * dt; this.spin += dt * 8;
+      if (Math.random() < 0.6) world.particles.witchTrail(this.x, this.y);
+      if (this.x > W / 2 + 220 || this.x < -W / 2 - 220 || this.y < world.cam.y - 300) this.alive = false;
+      return;
+    }
     if (this.phase === 'warn') {
       // Keep level with the player while waiting so the warning is honest.
       this.y = Math.max(this.y, p.y + 640);
@@ -161,7 +177,7 @@ export class Witch extends Enemy {
         const tx = p.x + p.vx * 0.25, ty = p.y + 110 + p.vy * 0.2;
         const dx = tx - this.x, dy = ty - this.y;
         const len = Math.hypot(dx, dy) || 1;
-        const sp = 980;
+        const sp = 860;
         this.vx = (dx / len) * sp; this.vy = (dy / len) * sp;
         if (Math.sign(this.vx) !== this.dir && this.vx !== 0) this.dir = Math.sign(this.vx);
         world.audio.witchSwoosh();
@@ -195,6 +211,7 @@ export class Witch extends Enemy {
       return;
     }
     const set = this.dir > 0 ? art.creatures.witchR : art.creatures.witchL;
+    if (this.phase === 'leave') { blit(ctx, set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.spin * this.dir }); return; }
     const rot = this.phase === 'dive' ? Math.atan2(-this.vy, this.vx) * (this.dir > 0 ? 1 : -1) * 0.5 : 0;
     blit(ctx, set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.dir > 0 ? rot : -rot });
   }

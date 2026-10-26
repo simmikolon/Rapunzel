@@ -9,13 +9,29 @@ import { lerp, invLerp, clamp } from './util.js';
 // a branch on the right tree, a ribbon on the braid, or a plank swing hung
 // between the trees. Difficulty is a smooth function of altitude.
 
+// Difficulty keyframes by altitude (px; 100 px = 1 m). The ramp used to
+// peak at 210 m and stay there, which capped good runs around 300 m; it now
+// stretches to 700 m with a final step beyond.
 const TIERS = [
   { y: 0,     gap: [0.75, 1.0],  dry: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35 },
-  { y: 2500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30 },
-  { y: 7000,  gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26 },
-  { y: 13000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22 },
-  { y: 21000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18 },
 ];
+
+// Pacing waves: every PACE_CYCLE px the climb builds up to a peak and then
+// gets a breather (no enemies, no crumbling branches, closer platforms,
+// more suns) so the pressure never becomes a flat plateau.
+const PACE_CYCLE = 9000;        // 90 m
+const PACE_BREATHER = 1500;     // the last 15 m of each cycle
+export function pacingAt(y) {
+  const phase = ((y % PACE_CYCLE) + PACE_CYCLE) % PACE_CYCLE;
+  if (phase >= PACE_CYCLE - PACE_BREATHER) return { breather: true, enemy: 0, dry: 0, gap: 0.85, sun: 1.6, lantern: 1.5 };
+  const t = phase / (PACE_CYCLE - PACE_BREATHER);          // 0 at the start of a cycle, 1 at the peak
+  return { breather: false, enemy: 0.75 + 0.45 * t, dry: 0.8 + 0.4 * t, gap: 1, sun: 1, lantern: 1 };
+}
 
 function tierAt(y) {
   // Linear interpolation between tier rows so difficulty ramps smoothly.
@@ -54,6 +70,7 @@ export class Level {
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
+  pacingAt(y) { return pacingAt(y); }
 
   generateUpTo(yTop) {
     while (this.nextY < yTop) this.makeRow();
@@ -80,6 +97,7 @@ export class Level {
   makeRow() {
     const r = this.rng;
     const T = tierAt(this.nextY);
+    const P = pacingAt(this.nextY);
     const y = this.nextY;
     const layout = this.nextLayout || this.pickLayout(T, y);
     this.nextLayout = null;
@@ -100,7 +118,7 @@ export class Level {
     let safe = false;
     for (const kind of kinds) {
       const opts = {};
-      if ((kind === 'branchL' || kind === 'branchR') && canBeDry && r.chance(T.dry)) opts.dry = true;
+      if ((kind === 'branchL' || kind === 'branchR') && canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
       const py = y + (kinds.length > 1 ? r.int(-16, 16) : 0);
       if (kind === 'ribbon' || kind === 'bow') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
       const p = new Platform(kind, py, opts);
@@ -115,7 +133,7 @@ export class Level {
     if (safe) this.lastSafeY = y;
 
     // --- enemies -----------------------------------------------------------
-    let gapMin = T.gap[0] * BEAT, gapMax = T.gap[1] * BEAT;
+    let gapMin = T.gap[0] * BEAT * P.gap, gapMax = T.gap[1] * BEAT * P.gap;
     if (!safe) gapMax = Math.min(gapMax, SAFE_GAP - (y - this.lastSafeY));
     // Decide the next row's layout now: from a front-plane row up to a row
     // that only has tower-layer platforms the effective gap grows while the
@@ -129,14 +147,14 @@ export class Level {
     const bounceVy = kinds.includes('bow') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
     this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);
 
-    if (y > 2200 && r.chance(T.crow)) {
+    if (y > 2200 && r.chance(T.crow * P.enemy)) {
       const dir = r.sign();
       const cy = y + gap * r.range(0.4, 0.7);
       const cx = r.range(-W / 2, W / 2);
       const track = clamp((T.index - 1.5) / 2.5, 0, 1);
       this.world.enemies.push(new Crow(cx, cy, dir, r.range(T.crowSpeed[0], T.crowSpeed[1]), track));
     }
-    if (y > 6500 && r.chance(T.spider)) {
+    if (y > 6500 && r.chance(T.spider * P.enemy)) {
       const branch = platforms.find((p) => p.kind === 'branchL' || p.kind === 'branchR');
       if (branch) {
         const sx = branch.x + r.range(-50, 50);
@@ -146,7 +164,7 @@ export class Level {
     }
 
     // --- pickups -----------------------------------------------------------
-    if (r.chance(T.sun)) {
+    if (r.chance(Math.min(0.9, T.sun * P.sun))) {
       const n = r.int(3, 5);
       const cx = r.range(-W / 2 + 120, W / 2 - 120);
       const baseY = y + gap * 0.5;
@@ -155,9 +173,13 @@ export class Level {
         this.world.pickups.push(new Sun(cx + t * 110, baseY + (1 - t * t) * 70));
       }
     }
-    if (r.chance(T.lantern)) this.world.pickups.push(new Lantern(r.range(-W / 2 + 100, W / 2 - 100), y + 80));
+    if (r.chance(T.lantern * P.lantern)) this.world.pickups.push(new Lantern(r.range(-W / 2 + 100, W / 2 - 100), y + 80));
+    // Hearts: a chance once one is missing, and a pity timer that guarantees
+    // one before long when the prince is down to his last heart.
     this.rowsSinceHeart++;
-    if (this.rowsSinceHeart > 14 && this.world.player.hearts < 3 && r.chance(0.22)) {
+    const hearts = this.world.player.hearts;
+    const pity = hearts <= 1 && this.rowsSinceHeart > 8;
+    if (pity || (this.rowsSinceHeart > 12 && hearts < 3 && r.chance(0.25))) {
       this.world.pickups.push(new Heart(r.range(-200, 200), y + gap * 0.5));
       this.rowsSinceHeart = 0;
     }

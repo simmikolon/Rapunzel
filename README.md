@@ -106,6 +106,13 @@ anchor. To use hand-drawn art instead, replace the sprite objects returned
 by the `build*` functions in `web/src/art/index.js` with
 `{ canvas: <image>, w, h, ax, ay }` entries of the same anchors.
 
+### Testing and analysis
+
+`web/dev/sprites.html` shows every generated sprite. `web/dev/sim.html`
+runs the game logic headlessly with a scripted player; drive it with
+`node tools/analyze.mjs <url> <runs> <kid|good> <bold|cautious>` to get
+heights, deaths and hits per 100 m (see `docs/ANALYSIS-phase1.md`).
+
 ### Tuning
 
 All gameplay numbers live in `web/src/config.js`; difficulty tiers are at

@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Rapunzel gameplay simulator</title>
+<style>body{background:#1e3c3f;color:#cde;font-family:monospace;padding:16px}pre{white-space:pre-wrap}</style>
+</head><body>
+<p>Headless gameplay simulator (dev tool). Runs the real game logic without rendering, driven by a scripted player. Use <code>tools/analyze.mjs</code> or call <code>runSims(config)</code> from the console.</p>
+<pre id="out">loading…</pre>
+<script type="module">
+import { runSims, formatReport } from './sim.js';
+window.runSims = runSims;
+window.formatReport = formatReport;
+window.__simReady = true;
+document.getElementById('out').textContent = 'ready: runSims({ runs, skill, policy, cap })';
+</script></body></html>

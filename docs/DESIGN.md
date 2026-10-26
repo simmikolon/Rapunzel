@@ -77,7 +77,7 @@ the numbers in `level.js`:
   time, roughly every 90 m. Past ~250 m the hit rate exceeds the heal
   rate and runs bleed out. The ceiling is attrition, not one hazard.
 
-Agreed fixes (🔜, Phase 1):
+Agreed fixes (✅ implemented in Phase 1, numbers in `docs/ANALYSIS-phase1.md`):
 
 - Boost makes the prince invulnerable for its duration and knocks enemies
   away (feathers, sun bonus). Boost becomes the game's "go through" verb.
@@ -283,7 +283,7 @@ the title / tower-select screen).
 | Phase | Goal | Content | Status |
 |---|---|---|---|
 | 0 | Browser port | Everything in section 2 | ✅ done |
-| 1 | Fix the ceiling | Boost invulnerability + knockback, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart; measure with the bot | 🔜 next |
+| 1 | Fix the ceiling | Boost shield + knockback, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart; measured with the simulator (see `docs/ANALYSIS-phase1.md`) | ✅ on branch `phase-1-ceiling` |
 | 2 | "Get higher" items | Super jump portal with light trails, thorny branches, squirrels | 🔜 |
 | 3 | Campaign framework | `LevelSpec`, forest tower with Rapunzel at the top, braid ending at her window, progress bar, rescue scene, mid-tower warp checkpoint, between-tower light bridge, tower-select screen, save data; keep Endless Tower mode | 🔜 |
 | 4 | Store and meta | Suns as currency, upgrades, cosmetics, pricing | 🔜 |
@@ -302,13 +302,14 @@ From `web/src/config.js` and `web/src/level.js` at the time of writing.
 |---|---|
 | Gravity / bounce velocity | 2100 px/s² / 1650 px/s (bounce height ~648 px) |
 | Dry branch / bow spring bounce | 1550 (~572 px) / 2650 (~1670 px) |
-| Boost | +1500 px/s, 3 charges, 0.5 charge per landing |
+| Boost | +1500 px/s, 3 charges, 0.5 charge per landing, 0.5 s shield |
 | Horizontal speed (keys / tilt) | 560 / 820 px/s |
 | Hearts / invulnerability after a hit | 3 / 1.6 s |
-| Row gaps (tier 0 → 4) | 0.75–1.0 → 1.25–1.8 beats (beat = 300 px) |
+| Row gaps (tier 0 → 5) | 0.75–1.0 → 1.3–1.9 beats (beat = 300 px) |
 | Safe gap guarantee | 520 px between non-crumbling platforms |
-| Tier altitudes | 0, 25, 70, 130, 210 m (interpolated) |
-| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 45–70 m) |
+| Tier altitudes | 0, 35, 100, 220, 400, 700 m (interpolated) |
+| Pacing | 90 m cycles, last 15 m a breather |
+| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m) |
 | 1 m | 100 px |
 
 ## 14. Testing tools
@@ -316,6 +317,9 @@ From `web/src/config.js` and `web/src/level.js` at the time of writing.
 - Automated climb bot and phone-flow checks (Playwright, headless
   Chromium): run before every push; they catch exceptions and basic
   regressions but do not judge feel.
+- Gameplay simulator (`web/dev/sim.html`, `tools/analyze.mjs`): runs the
+  real game logic headlessly with scripted players (skill presets, bold
+  vs cautious policy) and reports heights, deaths and hits per 100 m.
 - Generator stress test: generates ~3900 rows and checks that every
   consecutive pair is reachable, including with the camera far above the
   model (two boosts).
@@ -331,6 +335,8 @@ From `web/src/config.js` and `web/src/level.js` at the time of writing.
 - 2026-10-24: Repository restructured: `master` is the browser game,
   `swift-prototype` keeps the Xcode project.
 - 2026-10-26: Analysis of the 300 m ceiling; agreed Phase 1 fixes.
+- 2026-10-26: Phase 1 implemented and measured on `phase-1-ceiling`:
+  bold-player median 142 → 434 m, 83 % of runs pass 300 m.
   Decided on a campaign of towers with Rapunzel at the top, portals as
   travel animation and mid-tower checkpoints, Endless Tower kept as a
   mode, store between towers.
