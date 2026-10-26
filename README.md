@@ -10,7 +10,8 @@ It is plain JavaScript (ES modules) on a 2D canvas: no build step, no
 dependencies, nothing to install.
 
 The original Swift / SpriteKit prototype it grew out of lives on the
-[`swift-prototype`](../../tree/swift-prototype) branch.
+[`swift-prototype`](../../tree/swift-prototype) branch. Ideas, decisions
+and the roadmap are collected in [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ### Run it locally
 
