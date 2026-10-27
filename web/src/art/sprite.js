@@ -3,10 +3,11 @@ import { PX } from '../config.js';
 // Procedural pixel-art sprite factory. Every sprite is drawn once into an
 // offscreen canvas at PX logical pixels per art pixel. A sprite carries its
 // anchor (ax, ay) in logical pixels from the top-left so the renderer can
-// place it by foot / surface / center.
+// place it by foot / surface / center. At start-up gfx/atlas.js packs all
+// sprite canvases into one WebGL texture and adds a `tex` property to each.
 //
-// To replace any sprite with hand-drawn art later, call
-// `replaceSprite(name, image, ax, ay)` from assets.js.
+// To use hand-drawn art instead, return `{ canvas: <image>, w, h, ax, ay }`
+// objects of the same anchors from the build* functions.
 
 export function makeCanvas(w, h) {
   const c = document.createElement('canvas');
@@ -102,17 +103,4 @@ export function tint(sprite, color, alpha = 0.6) {
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, sprite.w, sprite.h);
   return { canvas, w: sprite.w, h: sprite.h, ax: sprite.ax, ay: sprite.ay };
-}
-
-// Draw a sprite with its anchor at (x, y) on a 2d context (screen coords).
-export function blit(ctx, s, x, y, opts) {
-  if (!opts) { ctx.drawImage(s.canvas, Math.round(x - s.ax), Math.round(y - s.ay)); return; }
-  const { sx = 1, sy = 1, rot = 0, alpha = 1, flip = false } = opts;
-  ctx.save();
-  if (alpha !== 1) ctx.globalAlpha = alpha;
-  ctx.translate(Math.round(x), Math.round(y));
-  if (rot) ctx.rotate(rot);
-  ctx.scale(flip ? -sx : sx, sy);
-  ctx.drawImage(s.canvas, -s.ax, -s.ay);
-  ctx.restore();
 }

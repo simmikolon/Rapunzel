@@ -6,8 +6,9 @@ Rapunzel is a game heavily inspired by some of the drawings made by my five year
 
 The game runs in any modern browser, phone or desktop, with the same
 portrait aspect ratio as the original iOS scene (768 x 1364, about 9:16).
-It is plain JavaScript (ES modules) on a 2D canvas: no build step, no
-dependencies, nothing to install.
+It is plain JavaScript (ES modules) rendered with WebGL through
+[PixiJS](https://pixijs.com) (vendored in `web/vendor/`, MIT): no build
+step, nothing to install, nothing to compile.
 
 The original Swift / SpriteKit prototype it grew out of lives on the
 [`swift-prototype`](../../tree/swift-prototype) branch. Ideas, decisions
@@ -47,7 +48,9 @@ home screen and runs full-screen in portrait.
 | Touch | hold the left or right half of the screen | the flame button | ⏸ |
 | Tilt | tilt the phone (enable on the title screen) | tap anywhere | ⏸ |
 
-`M` toggles sound. The best height is kept in `localStorage`.
+`M` toggles sound, `F` (or the button on the title screen) cycles the
+screen effects. The best height and the effects choice are kept in
+`localStorage`.
 
 ### What was ported from the prototype
 
@@ -92,6 +95,9 @@ custom engine instead of SpriteKit physics and GameplayKit:
   (forest → open sky → sunset → starry night), toasts for milestones.
 * **Audio**: every sound is synthesized with WebAudio, so there are no
   audio files; mute is remembered.
+* **Shaders**: a real bloom on everything that glows (lanterns, sun drops,
+  fireflies, flames, stars, the moon) and a CRT pass with a curved tube,
+  scanlines, chromatic aberration and flicker. See below.
 * **Screens**: title with controls, pause, game over with best height.
 
 ### Art
@@ -104,7 +110,55 @@ prince's colors and his hobby-horse pogo stick follow the original app
 icon, which also serves as the web icon (`web/icons/`). `web/dev/sprites.html` shows every generated sprite with its
 anchor. To use hand-drawn art instead, replace the sprite objects returned
 by the `build*` functions in `web/src/art/index.js` with
-`{ canvas: <image>, w, h, ax, ay }` entries of the same anchors.
+`{ canvas: <image>, w, h, ax, ay }` entries of the same anchors; the atlas
+builder picks them up unchanged.
+
+### Rendering and effects (WebGL)
+
+Drawing goes through a small immediate-mode facade over PixiJS
+(`web/src/gfx/renderer.js`): the game still draws everything every frame
+with calls like `g.blit(sprite, x, y)`, `g.rect(...)` or `g.text(...)`, and
+the facade hands out pooled PixiJS sprites, vector shapes and text objects in
+call order (every object gets an increasing `zIndex`, so draw order is
+z-order even when the three kinds interleave). Gameplay code never touches
+PixiJS directly. The stage is a stack of layers:
+
+| layer | content |
+|---|---|
+| `bg` | sky gradient, stars / moon / clouds, distant forest, tower, braid, lawn, trunks |
+| `world` | platforms, pickups, enemies, the prince, particles, fireflies |
+| `light` | altitude lighting (multiply blend) and the vignette |
+| `glow` | emissive copies of glowing things, blurred by the bloom filter and added over the scene |
+| `hud`, `overlay` | score, hearts, boost meter, buttons, toasts; pause / game over / notices |
+
+Everything sits in a root container that carries the CRT filter.
+
+* **Bloom** (`web/src/gfx/filters.js`, `BloomFilter`) is selective: a draw
+  call with a `glow` option is drawn a second time into the `glow` layer,
+  which is rendered at half resolution, blurred with a separable 9-tap
+  Gaussian (two iterations) and composited additively. There is no luminance
+  threshold, so a bright daytime sky does not haze over.
+* **CRT** (`CRTFilter`) bends the picture into a slightly curved tube
+  (only the corners leave the screen), splits the colour channels a little
+  toward the edges, darkens every other art-pixel row into scanlines, adds a
+  faint phosphor triad at retina densities, shades the corners and flickers
+  by a few percent. Scanlines are counted in device pixels, so they stay
+  the same size whatever the window.
+* **Presets**: `full` (bloom + CRT), `bloom` and `off`. `F` or the title
+  screen button cycle them, `?fx=full|bloom|off` in the URL forces one for a
+  visit. The choice is saved with the best height.
+* **Art** stays procedural: at start-up `web/src/gfx/atlas.js` packs every
+  sprite canvas into one 2048-px-wide texture with nearest-neighbour
+  sampling, so the whole scene batches into a handful of draw calls and the
+  chunky pixels stay crisp. `web/dev/sprites.html` keeps working because the
+  sprites keep their canvases.
+* The logical resolution is still 768 x 1364 and the backing store still
+  matches the CSS size in device pixels (`renderer.resize(W, H, scale)`), so
+  nothing changes for input or layout.
+* Browsers without WebGL get a short message instead of the game. The
+  vendored `web/vendor/pixi.min.mjs` is the unmodified ESM bundle from the
+  `pixi.js` npm package (sourcemap pointer stripped); see
+  `web/vendor/README.md`.
 
 ### Testing and analysis
 
@@ -115,6 +169,8 @@ heights, deaths and hits per 100 m (see `docs/ANALYSIS-phase1.md`).
 
 ### Tuning
 
-All gameplay numbers live in `web/src/config.js`; difficulty tiers are at
-the top of `web/src/level.js`; sky and lighting keyframes are in
-`web/src/background.js`.
+All gameplay numbers live in `web/src/config.js`, with the bloom and CRT
+amounts in its `FX` block; difficulty tiers are at the top of
+`web/src/level.js`; sky and lighting keyframes are in
+`web/src/background.js`. Which things glow, and how much, is the `glow`
+option on their draw calls (pickups, particles, background, HUD).

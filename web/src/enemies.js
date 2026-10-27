@@ -1,5 +1,4 @@
 import { W, H, GRAVITY } from './config.js';
-import { blit } from './art/sprite.js';
 import { TAU, clamp } from './util.js';
 
 // Enemies that fit the fairy tale: crows patrol the air between the trees,
@@ -62,10 +61,10 @@ export class Crow extends Enemy {
     this.vy = -150; this.dir = -this.dir;
     world.particles.feathers(this.x, this.y);
   }
-  draw(ctx, cam, art) {
+  draw(g, cam, art) {
     const set = this.dir > 0 ? art.creatures.crowR : art.creatures.crowL;
     const s = this.dead ? set[2] : set[this.flap];
-    blit(ctx, s, cam.sx(this.x), cam.sy(this.y), { rot: this.dead ? this.spin : 0 });
+    g.blit(s, cam.sx(this.x), cam.sy(this.y), { rot: this.dead ? this.spin : 0 });
   }
 }
 
@@ -113,14 +112,12 @@ export class Spider extends Enemy {
     this.dead = true; this.hurtful = false;
     world.particles.sparkles(this.x, this.y, 8, '#b48ad6');
   }
-  draw(ctx, cam, art) {
+  draw(g, cam, art) {
     const sx = cam.sx(this.x), top = cam.sy(this.y + this.h / 2);
     // thread
-    ctx.strokeStyle = 'rgba(240,240,250,0.8)';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(sx, cam.sy(this.anchorY)); ctx.lineTo(sx, top); ctx.stroke();
+    g.line(sx, cam.sy(this.anchorY), sx, top, 'rgba(240,240,250,0.8)', 2);
     const sq = this.dead ? clamp(1 - this.squish * 2, 0.15, 1) : 1;
-    blit(ctx, art.creatures.spider[this.frame], sx, top, { sy: sq, sx: 1 + (1 - sq) * 0.6, alpha: this.dead ? clamp(1 - this.squish * 1.5, 0, 1) : 1 });
+    g.blit(art.creatures.spider[this.frame], sx, top, { sy: sq, sx: 1 + (1 - sq) * 0.6, alpha: this.dead ? clamp(1 - this.squish * 1.5, 0, 1) : 1 });
   }
 }
 
@@ -199,20 +196,17 @@ export class Witch extends Enemy {
       }
     }
   }
-  draw(ctx, cam, art) {
+  draw(g, cam, art) {
     if (this.phase === 'warn') {
       // exclamation marker at the screen edge where she will appear
       const sx = this.side < 0 ? 40 : W - 40, sy = clamp(cam.sy(this.y), 60, H - 60);
       const blink = Math.floor(this.phaseT * 8) % 2 === 0;
-      ctx.fillStyle = blink ? '#ff3b3b' : '#ffd1d1';
-      ctx.font = 'bold 56px system-ui, sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('!', sx, sy);
+      g.text('!', sx, sy, 56, blink ? '#ff3b3b' : '#ffd1d1', 'center', false, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
       return;
     }
     const set = this.dir > 0 ? art.creatures.witchR : art.creatures.witchL;
-    if (this.phase === 'leave') { blit(ctx, set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.spin * this.dir }); return; }
+    if (this.phase === 'leave') { g.blit(set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.spin * this.dir }); return; }
     const rot = this.phase === 'dive' ? Math.atan2(-this.vy, this.vx) * (this.dir > 0 ? 1 : -1) * 0.5 : 0;
-    blit(ctx, set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.dir > 0 ? rot : -rot });
+    g.blit(set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.dir > 0 ? rot : -rot });
   }
 }

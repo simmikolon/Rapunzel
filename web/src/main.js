@@ -1,20 +1,23 @@
-import { W, H, STORAGE_KEY } from './config.js';
+import { W, H, STORAGE_KEY, FX } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
 import { HUD } from './hud.js';
+import { createRenderer, PRESETS } from './gfx/renderer.js';
 
 // Rapunzel - browser port of the SpriteKit prototype.
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
-// canvas to the viewport while keeping that aspect ratio.
+// canvas to the viewport while keeping that aspect ratio. Rendering is WebGL
+// through PixiJS (see src/gfx/), which makes the bloom and CRT passes possible.
+
+export const FX_LABELS = { full: 'bloom + CRT', bloom: 'bloom only', off: 'off' };
 
 class Game {
-  constructor(canvas) {
+  constructor(canvas, gfx, art) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d', { alpha: false });
-    this.ctx.imageSmoothingEnabled = false;
-    this.art = buildAllArt();
+    this.gfx = gfx;
+    this.art = art;
     this.input = new Input(canvas);
     this.input.anyInteraction = () => audio.unlock();
     this.hud = new HUD(this);
@@ -26,8 +29,13 @@ class Game {
     this.noticeText = '';
     this.noticeT = 0;
     this.iosSoundHintShown = false;
+    this.fxPreset = 'full';
     this.loadSave();
+    // ?fx=full|bloom|off forces a preset for this visit.
+    const param = new URLSearchParams(location.search).get('fx');
+    this.fxPreset = this.gfx.setPreset(PRESETS.includes(param) ? param : this.fxPreset);
     this.last = performance.now();
+    this.dt = 0;
     this.acc = 0;
     this.STEP = 1 / 120;
     this.setupDpr();
@@ -37,6 +45,7 @@ class Game {
   }
 
   get muted() { return audio.muted; }
+  get fxLabel() { return FX_LABELS[this.fxPreset] || this.fxPreset; }
 
   notice(text, seconds = 3.5) { this.noticeText = text; this.noticeT = seconds; }
 
@@ -48,10 +57,21 @@ class Game {
   }
 
   loadSave() {
-    try { const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); this.best = s.best || 0; } catch (_) { this.best = 0; }
+    try {
+      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      this.best = s.best || 0;
+      if (PRESETS.includes(s.fx)) this.fxPreset = s.fx;
+    } catch (_) { this.best = 0; }
   }
   save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ best: this.best })); } catch (_) { /* ignore */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ best: this.best, fx: this.fxPreset })); } catch (_) { /* ignore */ }
+  }
+
+  cycleFx() {
+    this.fxPreset = this.gfx.nextPreset();
+    this.save();
+    audio.click();
+    this.notice(`Effects: ${this.fxLabel}`, 1.6);
   }
 
   // The backing store matches the CSS size in device pixels, so nothing is
@@ -61,10 +81,7 @@ class Game {
     const rect = this.canvas.getBoundingClientRect();
     const cssW = rect.width || W;
     const scale = (cssW * dpr) / W;
-    this.canvas.width = Math.round(W * scale);
-    this.canvas.height = Math.round(H * scale);
-    this.ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    this.ctx.imageSmoothingEnabled = false;
+    this.gfx.resize(scale);
   }
 
   setMode(m) {
@@ -76,6 +93,7 @@ class Game {
     let dt = (now - this.last) / 1000;
     this.last = now;
     if (dt > 0.25) dt = 0.25;        // tab was hidden: don't fast-forward
+    this.dt = dt;
     this.input.poll(dt);
     this.update(dt);
     this.draw();
@@ -94,13 +112,15 @@ class Game {
       audio.click();
       if (!muted) this.maybeIosSoundHint();
     }
+    if (input.consumeFx() || input.consumeButton('fx')) this.cycleFx();
 
     switch (this.mode) {
       case 'title': {
         this.world.update(dt, true);
         const tapped = input.consumeTap();
-        const onTiltButton = input.taps.some((t) => { const z = input.zoneAt(t.x, t.y); return z && z.id === 'tilt'; });
-        if (onTiltButton) { input.consumeBoost(); break; }
+        // Taps on the title buttons (tilt, effects, sound) must not start the game.
+        const onButton = input.taps.some((t) => input.zoneAt(t.x, t.y));
+        if (onButton) { input.consumeBoost(); break; }
         if (this.modeT > 0.3 && tapped) { input.consumeBoost(); this.setMode('playing'); }
         break;
       }
@@ -134,19 +154,41 @@ class Game {
   }
 
   draw() {
-    const ctx = this.ctx;
-    this.world.draw(ctx);
+    const g = this.gfx;
+    g.begin();
+    this.world.draw(g);
     switch (this.mode) {
-      case 'title': this.hud.drawTitle(ctx, this.world, this.modeT); break;
-      case 'playing': this.hud.drawPlaying(ctx, this.world); break;
-      case 'paused': this.hud.drawPlaying(ctx, this.world); this.hud.drawPaused(ctx); break;
-      case 'gameover': this.hud.drawPlaying(ctx, this.world); this.hud.drawGameOver(ctx, this.world, this.modeT, this.isNewBest); break;
+      case 'title': this.hud.drawTitle(g, this.world, this.modeT); break;
+      case 'playing': this.hud.drawPlaying(g, this.world); break;
+      case 'paused': this.hud.drawPlaying(g, this.world); this.hud.drawPaused(g); break;
+      case 'gameover': this.hud.drawPlaying(g, this.world); this.hud.drawGameOver(g, this.world, this.modeT, this.isNewBest); break;
     }
-    if (this.noticeT > 0) this.hud.drawNotice(ctx, this.noticeText, this.noticeT);
+    if (this.noticeT > 0) this.hud.drawNotice(g, this.noticeText, this.noticeT);
+    g.end(this.dt);
   }
 }
 
-const boot = () => { window.game = new Game(document.getElementById('game')); };
+function showFallback(message) {
+  const stage = document.getElementById('stage');
+  const box = document.createElement('div');
+  box.id = 'nowebgl';
+  box.textContent = message;
+  stage.appendChild(box);
+}
+
+const boot = async () => {
+  const canvas = document.getElementById('game');
+  const art = buildAllArt();
+  let gfx;
+  try {
+    gfx = await createRenderer(canvas, art, FX);
+  } catch (err) {
+    console.error('WebGL renderer failed to start', err);
+    showFallback('Rapunzel needs WebGL for this preview, and the browser did not provide it.');
+    return;
+  }
+  window.game = new Game(canvas, gfx, art);
+};
 if (document.fonts && document.fonts.load) {
   // Give the pixel font a moment to arrive; fall back to monospace if offline.
   Promise.race([document.fonts.load('16px "Press Start 2P"'), new Promise((r) => setTimeout(r, 1500))]).then(boot, boot);

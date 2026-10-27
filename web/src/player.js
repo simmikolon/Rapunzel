@@ -5,7 +5,6 @@ import {
   MAX_HEARTS, INVULNERABLE_TIME, STOMP_VY,
 } from './config.js';
 import { approach, clamp, moveToward, sign } from './util.js';
-import { blit } from './art/sprite.js';
 
 // The prince. Position (x, y) is the tip of the pogo stick (feet), world
 // coordinates with y up. The state machine mirrors the original
@@ -235,7 +234,7 @@ export class Player {
     }
   }
 
-  draw(ctx, cam, art) {
+  draw(g, cam, art) {
     const s = this.currentSprite(art);
     const blink = this.invuln > 0 && this.state !== 'dead' && Math.floor(this.invuln * 14) % 2 === 0;
     const alpha = blink ? 0.35 : 1;
@@ -245,14 +244,11 @@ export class Player {
     if (this.shielded) {
       // boost shield: a warm aura around the prince that fades with the timer
       const k = this.shield / BOOST_SHIELD_TIME;
-      const cy = sy - PLAYER_H * 0.5;
-      const g = ctx.createRadialGradient(sx, cy, 30, sx, cy, 150);
-      g.addColorStop(0, `rgba(255,220,120,${0.45 * k})`); g.addColorStop(0.6, `rgba(255,160,60,${0.2 * k})`); g.addColorStop(1, 'rgba(255,140,40,0)');
-      ctx.fillStyle = g; ctx.fillRect(sx - 150, cy - 150, 300, 300);
+      g.halo(sx, sy - PLAYER_H * 0.5, 150, '#ffc864', 0.5 * k, { glow: 1 });
     }
-    blit(ctx, s, sx, sy, opts);
+    g.blit(s, sx, sy, opts);
     // Draw the wrap-around twin when near the screen edge.
-    if (this.x < -W / 2 + PLAYER_W) blit(ctx, s, sx + W, sy, opts);
-    else if (this.x > W / 2 - PLAYER_W) blit(ctx, s, sx - W, sy, opts);
+    if (this.x < -W / 2 + PLAYER_W) g.blit(s, sx + W, sy, opts);
+    else if (this.x > W / 2 - PLAYER_W) g.blit(s, sx - W, sy, opts);
   }
 }

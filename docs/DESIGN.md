@@ -94,8 +94,11 @@ the game, in its zone, in the simulator, and one line in this document.
 
 ## 4. The game today
 
-**Phase 0, the port (✅)**: plain JavaScript on a 2D canvas, 768 x 1364
-logical portrait resolution, deployed from `master` via Vercel.
+**Phase 0, the port (✅)**: plain JavaScript, 768 x 1364 logical portrait
+resolution, deployed from `master` via Vercel. Rendering is WebGL through
+PixiJS behind a small immediate-mode facade (`web/src/gfx/renderer.js`);
+gameplay code never touches PixiJS. Selective bloom and a CRT pass with
+presets full / bloom / off (F key, title button, `?fx=`).
 
 - Prince on a pogo stick: automatic bounce, tap to boost (three charges,
   refilled by landings and lanterns), keys, touch halves or phone tilt,
@@ -125,9 +128,10 @@ ramp stretched to 700 m with 90 m pacing cycles ending in a 15 m
 breather, witch cooldown 75 to 105 m and a slower dive, pity heart, a
 one-time hint for the shield. Plus the headless gameplay simulator.
 
-**Key files**: `web/src/config.js` (tunables), `web/src/level.js` (tiers,
-pacing, rows), `web/src/background.js` (layers, sky, lighting),
-`web/src/enemies.js`, `web/src/platforms.js`, `web/src/player.js`,
+**Key files**: `web/src/config.js` (tunables and the `FX` block),
+`web/src/level.js` (tiers, pacing, rows), `web/src/background.js` (layers,
+sky, lighting), `web/src/enemies.js`, `web/src/platforms.js`,
+`web/src/player.js`, `web/src/gfx/*` (renderer facade, atlas, filters),
 `web/src/art/*` (procedural sprites), `web/dev/sprites.html` (sprite
 sheet), `web/dev/sim.html` + `tools/analyze.mjs` (simulator).
 
@@ -232,10 +236,12 @@ is a pool to draw from, not a promise.
 - 💡 shake and motion effects when things happen: more shake, hit-stop,
   zoom punch on bow springs and the witch, speed lines on boost.
 - 💡 more particles and atmosphere in general.
-- 💡 CRT lines as a toggle (cheap overlay).
-- 💡 shaders and bloom. ⚠️ Canvas 2D has no shaders; glow per object and
-  scanlines are cheap, true bloom and screen-wide blur mean a WebGL
-  renderer (multi-day). Defer; most of the list above works in 2D.
+- ✅ bloom (selective, via a glow layer) and a CRT pass (curvature,
+  scanlines, aberration, flicker) with presets. Anything that should glow
+  passes `glow` on its draw call. With WebGL in place, fog with depth of
+  field, god rays and the portal's light trails are straightforward.
+- 💡 an automatic preset fallback for slower phones (drop to bloom, then
+  off, when frames run long); a bitmap font for the score text.
 
 **Themes, worlds, hair**
 - 💡 towers in snow, rain, summer, jungle, night, space; a parallel
@@ -287,7 +293,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
-| later | Tunnels / tower interior, WebGL renderer, selectable worlds, seasons and Christmas | 💡 |
+| later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
 
 Mode-independent polish (super jump portal, god rays, hit-stop, title
 idle scene) slots in wherever it fits.
@@ -339,3 +345,6 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   tower is zones 1 to 4 of endless mode. The sandbox approach: build and
   iterate every element in endless mode first, with the element-module
   rule, the simulator as guard rail and a dev menu.
+- 2026-10-27: Phase 1 merged into `master`. The WebGL renderer (PixiJS
+  facade, selective bloom, CRT presets) from `preview/webgl-pixi` merged as
+  well; the "no shaders in 2D" caveat is gone.
