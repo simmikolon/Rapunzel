@@ -72,21 +72,37 @@ export class Background {
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
     this.fireflies = Array.from({ length: 22 }, () => ({ x: r.range(-W / 2, W / 2), y: r.range(-100, H + 100), ph: r.range(0, TAU), sp: r.range(0.4, 1.1) }));
     this.swayAmp = 12;
-    // Atmosphere: fog wisps and falling leaves in two depths each, light
-    // shafts, and boughs hanging from the trunks. Positions are in their
-    // layer's coordinates (see cam.layerY).
-    this.fogFront = Array.from({ length: 7 }, () => this.newPuff(r, 1.25, true));
-    this.fogBack = Array.from({ length: 5 }, () => this.newPuff(r, 0.7, true));
-    this.leavesFront = Array.from({ length: 26 }, () => this.newLeaf(r, 1.25, true));
-    this.leavesBack = Array.from({ length: 30 }, () => this.newLeaf(r, 0.9, true));
+    // Atmosphere: falling leaves on a depth continuum, mist wisps made of
+    // overlapping soft puffs, light shafts, and boughs on the trunks.
+    // Positions are in each object's own layer coordinates (cam.layerY(f)).
+    this.leaves = Array.from({ length: 60 }, () => this.newLeaf(r));
+    this.fogFront = Array.from({ length: 6 }, () => this.newWisp(r, r.range(1.04, 1.2)));
+    this.fogBack = Array.from({ length: 4 }, () => this.newWisp(r, 0.75));
     this.shafts = Array.from({ length: 4 }, (_, i) => ({ x: 120 + i * 190 + r.range(-40, 40), w: r.range(70, 150), ph: r.range(0, TAU), sp: r.range(0.08, 0.16) }));
+    this.atmoWasOff = true;
   }
 
-  newPuff(r, f, anywhere) {
-    return { f, x: r.range(-200, W + 200), ly: r.range(0, anywhere ? H : 0) , rx: r.range(170, 320), ry: r.range(55, 110), drift: r.range(8, 24) * (r.chance(0.5) ? 1 : -1), ph: r.range(0, TAU), a: r.range(0.14, 0.26) };
+  // A leaf somewhere between far (f 0.85, small, dim) and near (f 1.35, big).
+  newLeaf(r) {
+    const f = r.range(0.85, 1.35);
+    const near = invLerp(0.85, 1.35, f);
+    return {
+      f, x: r.range(-40, W + 40), ly: 0, v: r.int(0, 2),
+      vy: r.range(35, 95) * (0.7 + 0.6 * near),       // fall speed, nearer ones a little faster
+      sway: r.range(15, 45), ph: r.range(0, TAU), sp: r.range(0.9, 2.2),
+      rot: r.range(0, TAU), spin: r.range(-2.5, 2.5),
+      s: lerp(0.55, 1.5, near), a: lerp(0.65, 1, near),
+    };
   }
-  newLeaf(r, f, anywhere) {
-    return { f, x: r.range(-40, W + 40), ly: r.range(0, anywhere ? H : 0), v: r.int(0, 2), vy: r.range(50, 110), sway: r.range(20, 50), ph: r.range(0, TAU), sp: r.range(1.2, 2.4), rot: r.range(0, TAU), spin: r.range(-2.5, 2.5), s: f > 1 ? r.range(1.0, 1.5) : r.range(0.55, 0.85) };
+  // A wisp: three soft puffs around a centre, slightly tilted, pulsing slowly.
+  newWisp(r, f) {
+    return {
+      f, x: r.range(-150, W + 150), ly: 0,
+      rx: r.range(260, 420), ry: r.range(110, 180), rot: r.range(-0.18, 0.18),
+      parts: [0, 1, 2].map(() => ({ dx: r.range(-0.5, 0.5), dy: r.range(-0.45, 0.45), k: r.range(0.55, 0.9) })),
+      drift: r.range(6, 18) * r.sign(), vdrift: r.range(-10, 10),
+      ph: r.range(0, TAU), pulse: r.range(0.08, 0.16), a: r.range(0.07, 0.11),
+    };
   }
 
   // Horizontal offset of the braid at world height y (a slow travelling wave).
@@ -191,7 +207,7 @@ export class Background {
     if (deep > 0) this.drawFog(g, cam, time, this.fogBack, deep, '#9fd4c4');
     this.drawTower(g, cam);
     this.drawBraid(g, cam, time);
-    if (deep > 0) this.drawLeaves(g, cam, this.leavesBack, deep);
+    if (deep > 0) this.drawLeaves(g, cam, false, deep);
     this.drawGround(g, cam);
     this.drawTrees(g, cam);
     this.drawBoughs(g, cam);
@@ -202,46 +218,52 @@ export class Background {
   drawFrontAtmosphere(g, cam, time) {
     const deep = deepForestAmount(cam.y);
     if (deep <= 0) return;
-    this.drawLeaves(g, cam, this.leavesFront, deep);
+    this.drawLeaves(g, cam, true, deep);
     this.drawFog(g, cam, time, this.fogFront, deep, '#d8efe6');
   }
 
-  // Fog drifts sideways, leaves fall and sway; both re-enter above the view
-  // of their own layer once they leave it below.
+  // Leaves fall with a shared slow wind plus their own flutter; wisps drift
+  // and pulse. Whatever leaves the view below re-enters at a random height
+  // above it, so arrivals are staggered rather than lined up.
   updateAtmosphere(dt, cam, time) {
     const amount = deepForestAmount(cam.y);
     if (amount <= 0) { this.atmoWasOff = true; return; }
-    const wrapY = (o, pad) => {
+    const reenter = (o, pad, spread) => {
       const camF = cam.layerY(o.f);
-      if (o.ly < camF - pad) o.ly = camF + H + pad - 1;         // fell below the view
-      else if (o.ly > camF + H + pad) o.ly = camF - pad + 1;    // camera dropped it below
+      if (o.ly < camF - pad) { o.ly = camF + H + pad + Math.random() * spread; o.x = Math.random() * (W + 80) - 40; }
+      else if (o.ly > camF + H + pad + spread) o.ly = camF + H + pad + Math.random() * spread;
     };
     if (this.atmoWasOff) {
-      // entering the band: scatter everything over the current view
+      // entering the band: scatter everything over the view and above it
       this.atmoWasOff = false;
-      for (const o of [...this.fogFront, ...this.fogBack, ...this.leavesFront, ...this.leavesBack]) o.ly = cam.layerY(o.f) + Math.random() * H;
+      for (const o of this.leaves) o.ly = cam.layerY(o.f) + Math.random() * H * 1.6;
+      for (const o of [...this.fogFront, ...this.fogBack]) o.ly = cam.layerY(o.f) + Math.random() * H * 1.3;
+    }
+    const wind = Math.sin(time * 0.23) * 28 + Math.sin(time * 0.61 + 1.7) * 14;
+    for (const o of this.leaves) {
+      o.ly -= o.vy * (1 + 0.25 * Math.sin(time * o.sp * 0.7 + o.ph)) * dt;
+      o.x += (wind + Math.sin(time * o.sp + o.ph) * o.sway) * dt;
+      o.rot += o.spin * dt;
+      if (o.x < -60) o.x = W + 60; else if (o.x > W + 60) o.x = -60;
+      reenter(o, 40, H * 0.8);
     }
     for (const o of [...this.fogFront, ...this.fogBack]) {
       o.x += o.drift * dt;
-      if (o.x < -o.rx - 60) o.x = W + o.rx + 60; else if (o.x > W + o.rx + 60) o.x = -o.rx - 60;
-      wrapY(o, o.ry + 20);
-    }
-    for (const o of [...this.leavesFront, ...this.leavesBack]) {
-      o.ly -= o.vy * dt;
-      o.x += Math.sin(time * o.sp + o.ph) * o.sway * dt + 6 * dt;
-      o.rot += o.spin * dt;
-      if (o.x < -60) o.x = W + 60; else if (o.x > W + 60) o.x = -60;
-      wrapY(o, 40);
+      o.ly += o.vdrift * dt;
+      if (o.x < -o.rx - 80) o.x = W + o.rx + 80; else if (o.x > W + o.rx + 80) o.x = -o.rx - 80;
+      reenter(o, o.ry + 40, H * 0.6);
     }
   }
 
-  drawLeaves(g, cam, list, amount) {
+  // `near` selects leaves in front of (true) or behind (false) the trunks.
+  drawLeaves(g, cam, near, amount) {
     const t = this.art.tiles.leaves;
-    for (const o of list) {
+    for (const o of this.leaves) {
+      if ((o.f >= 1) !== near) continue;
       const camF = cam.layerY(o.f);
       const sy = H - (o.ly - camF) + cam.oy;
       if (sy < -40 || sy > H + 40) continue;
-      g.blit(t[o.v], o.x + cam.ox, sy, { rot: o.rot, sx: o.s, sy: o.s, alpha: amount * (o.f > 1 ? 1 : 0.85) });
+      g.blit(t[o.v], o.x + cam.ox, sy, { rot: o.rot, sx: o.s, sy: o.s, alpha: amount * o.a });
     }
   }
 
@@ -249,9 +271,13 @@ export class Background {
     for (const o of list) {
       const camF = cam.layerY(o.f);
       const sy = H - (o.ly - camF) + cam.oy;
-      if (sy < -o.ry - 20 || sy > H + o.ry + 20) continue;
-      const breathe = 0.85 + 0.15 * Math.sin(time * 0.5 + o.ph);
-      g.puff(o.x + cam.ox, sy, o.rx * breathe, o.ry, color, o.a * amount);
+      if (sy < -o.ry * 1.6 || sy > H + o.ry * 1.6) continue;
+      const pulse = 0.55 + 0.45 * Math.sin(time * o.pulse * TAU + o.ph);   // forms and dissolves in place
+      const cos = Math.cos(o.rot), sin = Math.sin(o.rot);
+      for (const part of o.parts) {
+        const px = part.dx * o.rx, py = part.dy * o.ry;
+        g.puff(o.x + cam.ox + px * cos - py * sin, sy + px * sin + py * cos, o.rx * part.k, o.ry * part.k, color, o.a * amount * pulse, { rot: o.rot });
+      }
     }
   }
 
