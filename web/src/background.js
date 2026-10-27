@@ -127,8 +127,8 @@ export class Background {
     g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
     g.rect(W / 2 + TOWER_W / 2 - 16 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
     // atmospheric haze toward the wall's receding edges
-    g.puff(W / 2 - TOWER_W / 2 + 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16);
-    g.puff(W / 2 + TOWER_W / 2 - 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16);
+    g.puff(W / 2 - TOWER_W / 2 + 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
+    g.puff(W / 2 + TOWER_W / 2 - 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
   }
 
   trunkVariant(k, side) {
@@ -199,6 +199,7 @@ export class Background {
     this.atmo.drawDapple(g, cam, time);
     this.drawBraid(g, cam, time);
     this.atmo.drawBackLeaves(g, cam);
+    this.atmo.drawMidFog(g, cam, time);
     this.drawGround(g, cam);
     this.atmo.drawLawnMist(g, cam, time);
     this.drawTrees(g, cam);
@@ -208,7 +209,7 @@ export class Background {
   }
 
   // Closest layer: big leaves and mist drifting in front of everything.
-  drawFrontAtmosphere(g, cam, time) { this.atmo.drawFront(g, cam, time); }
+  drawFrontAtmosphere(g, cam, time, world) { this.atmo.drawFront(g, cam, time, world); }
 
   updateAtmosphere(dt, cam, time, world) { this.atmo.update(dt, cam, time, world); }
 

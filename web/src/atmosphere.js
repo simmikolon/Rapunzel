@@ -18,8 +18,15 @@ export class Atmosphere {
   constructor(art, r) {
     this.art = art;
     this.leaves = Array.from({ length: 60 }, () => this.newLeaf(r));
-    this.fogFront = Array.from({ length: 6 }, () => this.newWisp(r, r.range(1.04, 1.2)));
-    this.fogBack = Array.from({ length: 4 }, () => this.newWisp(r, 0.75));
+    // Fog in three depths: back (behind the tower, only the gaps show it),
+    // mid (in front of the wall, behind the trees and the prince: greys the
+    // wall, never covers gameplay) and front (thin wisps over everything).
+    // Fog banks are dense bands that roll through now and then.
+    this.fogBack = Array.from({ length: 4 }, () => this.newWisp(r, 0.75, 0.2, 0.3));
+    this.fogMid = Array.from({ length: 7 }, () => this.newWisp(r, r.range(0.93, 0.98), 0.22, 0.32));
+    this.fogFront = Array.from({ length: 6 }, () => this.newWisp(r, r.range(1.04, 1.2), 0.12, 0.18));
+    this.banks = [];
+    this.bankTimer = 18;
     this.shafts = Array.from({ length: 4 }, (_, i) => ({ x: 120 + i * 190 + r.range(-40, 40), w: r.range(70, 150), ph: r.range(0, TAU), sp: r.range(0.08, 0.16) }));
     this.motes = Array.from({ length: 40 }, () => ({ s: r.int(0, 3), t: r.next(), u: r.range(-0.5, 0.5), v: r.range(0.015, 0.045), ph: r.range(0, TAU), size: r.chance(0.3) ? 5 : 3, jit: r.range(0.6, 1.4) }));
     this.dapple = Array.from({ length: 8 }, () => ({ f: PARALLAX_TOWER, x: r.range(W / 2 - TOWER_W / 2 + 40, W / 2 + TOWER_W / 2 - 40), ly: 0, rx: r.range(110, 200), ry: r.range(70, 130), ph: r.range(0, TAU), sp: r.range(0.2, 0.4), a: r.range(0.22, 0.34) }));
@@ -47,15 +54,25 @@ export class Atmosphere {
     };
   }
   // A wisp: three soft puffs around a centre, slightly tilted, pulsing slowly.
-  newWisp(r, f) {
+  newWisp(r, f, aMin = 0.1, aMax = 0.16) {
     return {
       f, x: r.range(-150, W + 150), ly: 0,
-      rx: r.range(260, 420), ry: r.range(110, 180), rot: r.range(-0.18, 0.18),
+      rx: r.range(300, 480), ry: r.range(120, 200), rot: r.range(-0.18, 0.18),
       parts: [0, 1, 2].map(() => ({ dx: r.range(-0.5, 0.5), dy: r.range(-0.45, 0.45), k: r.range(0.55, 0.9) })),
       drift: r.range(6, 18) * r.sign(), vdrift: r.range(-10, 10),
-      ph: r.range(0, TAU), pulse: r.range(0.08, 0.16), a: r.range(0.07, 0.11), wake: 0,
+      ph: r.range(0, TAU), pulse: r.range(0.08, 0.16), a: r.range(aMin, aMax), wake: 0,
     };
   }
+  // A fog bank: a dense band across the whole width that drifts down through
+  // the view (it lives slightly in front of the prince's plane).
+  newBank(cam) {
+    const f = 1.06, camF = cam.layerY(f);
+    const n = 9, parts = [];
+    for (let i = 0; i < n; i++) parts.push({ x: -60 + (i / (n - 1)) * (W + 120) + (Math.random() - 0.5) * 90, dy: (Math.random() - 0.5) * 160, rx: 240 + Math.random() * 160, ry: 150 + Math.random() * 110, k: 0.8 + Math.random() * 0.2, ph: Math.random() * TAU });
+    return { f, ly: camF + H + 320, parts, drift: (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 14), vdrift: -(14 + Math.random() * 10), age: 0, a: 0.3 + Math.random() * 0.1 };
+  }
+  // Fog thickens under cloud cover and thins while a gust blows through.
+  get fogDensity() { return (0.78 + 0.5 * this.cloud.cover) * (1 - 0.45 * this.gustEnv()); }
 
   // --- slow dynamics -----------------------------------------------------
   gustEnv() {
@@ -108,8 +125,9 @@ export class Atmosphere {
     if (this.wasOff) {
       this.wasOff = false;
       for (const o of this.leaves) o.ly = cam.layerY(o.f) + Math.random() * H * 1.6;
-      for (const o of [...this.fogFront, ...this.fogBack]) o.ly = cam.layerY(o.f) + Math.random() * H * 1.3;
+      for (const o of [...this.fogFront, ...this.fogMid, ...this.fogBack]) o.ly = cam.layerY(o.f) + Math.random() * H * 1.3;
       for (const o of this.dapple) o.ly = cam.layerY(o.f) + Math.random() * H * 1.4;
+      this.banks.length = 0; this.bankTimer = 6 + Math.random() * 8;
     }
     const wind = Math.sin(time * 0.23) * 28 + Math.sin(time * 0.61 + 1.7) * 14 + gust * 230 * g.dir;
     for (const o of this.leaves) {
@@ -120,7 +138,16 @@ export class Atmosphere {
       reenter(o, 40, H * 0.8);
     }
     const px = cam.sx(p.x), py = cam.sy(p.y + 110);
-    for (const o of [...this.fogFront, ...this.fogBack]) {
+    // fog banks: spawn above the view now and then, drift down through it
+    this.bankTimer -= dt;
+    if (this.bankTimer <= 0 && this.banks.length < 2) { this.banks.push(this.newBank(cam)); this.bankTimer = 26 + Math.random() * 20; }
+    for (const b of this.banks) {
+      b.age += dt;
+      b.ly += b.vdrift * dt;
+      for (const part of b.parts) { part.x += b.drift * dt; if (part.x < -part.rx - 60) part.x += W + 2 * part.rx + 120; else if (part.x > W + part.rx + 60) part.x -= W + 2 * part.rx + 120; }
+    }
+    this.banks = this.banks.filter((b) => b.ly > cam.layerY(b.f) - 400);
+    for (const o of [...this.fogFront, ...this.fogMid, ...this.fogBack]) {
       o.x += (o.drift + gust * 60 * g.dir) * dt;
       o.ly += o.vdrift * dt;
       // wake: a wisp the prince passes through is pushed aside and thins out
@@ -218,22 +245,47 @@ export class Atmosphere {
     }
   }
 
-  drawFog(g, cam, time, list, amount, color, nudge) {
+  drawFog(g, cam, time, list, amount, color, nudge, glow = 0) {
+    const density = this.fogDensity;
     for (const o of list) {
       const camF = cam.layerY(o.f);
       const sy = H - (o.ly - camF) + cam.oy;
       if (sy < -o.ry * 1.6 || sy > H + o.ry * 1.6) continue;
-      const pulse = 0.55 + 0.45 * Math.sin(time * o.pulse * TAU + o.ph);
+      const pulse = 0.6 + 0.4 * Math.sin(time * o.pulse * TAU + o.ph);
       const cos = Math.cos(o.rot), sin = Math.sin(o.rot);
       const thin = 1 - 0.65 * o.wake, spread = 1 + 0.6 * o.wake;
+      const opts = glow ? { rot: o.rot, glow } : { rot: o.rot };
       for (const part of o.parts) {
         const px = part.dx * o.rx * spread, py = part.dy * o.ry * spread;
-        g.puff(o.x + nudge + cam.ox + px * cos - py * sin, sy + px * sin + py * cos, o.rx * part.k, o.ry * part.k, color, o.a * amount * pulse * thin, { rot: o.rot });
+        g.puff(o.x + nudge + cam.ox + px * cos - py * sin, sy + px * sin + py * cos, o.rx * part.k, o.ry * part.k, color, o.a * amount * pulse * thin * density, opts);
+      }
+    }
+  }
+
+  // Dense bands in front of everything; the prince keeps a clear hole around
+  // himself so he and his surroundings stay readable.
+  drawBanks(g, cam, time, amount, p) {
+    const density = this.fogDensity;
+    const px = cam.sx(p.x), py = cam.sy(p.y + 110);
+    for (const b of this.banks) {
+      const camF = cam.layerY(b.f);
+      const sy = H - (b.ly - camF) + cam.oy;
+      const fade = Math.min(1, b.age / 3);
+      for (const part of b.parts) {
+        const x = part.x + this.nudge + cam.ox, y = sy + part.dy;
+        if (y < -part.ry * 1.5 || y > H + part.ry * 1.5) continue;
+        const breathe = 0.85 + 0.15 * Math.sin(time * 0.35 + part.ph);
+        const d = Math.hypot(x - px, y - py);
+        const hole = p.alive ? clamp((d - 140) / 300, 0.2, 1) : 1;      // clear around the prince
+        g.puff(x, y, part.rx * breathe, part.ry * part.k, '#dcefe8', b.a * amount * fade * density * hole, { glow: 0.1 });
       }
     }
   }
 
   drawBackFog(g, cam, time) { const d = deepForestAmount(cam.y); if (d > 0) this.drawFog(g, cam, time, this.fogBack, d, '#9fd4c4', 0); }
+  // In front of the wall, behind the trees: this is the layer that makes the
+  // forest look misty without covering anything the prince interacts with.
+  drawMidFog(g, cam, time) { const d = deepForestAmount(cam.y); if (d > 0) this.drawFog(g, cam, time, this.fogMid, d, '#c4e2d6', this.nudge * 0.3, 0.12); }
   drawBackLeaves(g, cam) { const d = deepForestAmount(cam.y); if (d > 0) this.drawLeaves(g, cam, false, d); }
 
   // Canopy shadows on the wall: soft dark blobs in the tower layer, swaying.
@@ -245,7 +297,7 @@ export class Atmosphere {
       const sy = H - (o.ly - camF) + cam.oy;
       if (sy < -o.ry || sy > H + o.ry) continue;
       const sway = Math.sin(time * o.sp + o.ph) * (30 + 40 * this.gustEnv());
-      g.puff(o.x + sway + cam.ox, sy, o.rx, o.ry, '#3d5a48', o.a * d, { blend: 'multiply', rot: Math.sin(time * 0.1 + o.ph) * 0.3 });
+      g.puff(o.x + sway + cam.ox, sy, o.rx, o.ry, '#3d5a48', o.a * d, { blend: 'multiply', rot: Math.sin(time * 0.1 + o.ph) * 0.3, soft: true });
     }
   }
 
@@ -255,7 +307,7 @@ export class Atmosphere {
     const a = 1 - clamp((cam.y + 100) / 420, 0, 1);
     for (const o of this.lawnMist) {
       const breathe = 0.8 + 0.2 * Math.sin(time * 0.4 + o.ph);
-      g.puff(cam.sx(o.x), cam.sy(o.y), o.rx * breathe, o.ry, '#cfe6dc', 0.2 * a);
+      g.puff(cam.sx(o.x), cam.sy(o.y), o.rx * breathe, o.ry, '#cfe6dc', 0.22 * a);
     }
   }
 
@@ -307,10 +359,11 @@ export class Atmosphere {
   }
 
   // Closest layer: big leaves and mist drifting in front of everything.
-  drawFront(g, cam, time) {
+  drawFront(g, cam, time, world) {
     const d = deepForestAmount(cam.y);
     if (d <= 0) return;
     this.drawLeaves(g, cam, true, d);
-    this.drawFog(g, cam, time, this.fogFront, d, '#d8efe6', this.nudge);
+    this.drawFog(g, cam, time, this.fogFront, d, '#d8efe6', this.nudge, 0.12);
+    if (world) this.drawBanks(g, cam, time, d, world.player);
   }
 }

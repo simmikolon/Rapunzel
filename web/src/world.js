@@ -257,7 +257,7 @@ export class World {
     this.player.draw(g, cam, this.art);
     this.particles.draw(g, cam);
     this.bg.drawFront(g, cam, this.time);
-    this.bg.drawFrontAtmosphere(g, cam, this.time);
+    this.bg.drawFrontAtmosphere(g, cam, this.time, this);
     g.layer('light');
     this.bg.drawLighting(g, cam);
     this.bg.drawVignette(g);

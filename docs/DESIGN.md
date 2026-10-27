@@ -237,8 +237,13 @@ is a pool to draw from, not a promise.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
   the forest floor and in the deep forest, with dust motes drifting down
   the beams; passing clouds dim and restore the sun over 10–20 s.
-- ✅ fog: mist wisps (three soft puffs each, slightly tilted, pulsing in
-  place) behind the tower and in front of everything, drifting; a wisp the
+- ✅ fog in three depths: behind the tower (only the gaps show it), in
+  front of the wall but behind the trees and the prince (greys the wall,
+  never covers gameplay), and thin wisps over everything. Wisps are three
+  overlapping plateau puffs, tilted, pulsing in place, drifting. Fog
+  banks: dense bands that roll down through the view every 26–46 s with a
+  clear hole kept around the prince. Fog thickens under cloud cover and
+  thins in a gust; mist near the shafts glows a little; a front wisp the
   prince passes through is pushed aside and thins out (wake). Only in the
   deep forest band; the far clouds stay for the sky zones.
 - ✅ falling leaves on a depth continuum (parallax 0.85 to 1.35, size and
@@ -391,3 +396,5 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   dust motes, cloud cover, gusts, dapple, tower haze, lawn mist, fog wake,
   sideways nudge, owls, birds, butterflies, acorns, firefly behaviour.
   Sound for all of it deferred. Purely visual; simulator unaffected.
+- 2026-10-27: Fog was barely visible: reworked into three depths with a
+  plateau puff texture, fog banks, weather coupling and a wake hole.
