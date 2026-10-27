@@ -1,10 +1,15 @@
 # Rapunzel: design document
 
-A living document for the browser version of Rapunzel: what the game is
-today, where it is going, every idea collected so far, and the order we
-plan to build things in. Update it as decisions are made.
+The living guide for the browser version of Rapunzel. It records the
+vision, the concepts we work with, every idea collected so far, how we
+work, and the order we currently intend to build things in.
 
-Legend: ✅ exists · 🔜 agreed next · 💡 idea, not yet decided · ❓ open question · ⚠️ caveat
+**This document guides, it does not restrict.** Anything in it can change
+when playing the game teaches us something; when that happens, update the
+document and add a line to the decision log at the end. Ideas are kept
+even when they are not planned, so nothing gets lost.
+
+Legend: ✅ exists · 🔜 planned next · 💡 idea · ❓ open question · ⚠️ caveat
 
 ---
 
@@ -12,297 +17,290 @@ Legend: ✅ exists · 🔜 agreed next · 💡 idea, not yet decided · ❓ open
 
 A pogo-stick climb up Rapunzel's tower, inspired by a five-year-old's
 drawings. The prince bounces up branches of the two trees and ribbons
-tied to Rapunzel's braid; the witch and the forest try to stop him.
+tied to Rapunzel's braid while the witch and the forest try to stop him.
 Audience: kids first (the author's daughter), adults for high scores.
 
-Design principles that follow from that:
+**Where it is going**: a campaign of towers, each with Rapunzel waiting at
+the window at the top, each in its own land (forest, snow, rain, summer,
+jungle, night, space), with an upgrade store between towers and short
+scenes that tell the story. Until then, and alongside it forever, an
+**Endless Tower** mode: the same world without an end, for high scores.
+
+Principles:
 
 - Readable, friendly, charming. Hazards are telegraphed; nothing is unfair.
-- Short sessions (a tower in two to four minutes) with a clear goal.
-- Traps must never be a death without a way out (taps break webs, a
-  lantern precedes a barrier that needs a boost).
+- Short sessions with a clear goal; a tower takes two to four minutes.
+- Traps never kill without a way out (taps break webs, a lantern precedes
+  a barrier that needs a boost).
 - Core defensive abilities are part of the base game, never store-gated.
+- Variety over difficulty: a long climb needs new things to see and do,
+  not just higher probabilities.
 
-## 2. The game today (Phase 0, ✅)
+## 2. The three concepts: zone, tower, scene
 
-Deployed from `master` via Vercel; plain JavaScript on a 2D canvas, no
-build step, 768 x 1364 logical portrait resolution.
+- **Zone**: the unit of content. About 100 m of climb with its own small
+  roster of elements (two or three active, one carried over from the zone
+  before, one new), its own look (sky, trees, weather, atmosphere) and
+  usually one set piece. Zones are what we build and test.
+- **Tower**: a sequence of zones with Rapunzel's window at the top. The
+  forest tower is zones 1 to 4 of the sketch in section 6. Zone length and
+  difficulty are tower parameters (a kids' first tower might use 60 to 80 m
+  versions of the same zones, about 300 m in three minutes).
+- **Scene**: the glue between towers. The intro at the foot of the tower,
+  the rescue at the window, the witch's kidnapping gag, the light bridge to
+  the next tower. Scenes do not touch gameplay code and can be added one at
+  a time.
 
-**Mechanics**
-- Prince on a pogo stick: automatic bounce on landing, tap to boost
-  (three charges, refilled by landings and lanterns), steer with keys,
-  touch halves or phone tilt, screen wrap-around.
+How the two modes share the content:
+
+| | Campaign (later) | Endless Tower (now) |
+|---|---|---|
+| Zones | play a tower's zones up to the window | the same zones |
+| At the window | rescue scene, stars, next tower unlocks | no window; the zones continue |
+| Beyond | the next tower with its own zones | zones loop with harder variants; later chains every tower's zones as they are built |
+| Zone boundaries | portal warp and checkpoint | portal warp |
+
+Endless mode stays available from the start and keeps getting longer as
+towers are built, with no separate work.
+
+## 3. How we work: the sandbox approach
+
+The current endless game is the sandbox: every new element (enemy,
+platform, trap, tunnel, effect, mechanic) is built and iterated there,
+where it can be felt the day it lands, instead of building a campaign
+shell first and filling it later. Conditions that make this hold up:
+
+- **An element is a module, not a patch.** Each carries a spawn rule for
+  endless, a "place it at height X" hook for authored towers later, its
+  art, its sound, and either support in the simulator's scripted player or
+  a note that it is purely visual. Then the campaign is assembly, not
+  rework.
+- **Elements land in zones, not on top of each other.** Sameness made the
+  long climb boring; piling every hazard into the same stretch would make
+  it unplayable. Zones keep "iterate in endless" honest.
+- **The simulator is the guard rail.** After each element: hits per 100 m
+  per zone, fall rate, median height. A good, bold scripted run should sit
+  around 0.8 to 1.5 hits per 100 m in every zone; a zone that spikes gets
+  tuned before the next one starts.
+- **A dev menu** (`?dev=1`): jump to an altitude or zone, spawn an element
+  in front of the prince, toggle invulnerability, freeze the witch, show
+  hitboxes. Half a day of work that makes every later element far faster to
+  tune, on the phone as much as on the desktop.
+
+Workflow: one short branch per element or zone; Vercel gives each branch a
+preview URL; play it on the phone, run the simulator and the bot, merge
+when it is fun, drop it when it is not. "Done" for an element means: in
+the game, in its zone, in the simulator, and one line in this document.
+
+## 4. The game today
+
+**Phase 0, the port (✅)**: plain JavaScript on a 2D canvas, 768 x 1364
+logical portrait resolution, deployed from `master` via Vercel.
+
+- Prince on a pogo stick: automatic bounce, tap to boost (three charges,
+  refilled by landings and lanterns), keys, touch halves or phone tilt,
+  screen wrap-around.
 - Platforms: healthy branch, dry branch (crumbles after one bounce),
-  ribbon on the braid (moves with the hair's sway), bow (spring),
-  plank swing between the trees (land on top, bonk from below).
-- Enemies: crow (patrols, homes in at altitude, stompable), spider
+  ribbon on the braid (moves with the hair's sway), bow (spring), plank
+  swing between the trees (land on top, bonk from below).
+- Enemies: crow (patrols, homes in with altitude, stompable), spider
   (hangs on a thread, lunges when you pass below, stompable), witch
-  (telegraphed by a marker and a cackle, crosses above you, dives,
-  twice near the top; dodge only).
-- Pickups: sun drops (score), lanterns (boost refill), hearts (+1).
-- Three hearts with invulnerability flashes after a hit; game over on
-  zero hearts or falling off the bottom.
-- Procedural level in rows (the original's beats) with difficulty tiers
-  by altitude and a reachability guarantee (stress-tested).
+  (marker and cackle, crosses above you, dives, twice near the top).
+- Pickups: sun drops, lanterns (boost refill), hearts.
+- Three hearts; game over on zero hearts or falling off the bottom.
+- Procedural level in rows (the original's beats) with difficulty by
+  altitude and a stress-tested reachability guarantee.
+- Parallax layers like the SpriteKit prototype: sky, distant forest, tower
+  with windows, braid and ribbons (0.9x), trees with branches and swings
+  and the prince (1.0x), fireflies, vignette. Altitude-graded sky and
+  lighting (forest, open sky, sunset, night). Squash and stretch,
+  particles, screen shake, toasts. Synthesized sound with iOS unlock and
+  silent-switch handling. Title, pause, game over; best height saved; web
+  app manifest and icons. The prince follows the original app icon.
 
-**Presentation**
-- Parallax layers like the original SpriteKit prototype: sky, distant
-  forest, tower + windows + braid + ribbons (0.9x), trees + branches +
-  swings + prince (1.0x), fireflies, vignette.
-- Altitude-graded sky and lighting: forest → open sky → sunset → night
-  with stars and moon.
-- Squash and stretch, particles (dust, leaves, petals, crumble, flames,
-  feathers, sparkles), screen shake, toasts for milestones.
-- Synthesized WebAudio sound effects (no audio files), iOS unlock and
-  silent-switch workaround.
-- Title, pause and game-over screens; best height in `localStorage`;
-  web app manifest and icons; the prince's look follows the original
-  app icon (blue uniform, hobby-horse pogo stick).
+**Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
+(0.5 s after a boost the prince knocks enemies away for three suns; the
+witch is thrown off course), hearts restore all three hearts, difficulty
+ramp stretched to 700 m with 90 m pacing cycles ending in a 15 m
+breather, witch cooldown 75 to 105 m and a slower dive, pity heart, a
+one-time hint for the shield. Plus the headless gameplay simulator.
 
-**Key files**: `web/src/config.js` (tunables), `web/src/level.js`
-(tiers, row generation), `web/src/background.js` (layers, sky, lighting),
+**Key files**: `web/src/config.js` (tunables), `web/src/level.js` (tiers,
+pacing, rows), `web/src/background.js` (layers, sky, lighting),
 `web/src/enemies.js`, `web/src/platforms.js`, `web/src/player.js`,
-`web/src/art/*` (all procedural sprites; `web/dev/sprites.html` shows them).
+`web/src/art/*` (procedural sprites), `web/dev/sprites.html` (sprite
+sheet), `web/dev/sim.html` + `tools/analyze.mjs` (simulator).
 
-## 3. The 300 m problem (analysis)
+## 5. What playing has taught us so far
 
-Best scores sit around 300 m and it is hard to go beyond. Causes, from
-the numbers in `level.js`:
+- **The 300 m ceiling was attrition** (details in `docs/ANALYSIS-phase1.md`):
+  the ramp peaked at 210 m and stayed there while recovery could not keep
+  up. Phase 1 moved the scripted bold player's median from 142 to 434 m and
+  the author reaches almost 600 m.
+- **Longer became boring.** With attrition gone, the climb is the same
+  twenty seconds repeated for six minutes: three enemies, five platforms,
+  one rhythm. Probabilities are not novelty. A long climb needs three
+  things: something new to see and deal with every minute or two (zones),
+  small goals inside the run, and a few spectacle moments (the portal, a
+  swarm, the witch as a boss, the window at the top).
+- **Kids die by falling, adults by attrition.** Platform reading is the
+  kid's limit; shorter, fixed towers and the store are the planned answer,
+  possibly with an easy mode.
 
-- The difficulty ramp peaks at 210 m and never relents: 33 % crumbling
-  branches, crows homing at full strength on 28 % of rows, lunging
-  spiders on 24 %, widest braid sway, the witch diving twice every
-  45 to 70 m.
-- Recovery is weak: a heart only spawns once a heart is lost, one at a
-  time, roughly every 90 m. Past ~250 m the hit rate exceeds the heal
-  rate and runs bleed out. The ceiling is attrition, not one hazard.
+## 6. Zone sketch for Endless Tower (and the forest tower)
 
-Agreed fixes (✅ implemented in Phase 1, numbers in `docs/ANALYSIS-phase1.md`):
+Mostly existing art plus small additions, in the order we intend to
+build them. Each zone: elements, look, set piece.
 
-- Boost makes the prince invulnerable for its duration and knocks enemies
-  away (feathers, sun bonus). Boost becomes the game's "go through" verb.
-  The charge economy keeps it from trivializing enemies.
-- Collecting a heart restores all three hearts.
-- Pacing waves instead of a plateau: intense stretches alternate with
-  ~15 m breathers (no enemies, healthy platforms); the ramp stretches to
-  ~800 m; the witch gets a longer cooldown; a pity timer guarantees a
-  heart when stuck at one heart for long.
-- Measure before and after with the bot: hits per 100 m, deaths by cause.
+1. **Forest floor, 0 to 120 m** (✅ as is): crows, spiders, ribbons and
+   branches, fireflies, kept light.
+2. **Deep forest, 120 to 250 m** (🔜): squirrels on branches (the first
+   platform-bound enemy), thorny branches, the cross branch you must boost
+   through; fog and falling leaves; crows fade out, spiders stay.
+3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
+   right with guards' arms reaching out, window ledges on the tower layer,
+   Rapunzel's cameo window, the witch more present. Doors later.
+4. **Above the trees, 400 to 550 m** (🔜): the trees end, cloud platforms,
+   bird swarms to boost through, wind gusts; the tower rises out of the
+   forest with Rapunzel's window at the top. When this exists, the forest
+   tower exists.
+5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
+   (stars, asteroid platforms, the witch's territory), then zones repeat
+   with harder variants or palette swaps.
 
-## 4. Game structure: towers with Rapunzel at the top (decided)
+## 7. Element catalogue
 
-Decision: the main game becomes a **campaign of towers**. Each tower has
-Rapunzel waiting at the window at the top; reaching her completes the
-level and unlocks the next tower. The current endless climb stays as a
-separate **Endless Tower** mode for high scores.
+Everything proposed so far, by family. Status marks what exists; the rest
+is a pool to draw from, not a promise.
 
-Why: it is the fairy tale's goal; it fixes the 300 m problem at the root
-(a tower is a fixed height tuned to be beatable, difficulty lives between
-towers); fixed-seed levels are learnable and can be authored with set
-pieces; the store gets a natural rhythm between towers.
+**Enemies**
+- ✅ crow, ✅ spider, ✅ witch (dodge; deflected by a boost).
+- 💡 squirrels on branches that attack (stomp or time the landing).
+- 💡 arms reaching out of windows to grab the prince; guards at the windows.
+- 💡 scissors cutting the braid from below a certain height: ribbons below
+  the cut fall away. A rising death line; strong pacing, harsh; late zones
+  only, loudly telegraphed.
+- 💡 cross branches spanning the width, broken only by a boost. ⚠️ Only
+  spawn with a guaranteed charge (a lantern just below or a generator check).
+- 💡 a bird swarm to boost through (set piece).
+- 💡 spider webs and nets that hold or slow. ⚠️ Must break on a few taps
+  or a boost.
+- 💡 vines / green zones that slow or stick (jungle); prefer slowing.
+- 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
+  for a few seconds. ⚠️ Frustrating for young players; clearly marked, short.
+- 💡 the witch as a level boss defending the window.
+- 💡 per-theme rosters: bees (summer), ice creatures (snow), bats (night),
+  knights and witches inside the tower.
 
-**Narrative engine**: every time the prince reaches her, the witch
-cackles and whisks Rapunzel away to a new tower in another land (snow,
-rain, jungle, night, space...). The last tower is the showdown.
+**Platforms**
+- ✅ healthy branch, ✅ dry branch, ✅ ribbon, ✅ bow spring, ✅ plank swing.
+- 💡 thorny branch (do not land), icy branch (slides), cross branch
+  (barrier), double-length and tiny branches.
+- 💡 more ribbon and bow types on the hair: swinging bow, sticky bow that
+  stops you, tiny bow, a bow that changes the braid color.
+- 💡 cloud platforms (above the trees), star and asteroid platforms (space).
+- 💡 window ledges on the tower layer.
 
-**Portals** (both of the discussed variants, combined):
-- Between towers: a light bridge / wormhole (Bifröst style) travel
-  animation to the next tower.
-- Inside long towers: a mid-tower warp works as a checkpoint and a
-  setting change (e.g. forest floor → canopy). Restarting a four-minute
-  tower from zero after dying at 90 % is what makes kids quit, so
-  checkpoints matter more than any enemy.
+**Pickups, power-ups, portals**
+- ✅ sun drops, ✅ lanterns (boost refill), ✅ hearts (restore all).
+- 💡 super jump portal: a rare pickup that fires the prince 20 m up with
+  light trails and speed-line blur. The best single "get higher" device.
+- 💡 zone portals: at a zone boundary, a wormhole / light-bridge warp into
+  the next zone (the campaign's tower transition, reused).
+- 💡 timed power-ups: invulnerability star, jump power / speed-up.
+- 💡 magnet for suns and lanterns (store).
 
-**A tower is a spec** (`LevelSpec`): seed, height, theme (tile palette,
-weather, trunks, sky), enemy roster, platform mix, difficulty curve with
-breathers, hand-placed set pieces (a swarm at 60 %, a barrier, the boss
-at 90 %), boss, star criteria. The generator already runs on a seed and
-parameters, so this is a refactor of `level.js`, not a rewrite.
+**Tunnels and the inside of the tower**
+- 💡 doors and openings lead inside; the game continues on stairs, steps
+  and ledges with knights and witches; from outside the hair is visible at
+  the windows. ⚠️ A system, not an element: interior tiles, its own
+  enemies, an exit. Start with windows; do doors as short bonus rooms
+  (enter a window, climb for suns, exit higher) once zones and the dev
+  menu exist.
 
-**Tower details**
-- Height ~150 m for the first tower, growing to 400 to 500 m; two to four
-  minutes each. A vertical progress bar with her window at the top.
-- The braid ends at Rapunzel's window instead of running up forever: the
-  hair comes from her, so the tower's height is her hair's length.
-- The rescue moment must land: she pulls him up by the braid, lanterns
-  rise, a short cheer, then the witch's kidnapping gag and the bridge to
-  the next tower.
-- Star ratings for replay value without grinding: reach her; collect
-  enough suns; lose no heart (or finish under a time). ❓ exact criteria.
-- Suns persist across towers as store currency.
+**FX and atmosphere**
+- 💡 title screen: the tower behind, the prince bouncing happily in place,
+  flowers on the lawn, light rays through the forest.
+- 💡 god rays behind the tower and trees (additive quads, slow animation).
+- 💡 foreground clouds and fog, translucent and blurred because they are
+  close (depth of field), like mist in the forest; pre-blurred sprites at
+  ~1.3x parallax. The existing far clouds stay.
+- 💡 falling leaves with parallax (some fast, some slow); green or autumn
+  leaves by season.
+- 💡 seasons and weather: rain, snow; a Christmas edition with light chains
+  along the trees; cute animals living in the trees.
+- 💡 shake and motion effects when things happen: more shake, hit-stop,
+  zoom punch on bow springs and the witch, speed lines on boost.
+- 💡 more particles and atmosphere in general.
+- 💡 CRT lines as a toggle (cheap overlay).
+- 💡 shaders and bloom. ⚠️ Canvas 2D has no shaders; glow per object and
+  scanlines are cheap, true bloom and screen-wide blur mean a WebGL
+  renderer (multi-day). Defer; most of the list above works in 2D.
 
-❓ Open questions
-- Lives and retries: restart from the last checkpoint; do suns collected
-  before death stay? (Suggestion: keep them, they are the kid's progress.)
-- Is Endless Tower available from the start or unlocked after a few
-  towers? (Suggestion: from the start, as a second button.)
-- Fixed seed per tower (learnable, classic) vs. slight variation per
-  attempt. (Suggestion: fixed.)
-- Theme order and how many towers at launch. (Suggestion: launch with
-  three: forest, snow, night sky; add more later.)
+**Themes, worlds, hair**
+- 💡 towers in snow, rain, summer, jungle, night, space; a parallel
+  universe palette; selectable worlds on a map once unlocked.
+- 💡 alternative braids and changing hair colors (also store cosmetics).
 
-## 5. Themes, worlds and stages
+**Store and meta progression**
+- 💡 suns as persistent currency, bought between towers or from the title.
+- 💡 upgrades: fourth heart, fourth boost charge, longer shield, lantern /
+  sun magnet, stronger springs, a helmet variant of boost protection.
+- 💡 cosmetics: braid colors and styles, capes and crowns, palettes.
+- Principle: base defenses stay free; the store is also a difficulty valve
+  for kids (collect suns on easy towers, buy a heart).
+- ❓ pricing; suns inflate with boost punches (+3 each).
 
-Themes for towers (each with its own palette, weather, trunks, enemies
-and platform twists):
+**Scenes (campaign)**
+- 💡 intro at the foot of the tower (the witch cackles from the window),
+  the rescue (she pulls him up by the braid, lanterns rise, a cheer), the
+  kidnapping gag ("she is in another tower"), the light bridge.
 
-- 💡 Forest (the current look), with internal stages: ground → dense
-  forest → clouds → space as sections of the tallest towers.
-- 💡 Snow: icy branches slide you, icicles you bonk, snowfall, lights on
-  the trees (also the Christmas edition).
-- 💡 Rain: wind gusts push sideways, rain streaks, darker palette.
-- 💡 Summer: bees, flowers, bright palette.
-- 💡 Jungle: vines that slow you, dense foliage, different animals.
-- 💡 Night / space: stars, moon, the witch's territory, the showdown.
-- 💡 Parallel universe: palette-swapped world and alternative braids
-  (also usable as store cosmetics).
-- 💡 Selectable worlds instead of automatic progression: once a tower is
-  unlocked it can be replayed from a world map / tower-select screen.
-- 💡 Seasons and weather as date-driven variants (autumn leaves, snow in
-  December, Christmas lights), see FX.
+## 8. Campaign vision (later)
 
-## 6. Enemies and hazards
+- Each tower: seed, height, theme, zones with their rosters, difficulty
+  curve with breathers, hand-placed set pieces, boss, star criteria.
+  Fixed seed so towers are learnable.
+- Narrative engine: every rescue, the witch whisks Rapunzel to a new tower
+  in another land; the last tower is the showdown.
+- The braid ends at Rapunzel's window: the tower's height is her hair's
+  length. A vertical progress bar with her window at the top.
+- Portals between towers (travel animation) and mid-tower warps as
+  checkpoints: restarting a four-minute tower from zero after dying at
+  90 % is what makes kids quit.
+- Stars for replay without grinding: reach her; enough suns; no heart lost.
+- Suns persist; the store sits between towers.
 
-Existing: ✅ crow, ✅ spider, ✅ witch.
+❓ Open: retry rules and whether suns survive a death (suggestion: keep
+them); endless unlocked from the start (suggestion: yes); theme order and
+launch count (suggestion: forest, snow, night sky); exact star criteria.
 
-Ideas, with notes on fit and cost:
-
-- 💡 **Squirrels on branches** that attack: runs along the branch; stomp
-  it or time the landing. Adds a platform-bound enemy; all current
-  enemies are airborne or hanging. Cheap.
-- 💡 **Arms reaching out of the tower windows** to grab the prince; windows
-  spread left and right across the tower. Lives on the tower layer like
-  the ribbons, so the machinery exists. Cheap and thematic (the witch's
-  hands).
-- 💡 **Scissors cutting the braid** from below a certain height: ribbons
-  below the cut fall away. This is a rising death line, a strong pacing
-  tool but harsh; keep it to late towers and telegraph it loudly.
-- 💡 **Cross branches** spanning the width that can only be broken with a
-  boost. ⚠️ Never spawn one unless a charge is guaranteed (a lantern just
-  below, or the generator checks the charge).
-- 💡 **Bird swarm** you must boost through (works once boost grants
-  invulnerability). A set piece.
-- 💡 **Spider webs and nets**: sticky, slow you or hold you. ⚠️ Must break
-  on a few taps or a boost; a trap must never be a death without an out.
-- 💡 **Vines / green zones** that slow the prince strongly or stick (jungle).
-  Gentler than webs; prefer slowing over trapping for kids.
-- 💡 **Mushrooms** (negative power-up): dizziness, wobbly or reversed
-  controls for a few seconds. ⚠️ Frustrating for young players; make it
-  look clearly different and keep it short.
-- 💡 **Thorn / spiked branches**: a normal-looking branch with thorns; do
-  not land. Adds reading skill; cheap.
-- 💡 **Witch as a level boss** defending the window near the top of a tower.
-- 💡 Per-theme rosters: bees (summer), ice creatures (snow), knights and
-  witches inside the tower, etc.
-
-## 7. Platforms
-
-Existing: ✅ healthy branch, ✅ dry (crumbling) branch, ✅ ribbon, ✅ bow
-spring, ✅ plank swing.
-
-- 💡 More branch types: thorny (see hazards), icy (slides), cross branch
-  (barrier), double-length, tiny.
-- 💡 More ribbon / bow types on Rapunzel's hair: besides the spring bow,
-  e.g. a swinging bow, a sticky bow that stops you, a tiny bow, a bow
-  that changes the braid color.
-- 💡 Cloud platforms for the cloud stage, star / asteroid platforms for
-  space (needed once trees end or themes change).
-
-## 8. Pickups, power-ups and portals
-
-Existing: ✅ sun drops, ✅ lanterns (boost refill), ✅ hearts.
-
-- 🔜 Hearts restore all three hearts (Phase 1).
-- 💡 **Super jump portal**: a rare pickup that fires the prince 20 m up
-  with light trails, speed-line blur and a light-speed feel. The best
-  single "get higher" device and a wow moment. (Phase 2)
-- 💡 Timed power-ups (a few seconds each): invulnerability star, jump
-  power / speed up.
-- 💡 Negative power-up: mushroom (see hazards).
-- 💡 Magnet for suns and lanterns (store upgrade).
-
-## 9. Store and meta progression
-
-Currency: suns collected (persisted). Bought between towers (and from
-the title / tower-select screen).
-
-- 💡 Upgrades: fourth heart, fourth boost charge, longer boost
-  invulnerability window, lantern / sun magnet, stronger spring bows,
-  a helmet variant of boost protection (boosting through enemies yields
-  extra suns).
-- 💡 Cosmetics: braid colors and styles, prince capes and crowns,
-  parallel-universe palette.
-- Principle: base defensive mechanics (boost invulnerability, hearts)
-  stay in the base game; the store sells upgrades and looks. If the core
-  fix for the ceiling were store-gated, new players would hit the wall
-  before they could buy it.
-- The store doubles as a difficulty valve for kids: if a tower is too
-  hard, collect suns on easier towers and buy a heart.
-- ❓ Pricing: suns currently drop on ~40 % of rows in arcs of three to
-  five; balance once the store exists.
-
-## 10. FX and presentation wishlist
-
-- 💡 **Title / menu screen**: the tower in the background, the prince
-  bouncing happily in place (idle animation), flowers on the lawn, light
-  rays falling through the forest.
-- 💡 **God rays** (sunbeams) behind the tower and trees: translucent
-  rotated quads with additive blending, animated slowly. Cheap in 2D.
-- 💡 **Foreground clouds and fog**: pixel-art clouds with translucency,
-  blurred because they are close (depth of field), like wisps of mist in
-  the forest; the existing far clouds stay. Pre-blurred sprites at ~1.3x
-  parallax cost nothing at runtime.
-- 💡 **Falling leaves as particles** with parallax (some faster, some
-  slower); green leaves or autumn foliage depending on the season.
-- 💡 **Seasons and weather**: rain, snow; a Christmas edition with light
-  chains along the trees; cute animals living in the trees (owls, birds in
-  knot holes).
-- 💡 **Shake and motion effects** when things happen: more shake, hit-stop
-  (freeze frames), zoom punch on bow springs and the witch, speed lines
-  on boost.
-- 💡 **More particles and atmosphere** in general.
-- 💡 **CRT lines**: cheap as an overlay; make it a toggle.
-- 💡 **Shaders and bloom**: ⚠️ Canvas 2D has no shaders. Glow can be faked
-  per object (lanterns and suns already glow) and scanlines are an overlay,
-  but true bloom and screen-wide blur mean moving rendering to WebGL
-  (e.g. PixiJS), a multi-day rewrite. Defer until the game design has
-  settled; most of the wishlist above is achievable in 2D.
-
-## 11. Bigger ideas (later, maybe)
-
-- 💡 **Inside the tower**: openings lead inside; the game continues on
-  stairs, steps and ledges with knights and witches; from outside the hair
-  is visible at the windows. ⚠️ A whole second mode. Cheaper variant: a
-  short bonus room (enter a window, climb for suns, exit higher up).
-- 💡 Alternative braids and changing colors; a parallel universe.
-- 💡 Selectable worlds on a map.
-- 💡 WebGL renderer for bloom, CRT, blur and light shafts (see FX).
-
-## 12. Roadmap
+## 9. Roadmap (intended order, not a contract)
 
 | Phase | Goal | Content | Status |
 |---|---|---|---|
-| 0 | Browser port | Everything in section 2 | ✅ done |
-| 1 | Fix the ceiling | Boost shield + knockback, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart; measured with the simulator (see `docs/ANALYSIS-phase1.md`) | ✅ on branch `phase-1-ceiling` |
-| 2 | "Get higher" items | Super jump portal with light trails, thorny branches, squirrels | 🔜 |
-| 3 | Campaign framework | `LevelSpec`, forest tower with Rapunzel at the top, braid ending at her window, progress bar, rescue scene, mid-tower warp checkpoint, between-tower light bridge, tower-select screen, save data; keep Endless Tower mode | 🔜 |
-| 4 | Store and meta | Suns as currency, upgrades, cosmetics, pricing | 🔜 |
-| 5 | Themes and set pieces | Snow and night-sky towers, per-theme enemies and platform twists, swarm / barrier / scissors set pieces, witch boss | 💡 |
-| 6 | FX pass | Title idle scene, god rays, foreground fog, falling leaves with parallax, hit-stop and motion effects, animals in the trees, seasons / Christmas | 💡 |
-| 7 | Later / maybe | WebGL renderer (bloom, CRT, blur), tower interior bonus rooms, selectable worlds | 💡 |
+| 0 | Browser port | Section 4 | ✅ |
+| 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
+| 2 | Zone architecture and dev menu | Zones with rosters and set-piece hooks, element module pattern, `?dev=1` panel | 🔜 next |
+| 3 | Deep forest zone | Squirrels, thorny branches, cross branch, fog and falling leaves | 🔜 |
+| 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
+| 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
+| 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
+| 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
+| later | Tunnels / tower interior, WebGL renderer, selectable worlds, seasons and Christmas | 💡 |
 
-Phases 1 and 2 are mode-independent and stay useful in both the campaign
-and Endless Tower.
+Mode-independent polish (super jump portal, god rays, hit-stop, title
+idle scene) slots in wherever it fits.
 
-## 13. Tunables snapshot (for reference)
+## 10. Tunables snapshot
 
-From `web/src/config.js` and `web/src/level.js` at the time of writing.
+From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 
 | Parameter | Value |
 |---|---|
-| Gravity / bounce velocity | 2100 px/s² / 1650 px/s (bounce height ~648 px) |
+| Gravity / bounce velocity | 2100 px/s² / 1650 px/s (~648 px bounce) |
 | Dry branch / bow spring bounce | 1550 (~572 px) / 2650 (~1670 px) |
-| Boost | +1500 px/s, 3 charges, 0.5 charge per landing, 0.5 s shield |
+| Boost | +1500 px/s, 3 charges, 0.5 charge per landing, 0.5 s shield, 3 suns per punch |
 | Horizontal speed (keys / tilt) | 560 / 820 px/s |
 | Hearts / invulnerability after a hit | 3 / 1.6 s |
 | Row gaps (tier 0 → 5) | 0.75–1.0 → 1.3–1.9 beats (beat = 300 px) |
@@ -312,31 +310,32 @@ From `web/src/config.js` and `web/src/level.js` at the time of writing.
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m) |
 | 1 m | 100 px |
 
-## 14. Testing tools
+## 11. Tools
 
-- Automated climb bot and phone-flow checks (Playwright, headless
-  Chromium): run before every push; they catch exceptions and basic
-  regressions but do not judge feel.
-- Gameplay simulator (`web/dev/sim.html`, `tools/analyze.mjs`): runs the
-  real game logic headlessly with scripted players (skill presets, bold
-  vs cautious policy) and reports heights, deaths and hits per 100 m.
-- Generator stress test: generates ~3900 rows and checks that every
-  consecutive pair is reachable, including with the camera far above the
-  model (two boosts).
-- Real-device checks remain manual (iOS audio, tilt, performance).
+- Climb bot and phone-flow checks (Playwright, headless Chromium): run
+  before every push; catch exceptions and regressions, not feel.
+- Gameplay simulator (`web/dev/sim.html`, `tools/analyze.mjs`): real game
+  logic, scripted players (kid / good, bold / cautious), heights, deaths,
+  hits per 100 m by band. See `docs/ANALYSIS-phase1.md`.
+- Generator stress test: ~3900 rows, every consecutive pair reachable even
+  with the camera far above the model.
+- Real-device checks stay manual (iOS audio, tilt, performance).
 
-## 15. Decision log
+## 12. Decision log
 
-- 2026-10-22: Browser port on plain canvas, no framework; procedural
-  art because the original atlases were never committed.
+- 2026-10-22: Browser port on plain canvas, no framework; procedural art
+  because the original atlases were never committed.
 - 2026-10-23: Deploy on Vercel; prince restyled after the original app
-  icon; tower, windows and braid on a slower layer, trees in front
-  (matches the original prototype's layers).
-- 2026-10-24: Repository restructured: `master` is the browser game,
-  `swift-prototype` keeps the Xcode project.
-- 2026-10-26: Analysis of the 300 m ceiling; agreed Phase 1 fixes.
-- 2026-10-26: Phase 1 implemented and measured on `phase-1-ceiling`:
-  bold-player median 142 → 434 m, 83 % of runs pass 300 m.
-  Decided on a campaign of towers with Rapunzel at the top, portals as
-  travel animation and mid-tower checkpoints, Endless Tower kept as a
-  mode, store between towers.
+  icon; tower, windows and braid on a slower layer, trees in front.
+- 2026-10-24: `master` is the browser game, `swift-prototype` keeps the
+  Xcode project.
+- 2026-10-26: The 300 m ceiling analysed as attrition; Phase 1 fixes
+  agreed, implemented and measured (bold median 142 → 434 m).
+- 2026-10-26: Levels later: a campaign of towers with Rapunzel at the top,
+  portals as transitions and checkpoints, store between towers, Endless
+  Tower kept.
+- 2026-10-27: The longer climb is boring; cure is variety in zones, not
+  difficulty. Zone / tower / scene as the three concepts; the forest
+  tower is zones 1 to 4 of endless mode. The sandbox approach: build and
+  iterate every element in endless mode first, with the element-module
+  rule, the simulator as guard rail and a dev menu.
