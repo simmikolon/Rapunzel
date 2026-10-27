@@ -31,6 +31,7 @@ export const PAL = {
   // creatures
   crow: '#1b1b2a', crowHi: '#34345a', beak: '#c9b35a', eyeWhite: '#f4f4f4', eyeRed: '#ff3b3b',
   spider: '#3a2342', spiderHi: '#5d3a6e', thread: '#e8e8f0',
+  fur: '#c97a3a', furHi: '#e8a65e', furDark: '#8a4f22', belly: '#f2dcb8', acorn: '#8d6336', acornCap: '#5a3d22',
   witchDress: '#2b1d3d', witchDressHi: '#46306b', witchSkin: '#c9e2b0', witchHair: '#111120', witchHat: '#1c1430', broom: '#8a6a3c', broomStraw: '#d9b35a',
   // pickups
   sun1: '#fff3a0', sun2: '#ffd43a', sun3: '#ff9d1f',

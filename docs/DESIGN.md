@@ -82,10 +82,10 @@ shell first and filling it later. Conditions that make this hold up:
   per zone, fall rate, median height. A good, bold scripted run should sit
   around 0.8 to 1.5 hits per 100 m in every zone; a zone that spikes gets
   tuned before the next one starts.
-- **A dev menu** (`?dev=1`): jump to an altitude or zone, spawn an element
-  in front of the prince, toggle invulnerability, freeze the witch, show
-  hitboxes. Half a day of work that makes every later element far faster to
-  tune, on the phone as much as on the desktop.
+- **Dev helpers** that grow with need: ✅ `?at=150` starts at an altitude,
+  `?spawn=squirrel` puts an element on the next branch, `?dev=1` shows
+  altitude and zone. 💡 later: toggle invulnerability, freeze the witch,
+  show hitboxes.
 
 Workflow: one short branch per element or zone; Vercel gives each branch a
 preview URL; play it on the phone, run the simulator and the bot, merge
@@ -158,9 +158,10 @@ build them. Each zone: elements, look, set piece.
 
 1. **Forest floor, 0 to 120 m** (✅ as is): crows, spiders, ribbons and
    branches, fireflies, kept light.
-2. **Deep forest, 120 to 250 m** (🔜): squirrels on branches (the first
-   platform-bound enemy), thorny branches, the cross branch you must boost
-   through; fog and falling leaves; crows fade out, spiders stay.
+2. **Deep forest, 120 to 250 m** (in progress): ✅ squirrels on branches
+   (the first platform-bound enemy); 🔜 thorny branches, the cross branch
+   you must boost through, fog and falling leaves; crows fade out (0.6x),
+   spiders stay.
 3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
    right with guards' arms reaching out, window ledges on the tower layer,
    Rapunzel's cameo window, the witch more present. Doors later.
@@ -179,7 +180,11 @@ is a pool to draw from, not a promise.
 
 **Enemies**
 - ✅ crow, ✅ spider, ✅ witch (dodge; deflected by a boost).
-- 💡 squirrels on branches that attack (stomp or time the landing).
+- ✅ squirrel: sits on a healthy branch nibbling an acorn, patrols it,
+  dashes at the prince when he comes within reach (chirp and "!"). Landing
+  on it from above stomps it; it bites if it reaches him while crouched on
+  the branch or passing through it; falls with a crumbling branch. From the
+  deep forest band (~120 m).
 - 💡 arms reaching out of windows to grab the prince; guards at the windows.
 - 💡 scissors cutting the braid from below a certain height: ribbons below
   the cut fall away. A rising death line; strong pacing, harsh; late zones
@@ -287,8 +292,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 |---|---|---|---|
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
-| 2 | Zone architecture and dev menu | Zones with rosters and set-piece hooks, element module pattern, `?dev=1` panel | 🔜 next |
-| 3 | Deep forest zone | Squirrels, thorny branches, cross branch, fog and falling leaves | 🔜 |
+| 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
+| 3 | Deep forest zone | ✅ squirrels; 🔜 thorny branches, cross branch, fog and falling leaves | in progress |
 | 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
 | 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
@@ -313,7 +318,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Safe gap guarantee | 520 px between non-crumbling platforms |
 | Tier altitudes | 0, 35, 100, 220, 400, 700 m (interpolated) |
 | Pacing | 90 m cycles, last 15 m a breather |
-| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m) |
+| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
+| Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | 1 m | 100 px |
 
 ## 11. Tools
@@ -348,3 +354,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 - 2026-10-27: Phase 1 merged into `master`. The WebGL renderer (PixiJS
   facade, selective bloom, CRT presets) from `preview/webgl-pixi` merged as
   well; the "no shaders in 2D" caveat is gone.
+- 2026-10-27: Sandbox batch starts with the squirrel (`element/squirrel`):
+  first platform-bound enemy, zone bands as a small multiplier table,
+  `?at` / `?spawn` / `?dev` helpers, `CLAUDE.md` with the working rules.
+  Simulator: bold median 388 m, 0.99 hits per 100 m, squirrel hits on par
+  with crows; the bot learned to stomp or sidestep squirrels on its branch.

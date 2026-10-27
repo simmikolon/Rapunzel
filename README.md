@@ -50,7 +50,9 @@ home screen and runs full-screen in portrait.
 
 `M` toggles sound, `F` (or the button on the title screen) cycles the
 screen effects. The best height and the effects choice are kept in
-`localStorage`.
+`localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
+`?spawn=squirrel` puts one on the next branch, `?dev=1` shows altitude and
+zone.
 
 ### What was ported from the prototype
 
@@ -83,9 +85,11 @@ custom engine instead of SpriteKit physics and GameplayKit:
 
 * **Enemies** (the prototype had none): crows patrol between the trees and
   start homing in on the prince higher up; spiders dangle from branches and
-  lunge when he passes underneath; the witch arrives on her broom from a
-  marked side, crosses above him and dives, twice near the top. Crows and
-  spiders can be stomped with the pogo; the witch must be dodged.
+  lunge when he passes underneath; squirrels sit on branches and dash at
+  him when he comes close; the witch arrives on her broom from a marked
+  side, crosses above him and dives, twice near the top. Crows, spiders and
+  squirrels can be stomped with the pogo (or punched through with a boost);
+  the witch must be dodged or deflected with a boost.
 * **Hearts and a boost meter**: three hearts, invulnerability flashing after
   a hit; three boost charges refilled by landings and floating lanterns.
 * **Pickups**: sun drops, lanterns (boost refill) and hearts.

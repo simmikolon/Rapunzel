@@ -59,8 +59,19 @@ class Bot {
       if (Math.abs(dx) < this.s.dodgeRange && ahead) { if (!threat || Math.abs(dy) < Math.abs(threat.dy)) threat = { e, dx, dy }; }
     }
     if (threat) {
+      const e = threat.e;
       const canPunch = this.policy === 'bold' && p.boost >= 1 && p.vy > -200 && threat.dy > 0 && threat.dy < 300;
-      if (canPunch) this.input.boostQueued++;
+      if (e.kind === 'squirrel' && target && e.platform === target) {
+        // A squirrel on the branch we are landing on: a bold player stomps it
+        // (aim at it while falling from above), a cautious one lands on the
+        // far end of the branch instead of fleeing the platform altogether.
+        if (this.policy === 'bold' && p.vy < 0 && p.y > e.y + 10) axis = e.x > p.x + 8 ? 1 : e.x < p.x - 8 ? -1 : 0;
+        else {
+          const away = e.x > target.x ? target.left + 30 : target.right - 30;
+          let dx = away - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+          axis = Math.abs(dx) > 12 ? (dx > 0 ? 1 : -1) : 0;
+        }
+      } else if (canPunch) this.input.boostQueued++;
       else axis = threat.dx > 0 ? -1 : 1;               // steer away
     }
     // Save a fall: nothing landable below in view.

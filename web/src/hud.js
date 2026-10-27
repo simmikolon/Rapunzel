@@ -106,7 +106,9 @@ export class HUD {
     for (const t of world.toasts) {
       const a = clamp(t.life / 0.4, 0, 1);
       const pop = easeOutBack(clamp((t.maxLife - t.life) / 0.25, 0, 1));
-      g.text(t.text, W / 2, ty, 30, t.color, 'center', true, { alpha: a, scale: pop, glow: 0.35 });
+      // fit long toasts (the pixel font is ~1 em wide per character)
+      const size = Math.min(30, Math.floor((W - 80) / Math.max(1, t.text.length)));
+      g.text(t.text, W / 2, ty, size, t.color, 'center', true, { alpha: a, scale: pop, glow: 0.35 });
       ty += 46;
     }
   }

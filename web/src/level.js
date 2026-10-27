@@ -1,6 +1,6 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY } from './config.js';
 import { Platform } from './platforms.js';
-import { Crow, Spider } from './enemies.js';
+import { Crow, Spider, Squirrel } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
 import { lerp, invLerp, clamp } from './util.js';
 
@@ -13,13 +13,30 @@ import { lerp, invLerp, clamp } from './util.js';
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
 // stretches to 700 m with a final step beyond.
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35 },
-  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30 },
-  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26 },
-  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22 },
-  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20 },
-  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
 ];
+
+// Zones: altitude bands that scale each element's spawn chance, so new
+// elements arrive as a place changes rather than piling on top of each
+// other. An element's rule is: tier chance x pacing x zone multiplier,
+// starting at the band where its multiplier first becomes positive.
+export const ZONES = [
+  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0 } },
+  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.2, spider: 0.3, squirrel: 0.3 } },
+];
+export function zoneAt(y) {
+  let z = ZONES[0];
+  for (const c of ZONES) if (y >= c.from) z = c;
+  return z;
+}
+const zoneMul = (y, element) => { const m = zoneAt(y).mul[element]; return m == null ? 1 : m; };
 
 // Pacing waves: every PACE_CYCLE px the climb builds up to a peak and then
 // gets a breather (no enemies, no crumbling branches, closer platforms,
@@ -94,6 +111,17 @@ export class Level {
     return layout;
   }
 
+  // A squirrel on a healthy branch of this row, somewhere along it.
+  spawnSquirrel(platforms) {
+    const r = this.rng;
+    const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry);
+    if (!branch) return null;
+    const T = tierAt(branch.y);
+    const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1));
+    this.world.enemies.push(sq);
+    return sq;
+  }
+
   makeRow() {
     const r = this.rng;
     const T = tierAt(this.nextY);
@@ -147,14 +175,14 @@ export class Level {
     const bounceVy = kinds.includes('bow') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
     this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);
 
-    if (y > 2200 && r.chance(T.crow * P.enemy)) {
+    if (y > 2200 && r.chance(T.crow * P.enemy * zoneMul(y, 'crow'))) {
       const dir = r.sign();
       const cy = y + gap * r.range(0.4, 0.7);
       const cx = r.range(-W / 2, W / 2);
       const track = clamp((T.index - 1.5) / 2.5, 0, 1);
       this.world.enemies.push(new Crow(cx, cy, dir, r.range(T.crowSpeed[0], T.crowSpeed[1]), track));
     }
-    if (y > 6500 && r.chance(T.spider * P.enemy)) {
+    if (y > 6500 && r.chance(T.spider * P.enemy * zoneMul(y, 'spider'))) {
       const branch = platforms.find((p) => p.kind === 'branchL' || p.kind === 'branchR');
       if (branch) {
         const sx = branch.x + r.range(-50, 50);
@@ -162,6 +190,8 @@ export class Level {
         this.world.enemies.push(new Spider(sx, y - 28, 50, r.range(180, 300), r.range(1.4, 2.4), lunge));
       }
     }
+
+    if (r.chance(T.squirrel * P.enemy * zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
 
     // --- pickups -----------------------------------------------------------
     if (r.chance(Math.min(0.9, T.sun * P.sun))) {

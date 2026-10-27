@@ -121,6 +121,77 @@ export class Spider extends Enemy {
   }
 }
 
+// Squirrel: lives on a healthy branch. Sits nibbling an acorn, patrols the
+// branch, and dashes at the prince when he comes within reach. Landing on it
+// from above stomps it; it bites if it reaches him while he is crouched on
+// the branch or passing through it. Falls with the branch if that crumbles.
+export class Squirrel extends Enemy {
+  constructor(platform, offset, speed, alertness = 1) {
+    super(platform.x + offset, platform.y);
+    this.kind = 'squirrel';
+    this.platform = platform;
+    this.speed = speed; this.alertness = alertness;
+    this.w = 52; this.h = 40;
+    this.dir = Math.random() < 0.5 ? -1 : 1;
+    this.state = 'sit';            // sit | run | dash | falling
+    this.stateT = Math.random() * 1.5;
+    this.frame = 0;
+    this.vy = 0; this.spin = 0;
+    this.chirpCooldown = 0;
+  }
+  get left() { return this.platform.left + 18; }
+  get right() { return this.platform.right - 18; }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    if (this.chirpCooldown > 0) this.chirpCooldown -= dt;
+    const pf = this.platform;
+    if (this.state === 'falling' || this.dead) {
+      this.vy -= GRAVITY * 0.9 * dt;
+      this.y += this.vy * dt; this.x += this.dir * 60 * dt;
+      this.spin += dt * 7;
+      if (this.y < world.cam.y - 200) this.alive = false;
+      return;
+    }
+    if (!pf.landable) { this.state = 'falling'; this.hurtful = false; this.vy = 120; return; }
+    const p = world.player;
+    const dx = p.x - this.x;
+    const reach = p.alive && Math.abs(dx) < 240 && p.y >= pf.y - 60 && p.y < pf.y + 420;
+    if (reach && this.alertness > 0) {
+      if (this.state !== 'dash') { this.state = 'dash'; this.stateT = 0; if (this.chirpCooldown <= 0) { world.audio.chirp(); this.chirpCooldown = 2.5; } }
+      if (Math.abs(dx) > 6) this.dir = dx > 0 ? 1 : -1;
+      // dash: quick, but slow enough that a prince landing on the far end of
+      // the branch can bounce away before it arrives
+      this.x += this.dir * this.speed * (1.3 + 0.6 * this.alertness) * dt;
+    } else if (this.state === 'dash') {
+      this.state = 'run'; this.stateT = 0;
+    } else if (this.state === 'sit') {
+      if (this.stateT > 1.2 + Math.random() * 1.5) { this.state = 'run'; this.stateT = 0; }
+    } else {
+      this.x += this.dir * this.speed * dt;
+      if (this.stateT > 1 + Math.random() * 2 && Math.random() < 0.02) { this.state = 'sit'; this.stateT = 0; }
+    }
+    // stay on the branch, turn at the ends
+    if (this.x < this.left) { this.x = this.left; this.dir = 1; }
+    else if (this.x > this.right) { this.x = this.right; this.dir = -1; }
+    this.y = pf.y + this.h / 2;
+    const rate = this.state === 'dash' ? 14 : 8;
+    this.frame = this.state === 'sit' ? 0 : 1 + (Math.floor(this.t * rate) % 2);
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false;
+    this.state = 'falling'; this.vy = 260; this.dir = -this.dir || 1;
+    world.particles.leaves(this.x, this.y, 4);
+    world.particles.sparkles(this.x, this.y, 6, '#e8a65e');
+  }
+  draw(g, cam, art) {
+    const set = this.dir > 0 ? art.creatures.squirrelR : art.creatures.squirrelL;
+    const s = this.dead || this.state === 'falling' ? set[3] : set[this.frame];
+    const sy = cam.sy(this.y - this.h / 2);
+    g.blit(s, cam.sx(this.x), this.dead ? cam.sy(this.y) : sy, this.dead ? { rot: this.spin * this.dir } : undefined);
+    if (this.state === 'dash') g.text('!', cam.sx(this.x), sy - 70, 22, '#ffe9a0', 'center', true);
+  }
+}
+
 export class Witch extends Enemy {
   // phases: warn (off-screen, exclamation at the edge) -> cross (flies over the
   // player) -> dive (straight at where the player was) -> leave.

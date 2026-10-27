@@ -5,6 +5,7 @@ import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
 import { HUD } from './hud.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
+import { devParams, startAt, spawnNear, devLabel } from './dev.js';
 
 // Rapunzel - browser port of the SpriteKit prototype.
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -30,6 +31,7 @@ class Game {
     this.noticeT = 0;
     this.iosSoundHintShown = false;
     this.fxPreset = 'full';
+    this.dev = devParams();
     this.loadSave();
     // ?fx=full|bloom|off forces a preset for this visit.
     const param = new URLSearchParams(location.search).get('fx');
@@ -86,7 +88,12 @@ class Game {
 
   setMode(m) {
     this.mode = m; this.modeT = 0;
-    if (m === 'playing' && !this.world.started) { this.world.start(); this.maybeIosSoundHint(); }
+    if (m === 'playing' && !this.world.started) {
+      if (this.dev.at) startAt(this.world, this.dev.at);
+      this.world.start();
+      if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
+      this.maybeIosSoundHint();
+    }
   }
 
   frame(now) {
@@ -164,6 +171,7 @@ class Game {
       case 'gameover': this.hud.drawPlaying(g, this.world); this.hud.drawGameOver(g, this.world, this.modeT, this.isNewBest); break;
     }
     if (this.noticeT > 0) this.hud.drawNotice(g, this.noticeText, this.noticeT);
+    if (this.dev.dev) { g.layer('overlay'); g.text(devLabel(this.world), W / 2, H - 24, 12, '#8fd1c7', 'center'); }
     g.end(this.dt);
   }
 }

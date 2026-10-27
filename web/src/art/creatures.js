@@ -35,6 +35,41 @@ function drawSpider(t, frame) {
   line(5, 4, 2, 0 + o, C.spider); line(11, 4, 13, 0 + o, C.spider);
 }
 
+// Squirrel: 18 x 15 art px, facing right, feet on the branch (anchor
+// bottom-center). Frames: 0 sitting with an acorn, 1 / 2 running, 3 knocked.
+function drawSquirrel(t, frame) {
+  const { p, disc, ellipse, line, poly } = t;
+  const run = frame === 1 || frame === 2;
+  const knocked = frame === 3;
+  const bob = frame === 2 ? 1 : 0;
+  if (knocked) {
+    // on its back, tail flat, eyes x
+    ellipse(9, 11, 5, 3, C.fur); ellipse(9, 11, 3, 2, C.belly);
+    ellipse(3, 12, 3, 2, C.furHi); p(1, 11, 2, 1, C.fur);
+    disc(14, 11, 2, C.fur); p(13, 9, 1, 1, C.fur); p(16, 11, 1, 1, C.furDark);
+    p(13, 10, 1, 1, C.black); p(15, 12, 1, 1, C.black); p(13, 12, 1, 1, C.black); p(15, 10, 1, 1, C.black);
+    p(7, 8, 1, 1, C.furDark); p(10, 8, 1, 1, C.furDark);  // paws up
+    return;
+  }
+  // bushy tail curling up behind the body
+  ellipse(4, 8, 3, 4, C.fur); disc(5, 3, 3, C.fur); disc(4, 4, 2, C.furHi); p(2, 9, 1, 3, C.furDark);
+  if (run) {
+    // stretched body, tail streaming
+    ellipse(10, 10 + bob, 5, 3, C.fur); ellipse(10, 11 + bob, 3, 1, C.belly);
+    disc(15, 8 + bob, 2, C.fur); p(15, 5 + bob, 1, 2, C.fur);        // head, ear
+    p(16, 8 + bob, 1, 1, C.black); p(17, 9 + bob, 1, 1, C.furDark);  // eye, nose
+    if (frame === 1) { p(7, 13, 2, 2, C.furDark); p(13, 13, 2, 2, C.furDark); }
+    else { p(9, 13, 2, 2, C.furDark); p(11, 13, 2, 2, C.furDark); p(6, 12, 2, 1, C.fur); p(14, 12, 2, 1, C.fur); }
+  } else {
+    // sitting upright, acorn in the paws
+    ellipse(10, 10, 4, 4, C.fur); ellipse(10, 11, 2, 2, C.belly);
+    disc(12, 5, 3, C.fur); p(11, 1, 1, 2, C.fur); p(13, 1, 1, 2, C.fur);  // head, ears
+    p(13, 4, 1, 1, C.black); p(15, 6, 1, 1, C.furDark); p(12, 7, 1, 1, C.heartDark);
+    p(13, 8, 2, 2, C.acorn); p(13, 8, 2, 1, C.acornCap);                 // acorn
+    p(8, 13, 3, 2, C.furDark); p(11, 13, 3, 2, C.furDark);               // feet
+  }
+}
+
 // Witch on a broom: 34 x 30 art px, flying right. Anchor center.
 function drawWitch(t, frame) {
   const { p, poly, disc, line, ellipse } = t;
@@ -99,10 +134,12 @@ function drawHeart(t, empty) {
 export function buildCreatures() {
   const crowR = [0, 1, 2].map((f) => makeSprite(18, 14, (t) => drawCrow(t, f), { ax: 0.5, ay: 0.5 }));
   const spider = [0, 1].map((f) => makeSprite(16, 12, (t) => drawSpider(t, f), { ax: 0.5, ay: 0 }));
+  const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));
   return {
     crowR, crowL: crowR.map(flipH),
     spider,
+    squirrelR, squirrelL: squirrelR.map(flipH),
     witchR, witchL: witchR.map(flipH),
     sun: [0, 1].map((f) => makeSprite(11, 11, (t) => drawSun(t, f), { ax: 0.5, ay: 0.5 })),
     lantern: [0, 1].map((f) => makeSprite(12, 16, (t) => drawLantern(t, f), { ax: 0.5, ay: 0.5 })),

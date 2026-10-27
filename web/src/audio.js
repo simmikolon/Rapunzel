@@ -202,6 +202,11 @@ class Synth {
     [523, 659, 784, 1047].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.25, vol: 0.16, delay: i * 0.08 }));
   }
   click() { this.tone({ type: 'square', freq: 700, dur: 0.05, vol: 0.06 }); }
+  chirp() {
+    // squirrel alarm: two quick rising chirps
+    this.tone({ type: 'square', freq: 1500, to: 2300, dur: 0.06, vol: 0.05 });
+    this.tone({ type: 'square', freq: 1600, to: 2600, dur: 0.07, vol: 0.05, delay: 0.09 });
+  }
   milestone() {
     [784, 988, 1175, 1568].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.3, vol: 0.14, delay: i * 0.06 }));
   }
