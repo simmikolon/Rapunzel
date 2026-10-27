@@ -1,7 +1,7 @@
 import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, Color } from '../../vendor/pixi.min.mjs';
 import { W, H, PX } from '../config.js';
 import { makeCanvas } from '../art/sprite.js';
-import { buildAtlas, makeGlowTexture, canvasTexture } from './atlas.js';
+import { buildAtlas, makeGlowTexture, makeBeamTexture, canvasTexture } from './atlas.js';
 import { BloomFilter, CRTFilter } from './filters.js';
 
 // WebGL renderer (PixiJS) behind an immediate-mode facade. The game keeps
@@ -51,6 +51,7 @@ export class Renderer {
     this.atlas = buildAtlas(art);
     this.white = this.atlas.white;
     this.glowTex = makeGlowTexture(128);
+    this.beamTex = makeBeamTexture(64);
     // Sky: a 1 x 2 strip, linearly filtered; stretched to twice the screen
     // height and offset by half of it so the two texel centres sit exactly on
     // the top and bottom edges and the GPU interpolates the gradient.
@@ -193,7 +194,7 @@ export class Renderer {
   _blit(L, s, x, y, o, mul) {
     const sp = this._sprite(L);
     sp.texture = s.tex;
-    sp.blendMode = 'normal';
+    sp.blendMode = (o && o.blend) || 'normal';
     if (!o) {
       sp.pivot.set(0, 0);
       sp.position.set(Math.round(x - s.ax), Math.round(y - s.ay));
@@ -239,7 +240,7 @@ export class Renderer {
     const sp = this._sprite(L);
     const c = this._col(color);
     sp.texture = this.white;
-    sp.blendMode = 'normal';
+    sp.blendMode = (o && o.blend) || 'normal';
     sp.pivot.set(1, 1);
     sp.position.set(cx, cy);
     sp.rotation = (o && o.rot) || 0;
@@ -262,6 +263,44 @@ export class Renderer {
     sp.position.set(cx, cy);
     sp.rotation = 0;
     sp.scale.set(r / 64, r / 64);
+    sp.alpha = c.a * alpha * mul;
+    sp.tint = c.rgb;
+  }
+
+  // Soft elliptical cloud of color (fog wisps): the glow disc stretched to
+  // rx x ry, optionally rotated.
+  puff(cx, cy, rx, ry, color, alpha = 1, o) {
+    this._puff(this.cur, cx, cy, rx, ry, color, alpha, o, 1);
+    if (o && o.glow) this._puff(this.layers.glow, cx, cy, rx, ry, color, alpha, o, o.glow);
+  }
+  _puff(L, cx, cy, rx, ry, color, alpha, o, mul) {
+    const sp = this._sprite(L);
+    const c = this._col(color);
+    sp.texture = this.glowTex;
+    sp.blendMode = (o && o.blend) || 'normal';
+    sp.pivot.set(64, 64);
+    sp.position.set(cx, cy);
+    sp.rotation = (o && o.rot) || 0;
+    sp.scale.set(rx / 64, ry / 64);
+    sp.alpha = c.a * alpha * mul;
+    sp.tint = c.rgb;
+  }
+
+  // Light shaft: a soft-edged beam of `length` along its axis and `width`
+  // across, centred on (cx, cy), rotated by rot, additively blended.
+  beam(cx, cy, length, width, rot, color, alpha = 1, o) {
+    this._beam(this.cur, cx, cy, length, width, rot, color, alpha, 1);
+    if (o && o.glow) this._beam(this.layers.glow, cx, cy, length, width, rot, color, alpha, o.glow);
+  }
+  _beam(L, cx, cy, length, width, rot, color, alpha, mul) {
+    const sp = this._sprite(L);
+    const c = this._col(color);
+    sp.texture = this.beamTex;
+    sp.blendMode = 'add';
+    sp.pivot.set(0.5, 32);
+    sp.position.set(cx, cy);
+    sp.rotation = rot;
+    sp.scale.set(length, width / 64);
     sp.alpha = c.a * alpha * mul;
     sp.tint = c.rgb;
   }

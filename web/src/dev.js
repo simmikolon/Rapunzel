@@ -21,6 +21,8 @@ export function startAt(world, metres) {
   world.level.nextY = y - 200; world.level.lastSafeY = y - 200;
   world.level.modelCam = world.cam.y;
   world.nextWitchY = Math.max(world.nextWitchY, y + 3000);
+  world.nextMilestone = Math.floor(metres / 100) * 100 + 100;   // no stacked milestone toasts
+  world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
   world.platforms.push(new Platform('branchL', y - 10)); // something to land on at the start
   world.enemies.length = 0; world.pickups.length = 0;

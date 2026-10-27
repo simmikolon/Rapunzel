@@ -95,8 +95,10 @@ custom engine instead of SpriteKit physics and GameplayKit:
 * **Pickups**: sun drops, lanterns (boost refill) and hearts.
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
   debris, boost flames, feathers, screen shake, a swaying braid that moves
-  the ribbons (harder with altitude), altitude-graded sky and lighting
-  (forest → open sky → sunset → starry night), toasts for milestones.
+  the ribbons (harder with altitude), sky and lighting keyed to the zones
+  (forest floor → deep forest with mist, falling leaves and light shafts →
+  dawn at the windows → open sky → sunset → starry night), toasts for
+  milestones.
 * **Audio**: every sound is synthesized with WebAudio, so there are no
   audio files; mute is remembered.
 * **Shaders**: a real bloom on everything that glows (lanterns, sun drops,

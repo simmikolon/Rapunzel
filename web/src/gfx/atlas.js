@@ -72,3 +72,18 @@ export function makeGlowTexture(size = 128) {
 export function canvasTexture(canvas, label) {
   return new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear', label }) });
 }
+
+// A 1 x 64 soft strip (alpha rises and falls across its height) for light
+// shafts: stretched along its axis and rotated, it reads as a volumetric
+// beam with soft edges.
+export function makeBeamTexture(size = 64) {
+  const canvas = makeCanvas(1, size);
+  const ctx = canvas.getContext('2d');
+  for (let y = 0; y < size; y++) {
+    const t = (y + 0.5) / size;
+    const a = Math.sin(Math.PI * t) ** 1.5;
+    ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
+    ctx.fillRect(0, y, 1, 1);
+  }
+  return new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear', label: 'beam' }) });
+}

@@ -150,6 +150,26 @@ function drawBraidEnd(t) {
   disc(29, 4, 2, C.ribbon); disc(33, 4, 2, C.ribbon); p(30, 3, 3, 3, C.ribbonHi);
 }
 
+// Falling leaves: 5 x 4 art px, three colorways. Anchor center.
+function drawLeaf(t, variant) {
+  const { p } = t;
+  const cols = [[C.leaf, C.grassLight], [C.moss, '#c8d848'], ['#c87a2a', '#e8a65e']][variant];
+  p(1, 0, 3, 1, cols[0]); p(0, 1, 5, 2, cols[0]); p(1, 3, 3, 1, cols[0]);
+  p(1, 1, 2, 1, cols[1]); p(2, 2, 1, 1, cols[0]); p(4, 0, 1, 1, cols[0]);
+}
+
+// Leafy bough growing from a trunk into the picture: 26 x 14 art px, grows
+// to the right from its left edge (anchor left-middle). Mirrored for the
+// right trunk.
+function drawBough(t) {
+  const { p, disc, line } = t;
+  line(0, 7, 14, 6, C.barkDark); line(0, 8, 14, 7, C.barkDeep); line(8, 6, 16, 3, C.barkDark);
+  disc(13, 6, 4, C.leafDark); disc(18, 5, 4, C.leaf); disc(22, 8, 3, C.leafDark);
+  disc(15, 4, 3, C.leaf); disc(20, 3, 3, C.grass); disc(10, 9, 3, C.leafDark); disc(24, 5, 2, C.leaf);
+  p(16, 2, 2, 1, C.grassLight); p(21, 1, 1, 1, C.grassLight); p(12, 3, 1, 1, C.grass); p(23, 9, 2, 1, C.leaf);
+  p(18, 11, 1, 2, C.leafDark); p(13, 12, 1, 1, C.leafDark); p(17, 7, 2, 1, C.grass); p(11, 5, 1, 1, C.grassLight);
+}
+
 function drawCloud(t, w, h) {
   const { ellipse, p } = t;
   const r = new RNG(w * 31 + h);
@@ -177,5 +197,8 @@ export function buildTiles() {
   const braidEnd = makeSprite(36, 14, (t) => drawBraidEnd(t), { ax: 0.4, ay: 1 });
   const clouds = [[28, 10], [40, 13], [54, 16]].map(([w, h]) => makeSprite(w, h, (t) => drawCloud(t, w, h), { ax: 0.5, ay: 0.5 }));
   const moon = makeSprite(24, 24, (t) => drawMoon(t), { ax: 0.5, ay: 0.5 });
-  return { tower, trunkL, trunkR, forest, ground, braid, braidEnd, clouds, moon };
+  const leaves = [0, 1, 2].map((v) => makeSprite(5, 4, (t) => drawLeaf(t, v), { ax: 0.5, ay: 0.5 }));
+  const boughL = makeSprite(26, 14, (t) => drawBough(t), { ax: 0, ay: 0.5 });
+  const boughR = flipH(boughL);
+  return { tower, trunkL, trunkR, forest, ground, braid, braidEnd, clouds, moon, leaves, boughL, boughR };
 }

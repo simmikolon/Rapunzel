@@ -159,9 +159,10 @@ build them. Each zone: elements, look, set piece.
 1. **Forest floor, 0 to 120 m** (✅ as is): crows, spiders, ribbons and
    branches, fireflies, kept light.
 2. **Deep forest, 120 to 250 m** (in progress): ✅ squirrels on branches
-   (the first platform-bound enemy); 🔜 thorny branches, the cross branch
-   you must boost through, fog and falling leaves; crows fade out (0.6x),
-   spiders stay.
+   (the first platform-bound enemy); ✅ the look: green shade, mist in two
+   depths, falling leaves in two depths, light shafts through the canopy,
+   boughs reaching in from the trunks; 🔜 thorny branches, the cross branch
+   you must boost through; crows fade out (0.6x), spiders stay.
 3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
    right with guards' arms reaching out, window ledges on the tower layer,
    Rapunzel's cameo window, the witch more present. Doors later.
@@ -229,13 +230,16 @@ is a pool to draw from, not a promise.
 
 **FX and atmosphere**
 - 💡 title screen: the tower behind, the prince bouncing happily in place,
-  flowers on the lawn, light rays through the forest.
-- 💡 god rays behind the tower and trees (additive quads, slow animation).
-- 💡 foreground clouds and fog, translucent and blurred because they are
-  close (depth of field), like mist in the forest; pre-blurred sprites at
-  ~1.3x parallax. The existing far clouds stay.
-- 💡 falling leaves with parallax (some fast, some slow); green or autumn
-  leaves by season.
+  flowers on the lawn (light rays already shine through the forest).
+- ✅ light shafts through the canopy (additive soft beams, slow sway) on
+  the forest floor and in the deep forest.
+- ✅ fog: soft mist wisps behind the tower and in front of everything at
+  1.25x parallax, drifting, breathing; only in the deep forest band. The
+  far clouds stay for the sky zones.
+- ✅ falling leaves in two depths (small dark ones behind the trunks at
+  0.9x, big ones in front at 1.25x), swaying and spinning. 💡 autumn
+  colours by season.
+- ✅ boughs hanging from the trunks in the deep forest.
 - 💡 seasons and weather: rain, snow; a Christmas edition with light chains
   along the trees; cute animals living in the trees.
 - 💡 shake and motion effects when things happen: more shake, hit-stop,
@@ -293,7 +297,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
-| 3 | Deep forest zone | ✅ squirrels; 🔜 thorny branches, cross branch, fog and falling leaves | in progress |
+| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts, boughs, zone-keyed sky and light; 🔜 thorny branches, cross branch | in progress |
 | 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
 | 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
@@ -320,6 +324,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Pacing | 90 m cycles, last 15 m a breather |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
+| Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
 
 ## 11. Tools
@@ -359,3 +364,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   `?at` / `?spawn` / `?dev` helpers, `CLAUDE.md` with the working rules.
   Simulator: bold median 388 m, 0.99 hits per 100 m, squirrel hits on par
   with crows; the bot learned to stomp or sidestep squirrels on its branch.
+- 2026-10-27: Deep forest look (`element/deep-forest-atmosphere`): sky,
+  lighting and distant-forest fades re-keyed to the zone bands (they were
+  set for 300 m runs); mist and falling leaves in two depths, light shafts,
+  boughs; renderer gained puffs, beams and blend modes. Purely visual, the
+  simulator is unaffected.

@@ -1,6 +1,7 @@
 import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU } from './util.js';
+import { TRUNK_W } from './art/tiles.js';
 import { PAL as C } from './palette.js';
 
 // Parallax environment. Layers from back to front:
@@ -11,11 +12,16 @@ import { PAL as C } from './palette.js';
 //   -> fireflies (drawn after the actors) -> lighting and vignette.
 // Stars, the moon and the fireflies also go into the bloom layer (`glow`).
 
+// Keyed to the zone bands (100 px = 1 m): forest floor, deep forest from
+// 120 m, dawn light at the windows from 250 m, open sky above the trees
+// from 400 m, then sunset and night.
 const SKY = [
-  { y: 0,     top: '#173f50', bot: '#1e3c3f' },   // forest
-  { y: 7000,  top: '#3d8ec2', bot: '#a9ddf0' },   // open sky
-  { y: 15000, top: '#55397f', bot: '#f7a862' },   // sunset
-  { y: 23000, top: '#060a22', bot: '#232a5a' },   // night
+  { y: 0,     top: '#173f50', bot: '#1e3c3f' },   // forest floor
+  { y: 12000, top: '#0d2a2f', bot: '#143835' },   // deep forest: darker, greener
+  { y: 25000, top: '#3b5f86', bot: '#a7c6d8' },   // windows: dawn through the canopy
+  { y: 40000, top: '#3d8ec2', bot: '#a9ddf0' },   // above the trees: open sky
+  { y: 55000, top: '#55397f', bot: '#f7a862' },   // sunset
+  { y: 70000, top: '#060a22', bot: '#232a5a' },   // night
 ];
 const TRANSITION = 3000;
 
@@ -32,9 +38,11 @@ export function skyAt(y) {
 // the prince pick up the time of day too (cool forest, warm sunset, blue night).
 const LIGHT = [
   { y: 0,     color: '#b8e6d8', alpha: 0.16 },
-  { y: 7000,  color: '#ffffff', alpha: 0.0 },
-  { y: 15000, color: '#ffb070', alpha: 0.26 },
-  { y: 23000, color: '#5468b8', alpha: 0.42 },
+  { y: 12000, color: '#7fc98f', alpha: 0.30 },   // deep forest: green shade
+  { y: 25000, color: '#ffe6c8', alpha: 0.08 },   // windows: warm dawn
+  { y: 40000, color: '#ffffff', alpha: 0.0 },
+  { y: 55000, color: '#ffb070', alpha: 0.26 },
+  { y: 70000, color: '#5468b8', alpha: 0.42 },
 ];
 export function lightAt(y) {
   let i = 0;
@@ -45,9 +53,14 @@ export function lightAt(y) {
   return { color: mixHex(LIGHT[i].color, next.color, t), alpha: lerp(LIGHT[i].alpha, next.alpha, t) };
 }
 
-export const forestAlpha = (y) => 1 - smoothstep(invLerp(4000, 7000, y));
-export const cloudAlpha = (y) => smoothstep(invLerp(5000, 8000, y)) * (1 - 0.5 * smoothstep(invLerp(20000, 23000, y)));
-export const nightAlpha = (y) => smoothstep(invLerp(20000, 23000, y));
+export const forestAlpha = (y) => 1 - smoothstep(invLerp(27000, 40000, y));
+export const cloudAlpha = (y) => smoothstep(invLerp(34000, 42000, y)) * (1 - 0.5 * smoothstep(invLerp(66000, 70000, y)));
+export const nightAlpha = (y) => smoothstep(invLerp(66000, 70000, y));
+// Deep forest atmosphere (fog, leaves, boughs): rises into the band and
+// thins out toward the windows.
+export const deepForestAmount = (y) => smoothstep(invLerp(7000, 13000, y)) * (1 - smoothstep(invLerp(22000, 29000, y)));
+// Sunlight through the canopy: forest floor and deep forest, gone above the trees.
+export const shaftAmount = (y) => 1 - smoothstep(invLerp(24000, 34000, y));
 
 function hash(k) { let h = (k * 2654435761) >>> 0; h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; return (h ^ (h >>> 15)) >>> 0; }
 
@@ -59,6 +72,21 @@ export class Background {
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
     this.fireflies = Array.from({ length: 22 }, () => ({ x: r.range(-W / 2, W / 2), y: r.range(-100, H + 100), ph: r.range(0, TAU), sp: r.range(0.4, 1.1) }));
     this.swayAmp = 12;
+    // Atmosphere: fog wisps and falling leaves in two depths each, light
+    // shafts, and boughs hanging from the trunks. Positions are in their
+    // layer's coordinates (see cam.layerY).
+    this.fogFront = Array.from({ length: 7 }, () => this.newPuff(r, 1.25, true));
+    this.fogBack = Array.from({ length: 5 }, () => this.newPuff(r, 0.7, true));
+    this.leavesFront = Array.from({ length: 26 }, () => this.newLeaf(r, 1.25, true));
+    this.leavesBack = Array.from({ length: 30 }, () => this.newLeaf(r, 0.9, true));
+    this.shafts = Array.from({ length: 4 }, (_, i) => ({ x: 120 + i * 190 + r.range(-40, 40), w: r.range(70, 150), ph: r.range(0, TAU), sp: r.range(0.08, 0.16) }));
+  }
+
+  newPuff(r, f, anywhere) {
+    return { f, x: r.range(-200, W + 200), ly: r.range(0, anywhere ? H : 0) , rx: r.range(170, 320), ry: r.range(55, 110), drift: r.range(8, 24) * (r.chance(0.5) ? 1 : -1), ph: r.range(0, TAU), a: r.range(0.14, 0.26) };
+  }
+  newLeaf(r, f, anywhere) {
+    return { f, x: r.range(-40, W + 40), ly: r.range(0, anywhere ? H : 0), v: r.int(0, 2), vy: r.range(50, 110), sway: r.range(20, 50), ph: r.range(0, TAU), sp: r.range(1.2, 2.4), rot: r.range(0, TAU), spin: r.range(-2.5, 2.5), s: f > 1 ? r.range(1.0, 1.5) : r.range(0.55, 0.85) };
   }
 
   // Horizontal offset of the braid at world height y (a slow travelling wave).
@@ -156,13 +184,104 @@ export class Background {
   }
 
   drawBack(g, cam, time) {
+    const deep = deepForestAmount(cam.y);
     this.drawSky(g, cam);
     this.drawFar(g, cam, time);
     this.drawForest(g, cam);
+    if (deep > 0) this.drawFog(g, cam, time, this.fogBack, deep, '#9fd4c4');
     this.drawTower(g, cam);
     this.drawBraid(g, cam, time);
+    if (deep > 0) this.drawLeaves(g, cam, this.leavesBack, deep);
     this.drawGround(g, cam);
     this.drawTrees(g, cam);
+    this.drawBoughs(g, cam);
+    this.drawShafts(g, cam, time);
+  }
+
+  // Closest layer: big leaves and mist drifting in front of everything.
+  drawFrontAtmosphere(g, cam, time) {
+    const deep = deepForestAmount(cam.y);
+    if (deep <= 0) return;
+    this.drawLeaves(g, cam, this.leavesFront, deep);
+    this.drawFog(g, cam, time, this.fogFront, deep, '#d8efe6');
+  }
+
+  // Fog drifts sideways, leaves fall and sway; both re-enter above the view
+  // of their own layer once they leave it below.
+  updateAtmosphere(dt, cam, time) {
+    const amount = deepForestAmount(cam.y);
+    if (amount <= 0) { this.atmoWasOff = true; return; }
+    const wrapY = (o, pad) => {
+      const camF = cam.layerY(o.f);
+      if (o.ly < camF - pad) o.ly = camF + H + pad - 1;         // fell below the view
+      else if (o.ly > camF + H + pad) o.ly = camF - pad + 1;    // camera dropped it below
+    };
+    if (this.atmoWasOff) {
+      // entering the band: scatter everything over the current view
+      this.atmoWasOff = false;
+      for (const o of [...this.fogFront, ...this.fogBack, ...this.leavesFront, ...this.leavesBack]) o.ly = cam.layerY(o.f) + Math.random() * H;
+    }
+    for (const o of [...this.fogFront, ...this.fogBack]) {
+      o.x += o.drift * dt;
+      if (o.x < -o.rx - 60) o.x = W + o.rx + 60; else if (o.x > W + o.rx + 60) o.x = -o.rx - 60;
+      wrapY(o, o.ry + 20);
+    }
+    for (const o of [...this.leavesFront, ...this.leavesBack]) {
+      o.ly -= o.vy * dt;
+      o.x += Math.sin(time * o.sp + o.ph) * o.sway * dt + 6 * dt;
+      o.rot += o.spin * dt;
+      if (o.x < -60) o.x = W + 60; else if (o.x > W + 60) o.x = -60;
+      wrapY(o, 40);
+    }
+  }
+
+  drawLeaves(g, cam, list, amount) {
+    const t = this.art.tiles.leaves;
+    for (const o of list) {
+      const camF = cam.layerY(o.f);
+      const sy = H - (o.ly - camF) + cam.oy;
+      if (sy < -40 || sy > H + 40) continue;
+      g.blit(t[o.v], o.x + cam.ox, sy, { rot: o.rot, sx: o.s, sy: o.s, alpha: amount * (o.f > 1 ? 1 : 0.85) });
+    }
+  }
+
+  drawFog(g, cam, time, list, amount, color) {
+    for (const o of list) {
+      const camF = cam.layerY(o.f);
+      const sy = H - (o.ly - camF) + cam.oy;
+      if (sy < -o.ry - 20 || sy > H + o.ry + 20) continue;
+      const breathe = 0.85 + 0.15 * Math.sin(time * 0.5 + o.ph);
+      g.puff(o.x + cam.ox, sy, o.rx * breathe, o.ry, color, o.a * amount);
+    }
+  }
+
+  // Sunlight through the canopy, in front of the trees, behind the prince.
+  drawShafts(g, cam, time) {
+    const a = shaftAmount(cam.y);
+    if (a <= 0) return;
+    const deep = deepForestAmount(cam.y);
+    for (const sft of this.shafts) {
+      const sway = Math.sin(time * sft.sp + sft.ph) * 40;
+      const pulse = 0.8 + 0.2 * Math.sin(time * 0.3 + sft.ph * 2);
+      g.beam(sft.x + sway + 180, H * 0.45, 2600, sft.w, 1.12, '#fff2c0', 0.07 * a * pulse * (1 + 0.5 * deep), { glow: 0.25 });
+    }
+  }
+
+  // Leafy boughs reaching in from the trunks in the deep forest band.
+  drawBoughs(g, cam) {
+    const amount = deepForestAmount(cam.y);
+    if (amount <= 0) return;
+    const t = this.art.tiles;
+    const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
+    for (let k = first; k <= last; k++) {
+      const h = hash(k * 11 + 3) % 100;
+      if (h < 45) continue;                              // not every tile
+      const side = hash(k * 13 + 5) % 2 ? 'L' : 'R';
+      const off = (hash(k * 17 + 7) % 140) + 20;
+      const sy = cam.sy(k * TILE_H + off);
+      if (side === 'L') g.blit(t.boughL, TRUNK_W - 8 + cam.ox, sy, { alpha: amount });
+      else g.blit(t.boughR, W - TRUNK_W + 8 + cam.ox, sy, { alpha: amount });
+    }
   }
 
   updateFireflies(dt, cam, time) {
