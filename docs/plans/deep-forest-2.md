@@ -55,4 +55,9 @@ motes 40, dapple 8, life < 20, mist 4). All in the existing layers.
 
 ## Status
 
-Filled in as steps land (see the decision log in `docs/DESIGN.md`).
+All steps landed on `element/deep-forest-life` (2026-10-27): the
+atmosphere lives in `web/src/atmosphere.js`, the zone curves in
+`web/src/altitude.js`; owls, haze and firefly behaviour sit in
+`web/src/background.js` next to the trunks and fireflies they belong to.
+Verified with screenshots at 0 / 60 / 160 / 170 / 220 m, the sprite
+sheet and a simulator sanity run. Sound deferred.

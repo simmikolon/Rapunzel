@@ -131,7 +131,9 @@ one-time hint for the shield. Plus the headless gameplay simulator.
 **Key files**: `web/src/config.js` (tunables and the `FX` block),
 `web/src/level.js` (tiers, pacing, rows), `web/src/background.js` (layers,
 sky, lighting), `web/src/enemies.js`, `web/src/platforms.js`,
-`web/src/player.js`, `web/src/gfx/*` (renderer facade, atlas, filters),
+`web/src/player.js`, `web/src/atmosphere.js` (leaves, fog, shafts,
+life), `web/src/altitude.js` (zone-keyed curves), `web/src/gfx/*`
+(renderer facade, atlas, filters),
 `web/src/art/*` (procedural sprites), `web/dev/sprites.html` (sprite
 sheet), `web/dev/sim.html` + `tools/analyze.mjs` (simulator).
 
@@ -159,10 +161,11 @@ build them. Each zone: elements, look, set piece.
 1. **Forest floor, 0 to 120 m** (✅ as is): crows, spiders, ribbons and
    branches, fireflies, kept light.
 2. **Deep forest, 120 to 250 m** (in progress): ✅ squirrels on branches
-   (the first platform-bound enemy); ✅ the look: green shade, mist in two
-   depths, falling leaves in two depths, light shafts through the canopy,
-   boughs reaching in from the trunks; 🔜 thorny branches, the cross branch
-   you must boost through; crows fade out (0.6x), spiders stay.
+   (the first platform-bound enemy); ✅ the look: green shade, mist and
+   falling leaves on a depth continuum, light shafts with dust motes,
+   canopy dapple on the wall, boughs with birds, butterflies, owls in the
+   knot holes, acorns, gusts and passing clouds; 🔜 thorny branches, the
+   cross branch you must boost through; crows fade out (0.6x), spiders stay.
 3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
    right with guards' arms reaching out, window ledges on the tower layer,
    Rapunzel's cameo window, the witch more present. Doors later.
@@ -232,16 +235,30 @@ is a pool to draw from, not a promise.
 - 💡 title screen: the tower behind, the prince bouncing happily in place,
   flowers on the lawn (light rays already shine through the forest).
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
-  the forest floor and in the deep forest.
-- ✅ fog: soft mist wisps behind the tower and in front of everything at
-  1.25x parallax, drifting, breathing; only in the deep forest band. The
-  far clouds stay for the sky zones.
-- ✅ falling leaves in two depths (small dark ones behind the trunks at
-  0.9x, big ones in front at 1.25x), swaying and spinning. 💡 autumn
-  colours by season.
-- ✅ boughs hanging from the trunks in the deep forest.
+  the forest floor and in the deep forest, with dust motes drifting down
+  the beams; passing clouds dim and restore the sun over 10–20 s.
+- ✅ fog: mist wisps (three soft puffs each, slightly tilted, pulsing in
+  place) behind the tower and in front of everything, drifting; a wisp the
+  prince passes through is pushed aside and thins out (wake). Only in the
+  deep forest band; the far clouds stay for the sky zones.
+- ✅ falling leaves on a depth continuum (parallax 0.85 to 1.35, size and
+  opacity by depth) with a shared slow wind, flutter, and staggered
+  re-entry above the view. 💡 autumn colours by season.
+- ✅ gusts every 14–24 s: stronger wind on leaves and fog, boughs rock,
+  motes speed up, the braid swings a little wider (ribbons move with it).
+- ✅ canopy dapple: soft dark blobs (multiply) scrolling with the bricks.
+- ✅ tower haze along the wall's edges; low mist on the lawn at the start.
+- ✅ near leaves and fog drift slightly against the prince's motion.
+- ✅ boughs hanging from the trunks; birds perch on them and take off when
+  the prince comes near; acorns drop from them now and then.
+- ✅ owls blink in the trunks' knot holes (deep forest and night).
+- ✅ butterflies loop around branch tips and flee a landing (floor and
+  deep forest).
+- ✅ fireflies gather around lanterns and scatter from the prince.
+- 💡 sound for all of it: ambience (wind in the leaves, birdsong, an owl),
+  the gust whoosh, acorn plinks.
 - 💡 seasons and weather: rain, snow; a Christmas edition with light chains
-  along the trees; cute animals living in the trees.
+  along the trees; more animals living in the trees.
 - 💡 shake and motion effects when things happen: more shake, hit-stop,
   zoom punch on bow springs and the witch, speed lines on boost.
 - 💡 more particles and atmosphere in general.
@@ -297,7 +314,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
-| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts, boughs, zone-keyed sky and light; 🔜 thorny branches, cross branch | in progress |
+| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light; 🔜 thorny branches, cross branch; sound later | in progress |
 | 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
 | 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
@@ -369,3 +386,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   set for 300 m runs); mist and falling leaves in two depths, light shafts,
   boughs; renderer gained puffs, beams and blend modes. Purely visual, the
   simulator is unaffected.
+- 2026-10-27: Deep forest, part two (`element/deep-forest-life`, plan in
+  `docs/plans/deep-forest-2.md`): atmosphere moved into its own module;
+  dust motes, cloud cover, gusts, dapple, tower haze, lawn mist, fog wake,
+  sideways nudge, owls, birds, butterflies, acorns, firefly behaviour.
+  Sound for all of it deferred. Purely visual; simulator unaffected.

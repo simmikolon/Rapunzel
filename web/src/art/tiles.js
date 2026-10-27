@@ -170,6 +170,37 @@ function drawBough(t) {
   p(18, 11, 1, 2, C.leafDark); p(13, 12, 1, 1, C.leafDark); p(17, 7, 2, 1, C.grass); p(11, 5, 1, 1, C.grassLight);
 }
 
+// Small bird perched / flying, 8 x 6 art px, facing right. Anchor bottom-center.
+function drawBird(t, frame) {
+  const { p } = t;
+  const body = '#3b4a7a', wing = '#2a3560', belly = '#c9d2e8';
+  p(2, 2, 4, 3, body); p(3, 4, 2, 1, belly);
+  p(5, 1, 2, 2, body); p(7, 2, 1, 1, C.beak);            // head, beak
+  p(6, 1, 1, 1, C.black);
+  p(0, 3, 2, 1, body);                                     // tail
+  if (frame) { p(2, 0, 3, 2, wing); } else { p(3, 3, 2, 1, wing); }
+  p(3, 5, 1, 1, C.beak); p(5, 5, 1, 1, C.beak);            // feet
+}
+
+// Butterfly, 7 x 5 art px, two frames (wings open / closed), three colours.
+function drawButterfly(t, color, frame) {
+  const { p } = t;
+  const cols = [['#f4c542', '#e08a2a'], ['#6fb7ff', '#2c6fd1'], ['#ff8ab8', '#d14a7a']][color];
+  p(3, 1, 1, 3, '#2a1a10');                                 // body
+  if (frame === 0) {
+    p(0, 0, 3, 2, cols[0]); p(4, 0, 3, 2, cols[0]); p(1, 2, 2, 2, cols[1]); p(4, 2, 2, 2, cols[1]);
+    p(1, 0, 1, 1, cols[1]); p(5, 0, 1, 1, cols[1]);
+  } else {
+    p(2, 0, 1, 2, cols[0]); p(4, 0, 1, 2, cols[0]); p(2, 2, 1, 2, cols[1]); p(4, 2, 1, 2, cols[1]);
+  }
+}
+
+// Acorn, 4 x 5 art px. Anchor center.
+function drawAcorn(t) {
+  const { p } = t;
+  p(0, 0, 4, 2, C.acornCap); p(1, 2, 2, 3, C.acorn); p(0, 2, 1, 2, C.acorn); p(3, 2, 1, 2, C.acorn); p(1, 2, 1, 1, '#b48a52');
+}
+
 function drawCloud(t, w, h) {
   const { ellipse, p } = t;
   const r = new RNG(w * 31 + h);
@@ -200,5 +231,9 @@ export function buildTiles() {
   const leaves = [0, 1, 2].map((v) => makeSprite(5, 4, (t) => drawLeaf(t, v), { ax: 0.5, ay: 0.5 }));
   const boughL = makeSprite(26, 14, (t) => drawBough(t), { ax: 0, ay: 0.5 });
   const boughR = flipH(boughL);
-  return { tower, trunkL, trunkR, forest, ground, braid, braidEnd, clouds, moon, leaves, boughL, boughR };
+  const birdR = [0, 1].map((f) => makeSprite(8, 6, (t) => drawBird(t, f), { ax: 0.5, ay: 1 }));
+  const birdL = birdR.map(flipH);
+  const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
+  const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
+  return { tower, trunkL, trunkR, forest, ground, braid, braidEnd, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }

@@ -64,8 +64,8 @@ export class World {
     this.time += dt;
     // Ribbons ride on the braid, so a wilder braid is the 'moving platform' mechanic.
     this.bg.swayAmp = 12 + clamp(this.level.difficulty.index, 0, 4) * 14;
-    this.bg.updateFireflies(dt, this.cam, this.time);
-    this.bg.updateAtmosphere(dt, this.cam, this.time);
+    this.bg.updateFireflies(dt, this.cam, this.time, this);
+    this.bg.updateAtmosphere(dt, this.cam, this.time, this);
     for (const t of this.toasts) t.life -= dt;
     this.toasts = this.toasts.filter((t) => t.life > 0);
     if (idle) { this.player.idleT += dt; this.particles.update(dt); return; }
