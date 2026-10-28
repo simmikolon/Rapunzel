@@ -15,3 +15,18 @@ export const shaftAmount = (y) => 1 - smoothstep(invLerp(24000, 34000, y));
 export const lifeAmount = (y) => 1 - smoothstep(invLerp(22000, 29000, y));
 
 export function hash(k) { let h = (k * 2654435761) >>> 0; h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; return (h ^ (h >>> 15)) >>> 0; }
+
+// Tree look per zone: 0 oak (forest floor), 1 mossy giant (deep forest),
+// 2 birch-like (windows), 3 bare (above the trees). Trunks crossfade over
+// ~30 m around each boundary; a branch takes the nearest style.
+const TREE_BOUNDS = [12000, 25000, 40000];
+const TREE_FADE = 1500;
+export function treeStyleAt(y) {
+  for (let i = 0; i < TREE_BOUNDS.length; i++) {
+    const b = TREE_BOUNDS[i];
+    if (y < b - TREE_FADE) return { a: i, b: i, t: 0 };
+    if (y < b + TREE_FADE) return { a: i, b: i + 1, t: smoothstep(invLerp(b - TREE_FADE, b + TREE_FADE, y)) };
+  }
+  return { a: TREE_BOUNDS.length, b: TREE_BOUNDS.length, t: 0 };
+}
+export const treeStyleIndexAt = (y) => { const s = treeStyleAt(y); return s.t < 0.5 ? s.a : s.b; };

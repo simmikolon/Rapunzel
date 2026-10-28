@@ -12,7 +12,10 @@ const walk = (obj, prefix) => {
   for (const k of Object.keys(obj)) {
     const v = obj[k];
     if (v && v.canvas) items.push({ name: prefix + k, s: v });
-    else if (Array.isArray(v)) v.forEach((e, i) => { if (e && e.canvas) items.push({ name: `${prefix}${k}[${i}]`, s: e }); });
+    else if (Array.isArray(v)) v.forEach((e, i) => {
+      if (e && e.canvas) items.push({ name: `${prefix}${k}[${i}]`, s: e });
+      else if (e && typeof e === 'object') walk(e, `${prefix}${k}[${e.name || i}].`);
+    });
     else if (v && typeof v === 'object') walk(v, prefix + k + '.');
   }
 };

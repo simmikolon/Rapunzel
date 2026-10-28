@@ -2,6 +2,7 @@ import { buildPrince } from './prince.js';
 import { buildPlatforms } from './platforms.js';
 import { buildCreatures } from './creatures.js';
 import { buildTiles } from './tiles.js';
+import { buildTrees } from './trees.js';
 
 export function buildAllArt() {
   return {
@@ -9,5 +10,6 @@ export function buildAllArt() {
     platforms: buildPlatforms(),
     creatures: buildCreatures(),
     tiles: buildTiles(),
+    trees: buildTrees(),
   };
 }
