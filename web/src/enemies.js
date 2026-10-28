@@ -1,10 +1,15 @@
 import { W, H, GRAVITY } from './config.js';
-import { TAU, clamp } from './util.js';
+import { TAU, clamp, RNG } from './util.js';
 
 // Enemies that fit the fairy tale: crows patrol the air between the trees,
 // spiders dangle from branches on a thread, and the witch sweeps in on her
 // broom. Crows and spiders can be stomped from above (pogo!), the witch must
 // be dodged.
+//
+// Every random value that can touch a collision (flight phase, thread phase,
+// a squirrel's moods) comes from the RNG handed in, so a seeded round replays
+// exactly and the simulator is reproducible; Math.random is only used for
+// particles.
 
 let nextId = 1;
 
@@ -18,13 +23,13 @@ class Enemy {
 export class Crow extends Enemy {
   // `track` (0..1) makes the crow drift toward the prince's height when he is
   // near; 0 at low altitude (pure patrol), 1 near the top of the tower.
-  constructor(x, y, dir, speed, track = 0) {
+  constructor(x, y, dir, speed, track = 0, rng = new RNG()) {
     super(x, y);
     this.kind = 'crow';
     this.dir = dir; this.speed = speed; this.track = track;
     this.baseY = y;
     this.w = 62; this.h = 40;
-    this.phase = Math.random() * TAU;
+    this.phase = rng.range(0, TAU);
     this.vy = 0; this.spin = 0;
     this.flap = 0;
     this.alert = 0;
@@ -71,13 +76,13 @@ export class Crow extends Enemy {
 export class Spider extends Enemy {
   // Bobs on its thread; with `lunge` > 0 it drops at the prince when he
   // passes underneath, then slowly climbs back up.
-  constructor(x, anchorY, minLen, maxLen, speed, lunge = 0) {
+  constructor(x, anchorY, minLen, maxLen, speed, lunge = 0, rng = new RNG()) {
     super(x, anchorY - minLen);
     this.kind = 'spider';
     this.anchorY = anchorY;       // underside of the branch it hangs from
     this.minLen = minLen; this.maxLen = maxLen; this.speed = speed; this.lunge = lunge;
     this.w = 52; this.h = 40;
-    this.phase = Math.random() * TAU;
+    this.phase = rng.range(0, TAU);
     this.squish = 0;
     this.frame = 0;
     this.extra = 0;               // extra thread length during a lunge
@@ -126,15 +131,18 @@ export class Spider extends Enemy {
 // from above stomps it; it bites if it reaches him while he is crouched on
 // the branch or passing through it. Falls with the branch if that crumbles.
 export class Squirrel extends Enemy {
-  constructor(platform, offset, speed, alertness = 1) {
+  constructor(platform, offset, speed, alertness = 1, rng = new RNG()) {
     super(platform.x + offset, platform.y);
     this.kind = 'squirrel';
     this.platform = platform;
     this.speed = speed; this.alertness = alertness;
+    this.rng = rng;
     this.w = 52; this.h = 40;
-    this.dir = Math.random() < 0.5 ? -1 : 1;
+    this.dir = rng.sign();
     this.state = 'sit';            // sit | run | dash | falling
-    this.stateT = Math.random() * 1.5;
+    this.stateT = rng.range(0, 1.5);
+    this.sitFor = rng.range(1.2, 2.7);   // how long the current sit / run lasts
+    this.runFor = rng.range(1.4, 3.4);
     this.frame = 0;
     this.vy = 0; this.spin = 0;
     this.chirpCooldown = 0;
@@ -163,12 +171,12 @@ export class Squirrel extends Enemy {
       // the branch can bounce away before it arrives
       this.x += this.dir * this.speed * (1.3 + 0.6 * this.alertness) * dt;
     } else if (this.state === 'dash') {
-      this.state = 'run'; this.stateT = 0;
+      this.state = 'run'; this.stateT = 0; this.runFor = this.rng.range(1.4, 3.4);
     } else if (this.state === 'sit') {
-      if (this.stateT > 1.2 + Math.random() * 1.5) { this.state = 'run'; this.stateT = 0; }
+      if (this.stateT > this.sitFor) { this.state = 'run'; this.stateT = 0; this.runFor = this.rng.range(1.4, 3.4); }
     } else {
       this.x += this.dir * this.speed * dt;
-      if (this.stateT > 1 + Math.random() * 2 && Math.random() < 0.02) { this.state = 'sit'; this.stateT = 0; }
+      if (this.stateT > this.runFor) { this.state = 'sit'; this.stateT = 0; this.sitFor = this.rng.range(1.2, 2.7); }
     }
     // stay on the branch, turn at the ends
     if (this.x < this.left) { this.x = this.left; this.dir = 1; }

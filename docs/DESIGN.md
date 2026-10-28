@@ -382,7 +382,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   before every push; catch exceptions and regressions, not feel.
 - Gameplay simulator (`web/dev/sim.html`, `tools/analyze.mjs`): real game
   logic, scripted players (kid / good, bold / cautious), heights, deaths,
-  hits per 100 m by band. See `docs/ANALYSIS-phase1.md`.
+  hits per 100 m by band. See `docs/ANALYSIS-phase1.md`. A seed replays
+  exactly (enemies, pickups and the gusts that swing the braid roll on
+  seeded streams), so two builds are compared on paired seeds; a batch of
+  the same seeds gives the same numbers every time.
 - Generator stress test: ~3900 rows, every consecutive pair reachable even
   with the camera far above the model.
 - Real-device checks stay manual (iOS audio, tilt, performance).
@@ -444,3 +447,22 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   both builds and needs a better model before it can guard this. The
   branch box now really scales with the length (tree diversity scaled
   only the drawn width).
+- 2026-10-28: Engine hardening (`fix/engine-hardening`) after a technical
+  review. A thrown error no longer ends the frame loop: the frame is
+  dropped and a persistent error stops the game with a message instead of
+  a frozen picture; a failing boot shows a message instead of a blank
+  page. The fixed 1/120 s step became a semi-fixed step (each frame is
+  split into equal steps no longer than 1/120 s), which removes the
+  skipped or doubled frames at 90 and 144 Hz and the boost taps that were
+  lost in frames without a step (measured: 17 % of taps at 144 Hz, 49 % at
+  240 Hz, now 0 %); the boost queue survives a frame instead of being
+  cleared every frame. Enemies, pickups and the gusts draw their random
+  values from seeded streams, and hearts and the witch have streams of
+  their own, so a seeded round lays out the same tower however it is
+  played and the simulator is reproducible (40 of 40 seeds identical,
+  before 1 of 40; the measured deltas in the two entries above were within
+  that noise and should be re-read with paired seeds). The pixel font is
+  served from `web/fonts/` (OFL) instead of Google Fonts, and the canvas
+  keeps out of the phone's safe areas (notch, home indicator) in
+  full-screen mode. Verified in headless Chrome: WebGL context loss and
+  restore, WebGL1 shader fallback, 40 s heap flat.

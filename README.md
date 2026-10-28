@@ -114,7 +114,9 @@ procedurally in `web/src/art/` in the chunky 4-px style of the prototype's
 background mock-up, kept as `web/dev/bg.png`, using its palette. The
 prince's colors and his hobby-horse pogo stick follow the original app
 icon, which also serves as the web icon (`web/icons/`). `web/dev/sprites.html` shows every generated sprite with its
-anchor. To use hand-drawn art instead, replace the sprite objects returned
+anchor. The pixel font, Press Start 2P (SIL Open Font License, see
+`web/fonts/OFL.txt`), is served from `web/fonts/`, so the game has no
+runtime dependency on a font CDN. To use hand-drawn art instead, replace the sprite objects returned
 by the `build*` functions in `web/src/art/index.js` with
 `{ canvas: <image>, w, h, ax, ay }` entries of the same anchors; the atlas
 builder picks them up unchanged.
@@ -171,7 +173,9 @@ Everything sits in a root container that carries the CRT filter.
 `web/dev/sprites.html` shows every generated sprite. `web/dev/sim.html`
 runs the game logic headlessly with a scripted player; drive it with
 `node tools/analyze.mjs <url> <runs> <kid|good> <bold|cautious>` to get
-heights, deaths and hits per 100 m (see `docs/ANALYSIS-phase1.md`).
+heights, deaths and hits per 100 m (see `docs/ANALYSIS-phase1.md`). Runs
+are reproducible: the same seed gives the same round, so builds are
+compared on paired seeds.
 
 ### Tuning
 

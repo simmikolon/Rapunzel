@@ -2,7 +2,7 @@ import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFS
 import { Platform } from './platforms.js';
 import { Crow, Spider, Squirrel } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
-import { lerp, invLerp, clamp } from './util.js';
+import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt } from './altitude.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
@@ -69,9 +69,14 @@ function tierAt(y) {
 export class Level {
   constructor(world, rng) {
     this.world = world;
-    this.rng = rng;
+    this.rng = rng;              // the geometry stream: rows, lengths, enemies, suns, lanterns
+    this.rngHearts = rng;        // hearts depend on the prince's state, so they get a stream of their own
     this.forceLen = null;        // dev: every branch gets this length class
   }
+
+  // A fresh stream for an entity that keeps rolling after it was spawned (a
+  // squirrel's moods), seeded from the geometry stream so it replays too.
+  child() { return new RNG(this.rng.int(0, 0x7fffffff)); }
 
   reset() {
     this.nextY = 300;
@@ -139,7 +144,7 @@ export class Level {
       || platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'normal');
     if (!branch) return null;
     const T = tierAt(branch.y);
-    const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1));
+    const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1), this.child());
     this.world.enemies.push(sq);
     return sq;
   }
@@ -212,14 +217,14 @@ export class Level {
       const cy = y + gap * r.range(0.4, 0.7);
       const cx = r.range(-W / 2, W / 2);
       const track = clamp((T.index - 1.5) / 2.5, 0, 1);
-      this.world.enemies.push(new Crow(cx, cy, dir, r.range(T.crowSpeed[0], T.crowSpeed[1]), track));
+      this.world.enemies.push(new Crow(cx, cy, dir, r.range(T.crowSpeed[0], T.crowSpeed[1]), track, this.child()));
     }
     if (y > 6500 && r.chance(T.spider * P.enemy * zoneMul(y, 'spider'))) {
       const branch = platforms.find((p) => p.kind === 'branchL' || p.kind === 'branchR');
       if (branch) {
         const sx = branch.x + r.range(-50, 50);
         const lunge = clamp((T.index - 2) / 2, 0, 1);
-        this.world.enemies.push(new Spider(sx, y - 28, 50, r.range(180, 300), r.range(1.4, 2.4), lunge));
+        this.world.enemies.push(new Spider(sx, y - 28, 50, r.range(180, 300), r.range(1.4, 2.4), lunge, this.child()));
       }
     }
 
@@ -229,7 +234,7 @@ export class Level {
     // A stub is worth aiming for: most carry a small arc of suns.
     const stub = platforms.find((p) => p.len === 'stub');
     if (stub && r.chance(kinds.length > 1 ? 0.7 : 0.4)) {
-      for (let i = 0; i < 3; i++) { const t = i - 1; this.world.pickups.push(new Sun(stub.x + t * 44, stub.y + 70 + (1 - t * t) * 30)); }
+      for (let i = 0; i < 3; i++) { const t = i - 1; this.world.pickups.push(new Sun(stub.x + t * 44, stub.y + 70 + (1 - t * t) * 30, r)); }
     }
     if (r.chance(Math.min(0.9, T.sun * P.sun))) {
       const n = r.int(3, 5);
@@ -237,21 +242,23 @@ export class Level {
       const baseY = y + gap * 0.5;
       for (let i = 0; i < n; i++) {
         const t = (i / (n - 1)) * 2 - 1;
-        this.world.pickups.push(new Sun(cx + t * 110, baseY + (1 - t * t) * 70));
+        this.world.pickups.push(new Sun(cx + t * 110, baseY + (1 - t * t) * 70, r));
       }
     }
     // A lantern likes a long branch: a little likelier there, and it sits on it.
     const longBranch = platforms.find((p) => p.len === 'long' && !p.dry);
     if (r.chance(T.lantern * P.lantern * (longBranch ? 1.6 : 1))) {
-      this.world.pickups.push(new Lantern(longBranch ? longBranch.x + longBranch.def.dir * 60 : r.range(-W / 2 + 100, W / 2 - 100), y + 80));
+      this.world.pickups.push(new Lantern(longBranch ? longBranch.x + longBranch.def.dir * 60 : r.range(-W / 2 + 100, W / 2 - 100), y + 80, r));
     }
     // Hearts: a chance once one is missing, and a pity timer that guarantees
-    // one before long when the prince is down to his last heart.
+    // one before long when the prince is down to his last heart. They roll on
+    // their own stream so the geometry does not change with how he plays.
     this.rowsSinceHeart++;
     const hearts = this.world.player.hearts;
+    const rh = this.rngHearts;
     const pity = hearts <= 1 && this.rowsSinceHeart > 8;
-    if (pity || (this.rowsSinceHeart > 12 && hearts < 3 && r.chance(0.25))) {
-      this.world.pickups.push(new Heart(r.range(-200, 200), y + gap * 0.5));
+    if (pity || (this.rowsSinceHeart > 12 && hearts < 3 && rh.chance(0.25))) {
+      this.world.pickups.push(new Heart(rh.range(-200, 200), y + gap * 0.5, rh));
       this.rowsSinceHeart = 0;
     }
 

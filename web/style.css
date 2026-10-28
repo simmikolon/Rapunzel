@@ -1,3 +1,13 @@
+/* The pixel font is served from here (SIL Open Font License, see
+   fonts/OFL.txt) so the game has no runtime dependency on a font CDN. */
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/press-start-2p-latin.woff2") format("woff2");
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -15,6 +25,10 @@ html, body {
 #stage {
   position: fixed;
   inset: 0;
+  /* Keep the picture out of the notch / status bar and the home indicator
+     when the game runs full-screen from the home screen. */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,13 +49,23 @@ html, body {
 }
 
 #game {
-  /* Always keep the phone portrait aspect ratio (768:1364 ~ 9:16). */
+  /* Always keep the phone portrait aspect ratio (768:1364 ~ 9:16) inside the
+     safe area; dvh follows a mobile browser's collapsing toolbars. */
+  --avail-w: calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  --avail-h: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   aspect-ratio: 768 / 1364;
-  width: min(100vw, calc(100vh * 768 / 1364));
+  width: min(var(--avail-w), calc(var(--avail-h) * 768 / 1364));
   height: auto;
-  max-height: 100vh;
+  max-height: var(--avail-h);
   display: block;
   background: #1e3c3f;
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.55);
   touch-action: none;
+}
+
+@supports (height: 100dvh) {
+  #game {
+    --avail-w: calc(100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+    --avail-h: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
 }
