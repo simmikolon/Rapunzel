@@ -87,3 +87,21 @@ export function makeBeamTexture(size = 64) {
   }
   return new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear', label: 'beam' }) });
 }
+
+// Fog puff: a wide plateau that only softens toward the rim, so a wisp
+// actually covers what it sits on (the glow disc fades too early for fog).
+export function makeFogTexture(size = 128) {
+  const canvas = makeCanvas(size, size);
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const dx = (x + 0.5) / size - 0.5, dy = (y + 0.5) / size - 0.5;
+    const r = Math.sqrt(dx * dx + dy * dy) * 2;
+    const t = Math.min(1, Math.max(0, (r - 0.35) / 0.65));
+    const a = 1 - t * t * (3 - 2 * t);
+    const i = (y * size + x) * 4;
+    img.data[i] = 255; img.data[i + 1] = 255; img.data[i + 2] = 255; img.data[i + 3] = Math.round(a * 255);
+  }
+  ctx.putImageData(img, 0, 0);
+  return new Texture({ source: new CanvasSource({ resource: canvas, scaleMode: 'linear', label: 'fog' }) });
+}

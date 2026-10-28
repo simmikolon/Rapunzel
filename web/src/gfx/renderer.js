@@ -1,7 +1,7 @@
 import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, Color } from '../../vendor/pixi.min.mjs';
 import { W, H, PX } from '../config.js';
 import { makeCanvas } from '../art/sprite.js';
-import { buildAtlas, makeGlowTexture, makeBeamTexture, canvasTexture } from './atlas.js';
+import { buildAtlas, makeGlowTexture, makeBeamTexture, makeFogTexture, canvasTexture } from './atlas.js';
 import { BloomFilter, CRTFilter } from './filters.js';
 
 // WebGL renderer (PixiJS) behind an immediate-mode facade. The game keeps
@@ -52,6 +52,7 @@ export class Renderer {
     this.white = this.atlas.white;
     this.glowTex = makeGlowTexture(128);
     this.beamTex = makeBeamTexture(64);
+    this.fogTex = makeFogTexture(128);
     // Sky: a 1 x 2 strip, linearly filtered; stretched to twice the screen
     // height and offset by half of it so the two texel centres sit exactly on
     // the top and bottom edges and the GPU interpolates the gradient.
@@ -267,8 +268,9 @@ export class Renderer {
     sp.tint = c.rgb;
   }
 
-  // Soft elliptical cloud of color (fog wisps): the glow disc stretched to
-  // rx x ry, optionally rotated.
+  // Soft elliptical cloud of color (fog wisps): the fog disc (wide plateau,
+  // soft rim) stretched to rx x ry, optionally rotated; o.soft uses the
+  // glow disc instead for a gentler, gradient look.
   puff(cx, cy, rx, ry, color, alpha = 1, o) {
     this._puff(this.cur, cx, cy, rx, ry, color, alpha, o, 1);
     if (o && o.glow) this._puff(this.layers.glow, cx, cy, rx, ry, color, alpha, o, o.glow);
@@ -276,7 +278,7 @@ export class Renderer {
   _puff(L, cx, cy, rx, ry, color, alpha, o, mul) {
     const sp = this._sprite(L);
     const c = this._col(color);
-    sp.texture = this.glowTex;
+    sp.texture = (o && o.soft) ? this.glowTex : this.fogTex;
     sp.blendMode = (o && o.blend) || 'normal';
     sp.pivot.set(64, 64);
     sp.position.set(cx, cy);
