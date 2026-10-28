@@ -221,8 +221,8 @@ export class World {
     let s;
     const T = this.art.trees;
     switch (p.kind) {
-      case 'branchL': s = p.dry ? T.branchLDry : T.styles[p.style].branchL[p.variant]; break;
-      case 'branchR': s = p.dry ? T.branchRDry : T.styles[p.style].branchR[p.variant]; break;
+      case 'branchL': s = p.dry ? (T.branchLDry[p.len] || T.branchLDry.normal) : T.styles[p.style].branchL[p.len][p.variant]; break;
+      case 'branchR': s = p.dry ? (T.branchRDry[p.len] || T.branchRDry.normal) : T.styles[p.style].branchR[p.len][p.variant]; break;
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;

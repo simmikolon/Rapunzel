@@ -84,7 +84,7 @@ shell first and filling it later. Conditions that make this hold up:
   tuned before the next one starts.
 - **Dev helpers** that grow with need: ✅ `?at=150` starts at an altitude,
   `?spawn=squirrel` puts an element on the next branch, `?dev=1` shows
-  altitude and zone. 💡 later: toggle invulnerability, freeze the witch,
+  altitude and zone, `?len=stub` makes every branch one length class. 💡 later: toggle invulnerability, freeze the witch,
   show hitboxes.
 
 Workflow: one short branch per element or zone; Vercel gives each branch a
@@ -213,8 +213,19 @@ is a pool to draw from, not a promise.
   anchored at their root on the trunk, so a short branch is a short reach;
   the surface height and the collision box are unchanged. Dry branches
   keep one universal grey look so they stay readable.
+- ✅ branch lengths, the first difficulty that sits in the geometry: stub
+  (58 px box, a leaf knob or a snapped stump), short (106 px), normal
+  (178 px) and long (282 px, reaching the centre). The prince's 40 px body
+  must overlap the box, so the landing window is the box plus 40 px.
+  Rules: stubs and shorts are never dry and never in a breather; a stub
+  stands alone in a row only from tier 2.5 with the last safe row within
+  1.2 beats below it, never twice within two rows, and most stubs carry a
+  three-sun arc as the reward for aiming; long branches only in
+  single-branch rows (never crossing the braid at a ribbon, never two at
+  one height), more of them in breathers, squirrels and lanterns prefer
+  them. Stubs start in the deep forest zone.
 - 💡 thorny branch (do not land), icy branch (slides), cross branch
-  (barrier), double-length and tiny branches.
+  (barrier).
 - 💡 more ribbon and bow types on the hair: swinging bow, sticky bow that
   stops you, tiny bow, a bow that changes the braid color.
 - 💡 cloud platforms (above the trees), star and asteroid platforms (space).
@@ -333,7 +344,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
-| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone); 🔜 thorny branches, cross branch; sound later | in progress |
+| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
 | 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
 | 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
@@ -358,6 +369,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Safe gap guarantee | 520 px between non-crumbling platforms |
 | Tier altitudes | 0, 35, 100, 220, 400, 700 m (interpolated) |
 | Pacing | 90 m cycles, last 15 m a breather |
+| Branch lengths (box) | stub 58, short 106, normal 178, long 282 px; normal and long ± 12 % |
+| Branch length chances (tier 0 → 5) | short 0 → 0.28, stub 0 → 0.20 (from tier 2, deep forest on), long 0.10 → 0.12 |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -420,3 +433,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   lianas drawn by hash so they are stable. Branch boxes keep the surface
   height; length varies ±12 %, anchored at the trunk. Simulator sanity
   (10 bold runs): median 431 m, 0.9 hits per 100 m, unchanged.
+- 2026-10-28: Branch lengths (`element/branch-lengths`, plan in
+  `docs/plans/branch-lengths.md`): stub, short, normal and long classes
+  with their own drawings, generator rules that keep a stub a challenge
+  rather than a trap, and `?len=` to play one class. Simulator, same bot
+  and seeds, good bold, 40 runs: median 409 m (baseline 338), 0.93 hits
+  per 100 m (1.03), falls 50 % of deaths (42 %), doubling in the 100 m
+  band where stubs begin. The bot now aims for the bigger platform of a
+  row; the analyzer takes a seed base. The kid bot falls before 100 m in
+  both builds and needs a better model before it can guard this. The
+  branch box now really scales with the length (tree diversity scaled
+  only the drawn width).

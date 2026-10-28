@@ -14,13 +14,25 @@ import { TAU } from './util.js';
 //   solid from below (the original "bottomCollidable" flag -> bonk).
 export const KIND = {
   // Branches are anchored at their root on the trunk (|x| = 284) and reach
-  // inward; `w` scales with the branch's length scale (0.88 .. 1.12).
+  // inward. Their box comes from the length class (BRANCH_LEN) times a
+  // small scale (0.88 .. 1.12 for normal and long ones); `w` is the normal.
   branchL: { w: 178, cx: -195, root: -284, dir: 1, surface: 0, bounce: JUMP_VY, trunk: 'L' },
   branchR: { w: 178, cx: 195, root: 284, dir: -1, surface: 0, bounce: JUMP_VY, trunk: 'R' },
   ribbon:  { w: 104, cx: 0, surface: 0, bounce: JUMP_VY, onBraid: true, layer: PARALLAX_TOWER },
   bow:     { w: 124, cx: 0, surface: 0, bounce: SPRING_VY, onBraid: true, layer: PARALLAX_TOWER },
   swing:   { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
+};
+
+// Branch length classes: the box width (the sprite is 22 px longer: 11 px
+// of root inside the trunk, 11 px of leaves past the tip) and the sprite
+// length in art px. The prince's 40 px body must overlap the box, so the
+// landing window is the box plus 40 px.
+export const BRANCH_LEN = {
+  stub:   { box: 58,  art: 20 },
+  short:  { box: 106, art: 32 },
+  normal: { box: 178, art: 50 },
+  long:   { box: 282, art: 76 },
 };
 
 let nextId = 1;
@@ -30,11 +42,13 @@ export class Platform {
     this.id = nextId++;
     this.kind = kind;
     this.def = KIND[kind];
-    this.lenScale = opts.lenScale || 1;   // branches: length relative to the drawn sprite
-    this.variant = opts.variant || 0;     // branches: which of the six drawings
+    this.len = opts.len || 'normal';      // branches: length class (BRANCH_LEN)
+    this.lenScale = opts.lenScale || 1;   // branches: small scale on top of the class
+    this.variant = opts.variant || 0;     // branches: which drawing of the class
     this.style = opts.style || 0;         // branches: tree style (zone look)
     this.tint = opts.tint || null;        // branches: slight bark tint
-    this.baseX = opts.x != null ? opts.x : (this.def.root != null ? this.def.root + this.def.dir * (this.def.w * this.lenScale) / 2 : this.def.cx);
+    this.boxW = (this.def.root != null ? BRANCH_LEN[this.len].box : this.def.w) * this.lenScale;
+    this.baseX = opts.x != null ? opts.x : (this.def.root != null ? this.def.root + this.def.dir * this.boxW / 2 : this.def.cx);
     this.x = this.baseX;              // current center x (ribbons sway)
     this.layer = this.def.layer || 1; // parallax factor of the layer it belongs to
     this.ly = opts.ly != null ? opts.ly : y;   // height in layer coordinates
@@ -57,9 +71,9 @@ export class Platform {
   static worldToLayer(y, f, camY) { return y - (camY - CAMERA_START_Y) * (1 - f); }
   static layerFactor(kind) { return KIND[kind].layer || 1; }
 
-  get w() { return this.def.w * this.lenScale; }
-  get left() { return this.x - this.def.w / 2; }
-  get right() { return this.x + this.def.w / 2; }
+  get w() { return this.boxW; }
+  get left() { return this.x - this.boxW / 2; }
+  get right() { return this.x + this.boxW / 2; }
   get bounceVy() { return this.dry ? WEAK_JUMP_VY : this.def.bounce; }
   get solidBelow() { return !!this.def.solidBelow; }
   get bottom() { return this.y - (this.def.thickness || 0); }

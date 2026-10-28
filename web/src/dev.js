@@ -2,13 +2,14 @@
 //   ?at=150          start the round at 150 m
 //   ?spawn=squirrel  put that element on the next branch above the prince
 //   ?dev=1           show altitude and zone in the corner
+//   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER } from './config.js';
-import { Platform } from './platforms.js';
+import { Platform, BRANCH_LEN } from './platforms.js';
 import { zoneAt } from './level.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
-  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1' };
+  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '' };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
@@ -27,6 +28,11 @@ export function startAt(world, metres) {
   world.platforms.push(new Platform('branchL', y - 10)); // something to land on at the start
   world.enemies.length = 0; world.pickups.length = 0;
   world.level.generateUpTo(world.cam.top + 900);
+}
+
+// Force a branch length class for the whole round (before the level generates).
+export function forceLen(world, len) {
+  if (len && BRANCH_LEN[len]) world.level.forceLen = len;
 }
 
 // Spawn an element on the first healthy branch above the prince.
