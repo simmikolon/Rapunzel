@@ -219,9 +219,10 @@ export class World {
   drawPlatform(g, p) {
     const A = this.art.platforms;
     let s;
+    const T = this.art.trees;
     switch (p.kind) {
-      case 'branchL': s = p.dry ? A.branchLDry : A.branchL; break;
-      case 'branchR': s = p.dry ? A.branchRDry : A.branchR; break;
+      case 'branchL': s = p.dry ? T.branchLDry : T.styles[p.style].branchL[p.variant]; break;
+      case 'branchR': s = p.dry ? T.branchRDry : T.styles[p.style].branchR[p.variant]; break;
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
@@ -232,6 +233,7 @@ export class World {
     const opts = {};
     if (p.state === 'breaking') { opts.rot = (p.kind === 'branchL' ? -1 : 1) * p.t * 0.9; opts.alpha = clamp(1 - p.t / 0.6, 0, 1); }
     else if (p.wobble) opts.rot = p.wobble * 0.004;
+    if (p.def.root != null) { opts.sx = p.lenScale; if (p.tint && !p.dry) opts.tint = p.tint; }
     if (p.kind === 'swing') {
       // ropes up into the canopy
       const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;

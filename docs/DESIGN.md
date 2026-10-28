@@ -207,6 +207,12 @@ is a pool to draw from, not a promise.
 
 **Platforms**
 - ✅ healthy branch, ✅ dry branch, ✅ ribbon, ✅ bow spring, ✅ plank swing.
+- ✅ branch variety: six drawings per side (straight, gnarled, forked,
+  knobby, mossy with a mushroom shelf, with a nest) in the look of the
+  zone's tree, a slight bark tint and a length of 88–112 %. Branches are
+  anchored at their root on the trunk, so a short branch is a short reach;
+  the surface height and the collision box are unchanged. Dry branches
+  keep one universal grey look so they stay readable.
 - 💡 thorny branch (do not land), icy branch (slides), cross branch
   (barrier), double-length and tiny branches.
 - 💡 more ribbon and bow types on the hair: swinging bow, sticky bow that
@@ -257,6 +263,14 @@ is a pool to draw from, not a promise.
 - ✅ boughs hanging from the trunks; birds perch on them and take off when
   the prince comes near; acorns drop from them now and then.
 - ✅ owls blink in the trunks' knot holes (deep forest and night).
+- ✅ a tree per zone (`treeStyleAt`): oak on the forest floor, mossy
+  giants in the deep forest, birch-like trunks at the windows, bare tops
+  above the trees; trunk tiles crossfade over 30 m at each boundary.
+- ✅ trunk life: moss, cracks, woodpecker holes, fungus shelves, lichen
+  and burls scattered per tile; roots at the lawn; climbing vines (ivy,
+  thorny tendrils with red barbs, flowering creepers) winding across tile
+  boundaries; lianas and hanging moss that sway with the gusts. Mix and
+  density come from the zone's tree.
 - ✅ butterflies loop around branch tips and flee a landing (floor and
   deep forest).
 - ✅ fireflies gather around lanterns and scatter from the prince.
@@ -319,7 +333,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
-| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light; 🔜 thorny branches, cross branch; sound later | in progress |
+| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone); 🔜 thorny branches, cross branch; sound later | in progress |
 | 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
 | 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
@@ -398,3 +412,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   Sound for all of it deferred. Purely visual; simulator unaffected.
 - 2026-10-27: Fog was barely visible: reworked into three depths with a
   plateau puff texture, fog banks, weather coupling and a wake hole.
+- 2026-10-28: Trees looked like a repeating pattern (two branch drawings,
+  fixed length, four trunk tiles). `element/tree-diversity`, plan in
+  `docs/plans/tree-diversity.md`: tree art moved into `art/trees.js` with
+  a tree style per zone (oak, mossy giant, birch, bare), six branch
+  variants per side with length and tint, trunk overlays, vines and
+  lianas drawn by hash so they are stable. Branch boxes keep the surface
+  height; length varies ±12 %, anchored at the trunk. Simulator sanity
+  (10 bold runs): median 431 m, 0.9 hits per 100 m, unchanged.

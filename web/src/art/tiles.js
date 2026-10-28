@@ -57,35 +57,6 @@ function drawTower(t, variant) {
   }
 }
 
-// Tree trunk on the LEFT edge: 25 x 48 art px (bark runs vertically).
-function drawTrunk(t, variant) {
-  const { p, line, disc } = t;
-  const W = 25, H = 48;
-  p(0, 0, W, H, C.barkMid);
-  p(0, 0, 4, H, C.barkDark);         // deep shadow at the screen edge
-  p(18, 0, 6, H, C.barkLight);       // lit inner edge
-  p(22, 0, 2, H, C.barkMid);
-  p(24, 0, 1, H, C.barkDeep);        // outline against the sky
-  // vertical bark grain
-  for (let i = 0; i < 18; i++) {
-    const x = rng.int(3, W - 4), y = rng.int(0, H - 1), len = rng.int(4, 18);
-    line(x, y, x + rng.int(-1, 1), Math.min(H - 1, y + len), rng.chance(0.5) ? C.barkDark : C.barkDeep);
-    if (rng.chance(0.4)) line(x + 1, y, x + 1, Math.min(H - 1, y + len - 2), C.barkLight);
-  }
-  if (variant === 1) {
-    // moss clumps
-    for (let i = 0; i < 5; i++) { const x = rng.int(6, W - 8), y = rng.int(2, H - 6); disc(x, y, rng.int(1, 3), C.mossDark); p(x - 1, y - 1, 2, 1, C.moss); }
-  } else if (variant === 2) {
-    // knot hole
-    disc(12, 22, 5, C.barkDeep); disc(12, 22, 3, C.barkShadow); p(9, 18, 2, 1, C.barkLight);
-    for (let i = 0; i < 3; i++) { const x = rng.int(6, W - 8), y = rng.int(2, H - 6); disc(x, y, 2, C.mossDark); }
-  } else if (variant === 3) {
-    // climbing ivy
-    let y = 0, x = 16;
-    while (y < H) { p(x, y, 1, 2, C.leafDark); if (rng.chance(0.5)) p(x + rng.int(-2, 2), y, 2, 2, C.leaf); x += rng.int(-1, 1); x = Math.max(6, Math.min(W - 5, x)); y += 2; }
-  }
-}
-
 // Distant forest, 192 x 48 art px: tall thin trunks and leaf streaks in the
 // teal palette of bg.png. Drawn darker and desaturated so it recedes.
 function drawForest(t, variant) {
@@ -220,8 +191,6 @@ function drawMoon(t) {
 
 export function buildTiles() {
   const tower = [0, 1, 2, 3].map((v) => makeSprite(95, 48, (t) => drawTower(t, v), { ax: 0.5, ay: 1 }));
-  const trunkL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawTrunk(t, v), { ax: 0, ay: 1 }));
-  const trunkR = trunkL.map(flipH);
   const forest = [0, 1].map((v) => makeSprite(192, 48, (t) => drawForest(t, v), { ax: 0.5, ay: 1 }));
   const ground = makeSprite(192, 36, (t) => drawGround(t), { ax: 0.5, ay: 0 }, { ayPx: 4 * PX });
   const braid = makeSprite(14, 12, (t) => drawBraidSegment(t), { ax: 0.5, ay: 0 });
@@ -235,5 +204,5 @@ export function buildTiles() {
   const birdL = birdR.map(flipH);
   const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
   const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
-  return { tower, trunkL, trunkR, forest, ground, braid, braidEnd, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
+  return { tower, forest, ground, braid, braidEnd, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }

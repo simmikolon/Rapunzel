@@ -3,6 +3,7 @@ import { Platform } from './platforms.js';
 import { Crow, Spider, Squirrel } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
 import { lerp, invLerp, clamp } from './util.js';
+import { treeStyleIndexAt } from './altitude.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -146,7 +147,13 @@ export class Level {
     let safe = false;
     for (const kind of kinds) {
       const opts = {};
-      if ((kind === 'branchL' || kind === 'branchR') && canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
+      if (kind === 'branchL' || kind === 'branchR') {
+        if (canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
+        opts.variant = r.int(0, 5);
+        opts.lenScale = r.range(0.88, 1.12);
+        opts.style = treeStyleIndexAt(y);
+        opts.tint = r.pick([null, null, '#f2ece4', '#e4ddd2', '#d8d4cc', '#e8e0d0']);
+      }
       const py = y + (kinds.length > 1 ? r.int(-16, 16) : 0);
       if (kind === 'ribbon' || kind === 'bow') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
       const p = new Platform(kind, py, opts);

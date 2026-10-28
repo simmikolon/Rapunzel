@@ -13,8 +13,10 @@ import { TAU } from './util.js';
 // - swing: a plank hung on ropes between the trees: landable on top and
 //   solid from below (the original "bottomCollidable" flag -> bonk).
 export const KIND = {
-  branchL: { w: 178, cx: -195, surface: 0, bounce: JUMP_VY, trunk: 'L' },
-  branchR: { w: 178, cx: 195, surface: 0, bounce: JUMP_VY, trunk: 'R' },
+  // Branches are anchored at their root on the trunk (|x| = 284) and reach
+  // inward; `w` scales with the branch's length scale (0.88 .. 1.12).
+  branchL: { w: 178, cx: -195, root: -284, dir: 1, surface: 0, bounce: JUMP_VY, trunk: 'L' },
+  branchR: { w: 178, cx: 195, root: 284, dir: -1, surface: 0, bounce: JUMP_VY, trunk: 'R' },
   ribbon:  { w: 104, cx: 0, surface: 0, bounce: JUMP_VY, onBraid: true, layer: PARALLAX_TOWER },
   bow:     { w: 124, cx: 0, surface: 0, bounce: SPRING_VY, onBraid: true, layer: PARALLAX_TOWER },
   swing:   { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
@@ -28,7 +30,11 @@ export class Platform {
     this.id = nextId++;
     this.kind = kind;
     this.def = KIND[kind];
-    this.baseX = opts.x != null ? opts.x : this.def.cx;
+    this.lenScale = opts.lenScale || 1;   // branches: length relative to the drawn sprite
+    this.variant = opts.variant || 0;     // branches: which of the six drawings
+    this.style = opts.style || 0;         // branches: tree style (zone look)
+    this.tint = opts.tint || null;        // branches: slight bark tint
+    this.baseX = opts.x != null ? opts.x : (this.def.root != null ? this.def.root + this.def.dir * (this.def.w * this.lenScale) / 2 : this.def.cx);
     this.x = this.baseX;              // current center x (ribbons sway)
     this.layer = this.def.layer || 1; // parallax factor of the layer it belongs to
     this.ly = opts.ly != null ? opts.ly : y;   // height in layer coordinates
@@ -51,7 +57,7 @@ export class Platform {
   static worldToLayer(y, f, camY) { return y - (camY - CAMERA_START_Y) * (1 - f); }
   static layerFactor(kind) { return KIND[kind].layer || 1; }
 
-  get w() { return this.def.w; }
+  get w() { return this.def.w * this.lenScale; }
   get left() { return this.x - this.def.w / 2; }
   get right() { return this.x + this.def.w / 2; }
   get bounceVy() { return this.dry ? WEAK_JUMP_VY : this.def.bounce; }

@@ -53,4 +53,27 @@ read as a repeating pattern once the atmosphere stopped hiding it.
 
 ## Status
 
-Filled in as steps land.
+All four steps landed in one pass.
+
+- `web/src/art/trees.js` holds the tree art: `TREE_STYLES` (palettes,
+  leaf type, overlay and vine mix, liana chance per style), six branch
+  variants per side and style, four trunk tiles per style (variant 2
+  keeps the owls' knot hole), the dry branch, and the overlay sprites.
+  `art/tiles.js` and `art/platforms.js` lost their trunk and branch
+  builders.
+- `treeStyleAt(y)` in `altitude.js` returns `{a, b, t}` for the crossfade
+  (±15 m around 120, 250 and 400 m); branches take the nearest style.
+- Branches: `KIND.branchL/R` now carry `root` and `dir`; `Platform` takes
+  `lenScale`, `variant`, `style`, `tint` from the generator and scales
+  its width. `world.drawPlatform` scales the sprite along its length.
+- Background: `drawTrees` blends trunk styles, then `drawTrunkOverlays`,
+  `drawVines` (polylines per 5-tile slot, leaves or barbs every 42 px)
+  and `drawLianas` (swaying with `atmo.gustEnv()`).
+- Checked: screenshots at 0, 60, 120, 160, 250, 300, 400, 450 m, the
+  sprite sheet (now walks nested art), simulator 10 bold runs: median
+  431 m, 0.9 hits per 100 m (was 388 m / 0.99 with the same build
+  tolerance), so no balance change.
+
+Fixed on the way: the crossfade only covered the lower half of a boundary
+(a tile just above it jumped to the pure new style); the giants' fungus
+shelves lined up like a ladder (now two per tile at random insets).
