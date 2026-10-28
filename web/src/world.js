@@ -9,6 +9,7 @@ import { Witch } from './enemies.js';
 import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp } from './util.js';
+import { hash } from './altitude.js';
 
 // One round of the game: entities, collisions, generation, FX callbacks.
 export class World {
@@ -27,8 +28,14 @@ export class World {
   }
 
   reset(seed) {
+    // Three streams from one seed: the level geometry, the hearts (their
+    // timing depends on the prince's state) and the events (the witch), so a
+    // seeded round lays out the same tower however it is played.
     this.rng = new RNG(seed);
+    this.rngEvents = new RNG(seed == null ? undefined : hash(seed + 1));
     this.level.rng = this.rng;
+    this.level.rngHearts = new RNG(seed == null ? undefined : hash(seed + 2));
+    this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
     this.enemies = [];
@@ -170,12 +177,12 @@ export class World {
     // The witch: telegraphed dives from a fixed altitude on, never during a
     // breather stretch, and with a long cooldown so she is an event.
     if (pl.maxY > this.nextWitchY && !this.enemies.some((e) => e.kind === 'witch') && !this.level.pacingAt(pl.maxY).breather) {
-      const side = this.rng.sign();
+      const side = this.rngEvents.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));
       this.audio.witchWarn();
       this.toast('The witch!', '#ff8a8a', 1.4);
-      this.nextWitchY = pl.maxY + this.rng.range(7500, 10500);
+      this.nextWitchY = pl.maxY + this.rngEvents.range(7500, 10500);
     }
     // Teach the boost shield the first time an enemy comes into view.
     if (!this.hintShown && this.enemies.some((e) => e.alive && !e.dead && e.kind !== 'witch' && e.y < this.cam.top && e.y > this.cam.y)) {

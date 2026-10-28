@@ -39,8 +39,10 @@ class Game {
     this.fxPreset = this.gfx.setPreset(PRESETS.includes(param) ? param : this.fxPreset);
     this.last = performance.now();
     this.dt = 0;
-    this.acc = 0;
-    this.STEP = 1 / 120;
+    this.STEP = 1 / 120;      // longest physics step: a frame is split into equal steps no longer than this
+    this.MAX_STEPS = 8;       // slower than that the game runs in slow motion rather than spiralling
+    this.frameErrors = 0;
+    this.halted = false;
     this.setupDpr();
     window.addEventListener('resize', () => this.setupDpr());
     document.addEventListener('visibilitychange', () => { if (document.hidden && this.mode === 'playing') this.setMode('paused'); });
@@ -101,12 +103,30 @@ class Game {
     let dt = (now - this.last) / 1000;
     this.last = now;
     if (dt > 0.25) dt = 0.25;        // tab was hidden: don't fast-forward
+    if (dt < 0) dt = 0;
     this.dt = dt;
-    this.input.poll(dt);
-    this.update(dt);
-    this.draw();
-    this.input.endFrame();
-    requestAnimationFrame((t) => this.frame(t));
+    // A thrown error must not end the loop: the frame is abandoned, the next
+    // one runs, and only a persistent error stops the game with a message
+    // instead of a frozen picture.
+    try {
+      this.input.poll(dt);
+      this.update(dt);
+      this.draw();
+      this.frameErrors = 0;
+    } catch (err) {
+      this.onFrameError(err);
+    } finally {
+      this.input.endFrame();
+    }
+    if (!this.halted) requestAnimationFrame((t) => this.frame(t));
+  }
+
+  onFrameError(err) {
+    console.error('frame failed', err);
+    this.frameErrors++;
+    if (this.frameErrors < 3) { this.notice('Something went wrong, carrying on', 2); return; }
+    this.halted = true;
+    showFallback(`Rapunzel hit an error and stopped: ${err && err.message ? err.message : err}. Reload the page to play again.`);
   }
 
   update(dt) {
@@ -126,19 +146,26 @@ class Game {
       case 'title': {
         this.world.update(dt, true);
         const tapped = input.consumeTap();
+        input.consumeBoost();            // boosts queue until a round consumes them; none belongs to the title
         // Taps on the title buttons (tilt, effects, sound) must not start the game.
         const onButton = input.taps.some((t) => input.zoneAt(t.x, t.y));
-        if (onButton) { input.consumeBoost(); break; }
-        if (this.modeT > 0.3 && tapped) { input.consumeBoost(); this.setMode('playing'); }
+        if (onButton) break;
+        if (this.modeT > 0.3 && tapped) this.setMode('playing');
         break;
       }
       case 'playing': {
         if (input.consumePause() || input.consumeButton('pause')) { this.setMode('paused'); audio.click(); break; }
-        // Fixed-step simulation for stable collisions at high speeds.
-        this.acc += dt;
-        let steps = 0;
-        while (this.acc >= this.STEP && steps < 8) { this.world.update(this.STEP); this.acc -= this.STEP; steps++; }
-        if (steps === 8) this.acc = 0;
+        // Semi-fixed step: the frame's time is split into equal steps no
+        // longer than STEP, so the simulation advances exactly once per
+        // display refresh at any rate (no skipped or doubled frames at 90 or
+        // 144 Hz, no tap lost in a frame without a step) while every step
+        // stays short enough for stable collisions at high speeds.
+        if (dt > 0) {
+          let n = Math.ceil(dt / this.STEP);
+          if (n > this.MAX_STEPS) { n = this.MAX_STEPS; dt = n * this.STEP; }
+          const h = dt / n;
+          for (let i = 0; i < n; i++) this.world.update(h);
+        }
         if (this.world.over) {
           this.isNewBest = this.world.heightM > this.best;
           if (this.isNewBest) { this.best = this.world.heightM; this.save(); }
@@ -151,8 +178,8 @@ class Game {
         break;
       }
       case 'gameover': {
+        input.consumeBoost();
         if (this.modeT > 0.8 && input.consumeTap()) {
-          input.consumeBoost();
           this.world.reset();
           this.setMode('playing');
         }
@@ -178,6 +205,7 @@ class Game {
 }
 
 function showFallback(message) {
+  if (document.getElementById('nowebgl')) return;
   const stage = document.getElementById('stage');
   const box = document.createElement('div');
   box.id = 'nowebgl';
@@ -187,17 +215,27 @@ function showFallback(message) {
 
 const boot = async () => {
   const canvas = document.getElementById('game');
-  const art = buildAllArt();
-  let gfx;
   try {
-    gfx = await createRenderer(canvas, art, FX);
+    const art = buildAllArt();
+    let gfx;
+    try {
+      gfx = await createRenderer(canvas, art, FX);
+    } catch (err) {
+      console.error('WebGL renderer failed to start', err);
+      showFallback('Rapunzel needs WebGL for this preview, and the browser did not provide it.');
+      return;
+    }
+    window.game = new Game(canvas, gfx, art);
   } catch (err) {
-    console.error('WebGL renderer failed to start', err);
-    showFallback('Rapunzel needs WebGL for this preview, and the browser did not provide it.');
-    return;
+    console.error('Rapunzel failed to start', err);
+    showFallback(`Rapunzel could not start: ${err && err.message ? err.message : err}`);
   }
-  window.game = new Game(canvas, gfx, art);
 };
+// Errors outside the frame loop (event handlers, async work) are logged and,
+// while the game is not up yet, shown instead of leaving a blank page.
+const running = () => !!(window.game && window.game.gfx);
+window.addEventListener('error', (e) => { if (!running()) showFallback(`Rapunzel could not start: ${e.message}`); });
+window.addEventListener('unhandledrejection', (e) => { const r = e.reason; console.error('unhandled rejection', r); if (!running()) showFallback(`Rapunzel could not start: ${r && r.message ? r.message : r}`); });
 if (document.fonts && document.fonts.load) {
   // Give the pixel font a moment to arrive; fall back to monospace if offline.
   Promise.race([document.fonts.load('16px "Press Start 2P"'), new Promise((r) => setTimeout(r, 1500))]).then(boot, boot);

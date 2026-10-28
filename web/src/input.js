@@ -179,5 +179,8 @@ export class Input {
     this.buttonHits.splice(i, 1);
     return true;
   }
-  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.boostQueued = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; }
+  // Per-frame flags are cleared here. The boost queue is not: it is consumed
+  // by the physics step that fires it, so a tap that arrives in a frame which
+  // runs no step (high refresh rates) still counts in the next one.
+  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; }
 }

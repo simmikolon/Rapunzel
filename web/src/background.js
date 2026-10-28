@@ -67,6 +67,9 @@ export class Background {
     this.atmo = new Atmosphere(art, r);
   }
 
+  // A new round reseeds what can touch gameplay (the gusts that swing the braid).
+  reset(rng) { this.atmo.reset(rng); }
+
   // Horizontal offset of the braid at world height y (a slow travelling wave).
   braidX(y, time) {
     const amp = this.swayAmp + this.atmo.gustEnv() * 40;   // gusts swing the braid a little wider

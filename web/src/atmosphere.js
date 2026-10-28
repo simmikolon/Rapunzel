@@ -9,7 +9,7 @@
 // (cam.layerY(f)); shafts and motes in screen space; life in world space.
 import { W, H, PARALLAX_TOWER } from './config.js';
 import { TILE_H, TOWER_W, TRUNK_W } from './art/tiles.js';
-import { invLerp, lerp, TAU, clamp, approach } from './util.js';
+import { invLerp, lerp, TAU, clamp, approach, RNG } from './util.js';
 import { deepForestAmount, shaftAmount, lifeAmount, hash } from './altitude.js';
 
 const SHAFT_ROT = 1.12, SHAFT_LEN = 2600;
@@ -36,6 +36,7 @@ export class Atmosphere {
     this.acorns = [];
     this.acornTimer = 3;
     this.gust = { timer: 10, t: -1, dur: 3, strength: 0, dir: 1 };
+    this.rngGust = new RNG();   // gusts widen the braid's sway, so they roll on a seeded stream (see reset)
     this.cloud = { cover: 0, target: 0, timer: 15, rate: 0.15 };
     this.nudge = 0;
     this.wasOff = true;
@@ -71,6 +72,13 @@ export class Atmosphere {
     for (let i = 0; i < n; i++) parts.push({ x: -60 + (i / (n - 1)) * (W + 120) + (Math.random() - 0.5) * 90, dy: (Math.random() - 0.5) * 160, rx: 240 + Math.random() * 160, ry: 150 + Math.random() * 110, k: 0.8 + Math.random() * 0.2, ph: Math.random() * TAU });
     return { f, ly: camF + H + 320, parts, drift: (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 14), vdrift: -(14 + Math.random() * 10), age: 0, a: 0.3 + Math.random() * 0.1 };
   }
+  // A new round: the gusts move the ribbons, so their timing comes from the
+  // round's seed; everything else here is visual and may stay where it is.
+  reset(rng) {
+    this.rngGust = rng;
+    this.gust = { timer: 10, t: -1, dur: 3, strength: 0, dir: 1 };
+  }
+
   // Fog thickens under cloud cover and thins while a gust blows through.
   get fogDensity() { return (0.78 + 0.5 * this.cloud.cover) * (1 - 0.45 * this.gustEnv()); }
 
@@ -100,7 +108,7 @@ export class Atmosphere {
     // gusts
     const g = this.gust;
     if (g.t >= 0) { g.t += dt; if (g.t > g.dur) g.t = -1; }
-    else { g.timer -= dt; if (g.timer <= 0) { g.t = 0; g.dur = 2.5 + Math.random() * 1.5; g.strength = 0.6 + Math.random() * 0.4; g.dir = Math.random() < 0.5 ? -1 : 1; g.timer = 14 + Math.random() * 10; } }
+    else { g.timer -= dt; if (g.timer <= 0) { const r = this.rngGust; g.t = 0; g.dur = r.range(2.5, 4); g.strength = r.range(0.6, 1); g.dir = r.sign(); g.timer = r.range(14, 24); } }
     const gust = this.gustEnv();
     // cloud cover: a slow random walk
     const c = this.cloud;
