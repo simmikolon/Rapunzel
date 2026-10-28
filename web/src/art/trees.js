@@ -153,6 +153,20 @@ function drawTrunk(t, style, variant, rng) {
   }
 }
 
+// Crown: the top of the LEFT trunk at the treeline, 25 x 48 art px. The
+// full width at the bottom tapers into a tip with a few bare twigs.
+function drawCrown(t, style) {
+  const { poly, line, p } = t;
+  const B = style.bark;
+  poly([[0, 48], [25, 48], [23, 38], [19, 28], [15, 20], [11, 13], [9, 10], [6, 14], [3, 24], [1, 36]], B.mid);
+  poly([[0, 48], [4, 48], [4, 38], [3, 30], [2, 24], [1, 36]], B.dark);
+  poly([[18, 48], [24, 48], [23, 38], [19, 28], [15, 20], [14, 22], [17, 30], [19, 40]], B.light);
+  poly([[24, 48], [25, 48], [23, 38], [22, 38]], B.deep);
+  line(8, 30, 10, 46, B.deep); line(13, 24, 15, 44, B.dark); line(6, 36, 7, 47, B.dark);
+  line(10, 10, 14, 1, B.dark); line(12, 5, 17, 3, B.dark); line(9, 11, 4, 3, B.dark); line(6, 6, 2, 5, B.dark); line(14, 4, 15, 0, B.dark);
+  p(11, 12, 2, 1, B.light);
+}
+
 // --- overlays scattered on the trunks (style independent) ---------------------
 function drawMoss(t, size) {
   const { disc, p } = t;
@@ -202,5 +216,6 @@ export function buildTrees() {
     burlL, burlR: flipH(burlL),
     rootsL, rootsR: flipH(rootsL),
   };
-  return { styles, branchRDry, branchLDry: { normal: flipH(branchRDry.normal), long: flipH(branchRDry.long) }, overlays };
+  const crownL = makeSprite(25, 48, (t) => drawCrown(t, TREE_STYLES[3]), { ax: 0, ay: 1 });
+  return { styles, branchRDry, branchLDry: { normal: flipH(branchRDry.normal), long: flipH(branchRDry.long) }, overlays, crownL, crownR: flipH(crownL) };
 }

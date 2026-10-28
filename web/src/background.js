@@ -2,7 +2,7 @@ import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
-import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt } from './altitude.js';
+import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
 
@@ -91,10 +91,12 @@ export class Background {
     }
     const ca = cloudAlpha(cam.y);
     if (ca > 0) {
+      // once cloud platforms are around, the far clouds sit back: thinner and bluer
+      const back = cloudAmount(cam.y);
       for (const c of this.clouds) {
         const sy = ((c.y - camF) % (2 * H) + 2 * H) % (2 * H) - H / 2;
         const sx = ((c.x + time * c.drift) % (W + 240) + (W + 240)) % (W + 240) - 120;
-        g.blit(this.art.tiles.clouds[c.v], sx, sy, { alpha: ca });
+        g.blit(this.art.tiles.clouds[c.v], sx, sy, { alpha: ca * (1 - 0.3 * back), tint: back > 0 ? '#dce9f6' : undefined });
       }
     }
   }
@@ -142,11 +144,14 @@ export class Background {
   // tree style of its height (crossfading near a zone boundary), then gets
   // hashed overlays, climbing vines and swaying lianas.
   drawTrees(g, cam, time) {
-    const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
+    const crownTile = Math.floor(TREELINE_Y / TILE_H);     // the trunks end here with a crown
+    const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.min(crownTile, Math.ceil(cam.top / TILE_H));
+    if (first > last) return;
     const T = this.art.trees;
     const gust = this.atmo.gustEnv();
     for (let k = first; k <= last; k++) {
       const sy = cam.sy(k * TILE_H);
+      if (k === crownTile) { g.blit(T.crownL, cam.ox, sy); g.blit(T.crownR, W + cam.ox, sy); continue; }
       const st = treeStyleAt(k * TILE_H);
       const vL = this.trunkVariant(k, 'L'), vR = this.trunkVariant(k, 'R');
       g.blit(T.styles[st.a].trunkL[vL], cam.ox, sy);
@@ -197,7 +202,8 @@ export class Background {
         const style = this.art.trees.styles[treeStyleAt(startY).a];
         if (!style.vines.length || (seed % 100) >= style.vineChance * 100) continue;
         const len = TILE_H * (3 + (hash(seed + 1) % 5));
-        const endY = startY + len;
+        const endY = Math.min(startY + len, TREELINE_Y - TILE_H);
+        if (endY <= startY) continue;
         if (endY < cam.y - 40 || startY > cam.top + 40) continue;
         const total = style.vines.reduce((a, v) => a + v[1], 0);
         let pick = hash(seed + 2) % total, kind = style.vines[0][0];
@@ -231,6 +237,7 @@ export class Background {
   drawLianas(g, cam, time, gust, first, last) {
     const leaves = this.art.tiles.leaves;
     for (let k = first - 2; k <= last; k++) {
+      if ((k + 1) * TILE_H > TREELINE_Y - TILE_H) break;
       const style = this.art.trees.styles[treeStyleAt(k * TILE_H).a];
       if (style.lianas <= 0) continue;
       for (const side of ['L', 'R']) {
@@ -262,6 +269,7 @@ export class Background {
     if (amount <= 0) return;
     const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
     for (let k = first; k <= last; k++) {
+      if (k * TILE_H >= TREELINE_Y - TILE_H) break;
       for (const side of ['L', 'R']) {
         if (this.trunkVariant(k, side) !== 2) continue;
         const cx = (side === 'L' ? 48 : W - 48) + cam.ox;

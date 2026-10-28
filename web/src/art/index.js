@@ -3,6 +3,7 @@ import { buildPlatforms } from './platforms.js';
 import { buildCreatures } from './creatures.js';
 import { buildTiles } from './tiles.js';
 import { buildTrees } from './trees.js';
+import { buildClouds } from './clouds.js';
 
 export function buildAllArt() {
   return {
@@ -11,5 +12,6 @@ export function buildAllArt() {
     creatures: buildCreatures(),
     tiles: buildTiles(),
     trees: buildTrees(),
+    clouds: buildClouds(),
   };
 }

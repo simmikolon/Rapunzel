@@ -1,11 +1,14 @@
 // Development helpers, enabled through URL parameters (harmless in play):
 //   ?at=150          start the round at 150 m
 //   ?spawn=squirrel  put that element on the next branch above the prince
+//   ?spawn=storm     turn the next cloud above the prince into a storm cloud
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER } from './config.js';
 import { Platform, BRANCH_LEN } from './platforms.js';
 import { zoneAt } from './level.js';
+import { TREELINE_Y } from './altitude.js';
+import { Lightning } from './enemies.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
@@ -25,7 +28,7 @@ export function startAt(world, metres) {
   world.nextMilestone = Math.floor(metres / 100) * 100 + 100;   // no stacked milestone toasts
   world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
-  world.platforms.push(new Platform('branchL', y - 10)); // something to land on at the start
+  world.platforms.push(y > TREELINE_Y ? new Platform('cloud', y - 10, { x: -190, cloud: 'thick' }) : new Platform('branchL', y - 10)); // something to land on at the start
   world.enemies.length = 0; world.pickups.length = 0;
   world.level.generateUpTo(world.cam.top + 900);
 }
@@ -41,6 +44,10 @@ export function spawnNear(world, element) {
   const p = world.player;
   const branches = world.platforms.filter((q) => (q.kind === 'branchL' || q.kind === 'branchR') && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y);
   if (element === 'squirrel' && branches[0]) world.level.spawnSquirrel([branches[0]]);
+  if (element === 'storm') {
+    const cloud = world.platforms.filter((q) => q.kind === 'cloud' && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y)[0];
+    if (cloud) { cloud.cloud = 'storm'; cloud.drift = null; cloud.vx = 0; world.enemies.push(new Lightning(cloud)); }
+  }
 }
 
 export function devLabel(world) {

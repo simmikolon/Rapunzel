@@ -95,6 +95,14 @@ export class Particles {
       g: 0.9, drag: 0.4, spin: (Math.random() - 0.5) * 8, shape: 'leaf', shrink: false,
     }));
   }
+  cloudPuff(x, y, w, n = 10) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * w, y: y + Math.random() * 12 - 4,
+      vx: (Math.random() - 0.5) * 140, vy: -20 + Math.random() * 90,
+      life: 0.5 + Math.random() * 0.4, size: 10 + Math.random() * 12, color: Math.random() < 0.6 ? '#f4f7f8' : '#d6e2e8',
+      g: -0.02, drag: 2.2, shape: 'square', shrink: true,
+    }));
+  }
   boostTrail(x, y) {
     this.burst(x, y, 3, () => ({
       x: x + (Math.random() - 0.5) * 24, y: y + Math.random() * 10,

@@ -4,6 +4,7 @@ import { buildAllArt } from '../src/art/index.js';
 import { World } from '../src/world.js';
 import { GRAVITY, JUMP_VY, W, H, PX_PER_METER } from '../src/config.js';
 import { RNG } from '../src/util.js';
+import { startAt } from '../src/dev.js';
 
 const STEP = 1 / 120;
 
@@ -51,14 +52,28 @@ class Bot {
     if (target && target.kind === 'swing' && target.y > p.y) target = { x: p.x < 0 ? -195 : 195, y: target.y, kind: 'side' };
     let axis = 0;
     if (target) {
-      let dx = target.x - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+      // a drifting cloud: aim where it will be when we come down on it
+      let aimX = target.x;
+      if (target.vx) {
+        const dy = target.y - p.y, disc = p.vy * p.vy - 2 * GRAVITY * dy;
+        const tl = disc >= 0 ? (p.vy + Math.sqrt(disc)) / GRAVITY : 0.6;
+        aimX = target.x + target.vx * tl;
+      }
+      let dx = aimX - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
       if (Math.abs(dx) > 16) axis = dx > 0 ? 1 : -1;
     }
     // Enemies in the way: within dodgeRange horizontally and in the body's vertical path.
     let threat = null;
     for (const e of w.enemies) {
-      if (!e.alive || e.dead || !e.hurtful || e.phase === 'warn') continue;
+      if (!e.alive || e.dead) continue;
       let dx = e.x - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+      if (e.kind === 'lightning') {
+        // keep out of the column while the storm cloud charges or strikes
+        const body = p.y + 110, under = body < e.y && body > e.y - 480;
+        if (e.phase !== 'calm' && under && Math.abs(dx) < 90) { if (!threat) threat = { e, dx: dx || 1, dy: e.y - body }; }
+        continue;
+      }
+      if (!e.hurtful || e.phase === 'warn') continue;
       const dy = e.y - (p.y + 110);
       const ahead = p.vy > 0 ? (dy > -80 && dy < 360) : (dy < 80 && dy > -360);
       if (Math.abs(dx) < this.s.dodgeRange && ahead) { if (!threat || Math.abs(dy) < Math.abs(threat.dy)) threat = { e, dx, dy }; }
@@ -92,13 +107,14 @@ function makeWorld(input) {
   return new World({ art, input, best: 0 });
 }
 
-export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900 } = {}) {
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0 } = {}) {
   const input = new BotInput();
   const world = makeWorld(input);
   world.reset(seed);
+  if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, height: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0 };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0 };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; origHurt(pl, src); };
@@ -119,16 +135,17 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
     witchSeen = wc;
   }
   stats.height = world.heightM;
+  stats.climb = Math.max(0, world.heightM - startM);
   stats.time = t;
   stats.cause = world.over ? world.player.deathCause : (world.heightM >= cap ? 'cap' : 'timeout');
   if (stats.cause === 'fell') stats.fellBand = band();
   return stats;
 }
 
-export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1 } = {}) {
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0 } = {}) {
   const all = [];
-  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap }));
-  return summarize(all, { runs, skill, policy, cap });
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM }));
+  return summarize(all, { runs, skill, policy, cap, startM });
 }
 
 function summarize(all, cfg) {
@@ -141,17 +158,17 @@ function summarize(all, cfg) {
   for (const s of all) for (const b of Object.keys(s.hitsByBand)) bands[b] = (bands[b] || 0) + s.hitsByBand[b];
   // metres climbed inside each 100 m band, summed over runs, for a rate
   const bandMetres = {};
-  for (const s of all) { for (let b = 0; b < s.height; b += 100) bandMetres[b] = (bandMetres[b] || 0) + Math.min(100, s.height - b); }
+  for (const s of all) { for (let b = Math.floor(s.startM / 100) * 100; b < s.height; b += 100) bandMetres[b] = (bandMetres[b] || 0) + Math.min(100, s.height - b) - Math.max(0, s.startM - b); }
   const causes = {};
   for (const s of all) causes[s.cause] = (causes[s.cause] || 0) + 1;
   const fallsByBand = {};
   for (const s of all) if (s.fellBand != null) fallsByBand[s.fellBand] = (fallsByBand[s.fellBand] || 0) + 1;
   const deaths = all.filter((s) => s.cause === 'fell' || s.cause === 'caught').length;
-  const totalM = heights.reduce((a, b) => a + b, 0);
+  const totalM = all.reduce((a, s) => a + s.climb, 0);
   return {
     cfg,
     runs: all.length,
-    heightMedian: q(0.5), heightMean: Math.round(totalM / all.length), heightMax: heights[heights.length - 1],
+    heightMedian: q(0.5), heightMean: Math.round(heights.reduce((a, b) => a + b, 0) / all.length), heightMax: heights[heights.length - 1], climbMean: Math.round(totalM / all.length),
     reach: { 100: all.filter((s) => s.height >= 100).length, 200: all.filter((s) => s.height >= 200).length, 300: all.filter((s) => s.height >= 300).length, 500: all.filter((s) => s.height >= 500).length, 800: all.filter((s) => s.height >= 800).length },
     causes, fallsByBand, fallShare: deaths ? +((causes.fell || 0) / deaths).toFixed(2) : 0,
     hits, hitsPer100m: totalM ? +(Object.values(hits).reduce((a, b) => a + b, 0) / totalM * 100).toFixed(2) : 0,
@@ -166,7 +183,7 @@ export function formatReport(r) {
   const pct = (v) => `${Math.round((v / n) * 100)}%`;
   const lines = [];
   lines.push(`config: ${JSON.stringify(r.cfg)}`);
-  lines.push(`height: median ${r.heightMedian} m, mean ${r.heightMean} m, max ${r.heightMax} m`);
+  lines.push(`height: median ${r.heightMedian} m, mean ${r.heightMean} m, max ${r.heightMax} m${r.cfg.startM ? ` (from ${r.cfg.startM} m, mean climb ${r.climbMean} m)` : ''}`);
   lines.push(`reached: 100 m ${pct(r.reach[100])}, 200 m ${pct(r.reach[200])}, 300 m ${pct(r.reach[300])}, 500 m ${pct(r.reach[500])}, 800 m ${pct(r.reach[800])}`);
   lines.push(`deaths: ${JSON.stringify(r.causes)}  falls: ${Math.round(r.fallShare * 100)}% of deaths, by band ${JSON.stringify(r.fallsByBand)}`);
   lines.push(`hits per 100 m: ${r.hitsPer100m}  by enemy: ${JSON.stringify(r.hits)}`);

@@ -82,4 +82,46 @@ dissolve, a low rumble for the warning and a crack for the strike.
 
 ## Status
 
-Filled in as steps land.
+All four steps landed in one pass.
+
+- `TREELINE_Y` and `cloudAmount(y)` in `altitude.js`; the background
+  stops the trunks at a crown tile and ends vines, lianas and owls there;
+  the far clouds sit back (thinner, bluer) once platform clouds appear.
+- `KIND.cloud` with `CLOUD_SIZE` in `platforms.js`; a cloud carries its
+  behaviour (`cloud`), size, breathing phase and, when drifting, a
+  `drift` patrol (`baseX + amp * sin`). Wispy clouds reuse the dry flag
+  and dissolve in place instead of falling away.
+- `art/clouds.js`: thick, wispy and storm looks in three sizes, two
+  drawings each; `art/trees.js` gained the crown tile.
+- Generator: sky layouts (`cloudL/R/C`, with ribbons and bows) chosen
+  with probability `cloudAmount`; tier columns `cloudSmall`, `cloudWide`,
+  `drift`, `storm`; the rules from the plan; swings fade with the trees.
+- `Lightning` enemy in `enemies.js` (calm, charge, strike), drawn with
+  rain streaks, a flicker and a glowing bolt; the world lets the shield
+  ignore it (no punch, no suns); sounds `poof`, `dissolve`,
+  `thunderWarn`, `thunderCrack`; `?spawn=storm`.
+- Simulator: `startM` (a run can start in the sky), climb-based rates,
+  the bot aims where a drifting cloud will be and keeps out of a storm
+  cloud's column while it charges or strikes.
+
+Numbers, good skill, bold policy, 40 runs, seeds from 100:
+
+| | whole game, before (branch lengths) | whole game, with clouds | from 450 m |
+|---|---|---|---|
+| median / mean height | 409 m / 405 m | 339 m / 415 m | 735 m / 778 m (mean climb 328 m) |
+| hits per 100 m | 0.93 | 0.86 | 1.17 |
+| falls, share of deaths | 50 % | 55 % | 39 % |
+
+Two findings on the way. Drifting clouds that wandered across the screen
+and wrapped around the edge caused most of the sky's falls (an
+experiment switching them off took the fall share from about 70 % to
+53 %); they now patrol their lane on a slow sine and stay fully on
+screen, which brought the sky to 39 %. And the crows' 1.2 multiplier
+above the trees pushed the sky to 1.5 hits per 100 m; at 1.0 it is 1.17.
+The whole-game median moved from 409 to 339 m with the mean unchanged,
+which is within the spread between runs (the squirrels' and the
+lightning's timing use unseeded randomness), but worth watching.
+
+Visible in the renderer: `g.line` takes a plain alpha number, not an
+options object, and does not glow; the bolt's bloom comes from halos
+along it.
