@@ -41,6 +41,11 @@ class Bot {
       if (q.y > p.y + 10 && (!above || q.y < above.y)) above = q;
       if (q.y <= p.y + 10 && q.y > cam.y && (!below || q.y > below.y)) below = q;
     }
+    // In a row with two platforms a player aims for the bigger one (a stub
+    // next to a ribbon is the optional target, not the route).
+    const widest = (ref) => { let best = ref; for (const q of plats) if (Math.abs(q.y - ref.y) <= 40 && q.w > best.w) best = q; return best; };
+    if (above) above = widest(above);
+    if (below) below = widest(below);
     const apexLeft = p.vy > 0 ? (p.vy * p.vy) / (2 * GRAVITY) : 0;
     let target = p.vy > 0 ? (above && above.y - p.y < apexLeft + 60 ? above : (below || above)) : (below || above);
     if (target && target.kind === 'swing' && target.y > p.y) target = { x: p.x < 0 ? -195 : 195, y: target.y, kind: 'side' };
@@ -116,6 +121,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   stats.height = world.heightM;
   stats.time = t;
   stats.cause = world.over ? world.player.deathCause : (world.heightM >= cap ? 'cap' : 'timeout');
+  if (stats.cause === 'fell') stats.fellBand = band();
   return stats;
 }
 
@@ -138,13 +144,16 @@ function summarize(all, cfg) {
   for (const s of all) { for (let b = 0; b < s.height; b += 100) bandMetres[b] = (bandMetres[b] || 0) + Math.min(100, s.height - b); }
   const causes = {};
   for (const s of all) causes[s.cause] = (causes[s.cause] || 0) + 1;
+  const fallsByBand = {};
+  for (const s of all) if (s.fellBand != null) fallsByBand[s.fellBand] = (fallsByBand[s.fellBand] || 0) + 1;
+  const deaths = all.filter((s) => s.cause === 'fell' || s.cause === 'caught').length;
   const totalM = heights.reduce((a, b) => a + b, 0);
   return {
     cfg,
     runs: all.length,
     heightMedian: q(0.5), heightMean: Math.round(totalM / all.length), heightMax: heights[heights.length - 1],
     reach: { 100: all.filter((s) => s.height >= 100).length, 200: all.filter((s) => s.height >= 200).length, 300: all.filter((s) => s.height >= 300).length, 500: all.filter((s) => s.height >= 500).length, 800: all.filter((s) => s.height >= 800).length },
-    causes,
+    causes, fallsByBand, fallShare: deaths ? +((causes.fell || 0) / deaths).toFixed(2) : 0,
     hits, hitsPer100m: totalM ? +(Object.values(hits).reduce((a, b) => a + b, 0) / totalM * 100).toFixed(2) : 0,
     hitsPer100mByBand: Object.fromEntries(Object.keys(bandMetres).sort((a, b) => a - b).map((b) => [b, +((bands[b] || 0) / bandMetres[b] * 100).toFixed(2)])),
     hearts: total('hearts'), lanterns: total('lanterns'), boosts: total('boosts'), stomps: total('stomps'), punches: total('punches'), witches: total('witches'),
@@ -159,7 +168,7 @@ export function formatReport(r) {
   lines.push(`config: ${JSON.stringify(r.cfg)}`);
   lines.push(`height: median ${r.heightMedian} m, mean ${r.heightMean} m, max ${r.heightMax} m`);
   lines.push(`reached: 100 m ${pct(r.reach[100])}, 200 m ${pct(r.reach[200])}, 300 m ${pct(r.reach[300])}, 500 m ${pct(r.reach[500])}, 800 m ${pct(r.reach[800])}`);
-  lines.push(`deaths: ${JSON.stringify(r.causes)}`);
+  lines.push(`deaths: ${JSON.stringify(r.causes)}  falls: ${Math.round(r.fallShare * 100)}% of deaths, by band ${JSON.stringify(r.fallsByBand)}`);
   lines.push(`hits per 100 m: ${r.hitsPer100m}  by enemy: ${JSON.stringify(r.hits)}`);
   lines.push(`hits per 100 m by band: ${JSON.stringify(r.hitsPer100mByBand)}`);
   lines.push(`hearts ${r.hearts}, lanterns ${r.lanterns}, boosts ${r.boosts}, stomps ${r.stomps}, boost-punches ${r.punches}, witch events ${r.witches}`);

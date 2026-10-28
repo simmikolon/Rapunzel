@@ -19,7 +19,8 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
 ## Run and test
 - Serve: `python3 -m http.server 8000 --directory web` (or `http-server web`).
 - Dev helpers: `?at=150` starts at 150 m, `?spawn=squirrel` puts one on the
-  next branch, `?dev=1` shows altitude and zone, `?fx=off|bloom|full`.
+  next branch, `?len=stub|short|long` makes every branch that class,
+  `?dev=1` shows altitude and zone, `?fx=off|bloom|full`.
 - Sprite sheet: `web/dev/sprites.html`.
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
   (also `kid`, `cautious`). Target for a good bold run: 0.8 to 1.5 hits per

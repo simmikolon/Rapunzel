@@ -5,7 +5,7 @@ import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
 import { HUD } from './hud.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
-import { devParams, startAt, spawnNear, devLabel } from './dev.js';
+import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 
 // Rapunzel - browser port of the SpriteKit prototype.
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -32,6 +32,7 @@ class Game {
     this.iosSoundHintShown = false;
     this.fxPreset = 'full';
     this.dev = devParams();
+    if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
     this.loadSave();
     // ?fx=full|bloom|off forces a preset for this visit.
     const param = new URLSearchParams(location.search).get('fx');

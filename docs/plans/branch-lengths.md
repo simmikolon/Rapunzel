@@ -75,4 +75,41 @@ gets a normal and a long drawing. Same palettes, same surface height.
 
 ## Status
 
-Filled in as steps land.
+All five steps landed in one pass.
+
+- `BRANCH_LEN` in `platforms.js` holds the classes; a `Platform` carries
+  `len` and `boxW`, and `left`/`right` use the scaled box (tree diversity
+  had scaled `w` only).
+- `drawBranch(t, style, variant, rng, L)` in `art/trees.js` places tufts,
+  shelf, nest and knobs by fraction of the length; stubs have a leaf knob
+  and a snapped stump; the dry branch has a normal and a long drawing.
+  Sprites per style: stub 2, short 6, normal 6, long 6, each side.
+- Generator: tier columns `short`, `stub`, `long`; `stub` zone multiplier
+  (0 on the forest floor, 0.7 above the trees); pacing `short` and `long`;
+  `pickLen` applies the rules; stub sun arcs; squirrels prefer long
+  branches; lanterns a little likelier on a long branch and placed on it.
+- `?len=stub|short|normal|long` regenerates the round with one class.
+- Simulator reports falls as a share of deaths and by band.
+
+Numbers. The bot learned one thing for this element: in a row with two
+platforms it aims for the bigger one, as a player does (a stub next to a
+ribbon is the optional target, not the route). The same bot and the same
+40 seeds (`tools/analyze.mjs ... 100`) on both builds, good skill, bold
+policy, cap 1500 m:
+
+| | baseline (tree diversity) | with branch lengths |
+|---|---|---|
+| median / mean height | 338 m / 400 m | 409 m / 405 m |
+| hits per 100 m | 1.03 | 0.93 |
+| falls, share of deaths | 42 % (17 of 40) | 50 % (20 of 40) |
+| falls in the 100 m band | 3 | 6 |
+| lanterns collected | 229 | 265 |
+
+Falls rise where the stubs start (the 100 m band doubles) and stay at
+half the deaths overall; height and hit rate are unchanged, so the
+element adds a new kind of pressure without lowering the ceiling. The
+kid bot (reaction 0.22 s) falls before 100 m in both builds, so it is
+not a guard for this element yet; a kid model that steers earlier is a
+small follow-up. A first version put an extra lantern on a quarter of
+the long branches, which lifted lanterns collected by half; it is now a
+placement preference, not an extra.

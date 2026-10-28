@@ -1,6 +1,7 @@
 import { makeSprite, flipH } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { RNG } from '../util.js';
+import { BRANCH_LEN } from '../platforms.js';
 
 // Trees: one look per zone (oak on the forest floor, mossy giants in the
 // deep forest, birch-like trunks at the windows, bare tops above the
@@ -27,60 +28,89 @@ export const TREE_STYLES = [
 ];
 
 // --- branches -------------------------------------------------------------
-// 50 x 18 art px (200 x 72 logical), growing out of the RIGHT trunk toward
-// the left; the surface (collision top) is y = 7. Mirrored for the left.
-function drawBranch(t, style, variant, rng) {
+// L x 18 art px (L = 20 stub, 32 short, 50 normal, 76 long), growing out of
+// the RIGHT trunk toward the left: the root is at x = L - 1, the tip at
+// x = 3; the surface (collision top) is y = 7. Mirrored for the left.
+// Features sit relative to the tip and the root, never stretched.
+function drawBranch(t, style, variant, rng, L = 50) {
   const { p, poly, line, disc } = t;
-  const B = style.branchBark || style.bark, L = style.leaf;
+  const B = style.branchBark || style.bark, L_ = style.leaf;
+  const R = L - 1;                                   // root x
+  const at = (f) => Math.round(3 + (R - 3) * f);     // x at a fraction of the length, tip = 0
+  const stub = L <= 24;
   // log shape: thick at the trunk (right), tapering to the tip; gnarled adds a hump
-  const top = variant === 1 ? [[3, 8], [14, 8], [22, 6], [30, 7], [49, 5]] : [[3, 8], [49, 5]];
-  poly([...top, [49, 16], [3, 12]], B.mid);
-  poly([...top, [49, 7], ...[...top].reverse().map(([x, y]) => [x, y + 1])], B.light);
-  poly([[3, 11], [49, 13], [49, 16], [3, 12]], B.dark);
-  line(10, 10, 30, 9, B.dark); line(26, 11, 46, 11, B.dark); line(14, 9, 20, 9, B.light); line(34, 8, 44, 7, B.light);
-  if (variant === 1) { disc(35, 12, 2, B.dark); p(34, 11, 2, 1, B.light); }                         // gnarled: a knob below
-  if (variant === 2) { line(16, 7, 9, 1, B.mid, 2); line(10, 2, 8, 1, B.light); }                     // forked: a twig up
-  if (variant === 3) { disc(14, 13, 2, B.dark); disc(30, 14, 2, B.dark); p(13, 12, 2, 1, B.light); p(29, 13, 2, 1, B.light); line(20, 6, 20, 12, B.dark); line(38, 5, 38, 13, B.dark); } // knobby, rings
-  if (variant === 4) {                                                                                  // mossy with a mushroom shelf
-    p(6, 8, 14, 1, C.moss); p(24, 7, 12, 1, C.moss); p(38, 6, 9, 1, C.moss); p(12, 9, 3, 1, C.mossDark); p(30, 8, 3, 1, C.mossDark);
-    p(20, 13, 7, 2, '#c9b35a'); p(20, 13, 7, 1, '#e8d890'); p(21, 15, 5, 1, C.acorn);
+  const top = variant === 1 && !stub ? [[3, 8], [at(0.22), 8], [at(0.4), 6], [at(0.58), 7], [R, 5]] : [[3, 8], [R, 5]];
+  poly([...top, [R, 16], [3, 12]], B.mid);
+  poly([...top, [R, 7], ...[...top].reverse().map(([x, y]) => [x, y + 1])], B.light);
+  poly([[3, 11], [R, 13], [R, 16], [3, 12]], B.dark);
+  // grain
+  for (let x = 6; x < R - 6; x += 10) { line(x, 10, Math.min(R - 4, x + 8), 9 + (x % 20 ? 1 : 0), B.dark); }
+  for (let x = 10; x < R - 8; x += 14) line(x, 8, Math.min(R - 4, x + 6), 7, B.light);
+  if (stub) {
+    // stub: a knob with one leaf tuft (0) or a snapped stump (1)
+    if (variant === 1) {
+      poly([[6, 7], [4, 9], [7, 11], [5, 13], [R, 16], [R, 5], [8, 6]], B.mid);
+      poly([[6, 7], [8, 6], [10, 7], [9, 10], [11, 12], [8, 13], [5, 13], [7, 11], [4, 9]], B.light);
+      line(8, 7, 7, 12, B.deep); p(9, 9, 1, 1, B.deep); p(6, 8, 1, 1, B.deep);
+      if (L_) p(4, 5, 2, 1, L_.a);
+    } else if (L_) {
+      disc(6, 7, 4, L_.a); disc(4, 5, 3, L_.b); disc(8, 4, 2, L_.c); p(2, 9, 3, 2, L_.dark); p(1, 7, 2, 2, L_.a);
+    } else {
+      line(6, 8, 2, 3, B.dark); line(4, 6, 1, 7, B.dark); line(5, 9, 2, 12, B.dark);
+    }
+    return;
   }
-  if (variant === 5) {                                                                                  // nest with eggs
-    poly([[24, 7], [36, 7], [34, 3], [26, 3]], C.acorn); p(26, 3, 8, 1, '#c9b35a'); line(25, 5, 35, 5, '#b48a52'); line(27, 6, 33, 6, C.acornCap);
-    p(28, 2, 2, 1, '#eef2e0'); p(31, 2, 2, 1, '#eef2e0');
+  if (variant === 1) { disc(at(0.68), 12, 2, B.dark); p(at(0.68) - 1, 11, 2, 1, B.light); }                     // gnarled: a knob below
+  if (variant === 2) { const x = at(0.28); line(x, 7, x - 7, 1, B.mid, 2); line(x - 6, 2, x - 8, 1, B.light); } // forked: a twig up
+  if (variant === 3) {                                                                                             // knobby, rings
+    disc(at(0.24), 13, 2, B.dark); disc(at(0.58), 14, 2, B.dark); p(at(0.24) - 1, 12, 2, 1, B.light); p(at(0.58) - 1, 13, 2, 1, B.light);
+    line(at(0.36), 6, at(0.36), 12, B.dark); line(at(0.75), 5, at(0.75), 13, B.dark);
+  }
+  if (variant === 4) {                                                                                             // mossy with a mushroom shelf
+    p(6, 8, Math.round(L * 0.28), 1, C.moss); p(at(0.45), 7, Math.round(L * 0.24), 1, C.moss); p(at(0.76), 6, Math.round(L * 0.18), 1, C.moss);
+    p(at(0.2), 9, 3, 1, C.mossDark); p(at(0.6), 8, 3, 1, C.mossDark);
+    const sx = at(0.36); p(sx, 13, 7, 2, '#c9b35a'); p(sx, 13, 7, 1, '#e8d890'); p(sx + 1, 15, 5, 1, C.acorn);
+  }
+  if (variant === 5) {                                                                                             // nest with eggs
+    const nx = at(0.45);
+    poly([[nx, 7], [nx + 12, 7], [nx + 10, 3], [nx + 2, 3]], C.acorn); p(nx + 2, 3, 8, 1, '#c9b35a'); line(nx + 1, 5, nx + 11, 5, '#b48a52'); line(nx + 3, 6, nx + 9, 6, C.acornCap);
+    p(nx + 4, 2, 2, 1, '#eef2e0'); p(nx + 7, 2, 2, 1, '#eef2e0');
   }
   // leaves by style
   if (style.leaves === 'round') {
-    disc(5, 7, 4, L.a); disc(3, 5, 3, L.b); disc(7, 4, 2, L.c); p(1, 9, 3, 2, L.dark); p(0, 7, 2, 2, L.a);
-    disc(21, 4, 3, L.a); disc(23, 3, 2, L.b); p(19, 6, 2, 1, L.dark); p(24, 2, 1, 1, L.c);
-    if (variant !== 5) { disc(40, 3, 2, L.a); p(41, 2, 1, 1, L.c); }
-    if (variant === 2) { disc(8, 1, 2, L.a); p(8, 0, 1, 1, L.c); }
+    disc(5, 7, 4, L_.a); disc(3, 5, 3, L_.b); disc(7, 4, 2, L_.c); p(1, 9, 3, 2, L_.dark); p(0, 7, 2, 2, L_.a);
+    for (let f = 0.4; f < 0.95; f += 0.36) { const x = at(f); if (variant === 5 && Math.abs(x - at(0.45)) < 8) continue; disc(x, 4, 3, L_.a); disc(x + 2, 3, 2, L_.b); p(x - 2, 6, 2, 1, L_.dark); p(x + 3, 2, 1, 1, L_.c); }
+    if (variant === 2) { const x = at(0.28) - 8; disc(x, 1, 2, L_.a); p(x, 0, 1, 1, L_.c); }
   } else if (style.leaves === 'droop') {
-    disc(5, 7, 4, L.a); disc(4, 5, 3, L.b); p(6, 4, 2, 1, L.c); p(1, 9, 3, 2, L.dark);
-    disc(21, 5, 3, L.a); p(22, 3, 2, 1, L.b);
-    line(2, 11, 2, 16, L.dark); line(6, 11, 6, 17, L.a); line(9, 10, 9, 14, L.dark); line(21, 8, 21, 13, L.dark);   // hanging moss
-    p(2, 16, 1, 1, L.c); p(6, 17, 1, 1, L.c);
-    for (let i = 0; i < 6; i++) p(10 + rng.int(0, 36), 8 - rng.int(0, 2), 1, 1, C.moss);
+    disc(5, 7, 4, L_.a); disc(4, 5, 3, L_.b); p(6, 4, 2, 1, L_.c); p(1, 9, 3, 2, L_.dark);
+    for (let f = 0.4; f < 0.95; f += 0.36) { const x = at(f); if (variant === 5 && Math.abs(x - at(0.45)) < 8) continue; disc(x, 5, 3, L_.a); p(x + 1, 3, 2, 1, L_.b); }
+    line(2, 11, 2, 16, L_.dark); line(6, 11, 6, 17, L_.a); line(9, 10, 9, 14, L_.dark);   // hanging moss
+    for (let f = 0.4; f < 0.95; f += 0.36) { const x = at(f); line(x, 8, x, 13, L_.dark); }
+    p(2, 16, 1, 1, L_.c); p(6, 17, 1, 1, L_.c);
+    for (let i = 0; i < L / 8; i++) p(10 + rng.int(0, R - 14), 8 - rng.int(0, 2), 1, 1, C.moss);
   } else if (style.leaves === 'sparse') {
-    for (let i = 0; i < 9; i++) { const x = rng.int(0, 22), y = rng.int(1, 9); p(x, y, 1, 1, rng.chance(0.5) ? L.b : L.c); }
-    line(6, 7, 1, 3, B.dark); line(4, 6, 2, 9, B.dark); p(1, 2, 1, 1, L.c); p(2, 10, 1, 1, L.b);
-    for (let i = 0; i < 4; i++) p(rng.int(24, 46), rng.int(3, 6), 1, 1, L.b);
+    for (let i = 0; i < 9; i++) { const x = rng.int(0, Math.min(22, R - 6)), y = rng.int(1, 9); p(x, y, 1, 1, rng.chance(0.5) ? L_.b : L_.c); }
+    line(6, 7, 1, 3, B.dark); line(4, 6, 2, 9, B.dark); p(1, 2, 1, 1, L_.c); p(2, 10, 1, 1, L_.b);
+    for (let i = 0; i < L / 12; i++) p(rng.int(14, R - 4), rng.int(3, 6), 1, 1, L_.b);
   } else {
-    line(6, 8, 1, 3, B.dark); line(3, 5, 0, 6, B.dark); line(5, 9, 2, 12, B.dark); line(18, 7, 15, 2, B.dark); line(16, 4, 13, 3, B.dark);
-    line(32, 6, 30, 1, B.dark); line(31, 3, 34, 1, B.dark);
+    line(6, 8, 1, 3, B.dark); line(3, 5, 0, 6, B.dark); line(5, 9, 2, 12, B.dark);
+    for (let f = 0.3; f < 0.95; f += 0.3) { const x = at(f); line(x, 7, x - 3, 2, B.dark); line(x - 2, 4, x - 5, 3, B.dark); }
   }
 }
 
 // Dry (crumbling) branch: the same silhouette in dead-wood greys, cracked.
-function drawDryBranch(t) {
+function drawDryBranch(t, L = 50) {
   const { p, poly, line } = t;
-  poly([[3, 8], [49, 5], [49, 16], [3, 12]], C.dry);
-  poly([[3, 8], [49, 5], [49, 7], [3, 9]], C.dryLight);
-  poly([[3, 11], [49, 13], [49, 16], [3, 12]], C.dryDark);
-  line(10, 10, 30, 9, C.dryDark); line(26, 11, 46, 11, C.dryDark); line(14, 9, 20, 9, C.dryLight); line(34, 8, 44, 7, C.dryLight);
-  line(18, 8, 20, 12, C.barkShadow); line(33, 6, 31, 11, C.barkShadow); line(24, 9, 26, 9, C.barkShadow);
-  line(6, 7, 3, 3, C.dryDark); line(4, 4, 1, 4, C.dryDark); line(28, 6, 30, 2, C.dryDark); line(30, 3, 33, 1, C.dryDark);
-  p(12, 12, 1, 2, C.dryDark); p(40, 15, 1, 2, C.dryDark);
+  const R = L - 1;
+  const at = (f) => Math.round(3 + (R - 3) * f);
+  poly([[3, 8], [R, 5], [R, 16], [3, 12]], C.dry);
+  poly([[3, 8], [R, 5], [R, 7], [3, 9]], C.dryLight);
+  poly([[3, 11], [R, 13], [R, 16], [3, 12]], C.dryDark);
+  for (let x = 6; x < R - 6; x += 10) line(x, 10, Math.min(R - 4, x + 8), 9 + (x % 20 ? 1 : 0), C.dryDark);
+  for (let x = 10; x < R - 8; x += 14) line(x, 8, Math.min(R - 4, x + 6), 7, C.dryLight);
+  for (let f = 0.3; f < 0.95; f += 0.3) { const x = at(f); line(x, 8, x + 2, 12, C.barkShadow); p(x - 3, 13, 1, 2, C.dryDark); }
+  line(6, 7, 3, 3, C.dryDark); line(4, 4, 1, 4, C.dryDark);
+  for (let f = 0.5; f < 0.95; f += 0.4) { const x = at(f); line(x, 6, x + 2, 2, C.dryDark); line(x + 2, 3, x + 5, 1, C.dryDark); }
 }
 
 // --- trunks -----------------------------------------------------------------
@@ -148,14 +178,19 @@ function drawRoots(t) {
 
 export function buildTrees() {
   const rng = new RNG(2024);
+  const branch = (L, v, draw) => makeSprite(L, 18, draw, undefined, { axPx: L * 2, ayPx: 7 * 4 });
   const styles = TREE_STYLES.map((style, si) => {
-    const branchR = [0, 1, 2, 3, 4, 5].map((v) => makeSprite(50, 18, (t) => drawBranch(t, style, v, rng), undefined, { axPx: 25 * 4, ayPx: 7 * 4 }));
-    const branchL = branchR.map(flipH);
+    const branchR = {};
+    for (const [len, { art }] of Object.entries(BRANCH_LEN)) {
+      const variants = len === 'stub' ? [0, 1] : [0, 1, 2, 3, 4, 5];
+      branchR[len] = variants.map((v) => branch(art, v, (t) => drawBranch(t, style, v, rng, art)));
+    }
+    const branchL = Object.fromEntries(Object.entries(branchR).map(([len, arr]) => [len, arr.map(flipH)]));
     const trunkL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawTrunk(t, style, v, new RNG(100 + si * 10 + v)), { ax: 0, ay: 1 }));
     const trunkR = trunkL.map(flipH);
     return { ...style, branchR, branchL, trunkL, trunkR };
   });
-  const branchRDry = makeSprite(50, 18, (t) => drawDryBranch(t), undefined, { axPx: 25 * 4, ayPx: 7 * 4 });
+  const branchRDry = { normal: branch(50, 0, (t) => drawDryBranch(t, 50)), long: branch(76, 0, (t) => drawDryBranch(t, 76)) };
   const burlL = makeSprite(6, 9, (t) => drawBurl(t), { ax: 0, ay: 0.5 });
   const rootsL = makeSprite(36, 13, (t) => drawRoots(t), { ax: 0, ay: 1 });
   const overlays = {
@@ -167,5 +202,5 @@ export function buildTrees() {
     burlL, burlR: flipH(burlL),
     rootsL, rootsR: flipH(rootsL),
   };
-  return { styles, branchRDry, branchLDry: flipH(branchRDry), overlays };
+  return { styles, branchRDry, branchLDry: { normal: flipH(branchRDry.normal), long: flipH(branchRDry.long) }, overlays };
 }

@@ -14,12 +14,12 @@ import { treeStyleIndexAt } from './altitude.js';
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
 // stretches to 700 m with a final step beyond.
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
-  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
-  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
-  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
-  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
-  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
 ];
 
 // Zones: altitude bands that scale each element's spawn chance, so new
@@ -27,10 +27,10 @@ const TIERS = [
 // other. An element's rule is: tier chance x pacing x zone multiplier,
 // starting at the band where its multiplier first becomes positive.
 export const ZONES = [
-  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0 } },
-  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0 } },
-  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.2, spider: 0.3, squirrel: 0.3 } },
+  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0 } },
+  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6, stub: 1.0 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.2, spider: 0.3, squirrel: 0.3, stub: 0.7 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -46,9 +46,9 @@ const PACE_CYCLE = 9000;        // 90 m
 const PACE_BREATHER = 1500;     // the last 15 m of each cycle
 export function pacingAt(y) {
   const phase = ((y % PACE_CYCLE) + PACE_CYCLE) % PACE_CYCLE;
-  if (phase >= PACE_CYCLE - PACE_BREATHER) return { breather: true, enemy: 0, dry: 0, gap: 0.85, sun: 1.6, lantern: 1.5 };
+  if (phase >= PACE_CYCLE - PACE_BREATHER) return { breather: true, enemy: 0, dry: 0, short: 0, long: 1.6, gap: 0.85, sun: 1.6, lantern: 1.5 };
   const t = phase / (PACE_CYCLE - PACE_BREATHER);          // 0 at the start of a cycle, 1 at the peak
-  return { breather: false, enemy: 0.75 + 0.45 * t, dry: 0.8 + 0.4 * t, gap: 1, sun: 1, lantern: 1 };
+  return { breather: false, enemy: 0.75 + 0.45 * t, dry: 0.8 + 0.4 * t, short: 0.8 + 0.4 * t, long: 1, gap: 1, sun: 1, lantern: 1 };
 }
 
 function tierAt(y) {
@@ -70,6 +70,7 @@ export class Level {
   constructor(world, rng) {
     this.world = world;
     this.rng = rng;
+    this.forceLen = null;        // dev: every branch gets this length class
   }
 
   reset() {
@@ -85,6 +86,7 @@ export class Level {
     this.prevRowApex = JUMP_VY * JUMP_VY / (2 * GRAVITY);
     this.modelCam = CAMERA_START_Y; // highest view bottom the climb so far implies (never descends)
     this.nextLayout = null;      // layout already chosen for the next row
+    this.lastStubRow = -9;       // row index of the last stub branch
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -112,10 +114,29 @@ export class Level {
     return layout;
   }
 
-  // A squirrel on a healthy branch of this row, somewhere along it.
+  // Length class of a branch in a row of `kinds`. Stubs and short branches
+  // are the challenge: never in a breather, never two stubs within two rows,
+  // and a stub stands alone in a row only from tier 2.5 with the last safe
+  // row right below it (a miss is a bounce back, not a fall). Long branches
+  // are relief and only appear in single-branch rows (never at a ribbon's
+  // height, never two at one height).
+  pickLen(T, P, y, kinds) {
+    const r = this.rng;
+    if (this.forceLen) return this.forceLen;
+    const single = kinds.length === 1;
+    const stubOk = this.rowIndex - this.lastStubRow > 1 && (!single || (T.index >= 2.5 && y - this.lastSafeY <= 1.2 * BEAT));
+    if (stubOk && r.chance(T.stub * P.short * zoneMul(y, 'stub'))) { this.lastStubRow = this.rowIndex; return 'stub'; }
+    if (r.chance(T.short * P.short * zoneMul(y, 'short'))) return 'short';
+    if (single && r.chance(T.long * P.long * zoneMul(y, 'long'))) return 'long';
+    return 'normal';
+  }
+
+  // A squirrel on a healthy branch of this row, somewhere along it. Only
+  // normal and long branches have room for a patrol; long ones first.
   spawnSquirrel(platforms) {
     const r = this.rng;
-    const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry);
+    const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'long')
+      || platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'normal');
     if (!branch) return null;
     const T = tierAt(branch.y);
     const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1));
@@ -148,9 +169,13 @@ export class Level {
     for (const kind of kinds) {
       const opts = {};
       if (kind === 'branchL' || kind === 'branchR') {
-        if (canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
-        opts.variant = r.int(0, 5);
-        opts.lenScale = r.range(0.88, 1.12);
+        const len = this.pickLen(T, P, y, kinds);
+        opts.len = len;
+        if (len === 'normal' || len === 'long') {          // stubs and short branches are never dry
+          if (canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
+          opts.lenScale = r.range(0.88, 1.12);
+        }
+        opts.variant = len === 'stub' ? r.int(0, 1) : r.int(0, 5);
         opts.style = treeStyleIndexAt(y);
         opts.tint = r.pick([null, null, '#f2ece4', '#e4ddd2', '#d8d4cc', '#e8e0d0']);
       }
@@ -201,6 +226,11 @@ export class Level {
     if (r.chance(T.squirrel * P.enemy * zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
 
     // --- pickups -----------------------------------------------------------
+    // A stub is worth aiming for: most carry a small arc of suns.
+    const stub = platforms.find((p) => p.len === 'stub');
+    if (stub && r.chance(kinds.length > 1 ? 0.7 : 0.4)) {
+      for (let i = 0; i < 3; i++) { const t = i - 1; this.world.pickups.push(new Sun(stub.x + t * 44, stub.y + 70 + (1 - t * t) * 30)); }
+    }
     if (r.chance(Math.min(0.9, T.sun * P.sun))) {
       const n = r.int(3, 5);
       const cx = r.range(-W / 2 + 120, W / 2 - 120);
@@ -210,7 +240,11 @@ export class Level {
         this.world.pickups.push(new Sun(cx + t * 110, baseY + (1 - t * t) * 70));
       }
     }
-    if (r.chance(T.lantern * P.lantern)) this.world.pickups.push(new Lantern(r.range(-W / 2 + 100, W / 2 - 100), y + 80));
+    // A lantern likes a long branch: a little likelier there, and it sits on it.
+    const longBranch = platforms.find((p) => p.len === 'long' && !p.dry);
+    if (r.chance(T.lantern * P.lantern * (longBranch ? 1.6 : 1))) {
+      this.world.pickups.push(new Lantern(longBranch ? longBranch.x + longBranch.def.dir * 60 : r.range(-W / 2 + 100, W / 2 - 100), y + 80));
+    }
     // Hearts: a chance once one is missing, and a pity timer that guarantees
     // one before long when the prince is down to his last heart.
     this.rowsSinceHeart++;
