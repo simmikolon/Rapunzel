@@ -4,6 +4,7 @@ import { Particles } from './particles.js';
 import { Player } from './player.js';
 import { Platform } from './platforms.js';
 import { cloudAmount } from './altitude.js';
+import { Updraft } from './updraft.js';
 import { Level } from './level.js';
 import { Background } from './background.js';
 import { Witch } from './enemies.js';
@@ -34,6 +35,7 @@ export class World {
     this.platforms = [new Platform('ground', 0)];
     this.enemies = [];
     this.pickups = [];
+    this.fields = [];             // updrafts
     this.particles.clear();
     this.cam.reset();
     this.player.reset(0, 0);
@@ -80,6 +82,7 @@ export class World {
     if (pl.alive) this.collide();
 
     for (const e of this.enemies) e.update(dt, this);
+    for (const f of this.fields) f.update(dt, this);
     for (const k of this.pickups) k.update(dt);
     this.particles.update(dt);
     this.cam.follow(pl, dt);
@@ -165,6 +168,7 @@ export class World {
     this.platforms = this.platforms.filter((p) => p.alive && (p.y > floor || p.kind === 'ground'));
     this.enemies = this.enemies.filter((e) => e.alive && (e.kind === 'witch' || e.y > floor - 200));
     this.pickups = this.pickups.filter((k) => k.alive && k.y > floor && k.y < this.cam.top + 2500);
+    this.fields = this.fields.filter((f) => f.alive);
   }
 
   events() {
@@ -198,6 +202,14 @@ export class World {
       this.nextMilestone += 100;
     }
   }
+
+  // An updraft column under a lane, from just above a row to just below the next.
+  spawnUpdraft(x, bottom, top) {
+    const u = new Updraft(x, bottom, top);
+    this.fields.push(u);
+    return u;
+  }
+  onUpdraftEnter(pl, u) { this.audio.whoosh(); this.particles.cloudPuff(pl.x, pl.y + 40, 60, 6); }
 
   spawnStork() {
     const pl = this.player, side = this.rng.sign();
@@ -312,6 +324,7 @@ export class World {
     const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
+    for (const f of this.fields) f.draw(g, cam, this.time);
     for (const p of visible) this.drawPlatform(g, p);
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);

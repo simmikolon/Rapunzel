@@ -178,8 +178,8 @@ build them. Each zone: elements, look, set piece.
    its lane) and storm clouds with lightning striking below them; the
    braid with ribbons and bows runs on; spiders, squirrels and swings end
    with the trees; ✅ sky lanterns take over from the clouds at sunset and
-   night; ✅ storks cross the sky to ride for one bounce. 🔜 updrafts,
-   bird swarms to boost through; the
+   night; ✅ storks cross the sky to ride for one bounce; ✅ updrafts lift
+   the prince to the next row. 🔜 bird swarms to boost through; the
    tower rises out of the forest with Rapunzel's window at the top. When
    this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
@@ -260,6 +260,14 @@ is a pool to draw from, not a promise.
   stork enters from one edge 380 to 640 px above the prince and crosses
   at 150 to 210 px/s; its back is a 150 px perch. Never part of a row, so
   never the only way up: a timing reward worth +3 suns and a squawk.
+- ✅ updrafts (sky): a 150 px column of rising air under the next row's
+  lane, from just above a row to just below the next, with chance 0.12
+  to 0.20 per row (x 1.6 in breathers). Inside it the prince gets
+  3400 px/s² of lift up to 900 px/s, so a fall turns into a rise and a
+  bounce reaches further; feathers and leaves swirl up, a whoosh on
+  entering. After carrying him out of the top the air rests 1.6 s, so a
+  missed landing is a fall back to the row below, not an endless ride.
+  The cloud above an updraft is never a storm cloud.
 - 💡 star and asteroid platforms (space).
 - 💡 window ledges on the tower layer.
 
@@ -409,6 +417,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Lightning | calm 2.5–4.5 s, charge 1 s, strike 0.25 s; column 70 × 420 px |
 | Sky lanterns | from 520–600 m on; 136 px box; bob ± 20 px, sway ± 12 px |
 | Storks | every 400–700 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
+| Updrafts | chance 0.12 → 0.20 per sky row (× 1.6 in breathers); 150 px wide; lift 3400 px/s² to 900 px/s; rest 1.6 s |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -513,3 +522,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   of deaths); taught to chase only a stork that will still be on screen
   and within 320 px when it gets there: 33 % falls, 1.09 hits per 100 m,
   mean climb 330 m, 40 good bold runs.
+- 2026-10-29: Updrafts (`element/updrafts`): the sky's lift without a
+  landing. Same seeds with and without them, 40 good bold runs from
+  450 m: falls 53 % → 43 % of deaths, mean climb 337 → 390 m, 1.21 → 1.1
+  hits per 100 m. A first version let the bot ride a column forever when
+  the cloud above had dissolved; the air now rests after carrying the
+  prince out of the top.

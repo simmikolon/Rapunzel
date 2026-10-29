@@ -89,4 +89,14 @@ one gives +3 suns, white feathers and a squawk; `?spawn=stork`. The
 bot first chased storks it could not reach (54 % falls from 450 m); it
 now chases only a stork that will still be on screen and within 320 px
 when it gets there: 33 % falls, 1.09 hits per 100 m, mean climb 330 m
-(40 good bold runs from 450 m). Updrafts: next.
+(40 good bold runs from 450 m).
+
+**Updrafts: landed.** `Updraft` in `updraft.js` (lift, top speed, a rest
+after carrying the prince out of the top), kept in `world.fields`;
+`particles.updraft` feathers and leaves; `audio.whoosh()`; placed in
+`makeRow` under the next row's first lane once the gap is known, and the
+cloud above is never a storm (`updraftLane`); `?spawn=updraft`. A/B on
+the same seeds, 40 good bold runs from 450 m: without 53 % falls and a
+337 m mean climb, with 43 % and 390 m. A first version let the bot ride
+a column forever (a 'timeout' run) when the cloud above had dissolved;
+hence the rest.

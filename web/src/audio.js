@@ -185,6 +185,10 @@ class Synth {
     this.tone({ type: 'sawtooth', freq: 760, to: 420, dur: 0.12, vol: 0.1 });
     this.tone({ type: 'sawtooth', freq: 680, to: 380, dur: 0.14, vol: 0.09, delay: 0.14 });
   }
+  whoosh() {
+    // entering an updraft: a soft rising rush of air
+    this.noise({ dur: 0.5, vol: 0.18, filter: 'bandpass', freq: 400, to: 1800, q: 0.7 });
+  }
   thunderWarn() {
     // a low rumble while the storm cloud charges
     this.noise({ dur: 0.9, vol: 0.22, filter: 'lowpass', freq: 160, to: 70, q: 0.8 });

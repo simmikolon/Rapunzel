@@ -103,6 +103,14 @@ export class Particles {
       g: -0.02, drag: 2.2, shape: 'square', shrink: true,
     }));
   }
+  updraft(x, y, height) {
+    const leaf = Math.random() < 0.4;
+    this.spawn({
+      x, y, vx: (Math.random() - 0.5) * 40, vy: 260 + Math.random() * 240,
+      life: Math.min(1.6, height / 420), size: leaf ? 6 : 5, color: leaf ? C.grassLight : (Math.random() < 0.6 ? '#f4f4f0' : '#d2d2cc'),
+      g: -0.02, drag: 0.2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: leaf ? 'leaf' : 'feather', shrink: false, wobble: 1,
+    });
+  }
   boostTrail(x, y) {
     this.burst(x, y, 3, () => ({
       x: x + (Math.random() - 0.5) * 24, y: y + Math.random() * 10,
