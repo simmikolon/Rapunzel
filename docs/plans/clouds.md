@@ -125,3 +125,9 @@ lightning's timing use unseeded randomness), but worth watching.
 Visible in the renderer: `g.line` takes a plain alpha number, not an
 options object, and does not glow; the bolt's bloom comes from halos
 along it.
+
+Follow-up (2026-10-29): the clouds were repainted a quarter larger (box
+150 / 225 / 325 px, lobes proportional to the sprite height, wide clouds
+inset to stay on screen), and the far layer's scroll direction was fixed
+(stars and distant clouds rose while climbing). Sky from 450 m, 40 good
+bold runs: mean climb 381 m, 1.07 hits per 100 m, falls 48 % of deaths.

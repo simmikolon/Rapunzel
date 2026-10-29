@@ -243,7 +243,7 @@ is a pool to draw from, not a promise.
   stops you, tiny bow, a bow that changes the braid color.
 - ✅ cloud platforms above the treeline, in three lanes (left, right, a
   centre lane that never shares a row with a ribbon) and three sizes
-  (small 120, normal 180, wide 260 px). Thick: the staple. Wispy:
+  (small 150, normal 225, wide 325 px). Thick: the staple. Wispy:
   translucent, the dry branch's weak bounce, dissolves into puffs after
   one bounce, follows the dry rules. Drifting: patrols its lane on a slow
   sine (45 to 105 px/s at most), always fully on screen; small or normal
@@ -393,7 +393,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Branch lengths (box) | stub 58, short 106, normal 178, long 282 px; normal and long ± 12 % |
 | Branch length chances (tier 0 → 5) | short 0 → 0.28, stub 0 → 0.20 (from tier 2, deep forest on), long 0.10 → 0.12 |
 | Treeline | branches hand over to clouds 420 → 460 m; trunks end at 460 m |
-| Cloud sizes (box) | small 120, normal 180, wide 260 px; surface 16 px below the sprite top |
+| Cloud sizes (box) | small 150, normal 225, wide 325 px; surface 16 px below the sprite top |
 | Cloud chances (tier 4 → 5) | small 0.16 → 0.26, wide 0.24 → 0.18, drifting 0.26 → 0.40, storm 0 → 0.20 (× pacing); wispy uses the dry chance |
 | Lightning | calm 2.5–4.5 s, charge 1 s, strike 0.25 s; column 70 × 420 px |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
@@ -479,3 +479,12 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   their lane. Crows above the trees went from 1.2x to 1.0x. Good bold,
   40 runs from 450 m: mean climb 328 m, 1.17 hits per 100 m, falls 39 % of
   deaths. Whole game: mean 415 m (405), 0.86 hits per 100 m, falls 55 %.
+- 2026-10-29: Two fixes from playing the sky. The far layer (stars and the
+  distant clouds) scrolled the wrong way: screen y was computed from world
+  y without the flip, so the far clouds rose while the prince climbed and
+  looked faster than the foreground; the forest and tower layers were
+  right. And the cloud platforms were a quarter too small for the eye:
+  repainted (not scaled) at 150 / 225 / 325 px with lobes that follow the
+  sprite height; wide clouds sit a little further in to stay on screen.
+  Sky from 450 m, 40 good bold runs: mean climb 381 m (328), 1.07 hits per
+  100 m (1.17), falls 48 % of deaths (39 %).

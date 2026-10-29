@@ -83,7 +83,7 @@ export class Background {
     const night = nightAlpha(cam.y);
     if (night > 0) {
       for (const s of this.stars) {
-        const sy = ((s.y - camF) % H + H) % H;
+        const sy = ((H - (s.y - camF)) % H + H) % H;        // world y up, screen y down
         const tw = 0.5 + 0.5 * Math.sin(time * 2 + s.ph);
         g.rect(Math.round(s.x), Math.round(sy), s.s, s.s, '#ffffff', night * (0.4 + 0.6 * tw), { glow: 0.7 });
       }
@@ -94,7 +94,7 @@ export class Background {
       // once cloud platforms are around, the far clouds sit back: thinner and bluer
       const back = cloudAmount(cam.y);
       for (const c of this.clouds) {
-        const sy = ((c.y - camF) % (2 * H) + 2 * H) % (2 * H) - H / 2;
+        const sy = ((H - (c.y - camF)) % (2 * H) + 2 * H) % (2 * H) - H / 2;
         const sx = ((c.x + time * c.drift) % (W + 240) + (W + 240)) % (W + 240) - 120;
         g.blit(this.art.tiles.clouds[c.v], sx, sy, { alpha: ca * (1 - 0.3 * back), tint: back > 0 ? '#dce9f6' : undefined });
       }

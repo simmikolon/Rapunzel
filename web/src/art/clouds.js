@@ -17,34 +17,37 @@ function drawCloud(t, Wa, Ha, look, variant) {
   const c = LOOKS[look];
   const r = new RNG(Wa * 131 + variant * 17 + Ha * 3 + (look === 'storm' ? 5 : look === 'wispy' ? 3 : 0));
   const lobe = (cx, cy, rr) => { disc(cx, cy + 1, rr, c.shade); disc(cx, cy - 1, rr, c.top); disc(cx, cy, rr, c.body); };
+  // everything scales with the sprite: lobes are a share of its height
+  const rBig = Math.round(Ha * 0.42), rMin = Math.round(Ha * 0.22), rMax = Math.round(Ha * 0.34), rBot = Math.round(Ha * 0.18);
   // body: a wide low ellipse from the surface down
   ellipse(Wa / 2, (Ha + 4) / 2, Wa / 2 - 1, (Ha - 4) / 2 - 0.5, c.body);
-  ellipse(Wa / 2, Ha - 3, Wa / 2 - 3, 2.5, c.shade);
+  ellipse(Wa / 2, Ha - 3, Wa / 2 - 3, Math.max(2.5, Ha * 0.16), c.shade);
   p(4, Ha - 2, Wa - 8, 1, c.deep);
   p(6, Ha - 1, Wa - 12, 1, c.deep);
   // bottom lobes, shaded
-  const nb = Math.max(2, Math.round(Wa / 16));
-  for (let i = 0; i < nb; i++) { const cx = Math.round(5 + (Wa - 10) * (i + 0.5) / nb + r.range(-2, 2)); const rr = r.int(2, 3); disc(cx, Ha - 3, rr, c.shade); p(cx - rr + 1, Ha - 1, rr * 2 - 2, 1, c.deep); }
-  // top lobes, the big one off centre
-  const n = Math.max(3, Math.round(Wa / 11));
+  const nb = Math.max(2, Math.round(Wa / 18));
+  for (let i = 0; i < nb; i++) { const cx = Math.round(6 + (Wa - 12) * (i + 0.5) / nb + r.range(-2, 2)); const rr = r.int(rBot - 1, rBot); disc(cx, Ha - 3, rr, c.shade); p(cx - rr + 1, Ha - 1, rr * 2 - 2, 1, c.deep); }
+  // top lobes, the big one off centre; a couple of small ones in front
+  const n = Math.max(3, Math.round(Wa / 13));
   const big = r.int(0, n - 1);
   for (let i = 0; i < n; i++) {
-    const cx = Math.round(4 + (Wa - 8) * (i + 0.5) / n + r.range(-1.5, 1.5));
-    const rr = i === big ? Math.min(7, Math.floor(Ha / 2)) : r.int(3, Math.min(5, Math.floor(Ha / 2.6)));
+    const cx = Math.round(5 + (Wa - 10) * (i + 0.5) / n + r.range(-2, 2));
+    const rr = i === big ? rBig : r.int(rMin, rMax);
     lobe(cx, 1 + rr, rr);
   }
+  for (let i = 0; i < Math.round(Wa / 26); i++) { const cx = r.int(rMin + 2, Wa - rMin - 2), rr = r.int(rMin - 1, rMin); lobe(cx, 3 + rr + r.int(0, 2), rr); }
   if (look === 'wispy') {
     // ragged: holes punched through, thin wisps trailing off both ends
     ctx.globalCompositeOperation = 'destination-out';
-    for (let i = 0; i < 3 + variant; i++) ellipse(r.int(6, Wa - 6), r.int(6, Ha - 3), r.int(2, 4), r.int(1, 2), '#000');
-    for (let i = 0; i < 4; i++) { const y = r.int(5, Ha - 2); p(r.chance(0.5) ? 0 : Wa - 3, y, 3, 1, '#000'); }
+    for (let i = 0; i < 4 + variant; i++) ellipse(r.int(7, Wa - 7), r.int(6, Ha - 3), r.int(2, 5), r.int(1, 2), '#000');
+    for (let i = 0; i < 5; i++) { const y = r.int(5, Ha - 2); p(r.chance(0.5) ? 0 : Wa - 4, y, 4, 1, '#000'); }
     ctx.globalCompositeOperation = 'source-over';
-    for (let i = 0; i < 3; i++) { const y = r.int(6, Ha - 3); line(0, y, 3, y, c.shade); line(Wa - 4, y + 1, Wa - 1, y + 1, c.shade); }
+    for (let i = 0; i < 3; i++) { const y = r.int(6, Ha - 3); line(0, y, 4, y, c.shade); line(Wa - 5, y + 1, Wa - 1, y + 1, c.shade); }
   }
   if (look === 'storm') {
     // heavy underside, a lighter crest, flecks of lighter grey
-    ellipse(Wa / 2, Ha - 3, Wa / 2 - 2, 2.5, c.deep);
-    for (let i = 0; i < Wa / 6; i++) p(r.int(3, Wa - 4), r.int(5, Ha - 5), 1, 1, r.chance(0.5) ? c.shade : '#6c6a8a');
+    ellipse(Wa / 2, Ha - 3, Wa / 2 - 2, Math.max(2.5, Ha * 0.16), c.deep);
+    for (let i = 0; i < Wa / 5; i++) p(r.int(3, Wa - 4), r.int(5, Ha - 5), 1, 1, r.chance(0.5) ? c.shade : '#6c6a8a');
   }
 }
 

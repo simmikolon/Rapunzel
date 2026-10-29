@@ -1,5 +1,5 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY } from './config.js';
-import { Platform } from './platforms.js';
+import { Platform, CLOUD_SIZE } from './platforms.js';
 import { Crow, Spider, Squirrel, Lightning } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
 import { lerp, invLerp, clamp } from './util.js';
@@ -181,13 +181,15 @@ export class Level {
       if (slot.startsWith('cloud')) {
         kind = 'cloud';
         const lane = slot[5];
-        opts.x = lane === 'L' ? -190 + r.range(-40, 40) : lane === 'R' ? 190 + r.range(-40, 40) : r.range(-60, 60);
         opts.phase = r.range(0, 6.28);
         opts.variant = r.int(0, 1);
         // sizes follow the branch logic: small ones are the aim test (never in
         // a breather), wide ones the relief
         if (r.chance(T.cloudSmall * P.short)) opts.size = 'small';
         else if (r.chance(T.cloudWide * P.long)) opts.size = 'wide';
+        // lanes: a wide cloud sits a little further in so it stays on screen
+        const laneX = opts.size === 'wide' ? 160 : 190, jitter = opts.size === 'wide' ? 20 : 40;
+        opts.x = lane === 'L' ? -laneX + r.range(-jitter, jitter) : lane === 'R' ? laneX + r.range(-jitter, jitter) : r.range(-60, 60);
         opts.cloud = 'thick';
         // wispy follows the dry-branch rules; a cloud drifts or is wispy, not
         // both; a storm cloud is thick, not small and never alone in its row
@@ -196,7 +198,7 @@ export class Level {
           // patrol around the lane centre; the swing keeps the cloud fully on screen
           opts.cloud = 'drift';
           opts.x = lane === 'L' ? -150 : lane === 'R' ? 150 : 0;
-          const half = opts.size === 'small' ? 60 : 90;
+          const half = CLOUD_SIZE[opts.size || 'normal'].box / 2;
           opts.drift = { amp: Math.min(r.range(90, 140), 370 - Math.abs(opts.x) - half), omega: r.range(0.5, 0.75) * (P.breather ? 0.7 : 1), phase: r.range(0, 6.28) };
         }
         else if (kinds.length > 1 && opts.size !== 'small' && r.chance(T.storm * P.enemy * zoneMul(y, 'storm'))) opts.cloud = 'storm';

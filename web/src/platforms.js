@@ -42,9 +42,9 @@ export const BRANCH_LEN = {
 // Cloud sizes: box width in px (the sprite is the box; a cloud is soft to
 // its edge) and the sprite size in art px.
 export const CLOUD_SIZE = {
-  small:  { box: 120, art: [30, 12] },
-  normal: { box: 180, art: [45, 14] },
-  wide:   { box: 260, art: [65, 16] },
+  small:  { box: 150, art: [38, 15] },
+  normal: { box: 225, art: [56, 17] },
+  wide:   { box: 325, art: [81, 20] },
 };
 
 let nextId = 1;
