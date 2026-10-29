@@ -14,12 +14,12 @@ import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
 // stretches to 700 m with a final step beyond.
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
-  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
-  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
-  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
-  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
-  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, updraft: 0.10, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, updraft: 0.10, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, updraft: 0.10, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, updraft: 0.16, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
 ];
 
 // Zones: altitude bands that scale each element's spawn chance, so new
@@ -92,6 +92,7 @@ export class Level {
     this.modelCam = CAMERA_START_Y; // highest view bottom the climb so far implies (never descends)
     this.nextLayout = null;      // layout already chosen for the next row
     this.lastStubRow = -9;       // row index of the last stub branch
+    this.updraftLane = null;     // lane with an updraft below the next row (no storm there)
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -213,7 +214,7 @@ export class Level {
           const half = CLOUD_SIZE[opts.size || 'normal'].box / 2;
           opts.drift = { amp: Math.min(r.range(90, 140), 370 - Math.abs(opts.x) - half), omega: r.range(0.5, 0.75) * (P.breather ? 0.7 : 1), phase: r.range(0, 6.28) };
         }
-        else if (kinds.length > 1 && opts.size !== 'small' && r.chance(T.storm * P.enemy * zoneMul(y, 'storm'))) opts.cloud = 'storm';
+        else if (kinds.length > 1 && opts.size !== 'small' && lane !== this.updraftLane && r.chance(T.storm * P.enemy * zoneMul(y, 'storm'))) opts.cloud = 'storm';
       }
       if (kind === 'branchL' || kind === 'branchR') {
         const len = this.pickLen(T, P, y, kinds);
@@ -252,6 +253,16 @@ export class Level {
     gapMax = Math.max(gapMax, gapMin);
     const gap = r.range(gapMin, gapMax);
     this.nextLayout = nextLayout;
+    // Updrafts (sky only): a column under the next row's first lane, from
+    // just above this row to just below the next; more in breathers.
+    this.updraftLane = null;
+    const nextSlot = nextLayout.split('+')[0];
+    if (cloudAmount(y) >= 1 && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
+      const lane = nextSlot[5];
+      const ux = lane === 'L' ? -190 : lane === 'R' ? 190 : 0;
+      this.world.spawnUpdraft(ux, y + 60, y + gap - 90);
+      this.updraftLane = lane;
+    }
     const bounceVy = kinds.includes('bow') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
     this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);
 

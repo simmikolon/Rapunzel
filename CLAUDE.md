@@ -19,7 +19,7 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
 ## Run and test
 - Serve: `python3 -m http.server 8000 --directory web` (or `http-server web`).
 - Dev helpers: `?at=150` starts at 150 m, `?spawn=squirrel` puts one on the
-  next branch, `?spawn=storm` turns the next cloud into a storm cloud,
+  next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`.
 - Sprite sheet: `web/dev/sprites.html`.

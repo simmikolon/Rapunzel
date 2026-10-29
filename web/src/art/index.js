@@ -5,6 +5,7 @@ import { buildTiles } from './tiles.js';
 import { buildTrees } from './trees.js';
 import { buildClouds } from './clouds.js';
 import { buildLanterns } from './lanterns.js';
+import { buildWind } from './wind.js';
 
 export function buildAllArt() {
   return {
@@ -15,5 +16,6 @@ export function buildAllArt() {
     trees: buildTrees(),
     clouds: buildClouds(),
     lanterns: buildLanterns(),
+    wind: buildWind(),
   };
 }

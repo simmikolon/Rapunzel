@@ -3,6 +3,7 @@
 //   ?spawn=squirrel  put that element on the next branch above the prince
 //   ?spawn=storm     turn the next cloud above the prince into a storm cloud
 //   ?spawn=stork     send a stork across the screen now
+//   ?spawn=updraft   put an updraft column under the next platform
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER } from './config.js';
@@ -47,6 +48,10 @@ export function spawnNear(world, element) {
   const branches = world.platforms.filter((q) => (q.kind === 'branchL' || q.kind === 'branchR') && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y);
   if (element === 'squirrel' && branches[0]) world.level.spawnSquirrel([branches[0]]);
   if (element === 'stork') world.spawnStork();
+  if (element === 'updraft') {
+    const next = world.platforms.filter((q) => q.kind !== 'ground' && q.y > p.y + 380).sort((a, b) => a.y - b.y)[0];
+    if (next) world.spawnUpdraft(next.x, p.y + 80, next.y - 90);
+  }
   if (element === 'storm') {
     const cloud = world.platforms.filter((q) => q.kind === 'cloud' && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y)[0];
     if (cloud) { cloud.cloud = 'storm'; cloud.drift = null; cloud.vx = 0; world.enemies.push(new Lightning(cloud)); }
