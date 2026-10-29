@@ -110,3 +110,16 @@ The zone was too light before and is now in the middle of the target;
 the climb dropped 10 %, inside the 15 % allowed for a zone that gains
 two enemies. A first guard chance of 0.4 at tier 3 put the band at
 1.49 and was trimmed to 0.35.
+
+Rework after playing (2026-10-29). Three complaints: the balconies
+looked attached rather than built, stone dipped on a landing, and they
+stood between trees. Changes: `art/balconies.js` redrawn in the tower's
+brick palette (a doorway cut like the tiles' windows with the candle, a
+stone slab course with corbelled bricks, stone or wooden railing on
+top); no landing dip for balconies in `drawPlatform`; the layout slots
+moved into the sky table only, gated on `cloudAmount >= 1`, zone 0 below
+the treeline. The windows zone's own face is open again. Paired seeds,
+40 good bold runs from 450 m: master 1.1 hits per 100 m, 42 % falls,
+361 m mean climb; first sky placement (balconies 0.7, guards 1.0): 1.59,
+46 %, 200 m; final (balconies 0.4, guards 0.5, pots 0.8, 140 px slab):
+1.24, 50 %, 312 m.

@@ -169,12 +169,10 @@ build them. Each zone: elements, look, set piece.
    canopy dapple on the wall, boughs with birds, butterflies, owls in the
    knot holes, acorns, gusts and passing clouds; 🔜 thorny branches, the
    cross branch you must boost through; crows fade out (0.6x), spiders stay.
-3. **The tower's windows, 250 to 400 m** (in progress): ✅ balconies on
-   the tower's edges as platforms on the tower layer, in five looks (stone,
-   wooden, flowered, ivy, dilapidated and fragile); ✅ guards patrol them
-   and lunge with a halberd, a pogo on the helmet dazes them; ✅ flowerpots
-   wobble and fall when the prince passes below. 🔜 Rapunzel's cameo on a
-   balcony, the witch more present. Doors later.
+3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
+   right, the witch more present, Rapunzel's cameo. Balconies were built
+   for this band first and moved above the treeline: with trees on both
+   sides a balcony made no sense (decision log, 2026-10-29). Doors later.
 4. **Above the trees, 400 to 550 m** (in progress): ✅ the trees end at a
    treeline (bare tops, crown tiles at 460 m) and cloud platforms take over
    in three lanes: thick, wispy (weak bounce, dissolves), drifting (patrols
@@ -182,7 +180,10 @@ build them. Each zone: elements, look, set piece.
    braid with ribbons and bows runs on; spiders, squirrels and swings end
    with the trees; ✅ sky lanterns take over from the clouds at sunset and
    night; ✅ storks cross the sky to ride for one bounce; ✅ updrafts lift
-   the prince to the next row. 🔜 bird swarms to boost through; the
+   the prince to the next row; ✅ balconies on the tower's edges in five
+   looks (stone, wooden, flowered, ivy, dilapidated and fragile), with
+   guards who lunge with a halberd and flowerpots that fall when the
+   prince passes below. 🔜 bird swarms to boost through; the
    tower rises out of the forest with Rapunzel's window at the top. When
    this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
@@ -287,8 +288,10 @@ is a pool to draw from, not a promise.
   left and right edge, 120 px box; alone, with a ribbon, with a branch on
   the other side, or two at one height; never with a branch on the same
   side, at most one balcony row in two. Stone, wooden, flowered and ivy
-  variants; the dilapidated one is fragile under the dry rules. Windows
-  zone 1.0, deep forest 0.3 (the first windows), above the trees 0.3.
+  variants; the dilapidated one is fragile under the dry rules. Drawn in
+  the tower's own brick palette (doorway like the tiles' windows, a stone
+  course with corbels), and stone does not dip on a landing. Only where
+  the tower stands alone, above the treeline (zone 0.4 there, 0 below).
 
 **Pickups, power-ups, portals**
 - ✅ sun drops, ✅ lanterns (boost refill), ✅ hearts (restore all).
@@ -404,8 +407,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
 | 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
-| 4 | Windows zone | ✅ balconies (five looks, dilapidated fragile), guards, flowerpots; 🔜 Rapunzel's cameo, the witch more present | in progress |
-| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning); 🔜 bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
+| 4 | Windows zone | Windows spread across the tower, the witch more present, Rapunzel's cameo (balconies moved above the treeline) | 🔜 |
+| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots; 🔜 bird swarm, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
@@ -437,8 +440,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sky lanterns | from 520–600 m on; 136 px box; bob ± 20 px, sway ± 12 px |
 | Storks | every 1200–2000 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
-| Balconies | x = ±210, 120 px box, tier weight 0.6 (tier 2) → 1.0; zone 0 / 0.3 / 1.0 / 0.3 |
-| Guards / flowerpots per balcony | guard 0.25 → 0.45, pot 0.25 → 0.45 (tier 2 → 5), × pacing × zone |
+| Balconies | x = ±210, 140 px box (the whole slab), tier weight 1.0; only above the treeline, zone 0.4 |
+| Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -585,3 +588,13 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   0.4 put the band at 1.49, so it was trimmed to 0.35. The flowerpot
   rarely hits the bot (1 hit in 40 runs); it is a telegraph test for
   people, not for the bot.
+- 2026-10-29: Balconies reworked after playing: they looked bolted on,
+  they dipped like wood on a landing, and they stood between trees. Now
+  drawn in the tower's brick palette with a doorway like the tiles'
+  windows and corbelled stone beneath, the slab no longer dips, and they
+  appear only above the treeline where the tower stands alone (the
+  windows zone goes back to 🔜). Paired seeds, 40 good bold runs from
+  450 m: master 1.1 hits per 100 m, falls 42 %, mean climb 361 m; with
+  balconies at zone 0.7 and guards at 1.0 the sky overloaded (1.59, climb
+  200 m); at balconies 0.4, guards 0.5, pots 0.8 and the whole slab
+  landable: 1.24 hits per 100 m, falls 50 %, mean climb 312 m.

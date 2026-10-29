@@ -290,7 +290,7 @@ export class World {
       default: return;
     }
     const cam = this.cam;
-    const dip = p.squash * 10;
+    const dip = p.kind === 'balcony' ? 0 : p.squash * 10;   // stone does not give
     const opts = {};
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {

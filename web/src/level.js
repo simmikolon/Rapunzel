@@ -28,9 +28,9 @@ const TIERS = [
 // starting at the band where its multiplier first becomes positive.
 export const ZONES = [
   { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0 } },
-  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.3, guard: 0.5, pot: 0.3 } },
-  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6, stub: 1.0, balcony: 1.0, guard: 1.0, pot: 1.0 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.3, guard: 0.6, pot: 0.5 } },
+  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -107,23 +107,22 @@ export class Level {
     const r = this.rng;
     // Above the treeline the branch slots become cloud lanes (left, right and
     // a centre lane that never shares a row with a ribbon); the handover is
-    // gradual through cloudAmount. Swings need trees. Balconies sit on the
-    // tower's edges (never with a branch on the same side), at most one
-    // balcony row in two.
+    // gradual through cloudAmount. Swings need trees. Balconies belong to
+    // the tower where it stands alone, above the treeline: in the sky
+    // table only, at most one balcony row in two.
     const ca = cloudAmount(y);
     const sky = ca > 0 && r.chance(ca);
-    const b = T.balcony * zoneMul(y, 'balcony') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1);
+    const b = ca >= 1 ? T.balcony * zoneMul(y, 'balcony') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
     const items = sky ? [
       ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
       ['cloudL+ribbon', T.double * 0.7], ['cloudR+ribbon', T.double * 0.7], ['cloudL+cloudR', T.double * 0.6],
       ['bow', T.bow],
       ['balconyL', b], ['balconyR', b], ['balconyL+ribbon', b * T.double * 0.6], ['balconyR+ribbon', b * T.double * 0.6],
+      ['balconyL+cloudR', b * T.double * 0.5], ['cloudL+balconyR', b * T.double * 0.5], ['balconyL+balconyR', b * T.double * 0.4],
     ] : [
       ['branchL', 1.0], ['branchR', 1.0], ['ribbon', 1.1],
       ['branchL+ribbon', T.double * 0.7], ['branchR+ribbon', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
       ['swing', T.swing * (1 - ca)], ['bow', T.bow],
-      ['balconyL', b], ['balconyR', b], ['balconyL+ribbon', b * T.double * 0.6], ['balconyR+ribbon', b * T.double * 0.6],
-      ['balconyL+branchR', b * T.double * 0.5], ['branchL+balconyR', b * T.double * 0.5], ['balconyL+balconyR', b * T.double * 0.4],
     ];
     let layout = r.weighted(items.filter((it) => it[1] > 0));
     // avoid the same single slot three times in a row (keeps the climb zig-zagging)
