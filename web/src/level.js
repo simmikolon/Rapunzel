@@ -3,7 +3,7 @@ import { Platform, CLOUD_SIZE } from './platforms.js';
 import { Crow, Spider, Squirrel, Lightning } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
-import { treeStyleIndexAt, cloudAmount } from './altitude.js';
+import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -183,7 +183,14 @@ export class Level {
     for (const slot of kinds) {
       const opts = {};
       let kind = slot;
-      if (slot.startsWith('cloud')) {
+      if (slot.startsWith('cloud') && r.chance(0.6 * lanternAmount(y))) {
+        // from sunset on, a cloud slot often holds a sky lantern instead
+        kind = 'skyLantern';
+        const lane = slot[5];
+        opts.x = lane === 'L' ? -190 + r.range(-40, 40) : lane === 'R' ? 190 + r.range(-40, 40) : r.range(-60, 60);
+        opts.phase = r.range(0, 6.28);
+        opts.variant = r.chance(0.75) ? 0 : 1;
+      } else if (slot.startsWith('cloud')) {
         kind = 'cloud';
         const lane = slot[5];
         opts.phase = r.range(0, 6.28);

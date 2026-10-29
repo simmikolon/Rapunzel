@@ -171,6 +171,12 @@ class Synth {
     // a wispy cloud coming apart
     this.noise({ dur: 0.45, vol: 0.2, filter: 'bandpass', freq: 2200, to: 700, q: 0.8 });
   }
+  paper() {
+    // landing on a paper lantern: a soft thump with a crackle
+    this.noise({ dur: 0.16, vol: 0.18, filter: 'lowpass', freq: 900, to: 250, q: 0.7 });
+    this.noise({ dur: 0.08, vol: 0.07, filter: 'highpass', freq: 3000, delay: 0.02 });
+    this.tone({ type: 'sine', freq: 190, to: 280, dur: 0.12, vol: 0.1 });
+  }
   thunderWarn() {
     // a low rumble while the storm cloud charges
     this.noise({ dur: 0.9, vol: 0.22, filter: 'lowpass', freq: 160, to: 70, q: 0.8 });

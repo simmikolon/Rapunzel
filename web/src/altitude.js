@@ -34,3 +34,5 @@ export function treeStyleAt(y) {
   return { a: TREE_BOUNDS.length, b: TREE_BOUNDS.length, t: 0 };
 }
 export const treeStyleIndexAt = (y) => { const s = treeStyleAt(y); return s.t < 0.5 ? s.a : s.b; };
+// Sky lanterns: from the sunset band on, strongest at night.
+export const lanternAmount = (y) => smoothstep(invLerp(52000, 60000, y));
