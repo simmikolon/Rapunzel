@@ -125,6 +125,7 @@ export class World {
     const r = pl.rect;
     for (const e of this.enemies) {
       if (!e.alive || e.dead || !overlaps(r, e.rect)) continue;
+      if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
       else if (e.hurtful) { pl.hit(e); }
@@ -200,6 +201,7 @@ export class World {
   // ---------------------------------------------------------------- callbacks
   onPlayerLand(pl, p) {
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
+    else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.dry) { this.audio.weakBounce(); this.particles.crumble(pl.x, pl.y, 60, true); }
     else { this.audio.bounce(pl.combo); }
     if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
@@ -208,7 +210,10 @@ export class World {
     else this.particles.landingDust(pl.x, pl.y, 1.4);
   }
   onPlayerJump(pl, p) {
-    if (p && p.dry && p.used) { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
+    if (p && p.dry && p.used) {
+      if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
+      else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
+    }
   }
   onPlayerBoost(pl) { this.audio.boost(); this.particles.sparkles(pl.x, pl.y, 8, '#ffd04a'); }
   onPlayerBonk(pl, p) { this.audio.bonk(); this.particles.stars(pl.x, pl.headY); this.cam.shake(5, 0.2); }
@@ -233,12 +238,25 @@ export class World {
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
+      case 'cloud': s = this.art.clouds[p.cloud === 'storm' ? 'storm' : p.dry ? 'wispy' : 'thick'][p.size][p.variant]; break;
       default: return;
     }
     const cam = this.cam;
     const dip = p.squash * 10;
     const opts = {};
-    if (p.state === 'breaking') { opts.rot = (p.kind === 'branchL' ? -1 : 1) * p.t * 0.9; opts.alpha = clamp(1 - p.t / 0.6, 0, 1); }
+    if (p.kind === 'cloud') {
+      // breathing, a soft squash on landing, translucent when wispy, and a
+      // dissolve in place when it goes
+      const br = Math.sin(this.time * 1.4 + p.phase) * 0.03;
+      opts.sx = 1 + br + p.squash * 0.12; opts.sy = 1 - br - p.squash * 0.25;
+      if (p.dry) opts.alpha = 0.78;
+      if (p.state === 'breaking') { const k = p.t / 0.5; opts.alpha = (p.dry ? 0.78 : 1) * (1 - k); opts.sx += k * 0.5; opts.sy += k * 0.3; }
+      if (p.vx) {
+        // a drifting cloud trails thin streaks behind it
+        const sx = cam.sx(p.x), sy = cam.sy(p.y), d = p.vx > 0 ? -1 : 1, half = p.w / 2;
+        for (let i = 0; i < 3; i++) { const yy = sy + 10 + i * 10, x0 = sx + d * (half - 10 + i * 6); g.line(x0, yy, x0 + d * (34 + i * 10 + Math.sin(this.time * 3 + i) * 6), yy, '#e9f1f5', 3, 0.45 - i * 0.1); }
+      }
+    } else if (p.state === 'breaking') { opts.rot = (p.kind === 'branchL' ? -1 : 1) * p.t * 0.9; opts.alpha = clamp(1 - p.t / 0.6, 0, 1); }
     else if (p.wobble) opts.rot = p.wobble * 0.004;
     if (p.def.root != null) { opts.sx = p.lenScale; if (p.tint && !p.dry) opts.tint = p.tint; }
     if (p.kind === 'swing') {
@@ -257,7 +275,7 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time);
     g.layer('world');
-    const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2 };
+    const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const p of visible) this.drawPlatform(g, p);

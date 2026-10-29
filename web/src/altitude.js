@@ -13,6 +13,10 @@ export const deepForestAmount = (y) => smoothstep(invLerp(7000, 13000, y)) * (1 
 export const shaftAmount = (y) => 1 - smoothstep(invLerp(24000, 34000, y));
 // Forest life (butterflies, birds): floor and deep forest.
 export const lifeAmount = (y) => 1 - smoothstep(invLerp(22000, 29000, y));
+// The treeline: branches hand over to cloud platforms between 420 and
+// 460 m; the trunks end at TREELINE_Y with a crown tile.
+export const TREELINE_Y = 46000;
+export const cloudAmount = (y) => smoothstep(invLerp(42000, 46000, y));
 
 export function hash(k) { let h = (k * 2654435761) >>> 0; h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; return (h ^ (h >>> 15)) >>> 0; }
 

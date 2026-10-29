@@ -1,9 +1,9 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY } from './config.js';
-import { Platform } from './platforms.js';
-import { Crow, Spider, Squirrel } from './enemies.js';
+import { Platform, CLOUD_SIZE } from './platforms.js';
+import { Crow, Spider, Squirrel, Lightning } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
-import { treeStyleIndexAt } from './altitude.js';
+import { treeStyleIndexAt, cloudAmount } from './altitude.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -14,12 +14,12 @@ import { treeStyleIndexAt } from './altitude.js';
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
 // stretches to 700 m with a final step beyond.
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
-  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
-  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
-  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
-  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
-  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34 },
 ];
 
 // Zones: altitude bands that scale each element's spawn chance, so new
@@ -30,7 +30,7 @@ export const ZONES = [
   { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0 } },
   { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0 } },
   { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6, stub: 1.0 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.2, spider: 0.3, squirrel: 0.3, stub: 0.7 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -103,10 +103,19 @@ export class Level {
 
   pickLayout(T, y) {
     const r = this.rng;
-    const items = [
+    // Above the treeline the branch slots become cloud lanes (left, right and
+    // a centre lane that never shares a row with a ribbon); the handover is
+    // gradual through cloudAmount. Swings need trees.
+    const ca = cloudAmount(y);
+    const sky = ca > 0 && r.chance(ca);
+    const items = sky ? [
+      ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
+      ['cloudL+ribbon', T.double * 0.7], ['cloudR+ribbon', T.double * 0.7], ['cloudL+cloudR', T.double * 0.6],
+      ['bow', T.bow],
+    ] : [
       ['branchL', 1.0], ['branchR', 1.0], ['ribbon', 1.1],
       ['branchL+ribbon', T.double * 0.7], ['branchR+ribbon', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
-      ['swing', T.swing], ['bow', T.bow],
+      ['swing', T.swing * (1 - ca)], ['bow', T.bow],
     ];
     let layout = r.weighted(items);
     // avoid the same single slot three times in a row (keeps the climb zig-zagging)
@@ -157,7 +166,7 @@ export class Level {
     const layout = this.nextLayout || this.pickLayout(T, y);
     this.nextLayout = null;
     const kinds = layout.split('+');
-    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing');
+    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC');
     if (kinds.includes('bow')) this.lastBowY = y;
     const front = kinds.some((k) => k !== 'ribbon' && k !== 'bow');
     // Ribbons live on the slower tower layer. Their layer height is chosen so
@@ -171,8 +180,34 @@ export class Level {
     const platforms = [];
     const canBeDry = kinds.length > 1 || (y - this.lastSafeY) + T.gap[1] * BEAT <= SAFE_GAP;
     let safe = false;
-    for (const kind of kinds) {
+    for (const slot of kinds) {
       const opts = {};
+      let kind = slot;
+      if (slot.startsWith('cloud')) {
+        kind = 'cloud';
+        const lane = slot[5];
+        opts.phase = r.range(0, 6.28);
+        opts.variant = r.int(0, 1);
+        // sizes follow the branch logic: small ones are the aim test (never in
+        // a breather), wide ones the relief
+        if (r.chance(T.cloudSmall * P.short)) opts.size = 'small';
+        else if (r.chance(T.cloudWide * P.long)) opts.size = 'wide';
+        // lanes: a wide cloud sits a little further in so it stays on screen
+        const laneX = opts.size === 'wide' ? 160 : 190, jitter = opts.size === 'wide' ? 20 : 40;
+        opts.x = lane === 'L' ? -laneX + r.range(-jitter, jitter) : lane === 'R' ? laneX + r.range(-jitter, jitter) : r.range(-60, 60);
+        opts.cloud = 'thick';
+        // wispy follows the dry-branch rules; a cloud drifts or is wispy, not
+        // both; a storm cloud is thick, not small and never alone in its row
+        if (canBeDry && opts.size !== 'small' && r.chance(T.dry * P.dry)) opts.dry = true;
+        else if (opts.size !== 'wide' && r.chance(T.drift * (P.breather ? 0.6 : 1))) {
+          // patrol around the lane centre; the swing keeps the cloud fully on screen
+          opts.cloud = 'drift';
+          opts.x = lane === 'L' ? -150 : lane === 'R' ? 150 : 0;
+          const half = CLOUD_SIZE[opts.size || 'normal'].box / 2;
+          opts.drift = { amp: Math.min(r.range(90, 140), 370 - Math.abs(opts.x) - half), omega: r.range(0.5, 0.75) * (P.breather ? 0.7 : 1), phase: r.range(0, 6.28) };
+        }
+        else if (kinds.length > 1 && opts.size !== 'small' && r.chance(T.storm * P.enemy * zoneMul(y, 'storm'))) opts.cloud = 'storm';
+      }
       if (kind === 'branchL' || kind === 'branchR') {
         const len = this.pickLen(T, P, y, kinds);
         opts.len = len;
@@ -188,6 +223,7 @@ export class Level {
       if (kind === 'ribbon' || kind === 'bow') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
       const p = new Platform(kind, py, opts);
       platforms.push(p);
+      if (p.cloud === 'storm') this.world.enemies.push(new Lightning(p, this.child()));
       if (!opts.dry) safe = true;
     }
     if (!safe && kinds.length === 1 && (y - this.lastSafeY) + T.gap[1] * BEAT > SAFE_GAP) {

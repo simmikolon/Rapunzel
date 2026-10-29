@@ -83,8 +83,11 @@ shell first and filling it later. Conditions that make this hold up:
   around 0.8 to 1.5 hits per 100 m in every zone; a zone that spikes gets
   tuned before the next one starts.
 - **Dev helpers** that grow with need: ✅ `?at=150` starts at an altitude,
-  `?spawn=squirrel` puts an element on the next branch, `?dev=1` shows
-  altitude and zone, `?len=stub` makes every branch one length class. 💡 later: toggle invulnerability, freeze the witch,
+  `?spawn=squirrel` puts an element on the next branch, `?spawn=storm`
+  turns the next cloud into a storm cloud, `?dev=1` shows altitude and
+  zone, `?len=stub` makes every branch one length class. The simulator can
+  start at an altitude (`tools/analyze.mjs ... <cap> <seedBase> <startM>`)
+  to measure one zone. 💡 later: toggle invulnerability, freeze the witch,
   show hitboxes.
 
 Workflow: one short branch per element or zone; Vercel gives each branch a
@@ -169,10 +172,14 @@ build them. Each zone: elements, look, set piece.
 3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
    right with guards' arms reaching out, window ledges on the tower layer,
    Rapunzel's cameo window, the witch more present. Doors later.
-4. **Above the trees, 400 to 550 m** (🔜): the trees end, cloud platforms,
-   bird swarms to boost through, wind gusts; the tower rises out of the
-   forest with Rapunzel's window at the top. When this exists, the forest
-   tower exists.
+4. **Above the trees, 400 to 550 m** (in progress): ✅ the trees end at a
+   treeline (bare tops, crown tiles at 460 m) and cloud platforms take over
+   in three lanes: thick, wispy (weak bounce, dissolves), drifting (patrols
+   its lane) and storm clouds with lightning striking below them; the
+   braid with ribbons and bows runs on; spiders, squirrels and swings end
+   with the trees. 🔜 bird swarms to boost through, wind gusts that push
+   the prince; the tower rises out of the forest with Rapunzel's window at
+   the top. When this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
    (stars, asteroid platforms, the witch's territory), then zones repeat
    with harder variants or palette swaps.
@@ -189,6 +196,12 @@ is a pool to draw from, not a promise.
   on it from above stomps it; it bites if it reaches him while crouched on
   the branch or passing through it; falls with a crumbling branch. From the
   deep forest band (~120 m).
+- ✅ lightning under a storm cloud: the cloud is safe on top; rain streaks
+  mark a narrow column under its middle, the cloud flickers and rumbles
+  for a second, then one bolt strikes 420 px down for a quarter second.
+  Not stompable; the boost shield protects. Storm clouds are never alone in
+  a row and never small, so their edges are a safe approach. From about
+  480 m, growing toward the storm zone.
 - 💡 arms reaching out of windows to grab the prince; guards at the windows.
 - 💡 scissors cutting the braid from below a certain height: ribbons below
   the cut fall away. A rising death line; strong pacing, harsh; late zones
@@ -228,7 +241,15 @@ is a pool to draw from, not a promise.
   (barrier).
 - 💡 more ribbon and bow types on the hair: swinging bow, sticky bow that
   stops you, tiny bow, a bow that changes the braid color.
-- 💡 cloud platforms (above the trees), star and asteroid platforms (space).
+- ✅ cloud platforms above the treeline, in three lanes (left, right, a
+  centre lane that never shares a row with a ribbon) and three sizes
+  (small 150, normal 225, wide 325 px). Thick: the staple. Wispy:
+  translucent, the dry branch's weak bounce, dissolves into puffs after
+  one bounce, follows the dry rules. Drifting: patrols its lane on a slow
+  sine (45 to 105 px/s at most), always fully on screen; small or normal
+  only. Storm: the lightning's carrier (see enemies). The handover from
+  branches runs from 420 to 460 m.
+- 💡 star and asteroid platforms (space).
 - 💡 window ledges on the tower layer.
 
 **Pickups, power-ups, portals**
@@ -346,7 +367,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
 | 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
 | 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
-| 5 | Above the trees and the end of the tower | Trees end, cloud platforms, bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | 🔜 |
+| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning); 🔜 bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
@@ -371,6 +392,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Pacing | 90 m cycles, last 15 m a breather |
 | Branch lengths (box) | stub 58, short 106, normal 178, long 282 px; normal and long ± 12 % |
 | Branch length chances (tier 0 → 5) | short 0 → 0.28, stub 0 → 0.20 (from tier 2, deep forest on), long 0.10 → 0.12 |
+| Treeline | branches hand over to clouds 420 → 460 m; trunks end at 460 m |
+| Cloud sizes (box) | small 150, normal 225, wide 325 px; surface 16 px below the sprite top |
+| Cloud chances (tier 4 → 5) | small 0.16 → 0.26, wide 0.24 → 0.18, drifting 0.26 → 0.40, storm 0 → 0.20 (× pacing); wispy uses the dry chance |
+| Lightning | calm 2.5–4.5 s, charge 1 s, strike 0.25 s; column 70 × 420 px |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -466,3 +491,22 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   keeps out of the phone's safe areas (notch, home indicator) in
   full-screen mode. Verified in headless Chrome: WebGL context loss and
   restore, WebGL1 shader fallback, 40 s heap flat.
+- 2026-10-28: Above the trees, part one (`element/clouds`, plan in
+  `docs/plans/clouds.md`): the trees end at a treeline (handover 420 to
+  460 m, crown tiles), cloud platforms in three lanes and sizes with
+  thick, wispy, drifting and storm behaviours, lightning as the sky's
+  first new enemy, thunder and poof sounds, `?spawn=storm`, a simulator
+  that can start in a zone. Drifting clouds first wandered and wrapped
+  around the screen edge, which caused most sky falls; they now patrol
+  their lane. Crows above the trees went from 1.2x to 1.0x. Good bold,
+  40 runs from 450 m: mean climb 328 m, 1.17 hits per 100 m, falls 39 % of
+  deaths. Whole game: mean 415 m (405), 0.86 hits per 100 m, falls 55 %.
+- 2026-10-29: Two fixes from playing the sky. The far layer (stars and the
+  distant clouds) scrolled the wrong way: screen y was computed from world
+  y without the flip, so the far clouds rose while the prince climbed and
+  looked faster than the foreground; the forest and tower layers were
+  right. And the cloud platforms were a quarter too small for the eye:
+  repainted (not scaled) at 150 / 225 / 325 px with lobes that follow the
+  sprite height; wide clouds sit a little further in to stay on screen.
+  Sky from 450 m, 40 good bold runs: mean climb 381 m (328), 1.07 hits per
+  100 m (1.17), falls 48 % of deaths (39 %).

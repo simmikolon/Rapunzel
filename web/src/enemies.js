@@ -289,3 +289,74 @@ export class Witch extends Enemy {
     g.blit(set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.dir > 0 ? rot : -rot });
   }
 }
+
+// Lightning lives under a storm cloud. The cloud is safe on top; the bolt
+// strikes straight down from its middle in a narrow column. Phases: calm
+// (2.5 to 4.5 s, rain streaks mark the column) -> charge (1 s, the cloud
+// flickers and rumbles) -> strike (0.25 s, hurtful). Never stompable; the
+// boost shield simply protects.
+export class Lightning extends Enemy {
+  constructor(platform, rng = new RNG()) {
+    super(platform.x, platform.y - 20);
+    this.kind = 'lightning';
+    this.platform = platform;
+    this.rng = rng;              // its timing rolls on a seeded stream like every enemy's
+    this.w = 70; this.h = 420;
+    this.phase = 'calm'; this.phaseT = 0;
+    this.wait = rng.range(1.5, 4);
+    this.hurtful = false;
+    this.seed = rng.range(0, 100);
+    this.zig = [];
+  }
+  get stompable() { return false; }
+  get rect() { return { x: this.x - this.w / 2, y: this.y - this.h, w: this.w, h: this.h }; }
+  get top() { return this.y; }
+  update(dt, world) {
+    this.t += dt; this.phaseT += dt;
+    const pf = this.platform;
+    if (!pf.alive) { this.alive = false; return; }
+    this.x = pf.x; this.y = pf.y - 20;
+    const near = Math.abs(this.y - world.player.y) < 1400;
+    if (this.phase === 'calm' && this.phaseT > this.wait) {
+      this.phase = 'charge'; this.phaseT = 0;
+      if (near) world.audio.thunderWarn();
+    } else if (this.phase === 'charge' && this.phaseT > 1.0) {
+      this.phase = 'strike'; this.phaseT = 0; this.hurtful = true;
+      this.zig = []; let x = 0; for (let i = 0; i <= 8; i++) { this.zig.push([x, i / 8]); x += this.rng.range(-18, 18); }
+      if (near) { world.audio.thunderCrack(); world.cam.shake(5, 0.25); }
+    } else if (this.phase === 'strike' && this.phaseT > 0.25) {
+      this.phase = 'calm'; this.phaseT = 0; this.hurtful = false;
+      this.wait = this.rng.range(2.5, 4.5);
+    }
+  }
+  stomped() {}   // the shield only protects
+  draw(g, cam) {
+    const sx = cam.sx(this.x), top = cam.sy(this.y), bottom = cam.sy(this.y - this.h);
+    // rain streaks in the column, always
+    for (let i = 0; i < 9; i++) {
+      const f = ((this.t * 1.7 + i * 0.37 + this.seed) % 1);
+      const x = sx - 30 + (i * 7.5) % 60 + Math.sin(i * 2.3 + this.seed) * 3;
+      const y = top + f * (bottom - top);
+      g.line(x, y, x - 3, y + 30, '#c9dcf2', 3, 0.42 + 0.3 * (1 - f));
+    }
+    if (this.phase === 'charge') {
+      // flicker inside the cloud
+      const fl = Math.random() < 0.35 ? 1 : 0.35;
+      g.halo(sx, top + 10, 110 + fl * 30, '#f4f0ff', 0.3 * fl, { glow: 1 });
+    } else if (this.phase === 'strike') {
+      const k = 1 - this.phaseT / 0.25;
+      g.halo(sx, top + 10, 180, '#ffffff', 0.5 * k, { glow: 1 });
+      let px = sx, py = top;
+      for (const [zx, f] of this.zig) {
+        const x = sx + zx, y = top + f * (bottom - top);
+        if (f > 0) {
+          g.line(px, py, x, y, '#9ec5ff', 14, 0.35 * k);
+          g.line(px, py, x, y, '#ffffff', 6, k);
+          g.halo((px + x) / 2, (py + y) / 2, 40, '#cfe2ff', 0.35 * k, { glow: 1 });   // bloom along the bolt
+        }
+        px = x; py = y;
+      }
+      g.halo(px, py, 90, '#ffffff', 0.45 * k, { glow: 1 });
+    }
+  }
+}

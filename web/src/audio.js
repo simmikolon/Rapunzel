@@ -162,6 +162,25 @@ class Synth {
     this.noise({ dur: 0.35, vol: 0.3, filter: 'lowpass', freq: 2500, to: 300, q: 0.5 });
     this.tone({ type: 'square', freq: 140, to: 60, dur: 0.2, vol: 0.08 });
   }
+  poof(soft = false) {
+    // a cloud landing: a soft airy thump, rounder than the branch bounce
+    this.noise({ dur: soft ? 0.22 : 0.18, vol: soft ? 0.16 : 0.2, filter: 'lowpass', freq: 1400, to: 300, q: 0.6 });
+    this.tone({ type: 'sine', freq: soft ? 220 : 280, to: soft ? 300 : 420, dur: 0.14, vol: soft ? 0.1 : 0.14 });
+  }
+  dissolve() {
+    // a wispy cloud coming apart
+    this.noise({ dur: 0.45, vol: 0.2, filter: 'bandpass', freq: 2200, to: 700, q: 0.8 });
+  }
+  thunderWarn() {
+    // a low rumble while the storm cloud charges
+    this.noise({ dur: 0.9, vol: 0.22, filter: 'lowpass', freq: 160, to: 70, q: 0.8 });
+    this.tone({ type: 'sine', freq: 55, to: 40, dur: 0.8, vol: 0.12 });
+  }
+  thunderCrack() {
+    this.noise({ dur: 0.08, vol: 0.32, filter: 'highpass', freq: 1800 });
+    this.noise({ dur: 0.5, vol: 0.3, filter: 'lowpass', freq: 900, to: 120, q: 0.6, delay: 0.03 });
+    this.tone({ type: 'sine', freq: 110, to: 38, dur: 0.45, vol: 0.2, delay: 0.03 });
+  }
   bonk() {
     this.tone({ type: 'sine', freq: 140, to: 50, dur: 0.22, vol: 0.4 });
     this.noise({ dur: 0.08, vol: 0.2, filter: 'lowpass', freq: 900 });

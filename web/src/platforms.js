@@ -21,6 +21,10 @@ export const KIND = {
   ribbon:  { w: 104, cx: 0, surface: 0, bounce: JUMP_VY, onBraid: true, layer: PARALLAX_TOWER },
   bow:     { w: 124, cx: 0, surface: 0, bounce: SPRING_VY, onBraid: true, layer: PARALLAX_TOWER },
   swing:   { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
+  // Clouds (above the trees): in the prince's plane, free x in three lanes,
+  // box by size (CLOUD_SIZE); `cloud` names the behaviour (thick | wispy |
+  // drift | storm). Wispy clouds use the dry flag: weak bounce, gone after one.
+  cloud:   { w: 180, cx: 0, surface: 0, bounce: JUMP_VY, cloud: true },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 
@@ -35,6 +39,14 @@ export const BRANCH_LEN = {
   long:   { box: 282, art: 76 },
 };
 
+// Cloud sizes: box width in px (the sprite is the box; a cloud is soft to
+// its edge) and the sprite size in art px.
+export const CLOUD_SIZE = {
+  small:  { box: 150, art: [38, 15] },
+  normal: { box: 225, art: [56, 17] },
+  wide:   { box: 325, art: [81, 20] },
+};
+
 let nextId = 1;
 
 export class Platform {
@@ -47,7 +59,12 @@ export class Platform {
     this.variant = opts.variant || 0;     // branches: which drawing of the class
     this.style = opts.style || 0;         // branches: tree style (zone look)
     this.tint = opts.tint || null;        // branches: slight bark tint
-    this.boxW = (this.def.root != null ? BRANCH_LEN[this.len].box : this.def.w) * this.lenScale;
+    this.size = opts.size || 'normal';    // clouds: size class (CLOUD_SIZE)
+    this.cloud = opts.cloud || null;      // clouds: behaviour (thick | wispy | drift | storm)
+    this.drift = opts.drift || null;      // drifting clouds: { amp, omega, phase } patrol around baseX
+    this.vx = 0;                          // drifting clouds: current sideways speed
+    this.phase = opts.phase || 0;         // clouds: breathing phase
+    this.boxW = (this.def.root != null ? BRANCH_LEN[this.len].box : this.def.cloud ? CLOUD_SIZE[this.size].box : this.def.w) * this.lenScale;
     this.baseX = opts.x != null ? opts.x : (this.def.root != null ? this.def.root + this.def.dir * this.boxW / 2 : this.def.cx);
     this.x = this.baseX;              // current center x (ribbons sway)
     this.layer = this.def.layer || 1; // parallax factor of the layer it belongs to
@@ -83,6 +100,12 @@ export class Platform {
     this.t += dt;
     if (this.layer < 1) this.y = Platform.layerToWorld(this.ly, this.layer, cam.y);
     if (this.def.onBraid) this.x = this.baseX + braidX(this.ly) + this.sway * Math.sin(time * 1.3 + this.swayPhase);
+    if (this.drift && this.state !== 'breaking') {
+      // a drifting cloud patrols its lane: slow, smooth, always fully on screen
+      const { amp, omega, phase } = this.drift;
+      this.x = this.baseX + amp * Math.sin(time * omega + phase);
+      this.vx = amp * omega * Math.cos(time * omega + phase);
+    }
     if (this.state === 'jumpedOn') {
       this.squash = Math.max(0, 1 - this.t / 0.18);
       if (this.t > 0.18) { this.state = this.used && this.dry ? 'breaking' : 'normal'; this.t = 0; }
@@ -90,10 +113,15 @@ export class Platform {
       this.wobble = Math.sin(this.t * 40) * Math.max(0, 1 - this.t / 0.3) * 4;
       if (this.t > 0.3) { this.state = 'normal'; this.t = 0; this.wobble = 0; }
     } else if (this.state === 'breaking') {
-      // falls away, spinning slightly
-      this.y -= 400 * this.t * dt * 4;
-      this.wobble = this.t * 25;
-      if (this.t > 0.6) { this.state = 'gone'; this.alive = false; }
+      if (this.def.cloud) {
+        // a wispy cloud dissolves where it is
+        if (this.t > 0.5) { this.state = 'gone'; this.alive = false; }
+      } else {
+        // falls away, spinning slightly
+        this.y -= 400 * this.t * dt * 4;
+        this.wobble = this.t * 25;
+        if (this.t > 0.6) { this.state = 'gone'; this.alive = false; }
+      }
     }
   }
 
