@@ -195,7 +195,7 @@ export class World {
     // bounces above the prince, from one edge to the other.
     if (pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
       this.spawnStork();
-      this.nextStorkY = pl.maxY + this.rng.range(1200, 2000);
+      this.nextStorkY = pl.maxY + this.rngEvents.range(1200, 2000);
     }
     // Teach the boost shield the first time an enemy comes into view.
     if (!this.hintShown && this.enemies.some((e) => e.alive && !e.dead && e.kind !== 'witch' && e.y < this.cam.top && e.y > this.cam.y)) {
@@ -218,9 +218,11 @@ export class World {
   }
   onUpdraftEnter(pl, u) { this.audio.whoosh(); this.audio.spring(); this.particles.cloudPuff(pl.x, pl.y + 40, 60, 6); this.particles.petals(pl.x, pl.y + 60, 6); }
 
+  // Storks depend on where the prince is, so like the witch they roll on the
+  // events stream and leave the tower's geometry untouched.
   spawnStork() {
-    const pl = this.player, side = this.rng.sign();
-    const stork = new Platform('stork', pl.y + this.rng.range(380, 640), { x: -side * (W / 2 + 140), vx: side * this.rng.range(150, 210), phase: this.rng.range(0, 6.28) });
+    const pl = this.player, r = this.rngEvents, side = r.sign();
+    const stork = new Platform('stork', pl.y + r.range(380, 640), { x: -side * (W / 2 + 140), vx: side * r.range(150, 210), phase: r.range(0, 6.28) });
     this.platforms.push(stork);
     this.audio.wings();
     return stork;
