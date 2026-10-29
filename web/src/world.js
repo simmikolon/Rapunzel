@@ -43,7 +43,7 @@ export class World {
     this.suns = 0;
     this.stomps = 0;
     this.nextWitchY = 12000;
-    this.nextStorkY = 47000;      // storks cross the sky every 400 to 700 px of climb
+    this.nextStorkY = 47000;      // storks cross the sky every 1200 to 2000 px of climb
     this.nextMilestone = 100;
     this.hintShown = false;
     this.toasts = [];
@@ -188,7 +188,7 @@ export class World {
     // bounces above the prince, from one edge to the other.
     if (pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
       this.spawnStork();
-      this.nextStorkY = pl.maxY + this.rng.range(400, 700);
+      this.nextStorkY = pl.maxY + this.rng.range(1200, 2000);
     }
     // Teach the boost shield the first time an enemy comes into view.
     if (!this.hintShown && this.enemies.some((e) => e.alive && !e.dead && e.kind !== 'witch' && e.y < this.cam.top && e.y > this.cam.y)) {
@@ -209,7 +209,7 @@ export class World {
     this.fields.push(u);
     return u;
   }
-  onUpdraftEnter(pl, u) { this.audio.whoosh(); this.particles.cloudPuff(pl.x, pl.y + 40, 60, 6); }
+  onUpdraftEnter(pl, u) { this.audio.whoosh(); this.audio.spring(); this.particles.cloudPuff(pl.x, pl.y + 40, 60, 6); this.particles.petals(pl.x, pl.y + 60, 6); }
 
   spawnStork() {
     const pl = this.player, side = this.rng.sign();
@@ -324,7 +324,7 @@ export class World {
     const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
-    for (const f of this.fields) f.draw(g, cam, this.time);
+    for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);

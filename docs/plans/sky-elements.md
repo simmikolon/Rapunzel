@@ -100,3 +100,10 @@ the same seeds, 40 good bold runs from 450 m: without 53 % falls and a
 337 m mean climb, with 43 % and 390 m. A first version let the bot ride
 a column forever (a 'timeout' run) when the cloud above had dissolved;
 hence the rest.
+
+Follow-up from playing (2026-10-29): the updraft got its look (a small
+cloud with puffed cheeks at the base, `art/wind.js`, curls and soft
+breaths rising, petals among the feathers) and became a launch like the
+bow spring (9000 px/s² to 2300 px/s) at a slightly lower chance (0.10 to
+0.16); storks come every 1200 to 2000 px of climb. Sky from 450 m, 40
+good bold runs: 37 % falls, 1.21 hits per 100 m, mean climb 338 m.

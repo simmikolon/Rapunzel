@@ -104,11 +104,13 @@ export class Particles {
     }));
   }
   updraft(x, y, height) {
-    const leaf = Math.random() < 0.4;
+    const kind = Math.random();
+    const petal = kind < 0.35, leaf = kind >= 0.35 && kind < 0.6;
     this.spawn({
-      x, y, vx: (Math.random() - 0.5) * 40, vy: 260 + Math.random() * 240,
-      life: Math.min(1.6, height / 420), size: leaf ? 6 : 5, color: leaf ? C.grassLight : (Math.random() < 0.6 ? '#f4f4f0' : '#d2d2cc'),
-      g: -0.02, drag: 0.2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: leaf ? 'leaf' : 'feather', shrink: false, wobble: 1,
+      x, y, vx: (Math.random() - 0.5) * 60, vy: 320 + Math.random() * 300,
+      life: Math.min(1.5, height / 460), size: petal ? 5 : leaf ? 6 : 5,
+      color: petal ? (Math.random() < 0.5 ? C.ribbonHi : C.bowHi) : leaf ? C.grassLight : (Math.random() < 0.6 ? '#f4f4f0' : '#d2d2cc'),
+      g: -0.03, drag: 0.2, spin: (Math.random() - 0.5) * 12, angle: Math.random() * TAU, shape: leaf ? 'leaf' : 'feather', shrink: false,
     });
   }
   boostTrail(x, y) {
