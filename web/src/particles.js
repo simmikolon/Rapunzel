@@ -116,11 +116,11 @@ export class Particles {
       return { x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.4 + Math.random() * 0.4, size: 6 + Math.random() * 6, color: Math.random() < 0.3 ? C.white : color, g: 0.1, drag: 3, shape: 'spark', glow: 0.8 };
     });
   }
-  feathers(x, y) {
+  feathers(x, y, light = false) {
     this.burst(x, y, 9, () => ({
       x: x + (Math.random() - 0.5) * 40, y: y + (Math.random() - 0.5) * 30,
       vx: (Math.random() - 0.5) * 320, vy: 60 + Math.random() * 260,
-      life: 0.9 + Math.random() * 0.6, size: 5, color: Math.random() < 0.7 ? C.crow : C.crowHi,
+      life: 0.9 + Math.random() * 0.6, size: 5, color: light ? (Math.random() < 0.7 ? '#f4f4f0' : '#d2d2cc') : (Math.random() < 0.7 ? C.crow : C.crowHi),
       g: 0.08, drag: 2.2, spin: (Math.random() - 0.5) * 14, shape: 'feather', shrink: false,
     }));
   }

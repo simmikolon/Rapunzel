@@ -79,4 +79,14 @@ world; `Background.skyLanterns` rise behind and in front of the tower.
 Measured from 600 m, 40 good bold runs: the first version (112 px box,
 ± 28 px bob) raised falls from 41 % (lanterns off) to 53 % of deaths; at
 136 px with a ± 20 px bob: 29 % falls, 1.14 hits per 100 m, mean climb
-315 m (321 without). Storks and updrafts: next.
+315 m (321 without).
+
+**Storks: landed.** Kind `stork` in `platforms.js` (flies at `vx`, a
+flap bob, gone past the far edge); `drawStork` in `art/creatures.js`
+(42 x 22, two frames, both directions); `World.spawnStork()` from
+`events()` every 400 to 700 px of climb once `cloudAmount` is 1; riding
+one gives +3 suns, white feathers and a squawk; `?spawn=stork`. The
+bot first chased storks it could not reach (54 % falls from 450 m); it
+now chases only a stork that will still be on screen and within 320 px
+when it gets there: 33 % falls, 1.09 hits per 100 m, mean climb 330 m
+(40 good bold runs from 450 m). Updrafts: next.

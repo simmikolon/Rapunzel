@@ -178,7 +178,8 @@ build them. Each zone: elements, look, set piece.
    its lane) and storm clouds with lightning striking below them; the
    braid with ribbons and bows runs on; spiders, squirrels and swings end
    with the trees; ✅ sky lanterns take over from the clouds at sunset and
-   night. 🔜 storks to ride, updrafts, bird swarms to boost through; the
+   night; ✅ storks cross the sky to ride for one bounce. 🔜 updrafts,
+   bird swarms to boost through; the
    tower rises out of the forest with Rapunzel's window at the top. When
    this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
@@ -255,6 +256,10 @@ is a pool to draw from, not a promise.
   row's height, glowing; landing crumples the paper. A cloud slot becomes
   a lantern with chance 0.6 x `lanternAmount`. A field of small lanterns
   rises behind and in front of the tower at night, purely visual.
+- ✅ storks: once the clouds are fully in, every 400 to 700 px of climb a
+  stork enters from one edge 380 to 640 px above the prince and crosses
+  at 150 to 210 px/s; its back is a 150 px perch. Never part of a row, so
+  never the only way up: a timing reward worth +3 suns and a squawk.
 - 💡 star and asteroid platforms (space).
 - 💡 window ledges on the tower layer.
 
@@ -403,6 +408,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Cloud chances (tier 4 → 5) | small 0.16 → 0.26, wide 0.24 → 0.18, drifting 0.26 → 0.40, storm 0 → 0.20 (× pacing); wispy uses the dry chance |
 | Lightning | calm 2.5–4.5 s, charge 1 s, strike 0.25 s; column 70 × 420 px |
 | Sky lanterns | from 520–600 m on; 136 px box; bob ± 20 px, sway ± 12 px |
+| Storks | every 400–700 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -523,3 +529,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   112 px box took falls from 600 m from 41 % to 53 % of deaths; at 136 px
   with a calmer bob the sky from 600 m measures 29 % falls, 1.14 hits per
   100 m, mean climb 315 m (321 without lanterns), 40 good bold runs.
+- 2026-10-29: Storks (`element/sky-birds`): a one-shot moving perch that
+  crosses the screen, spawned relative to the prince like the witch.
+  The bot first chased storks it could not reach (falls from 450 m 54 %
+  of deaths); taught to chase only a stork that will still be on screen
+  and within 320 px when it gets there: 33 % falls, 1.09 hits per 100 m,
+  mean climb 330 m, 40 good bold runs.

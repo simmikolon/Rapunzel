@@ -36,7 +36,16 @@ class Bot {
     if (this.rng.next() < this.s.hesitate) return;   // hesitation: keep doing what we did
     const w = this.world, p = w.player, cam = w.cam;
     if (!p.alive) { this.input.axis = 0; return; }
-    const plats = w.platforms.filter((q) => q.landable && q.kind !== 'ground' && q.y > cam.y - 50 && q.y < cam.top + 800);
+    // A stork is only worth chasing while it will still be on screen and
+    // within reach when we get there; otherwise it is scenery.
+    const storkOk = (q) => {
+      if (q.kind !== 'stork') return true;
+      const dy = q.y - p.y, disc = p.vy * p.vy - 2 * GRAVITY * dy;
+      const tl = disc >= 0 ? (p.vy + Math.sqrt(disc)) / GRAVITY : 0.6;
+      const ax = q.x + q.vx * tl;
+      return Math.abs(ax) < W / 2 - 60 && Math.abs(ax - p.x) < 320;
+    };
+    const plats = w.platforms.filter((q) => q.landable && q.kind !== 'ground' && q.y > cam.y - 50 && q.y < cam.top + 800 && storkOk(q));
     let above = null, below = null;
     for (const q of plats) {
       if (q.y > p.y + 10 && (!above || q.y < above.y)) above = q;

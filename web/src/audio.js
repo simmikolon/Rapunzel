@@ -177,6 +177,14 @@ class Synth {
     this.noise({ dur: 0.08, vol: 0.07, filter: 'highpass', freq: 3000, delay: 0.02 });
     this.tone({ type: 'sine', freq: 190, to: 280, dur: 0.12, vol: 0.1 });
   }
+  wings() {
+    // a stork beating its wings as it comes in
+    for (let i = 0; i < 3; i++) this.noise({ dur: 0.14, vol: 0.1, filter: 'bandpass', freq: 500, to: 250, q: 1.2, delay: i * 0.22 });
+  }
+  squawk() {
+    this.tone({ type: 'sawtooth', freq: 760, to: 420, dur: 0.12, vol: 0.1 });
+    this.tone({ type: 'sawtooth', freq: 680, to: 380, dur: 0.14, vol: 0.09, delay: 0.14 });
+  }
   thunderWarn() {
     // a low rumble while the storm cloud charges
     this.noise({ dur: 0.9, vol: 0.22, filter: 'lowpass', freq: 160, to: 70, q: 0.8 });

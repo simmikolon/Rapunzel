@@ -1,4 +1,4 @@
-import { JUMP_VY, WEAK_JUMP_VY, SPRING_VY, CAMERA_START_Y, PARALLAX_TOWER } from './config.js';
+import { W, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, CAMERA_START_Y, PARALLAX_TOWER } from './config.js';
 import { TAU } from './util.js';
 
 // Platform kinds. Collision rects are relative to the platform center.
@@ -28,6 +28,9 @@ export const KIND = {
   // Sky lanterns (sunset and night): hover with a slow bob and sway around
   // the row's height; the surface is the top of the paper. Never fragile.
   skyLantern: { w: 136, cx: 0, surface: 0, bounce: JUMP_VY, lantern: true },
+  // A stork crossing the screen once: its back is a 150 px perch. Never part
+  // of the row structure, so never the only way up; gone past the far edge.
+  stork: { w: 150, cx: 0, surface: 0, bounce: JUMP_VY, stork: true },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 
@@ -65,7 +68,7 @@ export class Platform {
     this.size = opts.size || 'normal';    // clouds: size class (CLOUD_SIZE)
     this.cloud = opts.cloud || null;      // clouds: behaviour (thick | wispy | drift | storm)
     this.drift = opts.drift || null;      // drifting clouds: { amp, omega, phase } patrol around baseX
-    this.vx = 0;                          // drifting clouds: current sideways speed
+    this.vx = opts.vx || 0;               // sideways speed (storks fly, drifting clouds patrol)
     this.phase = opts.phase || 0;         // clouds: breathing phase
     this.boxW = (this.def.root != null ? BRANCH_LEN[this.len].box : this.def.cloud ? CLOUD_SIZE[this.size].box : this.def.w) * this.lenScale;
     this.baseX = opts.x != null ? opts.x : (this.def.root != null ? this.def.root + this.def.dir * this.boxW / 2 : this.def.cx);
@@ -104,6 +107,11 @@ export class Platform {
     this.t += dt;
     if (this.layer < 1) this.y = Platform.layerToWorld(this.ly, this.layer, cam.y);
     if (this.def.onBraid) this.x = this.baseX + braidX(this.ly) + this.sway * Math.sin(time * 1.3 + this.swayPhase);
+    if (this.def.stork) {
+      this.x += this.vx * dt;
+      this.y = this.baseY + 8 * Math.sin(time * 7 + this.phase);
+      if (Math.abs(this.x) > W / 2 + 220) this.alive = false;
+    }
     if (this.def.lantern) {
       this.y = this.baseY + 20 * Math.sin(time * 1.05 + this.phase);
       this.x = this.baseX + 12 * Math.sin(time * 0.7 + this.phase);
