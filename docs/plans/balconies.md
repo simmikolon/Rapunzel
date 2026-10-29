@@ -83,4 +83,30 @@ by more than 15 % (the zone gains two enemies, some drop is the point).
 
 ## Status
 
-Filled in as steps land.
+All four steps landed in one pass.
+
+- `KIND.balcony` on the tower layer in `platforms.js` (`side`, x = ±210,
+  box 120); `art/balconies.js` (36 x 40, five variants, mirrored);
+  layout slots `balconyL/R` in both tables weighted by tier x zone with
+  the one-in-two rule; `front` and the layer gap caps treat balconies as
+  tower-layer rows; the dilapidated variant takes the dry flag.
+- `Guard` and `Flowerpot` in `enemies.js`, art in `art/creatures.js`,
+  `particles.shards`, sounds `grunt`, `clank`, `rattle`, `shatter`; the
+  world calls an enemy's `onHit` after a hit (the pot shatters); spawned
+  per balcony in `makeRow` (guard first, else pot, never on a fragile
+  one); `?spawn=guard|pot` (a balcony is made if none is in view).
+- Bot: the squirrel rule covers any enemy bound to the target platform;
+  a falling pot above within 70 px is a threat.
+
+Paired seeds, 40 good bold runs from 250 m (cap 700):
+
+| | master | with balconies |
+|---|---|---|
+| hits per 100 m (300 m band) | 0.85 (0.62) | 1.15 (1.26) |
+| falls, share of deaths | 61 % | 55 % |
+| mean climb | 313 m | 281 m |
+
+The zone was too light before and is now in the middle of the target;
+the climb dropped 10 %, inside the 15 % allowed for a zone that gains
+two enemies. A first guard chance of 0.4 at tier 3 put the band at
+1.49 and was trimmed to 0.35.

@@ -19,6 +19,10 @@ export const KIND = {
   branchL: { w: 178, cx: -195, root: -284, dir: 1, surface: 0, bounce: JUMP_VY, trunk: 'L' },
   branchR: { w: 178, cx: 195, root: 284, dir: -1, surface: 0, bounce: JUMP_VY, trunk: 'R' },
   ribbon:  { w: 104, cx: 0, surface: 0, bounce: JUMP_VY, onBraid: true, layer: PARALLAX_TOWER },
+  // Balconies on the tower itself (windows zone): on the tower layer like
+  // the ribbons, at the wall's left or right edge (x = -210 / +210). The
+  // dilapidated variant is fragile under the dry rules.
+  balcony: { w: 120, cx: 0, surface: 0, bounce: JUMP_VY, layer: PARALLAX_TOWER, balcony: true },
   bow:     { w: 124, cx: 0, surface: 0, bounce: SPRING_VY, onBraid: true, layer: PARALLAX_TOWER },
   swing:   { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
   // Clouds (above the trees): in the prince's plane, free x in three lanes,
@@ -65,6 +69,7 @@ export class Platform {
     this.variant = opts.variant || 0;     // branches: which drawing of the class
     this.style = opts.style || 0;         // branches: tree style (zone look)
     this.tint = opts.tint || null;        // branches: slight bark tint
+    this.side = opts.side || 'L';         // balconies: which edge of the wall
     this.size = opts.size || 'normal';    // clouds: size class (CLOUD_SIZE)
     this.cloud = opts.cloud || null;      // clouds: behaviour (thick | wispy | drift | storm)
     this.drift = opts.drift || null;      // drifting clouds: { amp, omega, phase } patrol around baseX

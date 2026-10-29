@@ -360,3 +360,133 @@ export class Lightning extends Enemy {
     }
   }
 }
+
+// A guard on a balcony: patrols inside the railing like the squirrel on its
+// branch, and lunges with his halberd when the prince comes near (a wind-up
+// with a "!", then a thrust that reaches past the railing). A pogo on the
+// helmet dazes him and he sinks back through the door.
+export class Guard extends Enemy {
+  constructor(platform, rng = new RNG()) {
+    super(platform.x + rng.range(-16, 16), platform.y);
+    this.kind = 'guard';
+    this.platform = platform;
+    this.rng = rng;
+    this.w = 48; this.h = 72;
+    this.dir = platform.side === 'L' ? 1 : -1;      // faces the open side
+    this.state = 'stand';          // stand | walk | windup | thrust | dazed
+    this.stateT = 0;
+    this.standFor = rng.range(1, 2.5); this.walkFor = rng.range(0.8, 1.8);
+    this.cooldown = 0;
+    this.frame = 0;
+    this.sink = 0;
+  }
+  get left() { return this.platform.left + 22; }
+  get right() { return this.platform.right - 22; }
+  get rect() {
+    const r = { x: this.x - this.w / 2, y: this.y - this.h / 2, w: this.w, h: this.h };
+    if (this.state === 'thrust') { r.w += 70; if (this.dir < 0) r.x -= 70; }   // the halberd's reach
+    return r;
+  }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    const pf = this.platform;
+    if (this.dead) {
+      this.sink += dt;
+      if (this.sink > 0.9) this.alive = false;
+      this.y = pf.y + this.h / 2 - this.sink * 70;
+      return;
+    }
+    if (!pf.landable) { this.dead = true; this.hurtful = false; return; }   // the balcony went
+    if (this.cooldown > 0) this.cooldown -= dt;
+    const p = world.player;
+    const dx = p.x - this.x;
+    const near = p.alive && Math.abs(dx) < 230 && p.y >= pf.y - 100 && p.y < pf.y + 420;
+    if (this.state === 'windup') {
+      if (this.stateT > 0.35) { this.state = 'thrust'; this.stateT = 0; }
+    } else if (this.state === 'thrust') {
+      if (this.stateT > 0.45) { this.state = 'stand'; this.stateT = 0; this.cooldown = 1.2; this.standFor = this.rng.range(0.8, 1.6); }
+    } else if (near && this.cooldown <= 0) {
+      this.state = 'windup'; this.stateT = 0;
+      this.dir = dx > 0 ? 1 : -1;
+      world.audio.grunt();
+    } else if (this.state === 'stand') {
+      if (near) this.dir = dx > 0 ? 1 : -1;
+      if (this.stateT > this.standFor) { this.state = 'walk'; this.stateT = 0; this.walkFor = this.rng.range(0.8, 1.8); this.dir = this.rng.sign(); }
+    } else {
+      this.x += this.dir * 45 * dt;
+      if (this.stateT > this.walkFor) { this.state = 'stand'; this.stateT = 0; this.standFor = this.rng.range(1, 2.5); }
+    }
+    if (this.x < this.left) { this.x = this.left; this.dir = 1; }
+    else if (this.x > this.right) { this.x = this.right; this.dir = -1; }
+    this.y = pf.y + this.h / 2;
+    this.frame = this.state === 'walk' ? 1 + (Math.floor(this.t * 6) % 2) : this.state === 'thrust' ? 3 : 0;
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false; this.state = 'dazed';
+    world.audio.clank();
+    world.particles.stars(this.x, this.y + this.h / 2);
+  }
+  draw(g, cam, art) {
+    const set = this.dir > 0 ? art.creatures.guardR : art.creatures.guardL;
+    const s = this.dead ? set[4] : set[this.frame];
+    const sy = cam.sy(this.y - this.h / 2);
+    g.blit(s, cam.sx(this.x), sy, this.dead ? { alpha: Math.max(0, 1 - this.sink / 0.9) } : undefined);
+    if (this.state === 'windup') g.text('!', cam.sx(this.x), sy - this.h - 26, 22, '#ffe9a0', 'center', true);
+  }
+}
+
+// A flowerpot on a balcony's railing. When the prince is below it, it
+// wobbles with a rattle, then falls; hurtful only while falling; shatters
+// on him, on a platform or below the view. One shot.
+export class Flowerpot extends Enemy {
+  constructor(platform, rng = new RNG()) {
+    super(platform.x + (platform.side === 'L' ? -1 : 1) * 36, platform.y + 60);
+    this.kind = 'pot';
+    this.platform = platform;
+    this.rng = rng;
+    this.w = 36; this.h = 40;
+    this.state = 'sit';            // sit | wobble | fall
+    this.stateT = 0;
+    this.hurtful = false;
+    this.vy = 0; this.rot = 0;
+    this.flower = rng.int(0, 2);
+  }
+  get stompable() { return false; }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    const pf = this.platform, p = world.player;
+    if (this.dead) { this.alive = false; return; }
+    if (this.state === 'sit') {
+      if (!pf.alive) { this.alive = false; return; }
+      this.y = pf.y + 60;
+      const dy = this.y - (p.y + 110);
+      if (p.alive && Math.abs(p.x - this.x) < 90 && dy > 120 && dy < 620) { this.state = 'wobble'; this.stateT = 0; world.audio.rattle(); }
+    } else if (this.state === 'wobble') {
+      this.rot = Math.sin(this.stateT * 38) * 0.22;
+      if (this.stateT > 0.7) { this.state = 'fall'; this.stateT = 0; this.hurtful = true; this.vy = 0; }
+    } else {
+      const prevY = this.y;
+      this.vy -= GRAVITY * dt;
+      this.y += this.vy * dt;
+      this.rot += dt * 3;
+      // shatters on the first platform it crosses, or below the view
+      for (const q of world.platforms) {
+        if (q === pf || !q.landable || q.kind === 'ground') continue;
+        if (prevY - this.h / 2 >= q.y && this.y - this.h / 2 <= q.y && Math.abs(this.x - q.x) < q.w / 2 + 10) { this.shatter(world); return; }
+      }
+      if (this.y < world.cam.y - 100) this.alive = false;
+    }
+  }
+  shatter(world) {
+    this.dead = true; this.hurtful = false; this.alive = false;
+    world.audio.shatter();
+    world.particles.shards(this.x, this.y);
+  }
+  onHit(world) { this.shatter(world); }
+  stomped(world) { this.shatter(world); }     // the shield smashes it
+  draw(g, cam, art) {
+    const s = art.creatures.pots[this.flower];
+    g.blit(s, cam.sx(this.x), cam.sy(this.y - this.h / 2), this.rot ? { rot: this.rot } : undefined);
+    if (this.state === 'wobble') g.text('!', cam.sx(this.x), cam.sy(this.y + this.h / 2) - 26, 22, '#ffe9a0', 'center', true);
+  }
+}

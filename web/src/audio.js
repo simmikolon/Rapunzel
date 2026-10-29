@@ -189,6 +189,26 @@ class Synth {
     // entering an updraft: a soft rising rush of air
     this.noise({ dur: 0.5, vol: 0.18, filter: 'bandpass', freq: 400, to: 1800, q: 0.7 });
   }
+  grunt() {
+    // a guard winding up: a short low "hup"
+    this.tone({ type: 'sawtooth', freq: 170, to: 110, dur: 0.14, vol: 0.12 });
+    this.noise({ dur: 0.08, vol: 0.06, filter: 'bandpass', freq: 700, q: 1.5 });
+  }
+  clank() {
+    // a pogo on a helmet
+    this.tone({ type: 'square', freq: 1100, to: 420, dur: 0.16, vol: 0.12 });
+    this.noise({ dur: 0.12, vol: 0.18, filter: 'highpass', freq: 2500 });
+    this.tone({ type: 'sine', freq: 300, to: 120, dur: 0.2, vol: 0.14 });
+  }
+  rattle() {
+    // a flowerpot wobbling on the railing
+    for (let i = 0; i < 4; i++) this.tone({ type: 'square', freq: 900 + (i % 2) * 150, dur: 0.04, vol: 0.07, delay: i * 0.16 });
+  }
+  shatter() {
+    this.noise({ dur: 0.22, vol: 0.28, filter: 'highpass', freq: 1800 });
+    this.tone({ type: 'sine', freq: 1400, to: 500, dur: 0.18, vol: 0.1 });
+    this.noise({ dur: 0.3, vol: 0.12, filter: 'lowpass', freq: 800, to: 200, delay: 0.03 });
+  }
   thunderWarn() {
     // a low rumble while the storm cloud charges
     this.noise({ dur: 0.9, vol: 0.22, filter: 'lowpass', freq: 160, to: 70, q: 0.8 });

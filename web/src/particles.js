@@ -113,6 +113,15 @@ export class Particles {
       g: -0.03, drag: 0.2, spin: (Math.random() - 0.5) * 12, angle: Math.random() * TAU, shape: leaf ? 'leaf' : 'feather', shrink: false,
     });
   }
+  shards(x, y) {
+    this.burst(x, y, 12, (i) => ({
+      x: x + (Math.random() - 0.5) * 30, y: y + (Math.random() - 0.5) * 20,
+      vx: (Math.random() - 0.5) * 360, vy: 60 + Math.random() * 300,
+      life: 0.6 + Math.random() * 0.5, size: 5 + Math.random() * 5,
+      color: i % 4 === 0 ? C.leaf : i % 4 === 1 ? C.ribbonHi : Math.random() < 0.5 ? '#c8683a' : '#8a4a28',
+      g: 0.9, drag: 0.5, spin: (Math.random() - 0.5) * 12, angle: Math.random() * TAU, shape: i % 4 === 0 ? 'leaf' : 'square', shrink: false,
+    }));
+  }
   boostTrail(x, y) {
     this.burst(x, y, 3, () => ({
       x: x + (Math.random() - 0.5) * 24, y: y + Math.random() * 10,

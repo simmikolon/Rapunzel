@@ -87,6 +87,37 @@ function drawStork(t, frame) {
   line(14, 14, 7, 17, red); line(16, 14, 9, 18, red);
 }
 
+// Guard: 12 x 18 art px, facing right. Frames: stand, walk 1, walk 2,
+// thrust (halberd level), dazed. Anchor bottom centre.
+function drawGuard(t, frame) {
+  const { p, line, disc } = t;
+  const dazed = frame === 4, thrust = frame === 3;
+  const step = frame === 1 ? 1 : frame === 2 ? -1 : 0;
+  // legs and boots
+  p(4 + (step > 0 ? 1 : 0), 14, 2, 3, C.tightsDark); p(7 - (step < 0 ? 1 : 0), 14, 2, 3, C.tightsDark);
+  p(3 + (step > 0 ? 1 : 0), 17, 3, 1, C.boots); p(7 - (step < 0 ? 1 : 0), 17, 3, 1, C.boots);
+  // tunic with a gold belt
+  p(3, 8, 7, 6, C.cape); p(3, 8, 7, 1, C.capeHi); p(3, 12, 7, 1, C.gold);
+  // head: face under a helmet with a plume
+  p(4, 4, 5, 4, C.skin); p(8, 5, 1, 1, dazed ? C.black : C.black); p(6, 6, 1, 1, C.cheek);
+  p(3, 2, 7, 3, C.pole); p(3, 2, 7, 1, C.poleHi); p(2, 4, 9, 1, C.pole);
+  p(6, 0, 1, 2, C.capeHi); p(5, 0, 1, 1, C.cape);
+  if (dazed) { p(5, 5, 1, 1, C.black); p(8, 5, 1, 1, C.black); p(3, 1, 7, 3, C.pole); p(2, 3, 9, 1, C.pole); }   // helmet slipped
+  // arm and halberd
+  if (thrust) { p(9, 9, 3, 2, C.skin); line(1, 10, 11, 10, C.plankDark); p(11, 8, 1, 5, C.poleHi); p(10, 9, 1, 3, C.pole); }
+  else { p(9, 9, 2, 3, C.skin); line(10, 1, 10, 13, C.plankDark); p(9, 0, 3, 1, C.poleHi); p(10, 1, 1, 2, C.pole); }
+}
+
+// Flowerpots: 9 x 10 art px, three flowers. Anchor top centre (they sit on
+// a railing and fall).
+function drawPot(t, flower) {
+  const { p, disc } = t;
+  const col = [C.heart, C.ribbonHi, C.sun2][flower], hi = [C.heartHi, C.bowHi, C.sun1][flower];
+  disc(4, 2, 2, col); p(3, 1, 1, 1, hi); p(2, 3, 1, 1, col); p(6, 3, 1, 1, col);
+  p(4, 4, 1, 2, C.leaf); p(2, 4, 2, 1, C.leaf); p(5, 5, 2, 1, C.grass);
+  p(1, 6, 7, 1, '#d8784a'); p(2, 7, 5, 3, '#c8683a'); p(2, 7, 1, 3, '#e08a5a'); p(6, 8, 1, 2, '#8a4a28');
+}
+
 // Witch on a broom: 34 x 30 art px, flying right. Anchor center.
 function drawWitch(t, frame) {
   const { p, poly, disc, line, ellipse } = t;
@@ -151,12 +182,15 @@ function drawHeart(t, empty) {
 export function buildCreatures() {
   const crowR = [0, 1, 2].map((f) => makeSprite(18, 14, (t) => drawCrow(t, f), { ax: 0.5, ay: 0.5 }));
   const storkR = [0, 1].map((f) => makeSprite(42, 22, (t) => drawStork(t, f), undefined, { axPx: 21 * 4, ayPx: 8 * 4 }));
+  const guardR = [0, 1, 2, 3, 4].map((f) => makeSprite(12, 18, (t) => drawGuard(t, f), { ax: 0.5, ay: 1 }));
+  const pots = [0, 1, 2].map((f) => makeSprite(9, 10, (t) => drawPot(t, f), { ax: 0.5, ay: 0 }));
   const spider = [0, 1].map((f) => makeSprite(16, 12, (t) => drawSpider(t, f), { ax: 0.5, ay: 0 }));
   const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));
   return {
     crowR, crowL: crowR.map(flipH),
     storkR, storkL: storkR.map(flipH),
+    guardR, guardL: guardR.map(flipH), pots,
     spider,
     squirrelR, squirrelL: squirrelR.map(flipH),
     witchR, witchL: witchR.map(flipH),

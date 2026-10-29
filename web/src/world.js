@@ -133,7 +133,7 @@ export class World {
       if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
-      else if (e.hurtful) { pl.hit(e); }
+      else if (e.hurtful) { pl.hit(e); if (e.onHit) e.onHit(this); }
     }
 
     // Pickups
@@ -283,6 +283,7 @@ export class World {
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
+      case 'balcony': s = this.art.balconies[p.side][p.dry ? 4 : p.variant]; break;
       case 'cloud': s = this.art.clouds[p.cloud === 'storm' ? 'storm' : p.dry ? 'wispy' : 'thick'][p.size][p.variant]; break;
       case 'skyLantern': s = this.art.lanterns.big[p.variant]; break;
       case 'stork': s = (p.vx > 0 ? this.art.creatures.storkR : this.art.creatures.storkL)[Math.floor(this.time * 7 + p.phase) % 2]; break;
@@ -311,7 +312,7 @@ export class World {
         const sx = cam.sx(p.x), sy = cam.sy(p.y), d = p.vx > 0 ? -1 : 1, half = p.w / 2;
         for (let i = 0; i < 3; i++) { const yy = sy + 10 + i * 10, x0 = sx + d * (half - 10 + i * 6); g.line(x0, yy, x0 + d * (34 + i * 10 + Math.sin(this.time * 3 + i) * 6), yy, '#e9f1f5', 3, 0.45 - i * 0.1); }
       }
-    } else if (p.state === 'breaking') { opts.rot = (p.kind === 'branchL' ? -1 : 1) * p.t * 0.9; opts.alpha = clamp(1 - p.t / 0.6, 0, 1); }
+    } else if (p.state === 'breaking') { opts.rot = (p.kind === 'branchL' || p.side === 'L' ? -1 : 1) * p.t * 0.9; opts.alpha = clamp(1 - p.t / 0.6, 0, 1); }
     else if (p.wobble) opts.rot = p.wobble * 0.004;
     if (p.def.root != null) { opts.sx = p.lenScale; if (p.tint && !p.dry) opts.tint = p.tint; }
     if (p.kind === 'swing') {
@@ -330,7 +331,7 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time);
     g.layer('world');
-    const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
+    const order = { swing: 0, balcony: 1, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
