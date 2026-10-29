@@ -70,6 +70,23 @@ function drawSquirrel(t, frame) {
   }
 }
 
+// Stork: 42 x 22 art px, flying right, two flap frames. The anchor is the
+// top of its back (y = 8), the landing surface.
+function drawStork(t, frame) {
+  const { p, ellipse, line, disc, poly } = t;
+  const white = '#f4f4f0', shade = '#d2d2cc', black = '#1b1b2a', red = '#d8402c';
+  // wings: up or down
+  if (frame === 0) { poly([[12, 8], [30, 8], [34, 1], [26, 0], [16, 2]], white); poly([[26, 0], [34, 1], [36, 0], [31, 0]], black); line(14, 4, 30, 2, shade); }
+  else { poly([[12, 10], [30, 10], [34, 18], [26, 20], [16, 18]], white); poly([[26, 20], [34, 18], [36, 21], [30, 21]], black); line(14, 15, 30, 17, shade); }
+  // body and tail
+  ellipse(22, 11, 11, 4, white); ellipse(22, 13, 9, 2, shade);
+  poly([[10, 9], [12, 13], [6, 14], [5, 11]], black);
+  // neck and head, forward
+  line(31, 9, 36, 5, white, 2); disc(37, 4, 2, white); p(39, 4, 3, 1, red); p(38, 3, 1, 1, black); p(37, 2, 2, 1, black);
+  // legs trailing
+  line(14, 14, 7, 17, red); line(16, 14, 9, 18, red);
+}
+
 // Witch on a broom: 34 x 30 art px, flying right. Anchor center.
 function drawWitch(t, frame) {
   const { p, poly, disc, line, ellipse } = t;
@@ -133,11 +150,13 @@ function drawHeart(t, empty) {
 
 export function buildCreatures() {
   const crowR = [0, 1, 2].map((f) => makeSprite(18, 14, (t) => drawCrow(t, f), { ax: 0.5, ay: 0.5 }));
+  const storkR = [0, 1].map((f) => makeSprite(42, 22, (t) => drawStork(t, f), undefined, { axPx: 21 * 4, ayPx: 8 * 4 }));
   const spider = [0, 1].map((f) => makeSprite(16, 12, (t) => drawSpider(t, f), { ax: 0.5, ay: 0 }));
   const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));
   return {
     crowR, crowL: crowR.map(flipH),
+    storkR, storkL: storkR.map(flipH),
     spider,
     squirrelR, squirrelL: squirrelR.map(flipH),
     witchR, witchL: witchR.map(flipH),

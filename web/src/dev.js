@@ -2,6 +2,7 @@
 //   ?at=150          start the round at 150 m
 //   ?spawn=squirrel  put that element on the next branch above the prince
 //   ?spawn=storm     turn the next cloud above the prince into a storm cloud
+//   ?spawn=stork     send a stork across the screen now
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER } from './config.js';
@@ -25,6 +26,7 @@ export function startAt(world, metres) {
   world.level.nextY = y - 200; world.level.lastSafeY = y - 200;
   world.level.modelCam = world.cam.y;
   world.nextWitchY = Math.max(world.nextWitchY, y + 3000);
+  world.nextStorkY = Math.max(world.nextStorkY, y + 400);
   world.nextMilestone = Math.floor(metres / 100) * 100 + 100;   // no stacked milestone toasts
   world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
@@ -44,6 +46,7 @@ export function spawnNear(world, element) {
   const p = world.player;
   const branches = world.platforms.filter((q) => (q.kind === 'branchL' || q.kind === 'branchR') && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y);
   if (element === 'squirrel' && branches[0]) world.level.spawnSquirrel([branches[0]]);
+  if (element === 'stork') world.spawnStork();
   if (element === 'storm') {
     const cloud = world.platforms.filter((q) => q.kind === 'cloud' && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y)[0];
     if (cloud) { cloud.cloud = 'storm'; cloud.drift = null; cloud.vx = 0; world.enemies.push(new Lightning(cloud)); }

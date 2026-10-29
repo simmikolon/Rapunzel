@@ -3,6 +3,7 @@ import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
 import { Platform } from './platforms.js';
+import { cloudAmount } from './altitude.js';
 import { Level } from './level.js';
 import { Background } from './background.js';
 import { Witch } from './enemies.js';
@@ -40,6 +41,7 @@ export class World {
     this.suns = 0;
     this.stomps = 0;
     this.nextWitchY = 12000;
+    this.nextStorkY = 47000;      // storks cross the sky every 400 to 700 px of climb
     this.nextMilestone = 100;
     this.hintShown = false;
     this.toasts = [];
@@ -178,6 +180,12 @@ export class World {
       this.toast('The witch!', '#ff8a8a', 1.4);
       this.nextWitchY = pl.maxY + this.rng.range(7500, 10500);
     }
+    // Storks: once the clouds are fully in, a stork crosses the screen a few
+    // bounces above the prince, from one edge to the other.
+    if (pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
+      this.spawnStork();
+      this.nextStorkY = pl.maxY + this.rng.range(400, 700);
+    }
     // Teach the boost shield the first time an enemy comes into view.
     if (!this.hintShown && this.enemies.some((e) => e.alive && !e.dead && e.kind !== 'witch' && e.y < this.cam.top && e.y > this.cam.y)) {
       this.hintShown = true;
@@ -191,11 +199,25 @@ export class World {
     }
   }
 
+  spawnStork() {
+    const pl = this.player, side = this.rng.sign();
+    const stork = new Platform('stork', pl.y + this.rng.range(380, 640), { x: -side * (W / 2 + 140), vx: side * this.rng.range(150, 210), phase: this.rng.range(0, 6.28) });
+    this.platforms.push(stork);
+    this.audio.wings();
+    return stork;
+  }
+
   // ---------------------------------------------------------------- callbacks
   onPlayerLand(pl, p) {
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
     else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.kind === 'skyLantern') { this.audio.paper(); this.particles.sparkles(pl.x, pl.y + 10, 7, '#ffd04a'); return; }
+    else if (p.kind === 'stork') {
+      // riding a stork is the timing reward: suns and a squawk
+      this.audio.squawk(); this.particles.feathers(pl.x, pl.y, true);
+      this.suns += 3; this.toast('+3', '#ffe9a0', 0.9);
+      return;
+    }
     else if (p.dry) { this.audio.weakBounce(); this.particles.crumble(pl.x, pl.y, 60, true); }
     else { this.audio.bounce(pl.combo); }
     if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
@@ -205,7 +227,8 @@ export class World {
   }
   onPlayerJump(pl, p) {
     if (p && p.dry && p.used) {
-      if (p.kind === 'skyLantern') {
+      if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
+    else if (p.kind === 'skyLantern') {
       // the glow breathes; the paper crumples on a landing
       const fl = 0.3 + 0.08 * Math.sin(this.time * 7 + p.phase) + 0.05 * Math.sin(this.time * 2.3 + p.phase);
       g.halo(cam.sx(p.x), cam.sy(p.y) + 74, 170, p.variant ? '#ff9ab8' : '#ffbe50', fl, { glow: 1 });
@@ -241,12 +264,14 @@ export class World {
       case 'swing': s = A.plank; break;
       case 'cloud': s = this.art.clouds[p.cloud === 'storm' ? 'storm' : p.dry ? 'wispy' : 'thick'][p.size][p.variant]; break;
       case 'skyLantern': s = this.art.lanterns.big[p.variant]; break;
+      case 'stork': s = (p.vx > 0 ? this.art.creatures.storkR : this.art.creatures.storkL)[Math.floor(this.time * 7 + p.phase) % 2]; break;
       default: return;
     }
     const cam = this.cam;
     const dip = p.squash * 10;
     const opts = {};
-    if (p.kind === 'skyLantern') {
+    if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
+    else if (p.kind === 'skyLantern') {
       // the glow breathes; the paper crumples on a landing
       const fl = 0.3 + 0.08 * Math.sin(this.time * 7 + p.phase) + 0.05 * Math.sin(this.time * 2.3 + p.phase);
       g.halo(cam.sx(p.x), cam.sy(p.y) + 74, 170, p.variant ? '#ff9ab8' : '#ffbe50', fl, { glow: 1 });
@@ -284,7 +309,7 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time);
     g.layer('world');
-    const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2 };
+    const order = { swing: 0, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const p of visible) this.drawPlatform(g, p);
