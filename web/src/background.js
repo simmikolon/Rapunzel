@@ -2,7 +2,7 @@ import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
-import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount } from './altitude.js';
+import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
 
@@ -62,6 +62,8 @@ export class Background {
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
     this.fireflies = Array.from({ length: 22 }, () => ({ x: r.range(-W / 2, W / 2), y: r.range(-100, H + 100), ph: r.range(0, TAU), sp: r.range(0.4, 1.1) }));
+    // sky lanterns rising behind the tower (far) and a few in front of it (near)
+    this.skyLanterns = Array.from({ length: 18 }, (_, i) => ({ f: i < 12 ? 0.5 : 0.8, x: r.range(-W / 2, W / 2), y: r.range(-200, H + 200), vy: r.range(18, 42), ph: r.range(0, TAU), s: i < 12 ? r.range(0.5, 0.8) : r.range(0.9, 1.3) }));
     this.swayAmp = 12;
     for (const f of this.fireflies) { f.vx = 0; f.vy = 0; }
     this.atmo = new Atmosphere(art, r);
@@ -310,10 +312,12 @@ export class Background {
     this.drawSky(g, cam);
     this.drawFar(g, cam, time);
     this.drawForest(g, cam);
+    this.drawSkyLanterns(g, cam, time, false);
     this.atmo.drawBackFog(g, cam, time);
     this.drawTower(g, cam);
     this.atmo.drawDapple(g, cam, time);
     this.drawBraid(g, cam, time);
+    this.drawSkyLanterns(g, cam, time, true);
     this.atmo.drawBackLeaves(g, cam);
     this.atmo.drawMidFog(g, cam, time);
     this.drawGround(g, cam);
@@ -331,7 +335,35 @@ export class Background {
 
   // Fireflies wander, gather in a loose orbit around lanterns and scatter
   // when the prince comes close.
+  updateSkyLanterns(dt, cam) {
+    if (lanternAmount(cam.y) <= 0) return;
+    for (const l of this.skyLanterns) {
+      l.y += l.vy * dt;
+      const camL = cam.layerY(l.f);
+      if (Math.abs(l.y - camL - H / 2) > 2 * H) l.y = camL + Math.random() * (H + 240) - 120;   // first sight: spread over the view
+      else if (l.y > camL + H + 120) { l.y = camL - 120; l.x = -W / 2 + Math.random() * W; }
+      else if (l.y < camL - 160) l.y = camL + H + 100;
+    }
+  }
+
+  drawSkyLanterns(g, cam, time, near) {
+    const amount = lanternAmount(cam.y);
+    if (amount <= 0) return;
+    const night = nightAlpha(cam.y);
+    const alpha = amount * (0.55 + 0.45 * night);
+    const spr = this.art.lanterns.far;
+    for (const l of this.skyLanterns) {
+      if ((l.f > 0.7) !== near) continue;
+      const camL = cam.layerY(l.f);
+      const sx = W / 2 + l.x + Math.sin(time * 0.5 + l.ph) * 14 + cam.ox, sy = H - (l.y - camL) + cam.oy;
+      if (sy < -40 || sy > H + 40) continue;
+      g.halo(sx, sy, 26 * l.s, '#ffbe50', alpha * 0.5, { glow: 1 });
+      g.blit(spr, sx, sy, { sx: l.s, sy: l.s, alpha, glow: 0.8 });
+    }
+  }
+
   updateFireflies(dt, cam, time, world) {
+    this.updateSkyLanterns(dt, cam);
     const lanterns = world ? world.pickups.filter((k) => k.alive && k.kind === 'lantern') : [];
     const p = world && world.player;
     for (const f of this.fireflies) {

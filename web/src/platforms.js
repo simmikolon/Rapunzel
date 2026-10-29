@@ -25,6 +25,9 @@ export const KIND = {
   // box by size (CLOUD_SIZE); `cloud` names the behaviour (thick | wispy |
   // drift | storm). Wispy clouds use the dry flag: weak bounce, gone after one.
   cloud:   { w: 180, cx: 0, surface: 0, bounce: JUMP_VY, cloud: true },
+  // Sky lanterns (sunset and night): hover with a slow bob and sway around
+  // the row's height; the surface is the top of the paper. Never fragile.
+  skyLantern: { w: 136, cx: 0, surface: 0, bounce: JUMP_VY, lantern: true },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 
@@ -70,6 +73,7 @@ export class Platform {
     this.layer = this.def.layer || 1; // parallax factor of the layer it belongs to
     this.ly = opts.ly != null ? opts.ly : y;   // height in layer coordinates
     this.y = y;                       // surface height in the prince's plane
+    this.baseY = y;                   // rest height (lanterns bob around it)
     this.dry = !!opts.dry;            // breakable
     this.sway = opts.sway || 0;       // horizontal sway amplitude (ribbons)
     this.swayPhase = opts.swayPhase || 0;
@@ -100,6 +104,10 @@ export class Platform {
     this.t += dt;
     if (this.layer < 1) this.y = Platform.layerToWorld(this.ly, this.layer, cam.y);
     if (this.def.onBraid) this.x = this.baseX + braidX(this.ly) + this.sway * Math.sin(time * 1.3 + this.swayPhase);
+    if (this.def.lantern) {
+      this.y = this.baseY + 20 * Math.sin(time * 1.05 + this.phase);
+      this.x = this.baseX + 12 * Math.sin(time * 0.7 + this.phase);
+    }
     if (this.drift && this.state !== 'breaking') {
       // a drifting cloud patrols its lane: slow, smooth, always fully on screen
       const { amp, omega, phase } = this.drift;

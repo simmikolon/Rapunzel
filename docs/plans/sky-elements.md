@@ -71,4 +71,12 @@ under the next platform.
 
 ## Status
 
-Filled in as elements land.
+**Sky lanterns: landed.** `lanternAmount(y)` in `altitude.js`; kind
+`skyLantern` hovers in `Platform.update`; `art/lanterns.js` (34 x 40 art
+px big lantern, two colourways, a tiny far one); a cloud slot becomes a
+lantern in `makeRow`; glow halo, crumple and `audio.paper()` in the
+world; `Background.skyLanterns` rise behind and in front of the tower.
+Measured from 600 m, 40 good bold runs: the first version (112 px box,
+± 28 px bob) raised falls from 41 % (lanterns off) to 53 % of deaths; at
+136 px with a ± 20 px bob: 29 % falls, 1.14 hits per 100 m, mean climb
+315 m (321 without). Storks and updrafts: next.

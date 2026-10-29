@@ -177,9 +177,10 @@ build them. Each zone: elements, look, set piece.
    in three lanes: thick, wispy (weak bounce, dissolves), drifting (patrols
    its lane) and storm clouds with lightning striking below them; the
    braid with ribbons and bows runs on; spiders, squirrels and swings end
-   with the trees. 🔜 bird swarms to boost through, wind gusts that push
-   the prince; the tower rises out of the forest with Rapunzel's window at
-   the top. When this exists, the forest tower exists.
+   with the trees; ✅ sky lanterns take over from the clouds at sunset and
+   night. 🔜 storks to ride, updrafts, bird swarms to boost through; the
+   tower rises out of the forest with Rapunzel's window at the top. When
+   this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
    (stars, asteroid platforms, the witch's territory), then zones repeat
    with harder variants or palette swaps.
@@ -249,6 +250,11 @@ is a pool to draw from, not a promise.
   sine (45 to 105 px/s at most), always fully on screen; small or normal
   only. Storm: the lightning's carrier (see enemies). The handover from
   branches runs from 420 to 460 m.
+- ✅ sky lanterns from the sunset band on, the night's staple: a paper
+  lantern (136 px box, never fragile) hovering with a slow bob around its
+  row's height, glowing; landing crumples the paper. A cloud slot becomes
+  a lantern with chance 0.6 x `lanternAmount`. A field of small lanterns
+  rises behind and in front of the tower at night, purely visual.
 - 💡 star and asteroid platforms (space).
 - 💡 window ledges on the tower layer.
 
@@ -396,6 +402,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Cloud sizes (box) | small 150, normal 225, wide 325 px; surface 16 px below the sprite top |
 | Cloud chances (tier 4 → 5) | small 0.16 → 0.26, wide 0.24 → 0.18, drifting 0.26 → 0.40, storm 0 → 0.20 (× pacing); wispy uses the dry chance |
 | Lightning | calm 2.5–4.5 s, charge 1 s, strike 0.25 s; column 70 × 420 px |
+| Sky lanterns | from 520–600 m on; 136 px box; bob ± 20 px, sway ± 12 px |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -488,3 +495,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   sprite height; wide clouds sit a little further in to stay on screen.
   Sky from 450 m, 40 good bold runs: mean climb 381 m (328), 1.07 hits per
   100 m (1.17), falls 48 % of deaths (39 %).
+- 2026-10-29: Sky lanterns (`element/sky-lanterns`, plan in
+  `docs/plans/sky-elements.md`): hovering paper lanterns as platforms
+  from sunset on, with a field of small lanterns rising at night. A first
+  112 px box took falls from 600 m from 41 % to 53 % of deaths; at 136 px
+  with a calmer bob the sky from 600 m measures 29 % falls, 1.14 hits per
+  100 m, mean climb 315 m (321 without lanterns), 40 good bold runs.
