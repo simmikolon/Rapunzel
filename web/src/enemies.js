@@ -371,7 +371,7 @@ export class Guard extends Enemy {
     this.kind = 'guard';
     this.platform = platform;
     this.rng = rng;
-    this.w = 48; this.h = 72;
+    this.w = 80; this.h = 192;
     this.dir = platform.side === 'L' ? 1 : -1;      // faces the open side
     this.state = 'stand';          // stand | walk | windup | thrust | dazed
     this.stateT = 0;
@@ -380,11 +380,11 @@ export class Guard extends Enemy {
     this.frame = 0;
     this.sink = 0;
   }
-  get left() { return this.platform.left + 22; }
-  get right() { return this.platform.right - 22; }
+  get left() { return this.platform.left + 44; }
+  get right() { return this.platform.right - 44; }
   get rect() {
     const r = { x: this.x - this.w / 2, y: this.y - this.h / 2, w: this.w, h: this.h };
-    if (this.state === 'thrust') { r.w += 70; if (this.dir < 0) r.x -= 70; }   // the halberd's reach
+    if (this.state === 'thrust') { r.w += 90; if (this.dir < 0) r.x -= 90; }   // the halberd's reach
     return r;
   }
   update(dt, world) {
@@ -393,7 +393,7 @@ export class Guard extends Enemy {
     if (this.dead) {
       this.sink += dt;
       if (this.sink > 0.9) this.alive = false;
-      this.y = pf.y + this.h / 2 - this.sink * 70;
+      this.y = pf.y + this.h / 2 - this.sink * 120;
       return;
     }
     if (!pf.landable) { this.dead = true; this.hurtful = false; return; }   // the balcony went
@@ -440,11 +440,11 @@ export class Guard extends Enemy {
 // on him, on a platform or below the view. One shot.
 export class Flowerpot extends Enemy {
   constructor(platform, rng = new RNG()) {
-    super(platform.x + (platform.side === 'L' ? -1 : 1) * 36, platform.y + 60);
+    super(platform.x + (platform.side === 'L' ? -1 : 1) * 40, platform.y + 72 + 26);   // on the railing's top
     this.kind = 'pot';
     this.platform = platform;
     this.rng = rng;
-    this.w = 36; this.h = 40;
+    this.w = 48; this.h = 52;
     this.state = 'sit';            // sit | wobble | fall
     this.stateT = 0;
     this.hurtful = false;
@@ -458,7 +458,7 @@ export class Flowerpot extends Enemy {
     if (this.dead) { this.alive = false; return; }
     if (this.state === 'sit') {
       if (!pf.alive) { this.alive = false; return; }
-      this.y = pf.y + 60;
+      this.y = pf.y + 72 + this.h / 2;
       const dy = this.y - (p.y + 110);
       if (p.alive && Math.abs(p.x - this.x) < 90 && dy > 120 && dy < 620) { this.state = 'wobble'; this.stateT = 0; world.audio.rattle(); }
     } else if (this.state === 'wobble') {

@@ -22,7 +22,7 @@ export const KIND = {
   // Balconies on the tower itself (windows zone): on the tower layer like
   // the ribbons, at the wall's left or right edge (x = -210 / +210). The
   // dilapidated variant is fragile under the dry rules.
-  balcony: { w: 140, cx: 0, surface: 0, bounce: JUMP_VY, layer: PARALLAX_TOWER, balcony: true },
+  balcony: { w: 160, cx: 0, surface: 0, bounce: JUMP_VY, layer: PARALLAX_TOWER, balcony: true },
   bow:     { w: 124, cx: 0, surface: 0, bounce: SPRING_VY, onBraid: true, layer: PARALLAX_TOWER },
   swing:   { w: 224, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 32 },
   // Clouds (above the trees): in the prince's plane, free x in three lanes,

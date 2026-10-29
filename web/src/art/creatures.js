@@ -87,35 +87,59 @@ function drawStork(t, frame) {
   line(14, 14, 7, 17, red); line(16, 14, 9, 18, red);
 }
 
-// Guard: 12 x 18 art px, facing right. Frames: stand, walk 1, walk 2,
-// thrust (halberd level), dazed. Anchor bottom centre.
+// Guard: 34 x 48 art px, facing right, the body centred at x = 14 and the
+// halberd on his right (the prince is 26 x 58, so he stands shoulder high).
+// Frames: stand, walk 1, walk 2, thrust (halberd level), dazed. Anchor at
+// the feet below the body's centre.
 function drawGuard(t, frame) {
-  const { p, line, disc } = t;
+  const { p, line, poly } = t;
   const dazed = frame === 4, thrust = frame === 3;
-  const step = frame === 1 ? 1 : frame === 2 ? -1 : 0;
+  const step = frame === 1 ? 2 : frame === 2 ? -2 : 0;
+  const lean = thrust ? 1 : 0;                       // leans into the thrust
+  const trousers = '#3a3a5a', trousersHi = '#4e4e74';
   // legs and boots
-  p(4 + (step > 0 ? 1 : 0), 14, 2, 3, C.tightsDark); p(7 - (step < 0 ? 1 : 0), 14, 2, 3, C.tightsDark);
-  p(3 + (step > 0 ? 1 : 0), 17, 3, 1, C.boots); p(7 - (step < 0 ? 1 : 0), 17, 3, 1, C.boots);
-  // tunic with a gold belt
-  p(3, 8, 7, 6, C.cape); p(3, 8, 7, 1, C.capeHi); p(3, 12, 7, 1, C.gold);
-  // head: face under a helmet with a plume
-  p(4, 4, 5, 4, C.skin); p(8, 5, 1, 1, dazed ? C.black : C.black); p(6, 6, 1, 1, C.cheek);
-  p(3, 2, 7, 3, C.pole); p(3, 2, 7, 1, C.poleHi); p(2, 4, 9, 1, C.pole);
-  p(6, 0, 1, 2, C.capeHi); p(5, 0, 1, 1, C.cape);
-  if (dazed) { p(5, 5, 1, 1, C.black); p(8, 5, 1, 1, C.black); p(3, 1, 7, 3, C.pole); p(2, 3, 9, 1, C.pole); }   // helmet slipped
-  // arm and halberd
-  if (thrust) { p(9, 9, 3, 2, C.skin); line(1, 10, 11, 10, C.plankDark); p(11, 8, 1, 5, C.poleHi); p(10, 9, 1, 3, C.pole); }
-  else { p(9, 9, 2, 3, C.skin); line(10, 1, 10, 13, C.plankDark); p(9, 0, 3, 1, C.poleHi); p(10, 1, 1, 2, C.pole); }
+  p(8 + Math.max(0, step), 34, 5, 10, trousers); p(15 + Math.min(0, step), 34, 5, 10, trousers);
+  p(9 + Math.max(0, step), 34, 1, 9, trousersHi); p(16 + Math.min(0, step), 34, 1, 9, trousersHi);
+  p(7 + Math.max(0, step), 44, 6, 4, C.boots); p(15 + Math.min(0, step), 44, 6, 4, C.boots);
+  p(7 + Math.max(0, step), 44, 6, 1, C.hairHi); p(15 + Math.min(0, step), 44, 6, 1, C.hairHi);
+  // tunic with gold trim, belt and an emblem
+  p(7 + lean, 21, 14, 13, C.cape); p(7 + lean, 21, 14, 1, C.capeHi); p(7 + lean, 21, 1, 13, C.capeHi);
+  p(7 + lean, 30, 14, 2, C.gold); p(13 + lean, 30, 2, 2, C.goldDark); p(13 + lean, 24, 2, 3, C.gold); p(12 + lean, 25, 4, 1, C.gold);
+  // head: face with a moustache under a helmet with a plume
+  const hy = dazed ? 3 : 0;
+  p(9 + lean, 12, 10, 8, C.skin);
+  if (!dazed) { p(11 + lean, 14, 1, 1, C.black); p(16 + lean, 14, 1, 1, C.black); }
+  else { line(10 + lean, 15, 12 + lean, 17, C.black); line(12 + lean, 15, 10 + lean, 17, C.black); line(15 + lean, 15, 17 + lean, 17, C.black); line(17 + lean, 15, 15 + lean, 17, C.black); }
+  p(10 + lean, 16, 1, 1, C.cheek); p(17 + lean, 16, 1, 1, C.cheek);
+  p(11 + lean, 17, 6, 1, C.hair); p(10 + lean, 18, 2, 1, C.hair); p(16 + lean, 18, 2, 1, C.hair);
+  p(11 + lean, 20, 6, 1, C.gold);                      // collar
+  p(9 + lean, 4 + hy, 10, 1, C.pole); p(8 + lean, 5 + hy, 12, 5, C.pole); p(6 + lean, 10 + hy, 16, 2, C.pole);
+  p(9 + lean, 5 + hy, 3, 1, C.poleHi); p(8 + lean, 6 + hy, 1, 3, C.poleHi); p(13 + lean, 10 + hy, 2, 4, C.pole);
+  p(13 + lean, 0 + hy, 2, 4, C.capeHi); p(12 + lean, 1 + hy, 1, 3, C.cape); p(15 + lean, 1 + hy, 1, 2, C.cape);
+  // arms and the halberd
+  if (thrust) {
+    p(19, 24, 9, 3, C.cape); p(26, 25, 3, 2, C.skin); p(21, 26, 3, 2, C.skin);
+    line(12, 27, 33, 27, C.plankDark); line(12, 28, 33, 28, C.plankDark);
+    poly([[29, 22], [34, 27], [29, 32]], C.poleHi); poly([[29, 24], [32, 27], [29, 30]], C.pole); p(33, 27, 1, 1, C.white);
+  } else if (dazed) {
+    p(5, 22, 2, 8, C.cape); p(5, 30, 2, 2, C.skin); p(21, 22, 3, 7, C.cape); p(22, 29, 2, 2, C.skin);
+    line(4, 46, 30, 46, C.plankDark); poly([[30, 43], [34, 46], [30, 48]], C.poleHi);     // dropped
+  } else {
+    p(5, 22, 2, 8, C.cape); p(5, 30, 2, 2, C.skin);
+    p(21, 22, 3, 7, C.cape); p(23, 29, 3, 2, C.skin);
+    line(26, 2, 26, 46, C.plankDark); line(27, 2, 27, 46, C.plankDark);
+    poly([[26, 2], [33, 6], [26, 11]], C.poleHi); poly([[26, 4], [30, 6], [26, 9]], C.pole); p(26, 0, 2, 2, C.poleHi);
+  }
 }
 
-// Flowerpots: 9 x 10 art px, three flowers. Anchor top centre (they sit on
-// a railing and fall).
+// Flowerpots: 12 x 13 art px, three flowers. Anchor at the bottom (they sit
+// on a railing, then fall).
 function drawPot(t, flower) {
   const { p, disc } = t;
   const col = [C.heart, C.ribbonHi, C.sun2][flower], hi = [C.heartHi, C.bowHi, C.sun1][flower];
-  disc(4, 2, 2, col); p(3, 1, 1, 1, hi); p(2, 3, 1, 1, col); p(6, 3, 1, 1, col);
-  p(4, 4, 1, 2, C.leaf); p(2, 4, 2, 1, C.leaf); p(5, 5, 2, 1, C.grass);
-  p(1, 6, 7, 1, '#d8784a'); p(2, 7, 5, 3, '#c8683a'); p(2, 7, 1, 3, '#e08a5a'); p(6, 8, 1, 2, '#8a4a28');
+  disc(6, 2, 2, col); disc(3, 4, 1, col); disc(9, 4, 1, col); p(5, 1, 1, 1, hi); p(2, 3, 1, 1, hi);
+  p(6, 4, 1, 3, C.leaf); p(3, 6, 3, 1, C.leaf); p(7, 6, 3, 1, C.grass); p(2, 7, 2, 1, C.leaf); p(9, 7, 2, 1, C.leaf);
+  p(1, 8, 10, 1, '#d8784a'); p(2, 9, 8, 4, '#c8683a'); p(2, 9, 1, 4, '#e08a5a'); p(8, 10, 1, 3, '#8a4a28'); p(3, 12, 6, 1, '#8a4a28');
 }
 
 // Witch on a broom: 34 x 30 art px, flying right. Anchor center.
@@ -182,8 +206,8 @@ function drawHeart(t, empty) {
 export function buildCreatures() {
   const crowR = [0, 1, 2].map((f) => makeSprite(18, 14, (t) => drawCrow(t, f), { ax: 0.5, ay: 0.5 }));
   const storkR = [0, 1].map((f) => makeSprite(42, 22, (t) => drawStork(t, f), undefined, { axPx: 21 * 4, ayPx: 8 * 4 }));
-  const guardR = [0, 1, 2, 3, 4].map((f) => makeSprite(12, 18, (t) => drawGuard(t, f), { ax: 0.5, ay: 1 }));
-  const pots = [0, 1, 2].map((f) => makeSprite(9, 10, (t) => drawPot(t, f), { ax: 0.5, ay: 0 }));
+  const guardR = [0, 1, 2, 3, 4].map((f) => makeSprite(34, 48, (t) => drawGuard(t, f), undefined, { axPx: 14 * 4, ayPx: 48 * 4 }));
+  const pots = [0, 1, 2].map((f) => makeSprite(12, 13, (t) => drawPot(t, f), { ax: 0.5, ay: 1 }));
   const spider = [0, 1].map((f) => makeSprite(16, 12, (t) => drawSpider(t, f), { ax: 0.5, ay: 0 }));
   const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));

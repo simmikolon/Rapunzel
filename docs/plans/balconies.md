@@ -123,3 +123,10 @@ the treeline. The windows zone's own face is open again. Paired seeds,
 361 m mean climb; first sky placement (balconies 0.7, guards 1.0): 1.59,
 46 %, 200 m; final (balconies 0.4, guards 0.5, pots 0.8, 140 px slab):
 1.24, 50 %, 312 m.
+
+Scale pass (2026-10-29): the guard was 18 art px tall against the
+prince's 58. Repainted at 34 x 48 art px (anchor at the feet below the
+body's centre, the halberd to his right; thrust reach 90 px), the balcony
+at 44 x 72 with a doorway tall enough for him (160 px slab), the pot at
+12 x 13 standing on the railing's top. From 450 m, 40 good bold runs:
+1.28 hits per 100 m, 44 % falls, 337 m mean climb.

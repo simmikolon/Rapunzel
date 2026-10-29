@@ -440,7 +440,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sky lanterns | from 520–600 m on; 136 px box; bob ± 20 px, sway ± 12 px |
 | Storks | every 1200–2000 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
-| Balconies | x = ±210, 140 px box (the whole slab), tier weight 1.0; only above the treeline, zone 0.4 |
+| Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
+| Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
@@ -598,3 +599,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   balconies at zone 0.7 and guards at 1.0 the sky overloaded (1.59, climb
   200 m); at balconies 0.4, guards 0.5, pots 0.8 and the whole slab
   landable: 1.24 hits per 100 m, falls 50 %, mean climb 312 m.
+- 2026-10-29: The guard stood a third of the prince's height. Repainted
+  at 48 art px (helmet with a plume, moustache, red tunic, halberd; a
+  thrust and a dazed frame), the balcony at 72 art px so the doorway fits
+  him, the flowerpot larger and really on the railing. Paired seeds, 40
+  good bold runs from 450 m: 1.28 hits per 100 m, falls 44 %, mean climb
+  337 m (master 361 m).
