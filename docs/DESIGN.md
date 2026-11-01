@@ -170,8 +170,9 @@ build them. Each zone: elements, look, set piece.
    knot holes, acorns, gusts and passing clouds; 🔜 thorny branches, the
    cross branch you must boost through; crows fade out (0.6x), spiders stay.
 3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
-   right with guards' arms reaching out, window ledges on the tower layer,
-   Rapunzel's cameo window, the witch more present. Doors later.
+   right, the witch more present, Rapunzel's cameo. Balconies were built
+   for this band first and moved above the treeline: with trees on both
+   sides a balcony made no sense (decision log, 2026-10-29). Doors later.
 4. **Above the trees, 400 to 550 m** (in progress): ✅ the trees end at a
    treeline (bare tops, crown tiles at 460 m) and cloud platforms take over
    in three lanes: thick, wispy (weak bounce, dissolves), drifting (patrols
@@ -179,7 +180,10 @@ build them. Each zone: elements, look, set piece.
    braid with ribbons and bows runs on; spiders, squirrels and swings end
    with the trees; ✅ sky lanterns take over from the clouds at sunset and
    night; ✅ storks cross the sky to ride for one bounce; ✅ updrafts lift
-   the prince to the next row. 🔜 bird swarms to boost through; the
+   the prince to the next row; ✅ balconies on the tower's edges in five
+   looks (stone, wooden, flowered, ivy, dilapidated and fragile), with
+   guards who lunge with a halberd and flowerpots that fall when the
+   prince passes below. 🔜 bird swarms to boost through; the
    tower rises out of the forest with Rapunzel's window at the top. When
    this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
@@ -204,7 +208,16 @@ is a pool to draw from, not a promise.
   Not stompable; the boost shield protects. Storm clouds are never alone in
   a row and never small, so their edges are a safe approach. From about
   480 m, growing toward the storm zone.
-- 💡 arms reaching out of windows to grab the prince; guards at the windows.
+- ✅ guard on a balcony: patrols inside the railing, lunges with his
+  halberd when the prince is within 230 px (0.35 s wind-up with a "!",
+  0.45 s thrust reaching 70 px past the railing, 1.2 s cooldown), bites on
+  contact like the squirrel, stompable from above (he sinks back through
+  the door). Never on a dilapidated balcony; one thing per balcony.
+- ✅ flowerpot on a balcony's railing: wobbles with a rattle for 0.7 s when
+  the prince is 120 to 620 px below within 90 px, then falls; hurtful only
+  while falling; shatters on him, on a platform or below the view; the
+  shield smashes it. One shot.
+- 💡 arms reaching out of windows to grab the prince.
 - 💡 scissors cutting the braid from below a certain height: ribbons below
   the cut fall away. A rising death line; strong pacing, harsh; late zones
   only, loudly telegraphed.
@@ -271,7 +284,14 @@ is a pool to draw from, not a promise.
   rests 1.6 s, so a missed landing is a fall back to the row below, not
   an endless ride. The cloud above an updraft is never a storm cloud.
 - 💡 star and asteroid platforms (space).
-- 💡 window ledges on the tower layer.
+- ✅ balconies on the tower layer (0.9x like the ribbons) at the wall's
+  left and right edge, 120 px box; alone, with a ribbon, with a branch on
+  the other side, or two at one height; never with a branch on the same
+  side, at most one balcony row in two. Stone, wooden, flowered and ivy
+  variants; the dilapidated one is fragile under the dry rules. Drawn in
+  the tower's own brick palette (doorway like the tiles' windows, a stone
+  course with corbels), and stone does not dip on a landing. Only where
+  the tower stands alone, above the treeline (zone 0.4 there, 0 below).
 
 **Pickups, power-ups, portals**
 - ✅ sun drops, ✅ lanterns (boost refill), ✅ hearts (restore all).
@@ -387,8 +407,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
 | 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
-| 4 | Windows zone | Guards' arms, window ledges, Rapunzel's cameo, windows spread across the tower | 🔜 |
-| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning); 🔜 bird swarm, wind, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
+| 4 | Windows zone | Windows spread across the tower, the witch more present, Rapunzel's cameo (balconies moved above the treeline) | 🔜 |
+| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots; 🔜 bird swarm, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
@@ -420,6 +440,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sky lanterns | from 520–600 m on; 136 px box; bob ± 20 px, sway ± 12 px |
 | Storks | every 1200–2000 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
+| Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
+| Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
+| Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -558,3 +581,27 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   a bow spring (2300 px/s), a little rarer (0.10 to 0.16); storks every
   1200 to 2000 px of climb instead of 400 to 700. Sky from 450 m, 40 good
   bold runs: falls 37 % of deaths, 1.21 hits per 100 m, mean climb 338 m.
+- 2026-10-29: Balconies, guards and flowerpots (`element/balconies`, plan
+  in `docs/plans/balconies.md`): the windows zone gets its face. Paired
+  seeds, 40 good bold runs from 250 m: before 0.85 hits per 100 m (0.62 in
+  the 300 m band), falls 61 % of deaths, mean climb 313 m; after 1.15
+  (1.26 in the band), falls 55 %, climb 281 m. A first guard chance of
+  0.4 put the band at 1.49, so it was trimmed to 0.35. The flowerpot
+  rarely hits the bot (1 hit in 40 runs); it is a telegraph test for
+  people, not for the bot.
+- 2026-10-29: Balconies reworked after playing: they looked bolted on,
+  they dipped like wood on a landing, and they stood between trees. Now
+  drawn in the tower's brick palette with a doorway like the tiles'
+  windows and corbelled stone beneath, the slab no longer dips, and they
+  appear only above the treeline where the tower stands alone (the
+  windows zone goes back to 🔜). Paired seeds, 40 good bold runs from
+  450 m: master 1.1 hits per 100 m, falls 42 %, mean climb 361 m; with
+  balconies at zone 0.7 and guards at 1.0 the sky overloaded (1.59, climb
+  200 m); at balconies 0.4, guards 0.5, pots 0.8 and the whole slab
+  landable: 1.24 hits per 100 m, falls 50 %, mean climb 312 m.
+- 2026-10-29: The guard stood a third of the prince's height. Repainted
+  at 48 art px (helmet with a plume, moustache, red tunic, halberd; a
+  thrust and a dazed frame), the balcony at 72 art px so the doorway fits
+  him, the flowerpot larger and really on the railing. Paired seeds, 40
+  good bold runs from 450 m: 1.28 hits per 100 m, falls 44 %, mean climb
+  337 m (master 361 m).

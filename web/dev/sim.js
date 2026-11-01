@@ -82,6 +82,12 @@ class Bot {
         if (e.phase !== 'calm' && under && Math.abs(dx) < 90) { if (!threat) threat = { e, dx: dx || 1, dy: e.y - body }; }
         continue;
       }
+      if (e.kind === 'pot') {
+        // a falling pot above us within its column: step aside
+        const body = p.y + 110, dy = e.y - body;
+        if (e.state === 'fall' && Math.abs(dx) < 70 && dy > -120 && dy < 700) { if (!threat) threat = { e, dx: dx || 1, dy }; }
+        continue;
+      }
       if (!e.hurtful || e.phase === 'warn') continue;
       const dy = e.y - (p.y + 110);
       const ahead = p.vy > 0 ? (dy > -80 && dy < 360) : (dy < 80 && dy > -360);
@@ -90,7 +96,7 @@ class Bot {
     if (threat) {
       const e = threat.e;
       const canPunch = this.policy === 'bold' && p.boost >= 1 && p.vy > -200 && threat.dy > 0 && threat.dy < 300;
-      if (e.kind === 'squirrel' && target && e.platform === target) {
+      if ((e.kind === 'squirrel' || e.kind === 'guard') && target && e.platform === target) {
         // A squirrel on the branch we are landing on: a bold player stomps it
         // (aim at it while falling from above), a cautious one lands on the
         // far end of the branch instead of fleeing the platform altogether.
