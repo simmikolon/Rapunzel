@@ -224,15 +224,17 @@ is a pool to draw from, not a promise.
   shield smashes it. One shot.
 - ✅ window guard (grabber): hidden in one of the tower's windows until the
   prince is inward of it and about level with it, then his bust rises
-  behind the sill ("!", a creak, 0.5 s), his gauntleted arm shoots inward
-  into the prince's plane (130 px, up to 160 at the top tiers, out in
-  0.22 s, held 0.45 s), and pulls back; then 2 to 3.5 s of quiet. The arm
-  costs a heart and throws the prince away from the window; the boost
-  shield knocks it back (he keeps his head down for 5 s); nothing to
-  stomp, he stands behind the plane. Rolled per row on the tower stream
-  (tier 0.10 → 0.22 × pacing × zone: windows 1.0, above the trees 0.6) into
-  a free window within −60..+420 px of the row. In the windows band crows,
-  spiders and squirrels step back (0.6 / 0.5 / 0.5x) to make room for him.
+  behind the sill with his pike upright ("!", a creak, 0.5 s), he leans
+  out and the pike sweeps down into a thrust aimed at the prince (130 px
+  long, up to 160 at the top tiers, aimed up to 20° above or below level,
+  0.15 s down, held 0.4 s, hurtful only once it is past the sweep), then
+  comes back up; then 2 to 3.5 s of quiet. The pike costs a heart and
+  throws the prince away from the window; the boost shield knocks it back
+  (he keeps his head down for 5 s); nothing to stomp, he stands behind
+  the plane. Rolled per row on the tower stream (tier 0.09 → 0.20 × pacing
+  × zone: windows 1.0, above the trees 0.6) into a free window within
+  −60..+420 px of the row. In the windows band crows, spiders and
+  squirrels step back (0.6 / 0.5 / 0.5x) to make room for him.
 - 💡 scissors cutting the braid from below a certain height: ribbons below
   the cut fall away. A rising death line; strong pacing, harsh; late zones
   only, loudly telegraphed.
@@ -465,7 +467,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
 | Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
 | Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
-| Window guard | tier 0 / 0 / 0.10 / 0.15 / 0.19 / 0.22 per row × pacing × zone (windows 1.0, sky 0.6); reach 130–160 px, arm 40 px above the sill; peek 0.5 s, grab 0.22 + 0.45 s, retract 0.4 s, quiet 2–3.5 s (5 s after a punch) |
+| Window guard | tier 0 / 0 / 0.09 / 0.13 / 0.17 / 0.20 per row × pacing × zone (windows 1.0, sky 0.6); pike 130–160 px from hands 48 px above the sill, aim ± 0.35 rad; peek 0.5 s, thrust 0.15 s down + 0.4 s held, back 0.35 s, quiet 2–3.5 s (5 s after a punch) |
 | Windows band roster | crow 0.6, spider 0.5, squirrel 0.5 (were 0.8 / 0.7 / 0.6), window guard 1.0 |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
@@ -665,4 +667,13 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   (−10 %); from 300 m 239 m against 275 m. The bot steps away from a
   window whose guard is up unless it is about to land on a branch on that
   side, and only punches an arm that is really out; the analyzer now
-  lists hits per band and enemy.
+  lists hits per band and enemy. Playing it: the arm read as a red bar
+  sliding out of the wall. It became a pike: the bust rises with the pike
+  upright (that is the telegraph), leans out, and the pike sweeps down into
+  a thrust aimed at the prince, hurtful only once past the sweep; the
+  world lets an enemy refine its box with a `hits` test so the slanted
+  shaft, not its box, does the hitting. The aimed thrust hits the bot
+  more than the level arm did (about 90 against 80 guard hits in 120
+  runs), so the chance went to tier 0.09 → 0.20: from 250 m 1.40 hits per
+  100 m (1.30 in the band), falls 43 %, mean climb 257 m (master 299 m);
+  from 300 m 1.68 (1.49), 33 %, 244 m (master 275 m).
