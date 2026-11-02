@@ -66,15 +66,17 @@ heart; the boost shield knocks the arm back (+3 suns); not stompable.
 - Bot: a peeking or grabbing arm is a threat to step away from.
 - `?spawn=grabber`; sounds `creak`, `grab`; `clank` on a punch.
 
-Status: done. Two lessons: a spawned enemy on the tower layer must start
-with its height in the prince's plane (the cull runs right after
-generation, before the first update converts it), and the first density
+Status: done. Three lessons: a spawned enemy on the tower layer must
+start with its height in the prince's plane (the cull runs right after
+generation, before the first update converts it); the first density
 (tier 0.20 → 0.40, reach 150–190) was far too much (mean climb 192 m,
-1.66 hits per 100 m). Final, paired seeds, 40 good bold runs from 250 m:
-1.36 hits per 100 m (1.23 in the 300 m band, 14 of 33 guard hits there),
-falls 39 % of deaths, mean climb 281 m (baseline 316, −11 %), 300 m
-reached by every run. From 300 m: 1.72 (1.97 in the band; the baseline
-from there was already 1.5), mean climb 198 m (baseline 246).
+1.66 hits per 100 m); and 40 runs are too noisy to tune on (the same
+build read 281 and 255 m of climb), so the tuning used 120 paired runs
+(seeds 100–219). Final: tier 0.10 → 0.22, reach 130–160, and the windows
+band's crows, spiders and squirrels at 0.6 / 0.5 / 0.5x. From 250 m:
+1.37 hits per 100 m (1.38 in the 300 m band), falls 40 % of deaths, mean
+climb 268 m (master 299 m, −10 %). From 300 m: 1.62 (1.53 in the band),
+falls 31 %, mean climb 239 m (master 275 m).
 
 ## 3. Braid cut (`element/braid-cut`)
 

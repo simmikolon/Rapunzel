@@ -173,8 +173,9 @@ build them. Each zone: elements, look, set piece.
    and right of the braid on the tower layer (lit with a candle, dark,
    shuttered, flower box, curtains) in a steady storey rhythm, with stone
    string courses in the wall; ✅ guards reaching out of the windows for
-   the prince; 🔜 the witch more present (she comes with scissors for the
-   braid), Rapunzel's cameo. Balconies were built for this band first and
+   the prince, with crows, spiders and squirrels stepping back (0.6 / 0.5
+   / 0.5x) to make room; 🔜 the witch more present (she comes with
+   scissors for the braid), Rapunzel's cameo. Balconies were built for this band first and
    moved above the treeline: with trees on both sides a balcony made no
    sense (decision log, 2026-10-29). Doors later.
 4. **Above the trees, 400 to 550 m** (in progress): ✅ the trees end at a
@@ -229,8 +230,9 @@ is a pool to draw from, not a promise.
   costs a heart and throws the prince away from the window; the boost
   shield knocks it back (he keeps his head down for 5 s); nothing to
   stomp, he stands behind the plane. Rolled per row on the tower stream
-  (tier 0.12 → 0.25 × pacing × zone: windows 1.0, above the trees 0.6) into
-  a free window within −60..+420 px of the row.
+  (tier 0.10 → 0.22 × pacing × zone: windows 1.0, above the trees 0.6) into
+  a free window within −60..+420 px of the row. In the windows band crows,
+  spiders and squirrels step back (0.6 / 0.5 / 0.5x) to make room for him.
 - 💡 scissors cutting the braid from below a certain height: ribbons below
   the cut fall away. A rising death line; strong pacing, harsh; late zones
   only, loudly telegraphed.
@@ -463,7 +465,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
 | Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
 | Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
-| Window guard | tier 0 / 0 / 0.12 / 0.18 / 0.22 / 0.25 per row × pacing × zone (windows 1.0, sky 0.6); reach 130–160 px, arm 40 px above the sill; peek 0.5 s, grab 0.22 + 0.45 s, retract 0.4 s, quiet 2–3.5 s (5 s after a punch) |
+| Window guard | tier 0 / 0 / 0.10 / 0.15 / 0.19 / 0.22 per row × pacing × zone (windows 1.0, sky 0.6); reach 130–160 px, arm 40 px above the sill; peek 0.5 s, grab 0.22 + 0.45 s, retract 0.4 s, quiet 2–3.5 s (5 s after a punch) |
+| Windows band roster | crow 0.6, spider 0.5, squirrel 0.5 (were 0.8 / 0.7 / 0.6), window guard 1.0 |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m |
@@ -652,8 +655,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   runs from 250 m: before 1.05 hits per 100 m (0.62 in the 300 m band),
   falls 52 % of deaths, mean climb 316 m; a first build at tier 0.20 →
   0.40 and 150–190 px reach gave 1.66 (1.72), 53 %, 192 m, far too much;
-  at tier 0.12 → 0.25 and 130–160 px: 1.36 (1.23 in the band, 14 of the 33
-  guard hits), 39 %, 281 m. The bot steps away from a window whose guard
-  is up unless it is about to land on a branch on that side, and only
-  punches an arm that is really out; the analyzer now lists hits per band
-  and enemy.
+  at tier 0.12 → 0.25 and 130–160 px: 1.36 (1.23 in the band), 39 %,
+  281 m. Forty runs turned out too noisy for this (the same build read
+  281 and 255 m), so the tuning was settled on 120 paired runs: tier
+  0.10 → 0.22, and the windows band's crows, spiders and squirrels
+  stepped back to 0.6 / 0.5 / 0.5x so the zone's roster changes instead of
+  growing: 1.37 hits per 100 m (1.38 in the band, 82 guard hits in 120
+  runs), falls 40 % of deaths, mean climb 268 m against 299 m on master
+  (−10 %); from 300 m 239 m against 275 m. The bot steps away from a
+  window whose guard is up unless it is about to land on a branch on that
+  side, and only punches an arm that is really out; the analyzer now
+  lists hits per band and enemy.
