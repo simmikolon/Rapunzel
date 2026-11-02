@@ -97,9 +97,22 @@ the approach or the snip aborts the cut.
 - `?at=300&spawn=scissors`; sounds `snip`, `braidFall`; particles
   `hairStrands`.
 
+Status: done. The generator check (12 seeds, 151 stretches with cuts
+forced every 15–25 m, 435 rows) found no braid-only row and no dry branch
+in a stretch; gaps between safe rows are the generator's usual ones
+(up to 560 px at the top tiers, the bounce is 648). A first `CUT_LEAD` of
+1300 px put the witch above the view, so the cut happened unseen; at 900
+she snips in the upper part of the screen. Paired seeds, 120 good bold
+runs: from 250 m 1.35 hits per 100 m (1.48 in the 300 m band), falls 48 %
+of deaths, mean climb 262 m (master 299 m, guards alone 268 m); from
+300 m 1.49 (1.41), 39 %, 237 m (master 275 m, guards alone 239 m). 171
+scissors events in 120 runs from 250 m, 116 cuts, 55 fended off by a
+boost, six falls within 15 m above a cut.
+
 ## Targets
 
-Paired seeds (seedBase 100), 40 good bold runs, cap 800. Baseline on the
+Paired seeds (seedBase 100), 40 good bold runs, cap 800 (120 runs for
+the final tuning: 40 proved too noisy, the same build read 281 and 255 m). Baseline on the
 merged master: from 250 m mean climb 316 m, 1.05 hits per 100 m (0.62 in
 the 300 m band), falls 52 % of deaths; from 300 m mean climb 246 m, 1.44
 hits per 100 m (1.5 in the band), falls 48 %. Targets per element: 0.8 to

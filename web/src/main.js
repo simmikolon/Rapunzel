@@ -92,7 +92,7 @@ class Game {
   setMode(m) {
     this.mode = m; this.modeT = 0;
     if (m === 'playing' && !this.world.started) {
-      if (this.dev.at) startAt(this.world, this.dev.at);
+      if (this.dev.at) startAt(this.world, this.dev.at, this.dev.spawn);
       this.world.start();
       if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
       this.maybeIosSoundHint();

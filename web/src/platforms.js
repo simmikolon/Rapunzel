@@ -57,6 +57,12 @@ export const CLOUD_SIZE = {
   wide:   { box: 325, art: [81, 20] },
 };
 
+// After the braid is cut, the pieces below the cut and the ribbons and
+// bows on them fall together: the distance fallen after t seconds (half
+// gravity, the hair drags) and a little sideways swing.
+export const fallDist = (t) => 525 * t * t;
+export const fallSwing = (t) => Math.sin(t * 3.2) * 26 * Math.min(1, t * 1.5);
+
 let nextId = 1;
 
 export class Platform {
@@ -85,7 +91,7 @@ export class Platform {
     this.dry = !!opts.dry;            // breakable
     this.sway = opts.sway || 0;       // horizontal sway amplitude (ribbons)
     this.swayPhase = opts.swayPhase || 0;
-    this.state = 'normal';            // normal | jumpedOn | bottomHit | breaking | gone
+    this.state = 'normal';            // normal | jumpedOn | bottomHit | breaking | falling | gone
     this.t = 0;                       // time in state
     this.alive = true;
     this.used = false;                // dry branches: bounced on once
@@ -112,6 +118,13 @@ export class Platform {
     this.t += dt;
     if (this.layer < 1) this.y = Platform.layerToWorld(this.ly, this.layer, cam.y);
     if (this.def.onBraid) this.x = this.baseX + braidX(this.ly) + this.sway * Math.sin(time * 1.3 + this.swayPhase);
+    if (this.state === 'falling') {
+      // on a cut piece of the braid: rides it down (background.js draws the piece the same way)
+      this.y -= fallDist(this.t); this.x += fallSwing(this.t);
+      this.wobble = Math.sin(this.t * 7) * 40 * Math.min(1, this.t * 2);
+      if (this.y < cam.y - 400) { this.state = 'gone'; this.alive = false; }
+      return;
+    }
     if (this.def.stork) {
       this.x += this.vx * dt;
       this.y = this.baseY + 8 * Math.sin(time * 7 + this.phase);
@@ -146,9 +159,15 @@ export class Platform {
     }
   }
 
+  // The braid was cut above this ribbon: it goes down with the hair.
+  fallAway() {
+    if (this.state === 'falling' || this.state === 'gone') return;
+    this.state = 'falling'; this.t = 0;
+  }
+
   // The player bounced on it.
   jumpedOn() {
-    if (this.state === 'breaking' || this.state === 'gone') return false;
+    if (this.state === 'breaking' || this.state === 'falling' || this.state === 'gone') return false;
     this.state = 'jumpedOn';
     this.t = 0;
     if (this.dry) this.used = true;
@@ -159,5 +178,5 @@ export class Platform {
     if (this.state === 'normal') { this.state = 'bottomHit'; this.t = 0; }
   }
 
-  get landable() { return this.alive && this.state !== 'breaking' && this.state !== 'gone'; }
+  get landable() { return this.alive && this.state !== 'breaking' && this.state !== 'falling' && this.state !== 'gone'; }
 }

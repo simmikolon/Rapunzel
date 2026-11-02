@@ -142,7 +142,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0 };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0 };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
@@ -153,7 +153,9 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   const origStomp = world.onPlayerStomp.bind(world);
   world.onPlayerStomp = (pl, e) => { stats.stomps++; origStomp(pl, e); };
   if (world.onBoostPunch) { const o = world.onBoostPunch.bind(world); world.onBoostPunch = (pl, e) => { stats.punches++; o(pl, e); }; }
-  let t = 0, witchSeen = 0;
+  const origCut = world.cutBraid.bind(world);
+  world.cutBraid = (ly, bx, y) => { stats.cuts++; stats.cutAt.push(world.player.maxY); origCut(ly, bx, y); };
+  let t = 0, witchSeen = 0, scissorsSeen = 0;
   while (!world.over && t < maxTime && world.heightM < cap) {
     bot.step(STEP);
     world.update(STEP);
@@ -161,12 +163,17 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
     const wc = world.enemies.filter((e) => e.kind === 'witch').length;
     if (wc > witchSeen) stats.witches++;
     witchSeen = wc;
+    const sc = world.enemies.filter((e) => e.kind === 'scissors').length;
+    if (sc > scissorsSeen) stats.scissors++;
+    scissorsSeen = sc;
   }
   stats.height = world.heightM;
   stats.climb = Math.max(0, world.heightM - startM);
   stats.time = t;
   stats.cause = world.over ? world.player.deathCause : (world.heightM >= cap ? 'cap' : 'timeout');
   if (stats.cause === 'fell') stats.fellBand = band();
+  // a fall in the 15 m above a cut is the cut's doing (the stretch without ribbons)
+  if (stats.cause === 'fell' && stats.cutAt.some((c) => world.player.maxY >= c && world.player.maxY - c < 1500)) stats.fellAfterCut = 1;
   return stats;
 }
 
@@ -204,6 +211,7 @@ function summarize(all, cfg) {
     hitsPer100mByBand: Object.fromEntries(Object.keys(bandMetres).sort((a, b) => a - b).map((b) => [b, +((bands[b] || 0) / bandMetres[b] * 100).toFixed(2)])),
     hitsByBandKind: bandKinds,
     hearts: total('hearts'), lanterns: total('lanterns'), boosts: total('boosts'), stomps: total('stomps'), punches: total('punches'), witches: total('witches'),
+    scissors: total('scissors'), cuts: total('cuts'), fellAfterCut: total('fellAfterCut'),
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
   };
 }
@@ -220,5 +228,6 @@ export function formatReport(r) {
   lines.push(`hits per 100 m by band: ${JSON.stringify(r.hitsPer100mByBand)}`);
   lines.push(`hits by band and enemy: ${JSON.stringify(r.hitsByBandKind)}`);
   lines.push(`hearts ${r.hearts}, lanterns ${r.lanterns}, boosts ${r.boosts}, stomps ${r.stomps}, boost-punches ${r.punches}, witch events ${r.witches}`);
+  lines.push(`scissors events ${r.scissors}, braid cuts ${r.cuts}, falls within 15 m above a cut ${r.fellAfterCut}`);
   return lines.join('\n');
 }

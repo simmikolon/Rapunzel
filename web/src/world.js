@@ -1,13 +1,13 @@
-import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS } from './config.js';
+import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS, PARALLAX_TOWER } from './config.js';
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
-import { Platform } from './platforms.js';
+import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
-import { Level } from './level.js';
+import { Level, CUT_LEAD } from './level.js';
 import { Background } from './background.js';
-import { Witch } from './enemies.js';
+import { Witch, Scissors } from './enemies.js';
 import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp } from './util.js';
@@ -46,6 +46,7 @@ export class World {
     this.enemies = [];
     this.pickups = [];
     this.fields = [];             // updrafts
+    this.braidCut = { ly: -Infinity, pieces: [] };   // where the braid ends now, and the pieces falling away
     this.particles.clear();
     this.cam.reset();
     this.player.reset(0, 0);
@@ -100,6 +101,12 @@ export class World {
     this.level.generateUpTo(this.cam.top + 900);
     this.cull();
     this.events();
+    // cut braid pieces fall out of the view and are forgotten
+    if (this.braidCut.pieces.length) {
+      const camF = this.cam.layerY(PARALLAX_TOWER);
+      for (const pc of this.braidCut.pieces) pc.t += dt;
+      this.braidCut.pieces = this.braidCut.pieces.filter((pc) => pc.top - fallDist(pc.t) > camF - 200);
+    }
 
     if (pl.alive && pl.headY < this.cam.y - 10) pl.die('fell');
     if (!pl.alive) {
@@ -149,7 +156,7 @@ export class World {
 
   // Boosting through an enemy knocks it away instead of hurting the prince.
   boostPunch(e) {
-    if (e.kind === 'witch') { if (e.phase === 'warn' || e.deflected) return; e.deflect(this); }
+    if (e.kind === 'witch' || e.kind === 'scissors') { if (e.phase === 'warn' || e.deflected) return; e.deflect(this); }
     else e.stomped(this);
     this.suns += PUNCH_SUNS;
     this.onBoostPunch(this.player, e);
@@ -186,13 +193,28 @@ export class World {
     if (!pl.alive) return;
     // The witch: telegraphed dives from a fixed altitude on, never during a
     // breather stretch, and with a long cooldown so she is an event.
-    if (pl.maxY > this.nextWitchY && !this.enemies.some((e) => e.kind === 'witch') && !this.level.pacingAt(pl.maxY).breather) {
+    const witchAbout = this.enemies.some((e) => e.kind === 'witch' || e.kind === 'scissors');
+    if (pl.maxY > this.nextWitchY && !witchAbout && !this.level.pacingAt(pl.maxY).breather) {
       const side = this.rngEvents.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));
       this.audio.witchWarn();
       this.toast('The witch!', '#ff8a8a', 1.4);
       this.nextWitchY = pl.maxY + this.rngEvents.range(7500, 10500);
+    }
+    // The witch with scissors: the generator planned a cut; when the prince is
+    // close enough below it and no witch is about, she comes for the braid.
+    // A plan the prince outclimbs is dropped. Her side rolls on the tower
+    // stream so the diving witch's own rolls stay untouched.
+    const plan = this.level.cutPlan;
+    if (plan && !plan.fired) {
+      if (pl.maxY >= plan.yc - CUT_LEAD && !witchAbout) {
+        plan.fired = true;
+        const ly = Platform.worldToLayer(plan.yc, PARALLAX_TOWER, this.cam.y);
+        this.enemies.push(new Scissors(this.level.rngTower.sign(), ly, this.cam.y));
+        this.audio.witchWarn();
+        this.toast('The witch has scissors!', '#ff8a8a', 1.6);
+      } else if (pl.maxY > plan.yc + 300) this.level.cutDone();
     }
     // Storks: once the clouds are fully in, a stork crosses the screen a few
     // bounces above the prince, from one edge to the other.
@@ -212,6 +234,22 @@ export class World {
       this.nextMilestone += 100;
     }
   }
+
+  // The witch cut the braid at layer height `ly`: the braid ends there now,
+  // the piece below falls away with every ribbon and bow on it.
+  cutBraid(ly, braidX, y) {
+    const cut = this.braidCut;
+    cut.pieces.push({ top: ly, bottom: cut.ly, t: 0 });
+    cut.ly = ly;
+    for (const p of this.platforms) if (p.def.onBraid && p.ly < ly) p.fallAway();
+    this.audio.snip(); this.audio.braidFall();
+    this.particles.hairStrands(braidX, y);
+    this.cam.shake(8, 0.3);
+    this.toast('The braid is cut!', '#ffd98a', 1.6);
+    this.level.cutDone();
+  }
+  // The shield threw her off before the snip.
+  onCutAborted() { this.toast('Saved the braid!', '#c8ff7a', 1.4); this.level.cutDone(); }
 
   // An updraft column under a lane, from just above a row to just below the next.
   spawnUpdraft(x, bottom, top) {

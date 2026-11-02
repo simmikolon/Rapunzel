@@ -189,6 +189,18 @@ class Synth {
     // entering an updraft: a soft rising rush of air
     this.noise({ dur: 0.5, vol: 0.18, filter: 'bandpass', freq: 400, to: 1800, q: 0.7 });
   }
+  snip() {
+    // the scissors closing on the braid: two metallic clicks
+    for (let i = 0; i < 2; i++) {
+      this.noise({ dur: 0.03, vol: 0.2, filter: 'highpass', freq: 4000, delay: i * 0.12 });
+      this.tone({ type: 'square', freq: 2600 - i * 400, to: 1900, dur: 0.07, vol: 0.06, delay: i * 0.12 });
+    }
+  }
+  braidFall() {
+    // the cut braid dropping away: a long falling whoosh and a soft thud
+    this.noise({ dur: 0.9, vol: 0.22, filter: 'bandpass', freq: 1600, to: 180, q: 0.7 });
+    this.tone({ type: 'sine', freq: 180, to: 60, dur: 0.5, vol: 0.14, delay: 0.5 });
+  }
   creak() {
     // a window guard rising behind the sill: a visor's squeal and a knock
     this.tone({ type: 'sawtooth', freq: 900, to: 1400, dur: 0.16, vol: 0.045, slide: 'linear' });
