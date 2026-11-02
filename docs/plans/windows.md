@@ -49,22 +49,42 @@ appear.
 
 ## 2. Window grabber (`element/window-grabber`)
 
-A guard pops up in a window ("!", the helmet rises behind the sill), then
-his gauntleted arm shoots inward into the prince's plane; contact costs a
-heart; the boost shield knocks the arm back (+3 suns); not stompable.
+A guard pops up in a window ("!", the bust rises behind the sill with his
+pike upright), leans out and thrusts the pike at the prince; contact costs
+a heart; the boost shield knocks the pike back (+3 suns); not stompable.
 
-- `Grabber` in `enemies.js`: hidden (2.0–3.5 s) → peek 0.45 s → grab
-  (0.22 s out, 0.28 s hold, hurtful) → retract 0.4 s. Trigger: the prince
-  inward of the window within reach + 40 px and within 150 px of the arm's
-  height. Reach 150 px, +40 at the top tiers. The arm's rect only while
-  grabbing; `x` is the arm's middle so the knock-back points away from
-  the window. Height follows the window's layer height every frame.
+- `Grabber` in `enemies.js`: hidden (2.0–3.5 s) → peek 0.5 s (pike
+  upright) → thrust (0.15 s sweep down to the aim, 0.4 s held, hurtful
+  once past the sweep) → back 0.35 s. Trigger: the prince inward of the
+  window within reach + 40 px and within 120 px of the hands' height.
+  Pike 130 px, +30 at the top tiers, aimed up to 0.35 rad above or below
+  level. The world tests the shaft (`hits`), not its box; `x` is the
+  shaft's middle so the knock-back points away from the window. Height
+  follows the window's layer height every frame.
 - Spawn rule in `level.js`: tier `grabber` 0 / 0 / 0.20 / 0.30 / 0.36 /
   0.40 × pacing × zone (windows 1.0, above the trees 0.6, else 0), rolled
   on a new `rngTower` stream so the tower's geometry stays identical on
   paired seeds; a free window within −60..+420 px (layer) of the row.
 - Bot: a peeking or grabbing arm is a threat to step away from.
 - `?spawn=grabber`; sounds `creak`, `grab`; `clank` on a punch.
+
+Status: done. Three lessons: a spawned enemy on the tower layer must
+start with its height in the prince's plane (the cull runs right after
+generation, before the first update converts it); the first density
+(tier 0.20 → 0.40, reach 150–190) was far too much (mean climb 192 m,
+1.66 hits per 100 m); and 40 runs are too noisy to tune on (the same
+build read 281 and 255 m of climb), so the tuning used 120 paired runs
+(seeds 100–219). Final: tier 0.10 → 0.22, reach 130–160, and the windows
+band's crows, spiders and squirrels at 0.6 / 0.5 / 0.5x. From 250 m:
+1.37 hits per 100 m (1.38 in the 300 m band), falls 40 % of deaths, mean
+climb 268 m (master 299 m, −10 %). From 300 m: 1.62 (1.53 in the band),
+falls 31 %, mean climb 239 m (master 275 m).
+
+Playing it: the arm looked like a red bar sliding out of the wall. It is a
+pike now (bust leans out, pike sweeps down into an aimed thrust); the
+aimed thrust hits the bot a little more, so the chance went to tier
+0.09 → 0.20. From 250 m: 1.40 (1.30 in the band), falls 43 %, mean climb
+257 m; from 300 m: 1.68 (1.49), 33 %, 244 m.
 
 ## 3. Braid cut (`element/braid-cut`)
 

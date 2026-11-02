@@ -6,13 +6,15 @@
 //   ?spawn=guard     a guard on the next balcony above (a balcony is made if none is in view)
 //   ?spawn=pot       a flowerpot on the next balcony above
 //   ?spawn=updraft   put an updraft column under the next platform
+//   ?spawn=grabber   a guard in the nearest window above the prince
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
-import { PX_PER_METER } from './config.js';
+import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN } from './platforms.js';
 import { zoneAt } from './level.js';
 import { TREELINE_Y } from './altitude.js';
-import { Lightning, Guard, Flowerpot } from './enemies.js';
+import { Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
+import { windowsBetween } from './windows.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
@@ -58,6 +60,13 @@ export function spawnNear(world, element) {
       world.platforms.push(b);
     }
     world.enemies.push(element === 'guard' ? new Guard(b, world.level.child()) : new Flowerpot(b, world.level.child()));
+  }
+  if (element === 'grabber') {
+    // the nearest window above the prince, in layer coordinates
+    const ly = Platform.worldToLayer(p.y, PARALLAX_TOWER, world.cam.y);
+    const balconies = world.platforms.filter((q) => q.kind === 'balcony');
+    const w = windowsBetween(ly + 100, ly + 3000, balconies)[0];
+    if (w) world.enemies.push(new Grabber(w, world.level.child(world.level.rngTower), 150, world.cam.y));
   }
   if (element === 'stork') world.spawnStork();
   if (element === 'updraft') {

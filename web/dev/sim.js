@@ -88,6 +88,19 @@ class Bot {
         if (e.state === 'fall' && Math.abs(dx) < 70 && dy > -120 && dy < 700) { if (!threat) threat = { e, dx: dx || 1, dy }; }
         continue;
       }
+      if (e.kind === 'grabber') {
+        // A guard peeking or grabbing from a window: once the helmet is up the
+        // arm comes within half a second, so step away from the window, unless
+        // we are about to land on a branch on that side (the landing counts
+        // more than a heart). Punch only an arm that is really out.
+        if (!((e.state === 'peek' && e.stateT > 0.1) || e.state === 'grab')) continue;
+        const body = p.y + 110, dy = e.armY - body, inward = (p.x - e.win.x) * e.dir;
+        if (Math.abs(dy) > 180 || inward < -60 || inward > e.reach + 80) continue;
+        if (target && p.vy < 0 && target.kind === (e.win.side === 'L' ? 'branchL' : 'branchR') && Math.abs(target.y - e.armY) < 260) continue;
+        let wx = e.win.x - p.x; if (wx > W / 2) wx -= W; else if (wx < -W / 2) wx += W;
+        if (!threat) threat = { e, dx: wx || -e.dir, dy, noPunch: !e.hurtful };
+        continue;
+      }
       if (!e.hurtful || e.phase === 'warn') continue;
       const dy = e.y - (p.y + 110);
       const ahead = p.vy > 0 ? (dy > -80 && dy < 360) : (dy < 80 && dy > -360);
@@ -95,7 +108,7 @@ class Bot {
     }
     if (threat) {
       const e = threat.e;
-      const canPunch = this.policy === 'bold' && p.boost >= 1 && p.vy > -200 && threat.dy > 0 && threat.dy < 300;
+      const canPunch = this.policy === 'bold' && !threat.noPunch && p.boost >= 1 && p.vy > -200 && threat.dy > 0 && threat.dy < 300;
       if ((e.kind === 'squirrel' || e.kind === 'guard') && target && e.platform === target) {
         // A squirrel on the branch we are landing on: a bold player stomps it
         // (aim at it while falling from above), a cautious one lands on the
@@ -129,10 +142,10 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0 };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0 };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
-  world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; origHurt(pl, src); };
+  world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
   const origCollect = world.collect.bind(world);
   world.collect = (k) => { if (k.kind === 'heart') stats.hearts++; if (k.kind === 'lantern') stats.lanterns++; origCollect(k); };
   const origBoost = world.onPlayerBoost.bind(world);
@@ -169,8 +182,9 @@ function summarize(all, cfg) {
   const total = (k) => all.reduce((a, s) => a + (s[k] || 0), 0);
   const hits = {};
   for (const s of all) for (const k of Object.keys(s.hits)) hits[k] = (hits[k] || 0) + s.hits[k];
-  const bands = {};
+  const bands = {}, bandKinds = {};
   for (const s of all) for (const b of Object.keys(s.hitsByBand)) bands[b] = (bands[b] || 0) + s.hitsByBand[b];
+  for (const s of all) for (const b of Object.keys(s.hitsByBandKind)) { const o = bandKinds[b] || (bandKinds[b] = {}); for (const k of Object.keys(s.hitsByBandKind[b])) o[k] = (o[k] || 0) + s.hitsByBandKind[b][k]; }
   // metres climbed inside each 100 m band, summed over runs, for a rate
   const bandMetres = {};
   for (const s of all) { for (let b = Math.floor(s.startM / 100) * 100; b < s.height; b += 100) bandMetres[b] = (bandMetres[b] || 0) + Math.min(100, s.height - b) - Math.max(0, s.startM - b); }
@@ -188,6 +202,7 @@ function summarize(all, cfg) {
     causes, fallsByBand, fallShare: deaths ? +((causes.fell || 0) / deaths).toFixed(2) : 0,
     hits, hitsPer100m: totalM ? +(Object.values(hits).reduce((a, b) => a + b, 0) / totalM * 100).toFixed(2) : 0,
     hitsPer100mByBand: Object.fromEntries(Object.keys(bandMetres).sort((a, b) => a - b).map((b) => [b, +((bands[b] || 0) / bandMetres[b] * 100).toFixed(2)])),
+    hitsByBandKind: bandKinds,
     hearts: total('hearts'), lanterns: total('lanterns'), boosts: total('boosts'), stomps: total('stomps'), punches: total('punches'), witches: total('witches'),
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
   };
@@ -203,6 +218,7 @@ export function formatReport(r) {
   lines.push(`deaths: ${JSON.stringify(r.causes)}  falls: ${Math.round(r.fallShare * 100)}% of deaths, by band ${JSON.stringify(r.fallsByBand)}`);
   lines.push(`hits per 100 m: ${r.hitsPer100m}  by enemy: ${JSON.stringify(r.hits)}`);
   lines.push(`hits per 100 m by band: ${JSON.stringify(r.hitsPer100mByBand)}`);
+  lines.push(`hits by band and enemy: ${JSON.stringify(r.hitsByBandKind)}`);
   lines.push(`hearts ${r.hearts}, lanterns ${r.lanterns}, boosts ${r.boosts}, stomps ${r.stomps}, boost-punches ${r.punches}, witch events ${r.witches}`);
   return lines.join('\n');
 }
