@@ -171,7 +171,7 @@ build them. Each zone: elements, look, set piece.
    cross branch you must boost through; crows fade out (0.6x), spiders stay.
 3. **The tower's windows, 250 to 400 m** (in progress): ✅ windows left
    and right of the braid on the tower layer (lit with a candle, dark,
-   shuttered, flower box, curtains), denser in this band, with stone
+   shuttered, flower box, curtains) in a steady storey rhythm, with stone
    string courses in the wall; 🔜 guards' arms reaching out of the
    windows, the witch more present (she comes with scissors for the
    braid), Rapunzel's cameo. Balconies were built for this band first and
@@ -338,12 +338,12 @@ is a pool to draw from, not a promise.
 - ✅ tower haze along the wall's edges; low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
-  at a layer height, placed per tile and side by hash like the trunk
-  overlays, so a height always shows the same windows whatever the seed.
-  Five looks (lit with a flickering candle and a small glow, dark,
-  shuttered, flower box, curtains); at least 160 px between sills on one
-  side, both sides in one tile only from the windows band, none where a
-  balcony sits. The old centred window tile is a stone string course now.
+  at a layer height, one per storey (440 layer px), left and right in
+  turn, so the tower reads as built rather than scattered and a height
+  always shows the same windows whatever the seed. Five looks (lit with a
+  flickering candle and a small glow, dark, shuttered, flower box,
+  curtains), never the same look twice in a row, none where a balcony
+  sits. The old centred window tile is a stone string course now.
 - ✅ near leaves and fog drift slightly against the prince's motion.
 - ✅ boughs hanging from the trunks; birds perch on them and take off when
   the prince comes near; acorns drop from them now and then.
@@ -453,7 +453,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Storks | every 1200–2000 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
 | Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
-| Windows | x = ±114, 22 × 30 art px, sill at a layer height; per side and tile: floor 0.10, deep forest 0.12, windows 0.42, above the trees 0.30 |
+| Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
@@ -622,8 +622,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   `docs/plans/windows.md`): the window was baked into a tile variant at
   the wall's centre, where the braid hid it. Windows are now their own
   sprites left and right of the braid (x = ±114, 40 px from the wall's
-  edge), placed per tile by hash like the trunk overlays, in five looks,
-  denser in the windows band and never under a balcony; the tile variant
-  became a stone string course. Purely visual, the simulator is
-  unaffected. Also fixed a misplaced draw block in `World.onPlayerJump`
+  edge) in five looks, never under a balcony; the tile variant became a
+  stone string course. A first version scattered them per tile by hash
+  with a density per band (up to seven in view in the windows band);
+  playing it showed that as noise, so they sit one per storey of 440
+  layer px, left and right in turn, about three in view, looks still by
+  hash. Purely visual, the simulator is unaffected. Also fixed a
+  misplaced draw block in `World.onPlayerJump`
   (a ReferenceError waiting for a fragile stork).

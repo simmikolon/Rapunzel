@@ -25,14 +25,11 @@ happens above the prince.
 
 ## 1. Windows (`element/tower-windows`)
 
-- `src/windows.js`: pure, hash-based placement like the trunk overlays.
-  `windowAt(k, side)` gives tile k's window on a side (variant, sill
-  height `ly` in layer coordinates, x = ±114) or null. Density per side
-  and tile by band: floor 0.10, deep forest 0.12, windows 0.42, above the
-  trees 0.30 (the altitude a layer height is seen at is `ly / 0.9`). At
-  least 160 px between sills on one side; both sides in one tile only
-  from the windows band. `windowsBetween(lo, hi, blockers)` lists them
-  for the level; `blockedBy` keeps them off a balcony's wall.
+- `src/windows.js`: pure placement. `windowAt(i)` gives window number i:
+  its side (left and right in turn), its look (by hash, never the same as
+  the one below), its sill height `ly = 260 + i · 440` in layer
+  coordinates and x = ±114. `windowsBetween(lo, hi, blockers)` lists
+  them for the level; `blockedBy` keeps them off a balcony's wall.
 - `art/windows.js`: 22 × 30 art px, sill anchor, five variants (lit with
   a candle, dark, shuttered, flower box, curtains), mirrored for the
   right side. Lit ones get a flickering glow rect and a small halo at
@@ -42,10 +39,13 @@ happens above the prince.
 - Tile variant 2 lost its window and became a stone string course.
 - Purely visual; the simulator is unaffected.
 
-Status: done. Screenshots at 120, 274, 300 and 480 m: windows sit beside
-the braid, none under a balcony, all five looks appear (variant counts over
-600 tiles: 97 / 47 / 46 / 48 / 49; the windows band holds ~0.8 windows per
-tile, the floor ~0.15).
+Status: done. A first version placed them per tile by hash with a
+density per band (up to seven in view in the windows band); playing it
+read as noise, "as if nobody had built the tower". Now one window per
+storey of 440 layer px, left and right in turn, about three in view at
+any height, looks by hash. Screenshots at 120, 274, 300 and 480 m:
+windows sit beside the braid, none under a balcony, all five looks
+appear.
 
 ## 2. Window grabber (`element/window-grabber`)
 
