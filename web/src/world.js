@@ -248,15 +248,7 @@ export class World {
   }
   onPlayerJump(pl, p) {
     if (p && p.dry && p.used) {
-      if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
-    else if (p.kind === 'skyLantern') {
-      // the glow breathes; the paper crumples on a landing
-      const fl = 0.3 + 0.08 * Math.sin(this.time * 7 + p.phase) + 0.05 * Math.sin(this.time * 2.3 + p.phase);
-      g.halo(cam.sx(p.x), cam.sy(p.y) + 74, 170, p.variant ? '#ff9ab8' : '#ffbe50', fl, { glow: 1 });
-      opts.sy = 1 - p.squash * 0.22; opts.sx = 1 + p.squash * 0.1;
-      opts.rot = Math.sin(this.time * 0.7 + p.phase) * 0.05;
-      opts.glow = 0.5;
-    } else if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
+      if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
       else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
     }
   }
