@@ -321,7 +321,7 @@ export class World {
   draw(g) {
     const cam = this.cam;
     g.layer('bg');
-    this.bg.drawBack(g, cam, this.time);
+    this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
     const order = { swing: 0, balcony: 1, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);

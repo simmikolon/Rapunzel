@@ -5,6 +5,7 @@ import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
+import { windowAt, blockedBy } from './windows.js';
 
 // Parallax environment. Layers from back to front:
 //   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
@@ -119,7 +120,7 @@ export class Background {
   }
 
   // The tower scrolls slower than the prince: it stands behind the trees.
-  drawTower(g, cam) {
+  drawTower(g, cam, time, world) {
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     const t = this.art.tiles;
@@ -127,9 +128,9 @@ export class Background {
       const h = hash(k + 7);
       let v = 0;
       if (k > 0) { const r = h % 100; v = r < 62 ? 0 : r < 80 ? 1 : r < 92 ? 2 : 3; }
-      if (v === 2 && hash(k + 6) % 100 >= 92) v = 1; // no two windows stacked
       g.blit(t.tower[v], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
     }
+    this.drawWindows(g, cam, camF, first, last, time, world);
     // push the wall back a little and let the trees cast a shadow on it
     g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, 'rgba(10,24,30,0.14)');
     g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
@@ -137,6 +138,27 @@ export class Background {
     // atmospheric haze toward the wall's receding edges
     g.puff(W / 2 - TOWER_W / 2 + 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
     g.puff(W / 2 + TOWER_W / 2 - 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
+  }
+
+  // Windows left and right of the braid (windows.js decides where); a lit
+  // one flickers and glows a little. None where a balcony sits on the wall.
+  drawWindows(g, cam, camF, first, last, time, world) {
+    const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony') : [];
+    const spr = this.art.windows;
+    for (let k = Math.max(1, first - 1); k <= last; k++) {
+      for (const side of ['L', 'R']) {
+        const w = windowAt(k, side);
+        if (!w || blockedBy(w, blockers)) continue;
+        const sx = W / 2 + w.x + cam.ox, sy = H - (w.ly - camF) + cam.oy;
+        if (sy < -10 || sy > H + 130) continue;
+        g.blit(spr[side][w.variant], sx, sy);
+        if (w.lit) {
+          const fl = 0.8 + 0.2 * Math.sin(time * 9 + w.k * 1.7) * Math.sin(time * 2.3 + w.k);
+          g.rect(sx - 4, sy - 60, 8, 12, C.lanternGlow, fl, { glow: 0.8 });
+          g.halo(sx, sy - 52, 64, '#ffb347', 0.16 * fl, { glow: 0.5 });
+        }
+      }
+    }
   }
 
   trunkVariant(k, side) {
@@ -311,13 +333,13 @@ export class Background {
     if (top < H) g.rect(0, top, W, H - top, C.grassDark);
   }
 
-  drawBack(g, cam, time) {
+  drawBack(g, cam, time, world) {
     this.drawSky(g, cam);
     this.drawFar(g, cam, time);
     this.drawForest(g, cam);
     this.drawSkyLanterns(g, cam, time, false);
     this.atmo.drawBackFog(g, cam, time);
-    this.drawTower(g, cam);
+    this.drawTower(g, cam, time, world);
     this.atmo.drawDapple(g, cam, time);
     this.drawBraid(g, cam, time);
     this.drawSkyLanterns(g, cam, time, true);

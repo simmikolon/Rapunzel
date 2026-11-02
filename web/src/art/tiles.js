@@ -41,16 +41,11 @@ function drawTower(t, variant) {
     for (let i = 0; i < 26; i++) { const x = rng.int(4, W - 6), y = rng.int(0, H - 2); p(x, y, rng.int(1, 3), 1, rng.chance(0.5) ? C.mossDark : C.leafDark); }
     line(60, 2, 64, 14, C.mortar); line(64, 14, 61, 22, C.mortar); line(61, 22, 66, 30, C.mortar);
   } else if (variant === 2) {
-    // arched window with a dark interior and a lit sill
-    const wx = 38, wy = 8, ww = 18, wh = 26;
-    p(wx, wy + 4, ww, wh - 4, C.nightDeep);
-    disc(wx + ww / 2 - 0.5, wy + 5, 9, C.nightDeep);
-    p(wx, wy + 4, ww, wh - 4, C.nightDeep);
-    p(wx - 2, wy + wh, ww + 4, 2, C.stoneLight); p(wx - 2, wy + wh + 2, ww + 4, 1, C.stoneDark);
-    // candle light inside
-    p(wx + 7, wy + 14, 4, 6, C.dusk); p(wx + 8, wy + 12, 2, 3, C.lanternGlow); p(wx + 8, wy + 11, 2, 1, C.sun1);
-    // ivy on the left edge
-    for (let i = 0; i < 14; i++) { const y = rng.int(0, H - 2); p(2, y, rng.int(2, 6), 1, C.leaf); p(3, y + 1, rng.int(1, 3), 1, C.grass); }
+    // a stone string course across the wall with weathering streaks below
+    // (the windows themselves are placed by src/windows.js, left and right)
+    p(0, 20, W, 3, C.stoneLight); p(0, 23, W, 1, C.stone); p(0, 24, W, 1, C.stoneDark);
+    for (let x = 9; x < W; x += 16) line(x, 20, x, 23, C.stone);
+    for (let i = 0; i < 9; i++) { const x = rng.int(3, W - 5), len = rng.int(3, 9); p(x, 25, 1, len, C.brickShade); if (rng.chance(0.5)) p(x + 1, 25, 1, Math.max(1, len - 3), C.brickDark); }
   } else if (variant === 3) {
     // vines hanging across
     for (let x = 10; x < W - 10; x += 9) { const len = rng.int(6, 22); line(x, 0, x + rng.int(-2, 2), len, C.leafDark); p(x + 1, len - 2, 2, 2, C.leaf); p(x - 1, Math.floor(len / 2), 2, 2, C.grass); }
