@@ -5,7 +5,7 @@ import { Player } from './player.js';
 import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
-import { Level, CUT_LEAD } from './level.js';
+import { Level, CUT_ROOM } from './level.js';
 import { Background } from './background.js';
 import { Witch, Scissors } from './enemies.js';
 import { audio } from './audio.js';
@@ -202,19 +202,21 @@ export class World {
       this.toast('The witch!', '#ff8a8a', 1.4);
       this.nextWitchY = pl.maxY + this.rngEvents.range(7500, 10500);
     }
-    // The witch with scissors: the generator planned a cut; when the prince is
-    // close enough below it and no witch is about, she comes for the braid.
-    // A plan the prince outclimbs is dropped. Her side rolls on the tower
+    // The witch with scissors: the generator planned a cut stretch; once the
+    // prince has reached its foot and no witch is about, she comes for the
+    // braid above him, but only while he still has CUT_ROOM below the
+    // stretch's top (so the cut lands above him however fast he climbs); a
+    // plan that waited too long is dropped. Her side rolls on the tower
     // stream so the diving witch's own rolls stay untouched.
     const plan = this.level.cutPlan;
     if (plan && !plan.fired) {
-      if (pl.maxY >= plan.yc - CUT_LEAD && !witchAbout) {
+      if (pl.maxY > plan.yc - CUT_ROOM) this.level.cutDone();
+      else if (pl.maxY >= plan.from && !witchAbout) {
         plan.fired = true;
-        const ly = Platform.worldToLayer(plan.yc, PARALLAX_TOWER, this.cam.y);
-        this.enemies.push(new Scissors(this.level.rngTower.sign(), ly, this.cam.y));
+        this.enemies.push(new Scissors(this.level.rngTower.sign(), plan.from, plan.yc, pl));
         this.audio.witchWarn();
         this.toast('The witch has scissors!', '#ff8a8a', 1.6);
-      } else if (pl.maxY > plan.yc + 300) this.level.cutDone();
+      }
     }
     // Storks: once the clouds are fully in, a stork crosses the screen a few
     // bounces above the prince, from one edge to the other.

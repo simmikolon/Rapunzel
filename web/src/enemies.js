@@ -585,21 +585,25 @@ export class Grabber extends Enemy {
 }
 
 // The witch with scissors (in the tale she is the one who cuts the braid).
-// She flies in at a layer height above the prince, stops beside the braid,
-// snips it and leaves; the braid below the cut falls with its ribbons and
-// bows (world.cutBraid). Phases: warn (edge marker with the scissors,
-// cackle) -> approach (level flight to the braid) -> snip -> leave. Hurtful
-// on the way in and while snipping; the boost shield throws her off before
-// the snip (deflect), which saves the braid.
+// She rides SCISSORS_ABOVE px above the prince's highest point, inside the
+// stretch the generator planned (hFrom .. hTo), stops beside the braid,
+// snips it there and leaves; the braid below the cut falls with its
+// ribbons and bows (world.cutBraid). Phases: warn (edge marker with the
+// scissors, cackle) -> approach (level flight to the braid) -> snip ->
+// leave. Hurtful on the way in and while snipping; the boost shield throws
+// her off before the snip (deflect), which saves the braid.
+const SCISSORS_ABOVE = 640;
 export class Scissors extends Enemy {
-  constructor(side, ly, camY) {
-    super(side * (W / 2 + 140), Platform.layerToWorld(ly, PARALLAX_TOWER, camY));
+  constructor(side, hFrom, hTo, player) {
+    super(side * (W / 2 + 100), clamp(player.maxY + SCISSORS_ABOVE, hFrom, hTo));
     this.kind = 'scissors';
     this.side = side; this.dir = -side;
-    this.ly = ly;                   // the cut's layer height: she keeps level with that point of the braid
+    this.hFrom = hFrom; this.hTo = hTo;   // the planned stretch, in the prince's plane
+    this.ly = 0;                    // her height on the tower layer, fixed once the snipping starts
+    this.lyFixed = null;
     this.w = 96; this.h = 70;
     this.phase = 'warn'; this.phaseT = 0;
-    this.warnTime = 1.2;
+    this.warnTime = 1.0;
     this.vx = 0; this.vy = 0; this.spin = 0;
     this.frame = 0; this.blade = 0;  // scissors open (0) or closed (1)
     this.hurtful = false;
@@ -625,22 +629,31 @@ export class Scissors extends Enemy {
       if (this.x > W / 2 + 220 || this.x < -W / 2 - 220 || this.y < world.cam.y - 300 || this.y > world.cam.top + 400) this.alive = false;
       return;
     }
-    this.y = Platform.layerToWorld(this.ly, PARALLAX_TOWER, world.cam.y);
+    // Above the prince's highest point until the snipping starts; from then
+    // on glued to that point of the braid (a layer height) like a ribbon.
+    const p = world.player;
+    if (this.lyFixed == null) {
+      this.y = clamp(p.maxY + SCISSORS_ABOVE, this.hFrom, this.hTo);
+      this.ly = Platform.worldToLayer(this.y, PARALLAX_TOWER, world.cam.y);
+    } else {
+      this.ly = this.lyFixed;
+      this.y = Platform.layerToWorld(this.ly, PARALLAX_TOWER, world.cam.y);
+    }
     const braidX = world.bg.braidX(this.ly, world.time);
     const targetX = braidX + this.side * 70;            // she stops on her side of the braid
     if (this.phase === 'warn') {
       if (this.phaseT > this.warnTime) { this.phase = 'approach'; this.phaseT = 0; this.hurtful = true; world.audio.witchSwoosh(); }
     } else if (this.phase === 'approach') {
-      const dx = targetX - this.x, step = 700 * dt;
-      if (Math.abs(dx) <= step) { this.x = targetX; this.phase = 'snip'; this.phaseT = 0; world.audio.snip(); }
+      const dx = targetX - this.x, step = 850 * dt;
+      if (Math.abs(dx) <= step) { this.x = targetX; this.phase = 'snip'; this.phaseT = 0; this.lyFixed = this.ly; world.audio.snip(); }
       else this.x += Math.sign(dx) * step;
       if (world.particles.items.length < 400 && Math.random() < 0.5) world.particles.witchTrail(this.x - this.dir * 40, this.y - 10);
     } else if (this.phase === 'snip') {
       this.x = targetX;                                 // the braid sways: stay beside it
       this.blade = Math.floor(this.phaseT * 6) % 2;
-      if (!this.cut && this.phaseT > 0.55) { this.cut = true; world.cutBraid(this.ly, braidX, this.y); }
+      if (!this.cut && this.phaseT > 0.35) { this.cut = true; world.cutBraid(this.ly, braidX, this.y); }
       if (this.cut) this.blade = 1;
-      if (this.phaseT > 0.95) {
+      if (this.phaseT > 0.7) {
         this.phase = 'leave'; this.phaseT = 0; this.hurtful = false;
         this.dir = this.side; this.vx = this.side * 600; this.vy = 520;
         world.audio.witchWarn();

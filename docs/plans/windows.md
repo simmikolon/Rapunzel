@@ -81,11 +81,13 @@ falls 31 %, mean climb 239 m (master 275 m).
 ## 3. Braid cut (`element/braid-cut`)
 
 From 300 m, every 120–180 m, never in a breather: the witch flies in with
-scissors at a layer height ~9 m above the prince, snips, and the braid
-below the cut falls with its ribbons and bows. The generator planned the
-stretch (`CUT_AHEAD` 900 px plus a 240 px margin) without braid-only rows
-and without dry branches, so it stays reachable. A boost into her during
-the approach or the snip aborts the cut.
+scissors 640 px above the prince's highest point, snips where she is once
+she reaches the braid, and the braid below the cut falls with its ribbons
+and bows. The generator planned the stretch (`CUT_AHEAD` 1600 px plus a
+240 px margin) without braid-only rows and without dry branches, and she
+only sets out while the prince is still `CUT_ROOM` (1000 px) below its
+top, so the cut lands inside the stretch and it stays reachable. A boost
+into her during the approach or the snip aborts the cut.
 
 - `level.js`: `cutPlan { from, yc, until }` rolled on `rngTower`; the
   layout filter in the stretch; `nextCutY` after a cut or an expired plan.
@@ -112,6 +114,14 @@ rhythm windows: from 250 m 1.43 (1.40 in the band), falls 42 %, mean
 climb 251 m; from 300 m 1.56 (1.71), 40 %, 243 m; a band moves by 0.2 to
 0.3 between builds that differ only in the windows' places, so that is
 the noise floor even at 120 runs.
+
+Playing it: the cut came too low, sometimes below the prince, because she
+aimed at the planned height while he kept climbing. Now she rides above
+his highest point and snips where she is; over 148 cuts the cut lands a
+median 560 px above his feet at 80 % of the view's height (tenth
+percentiles 235 px and 62 %), 5 % below him (boost chains), down from
+25 %. 120 paired runs: from 250 m 1.32 (1.23 in the band), falls 37 %,
+mean climb 276 m; from 300 m 1.50 (1.49), 42 %, 259 m.
 
 ## Targets
 

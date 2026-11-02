@@ -235,13 +235,15 @@ is a pool to draw from, not a promise.
   a free window within −60..+420 px of the row. In the windows band crows,
   spiders and squirrels step back (0.6 / 0.5 / 0.5x) to make room for him.
 - ✅ the witch with scissors (braid cut): from 300 m on, every 120–180 m,
-  never in a breather, she comes for the braid about 9 m above the prince
-  (edge marker with snapping scissors and a cackle for 1.2 s, level flight
-  to the braid, 0.55 s of snipping) and cuts it; the braid below the cut
-  falls away with every ribbon and bow on it, the hanging part ends in a
-  frayed end. The generator planned the stretch ahead: the rows from 9 m
-  below the cut to 2.4 m above it hold no braid-only layout and no dry
-  branch, so the climb stays possible without ribbons. A boost into her
+  never in a breather, she comes for the braid 6.4 m above the prince's
+  highest point (edge marker with snapping scissors and a cackle for
+  1 s, level flight to the braid, 0.35 s of snipping) and cuts it there,
+  in the upper fifth of the view; the braid below the cut falls away with
+  every ribbon and bow on it, the hanging part ends in a frayed end. The
+  generator planned a 16 m stretch ahead whose rows hold no braid-only
+  layout and no dry branch; she only sets out while the prince is in its
+  lower 6 m, so the cut always lands inside it and the climb stays
+  possible without ribbons. A boost into her
   on the way in or while snipping throws her off and saves the braid
   (+3 suns like any punch). She is hurtful on the way in and while
   snipping, never stompable. Rolled on the tower stream.
@@ -476,7 +478,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
 | Window guard | tier 0 / 0 / 0.10 / 0.15 / 0.19 / 0.22 per row × pacing × zone (windows 1.0, sky 0.6); reach 130–160 px, arm 40 px above the sill; peek 0.5 s, grab 0.22 + 0.45 s, retract 0.4 s, quiet 2–3.5 s (5 s after a punch) |
 | Windows band roster | crow 0.6, spider 0.5, squirrel 0.5 (were 0.8 / 0.7 / 0.6), window guard 1.0 |
-| Braid cut | from 300 m, then every 120–180 m; planned 900 px above a row, stretch to 240 px past the cut without braid-only rows or dry branches; the witch comes when the prince is 900 px below the cut; warn 1.2 s, approach 700 px/s, snip 0.55 s; cut pieces fall 525·t² px |
+| Braid cut | from 300 m, then every 120–180 m; stretch of 1600 + 240 px above the planning row without braid-only rows or dry branches; the witch sets out when the prince reaches the stretch and is still 1000 px below its top, rides 640 px above his highest point, warn 1.0 s, approach 850 px/s, snip 0.35 s; cut pieces fall 525·t² px |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m, the witch with scissors 300 m |
@@ -701,3 +703,18 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   bracket the targets; between builds that differ only in where the
   windows are, a band moves by 0.2 to 0.3, so that is the noise floor
   even at 120 runs.
+- 2026-11-02: Playing the cut: it came too low, sometimes below the
+  prince and scrolling out of the bottom of the view, because the witch
+  aimed at the planned height while the prince kept climbing for the two
+  seconds she needs. She now rides 640 px above his highest point (the
+  upper fifth of the view) like the diving witch does while she warns,
+  snips where she is once she reaches the braid, and only sets out while
+  he is still 1000 px below the stretch's top (the stretch grew to 1600 +
+  240 px); a plan another witch blocked for too long is dropped. Warn
+  1.0 s, approach 850 px/s, snip 0.35 s. Measured over 148 cuts: the cut
+  lands a median 560 px above his feet (tenth percentile 235), at 80 % of
+  the view's height (tenth percentile 62 %); 5 % still land below him
+  when he boost-chains past her, down from 25 % before. Paired seeds, 120
+  good bold runs: from 250 m 1.32 hits per 100 m (1.23 in the band), falls
+  37 %, mean climb 276 m (master 299 m); from 300 m 1.50 (1.49), 42 %,
+  259 m (master 275 m).

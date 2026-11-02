@@ -53,13 +53,17 @@ export function pacingAt(y) {
 }
 
 // The braid cut. From CUT_FROM on, every CUT_EVERY of climb the generator
-// plans a cut CUT_AHEAD above the row it is at and builds the rows from
-// there to CUT_MARGIN past the cut without braid-only layouts and without
-// dry branches, so the climb stays possible once the ribbons below the cut
-// have fallen (the margin covers the layer drift: a ribbon planned for a
-// row just above the cut can still hang below it when the witch comes).
-// The witch comes when the prince is CUT_LEAD below the cut (world.js).
-export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 900, CUT_MARGIN = 240, CUT_LEAD = 900;
+// plans a cut stretch from the row it is at (`from`) to CUT_AHEAD above it
+// (`yc`) plus CUT_MARGIN, and builds those rows without braid-only layouts
+// and without dry branches. The witch comes once the prince reaches `from`
+// and snips above his highest point, never above `yc`, so the cut always
+// falls inside the stretch and the climb stays possible once the ribbons
+// below it have fallen. She only sets out while he is still CUT_ROOM below
+// `yc` (a plan another witch blocked for too long is dropped), so the cut
+// lands above him even if he boosts; the margin covers the layer drift (a
+// ribbon planned for a row just above the cut can still hang below it when
+// she snips).
+export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 1600, CUT_MARGIN = 240, CUT_ROOM = 1000;
 const braidOnly = (layout) => layout.split('+').every((k) => k === 'ribbon' || k === 'bow');
 
 function tierAt(y) {
