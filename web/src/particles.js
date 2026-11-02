@@ -122,6 +122,15 @@ export class Particles {
       g: 0.9, drag: 0.5, spin: (Math.random() - 0.5) * 12, angle: Math.random() * TAU, shape: i % 4 === 0 ? 'leaf' : 'square', shrink: false,
     }));
   }
+  hairStrands(x, y) {
+    // cut hair: golden strands drifting off the cut
+    this.burst(x, y, 16, () => ({
+      x: x + (Math.random() - 0.5) * 40, y: y + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 260, vy: 60 + Math.random() * 260,
+      life: 0.9 + Math.random() * 0.6, size: 5 + Math.random() * 3, color: Math.random() < 0.5 ? C.braid : (Math.random() < 0.5 ? C.braidHi : C.braidShade),
+      g: 0.15, drag: 2.2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: 'feather', shrink: false, glow: 0.3,
+    }));
+  }
   boostTrail(x, y) {
     this.burst(x, y, 3, () => ({
       x: x + (Math.random() - 0.5) * 24, y: y + Math.random() * 10,

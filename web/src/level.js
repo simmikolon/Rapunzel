@@ -28,10 +28,10 @@ const TIERS = [
 // other. An element's rule is: tier chance x pacing x zone multiplier,
 // starting at the band where its multiplier first becomes positive.
 export const ZONES = [
-  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0 } },
-  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0 } },
-  { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6 } },
+  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0 } },
+  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -51,6 +51,20 @@ export function pacingAt(y) {
   const t = phase / (PACE_CYCLE - PACE_BREATHER);          // 0 at the start of a cycle, 1 at the peak
   return { breather: false, enemy: 0.75 + 0.45 * t, dry: 0.8 + 0.4 * t, short: 0.8 + 0.4 * t, long: 1, gap: 1, sun: 1, lantern: 1 };
 }
+
+// The braid cut. From CUT_FROM on, every CUT_EVERY of climb the generator
+// plans a cut stretch from the row it is at (`from`) to CUT_AHEAD above it
+// (`yc`) plus CUT_MARGIN, and builds those rows without braid-only layouts
+// and without dry branches. The witch comes once the prince reaches `from`
+// and snips above his highest point, never above `yc`, so the cut always
+// falls inside the stretch and the climb stays possible once the ribbons
+// below it have fallen. She only sets out while he is still CUT_ROOM below
+// `yc` (a plan another witch blocked for too long is dropped), so the cut
+// lands above him even if he boosts; the margin covers the layer drift (a
+// ribbon planned for a row just above the cut can still hang below it when
+// she snips).
+export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 1600, CUT_MARGIN = 240, CUT_ROOM = 1000;
+const braidOnly = (layout) => layout.split('+').every((k) => k === 'ribbon' || k === 'bow');
 
 function tierAt(y) {
   // Linear interpolation between tier rows so difficulty ramps smoothly.
@@ -96,6 +110,18 @@ export class Level {
     this.lastStubRow = -9;       // row index of the last stub branch
     this.updraftLane = null;     // lane with an updraft below the next row (no storm there)
     this.lastBalconyRow = -9;    // row index of the last balcony row
+    this.nextCutY = CUT_FROM;    // the next braid cut is planned at the first row from here
+    this.cutPlan = null;         // { from, yc, until, fired }: the stretch kept free of braid-only rows
+  }
+
+  // Is row height y inside the planned cut's stretch?
+  inCut(y) { return !!this.cutPlan && y >= this.cutPlan.from && y <= this.cutPlan.until; }
+
+  // The cut happened, was fended off or was outclimbed: plan the next one.
+  cutDone() {
+    const base = this.cutPlan ? this.cutPlan.yc : this.world.player.maxY;
+    this.cutPlan = null;
+    this.nextCutY = base + this.rngTower.range(CUT_EVERY[0], CUT_EVERY[1]);
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -115,7 +141,7 @@ export class Level {
     const ca = cloudAmount(y);
     const sky = ca > 0 && r.chance(ca);
     const b = ca >= 1 ? T.balcony * zoneMul(y, 'balcony') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
-    const items = sky ? [
+    let items = sky ? [
       ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
       ['cloudL+ribbon', T.double * 0.7], ['cloudR+ribbon', T.double * 0.7], ['cloudL+cloudR', T.double * 0.6],
       ['bow', T.bow],
@@ -126,6 +152,8 @@ export class Level {
       ['branchL+ribbon', T.double * 0.7], ['branchR+ribbon', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
       ['swing', T.swing * (1 - ca)], ['bow', T.bow],
     ];
+    // in a planned cut's stretch nothing may hang on the braid alone
+    if (this.inCut(y)) items = items.filter((it) => !braidOnly(it[0]));
     let layout = r.weighted(items.filter((it) => it[1] > 0));
     // avoid the same single slot three times in a row (keeps the climb zig-zagging)
     if (layout === this.lastLayout && this.rowIndex > 1 && r.chance(0.7)) layout = r.weighted(items.filter((it) => it[0] !== layout));
@@ -188,9 +216,15 @@ export class Level {
   makeRow() {
     const r = this.rng;
     const T = tierAt(this.nextY);
-    const P = pacingAt(this.nextY);
     const y = this.nextY;
-    const layout = this.nextLayout || this.pickLayout(T, y);
+    // Plan a braid cut: never in a stretch that starts or ends in a breather.
+    if (!this.cutPlan && y >= this.nextCutY && zoneMul(y, 'scissors') > 0 && !pacingAt(y).breather && !pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
+      this.cutPlan = { from: y, yc: y + CUT_AHEAD, until: y + CUT_AHEAD + CUT_MARGIN, fired: false };
+    }
+    const P0 = pacingAt(y);
+    const P = this.inCut(y) ? { ...P0, dry: 0 } : P0;    // no crumbling branch where the ribbons will go
+    let layout = this.nextLayout || this.pickLayout(T, y);
+    if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
     this.nextLayout = null;
     const kinds = layout.split('+');
     this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC');

@@ -7,6 +7,7 @@
 //   ?spawn=pot       a flowerpot on the next balcony above
 //   ?spawn=updraft   put an updraft column under the next platform
 //   ?spawn=grabber   a guard in the nearest window above the prince
+//   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
@@ -22,9 +23,12 @@ export function devParams() {
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
-export function startAt(world, metres) {
+// `spawn` is the ?spawn element: a braid cut must be planned before the
+// rows above are generated, so it is handled here.
+export function startAt(world, metres, spawn = '') {
   const y = Math.max(0, metres) * PX_PER_METER;
   if (!y) return;
+  if (spawn === 'scissors') world.level.nextCutY = y - 400;
   const p = world.player;
   p.y = y; p.prevY = y; p.maxY = y; p.vy = 0;
   world.cam.y = y - 520; world.cam.target = world.cam.y; world.cam.maxY = world.cam.y;

@@ -105,6 +105,15 @@ function drawBraidSegment(t) {
   p(1, 5, 2, 1, C.braidDark); p(11, 11, 2, 1, C.braidDark); p(2, 11, 1, 1, C.braidDark); p(12, 3, 1, 1, C.braidDark);
 }
 
+// The frayed end of a cut braid: 14 x 10 art px hanging from the last
+// whole bit (anchor top centre; drawn upside down for a falling piece's top).
+function drawBraidCut(t) {
+  const { p, line } = t;
+  p(3, 0, 8, 2, C.braid); p(4, 0, 6, 1, C.braidHi);
+  line(4, 2, 1, 8, C.braidShade); line(6, 2, 5, 9, C.braid); line(8, 2, 9, 9, C.braid); line(10, 2, 13, 8, C.braidShade);
+  p(1, 8, 1, 1, C.braidDark); p(13, 8, 1, 1, C.braidDark); p(5, 9, 1, 1, C.braidDark); p(9, 9, 1, 1, C.braidDark);
+}
+
 function drawBraidEnd(t) {
   const { p, disc, ellipse } = t;
   // the loose end of the braid pooling on the grass
@@ -190,6 +199,7 @@ export function buildTiles() {
   const ground = makeSprite(192, 36, (t) => drawGround(t), { ax: 0.5, ay: 0 }, { ayPx: 4 * PX });
   const braid = makeSprite(14, 12, (t) => drawBraidSegment(t), { ax: 0.5, ay: 0 });
   const braidEnd = makeSprite(36, 14, (t) => drawBraidEnd(t), { ax: 0.4, ay: 1 });
+  const braidCut = makeSprite(14, 10, (t) => drawBraidCut(t), { ax: 0.5, ay: 0 });
   const clouds = [[28, 10], [40, 13], [54, 16]].map(([w, h]) => makeSprite(w, h, (t) => drawCloud(t, w, h), { ax: 0.5, ay: 0.5 }));
   const moon = makeSprite(24, 24, (t) => drawMoon(t), { ax: 0.5, ay: 0.5 });
   const leaves = [0, 1, 2].map((v) => makeSprite(5, 4, (t) => drawLeaf(t, v), { ax: 0.5, ay: 0.5 }));
@@ -199,5 +209,5 @@ export function buildTiles() {
   const birdL = birdR.map(flipH);
   const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
   const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
-  return { tower, forest, ground, braid, braidEnd, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
+  return { tower, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }

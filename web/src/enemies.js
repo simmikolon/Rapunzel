@@ -282,7 +282,7 @@ export class Witch extends Enemy {
       // exclamation marker at the screen edge where she will appear
       const sx = this.side < 0 ? 40 : W - 40, sy = clamp(cam.sy(this.y), 60, H - 60);
       const blink = Math.floor(this.phaseT * 8) % 2 === 0;
-      g.text('!', sx, sy, 56, blink ? '#ff3b3b' : '#ffd1d1', 'center', false, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
+      g.text('!', sx, sy, 56, blink ? '#ff3b3b' : '#ffd1d1', 'center', true, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
       return;
     }
     const set = this.dir > 0 ? art.creatures.witchR : art.creatures.witchL;
@@ -617,5 +617,98 @@ export class Grabber extends Enemy {
       g.blit(fist, gx + ux * 30, gy + uy * 30, { rot });
     }
     if (this.state === 'peek') g.text('!', sx - this.dir * 30, sill - 92, 22, '#ffe9a0', 'center', true);
+  }
+}
+
+// The witch with scissors (in the tale she is the one who cuts the braid).
+// She rides SCISSORS_ABOVE px above the prince's highest point, inside the
+// stretch the generator planned (hFrom .. hTo), stops beside the braid,
+// snips it there and leaves; the braid below the cut falls with its
+// ribbons and bows (world.cutBraid). Phases: warn (edge marker with the
+// scissors, cackle) -> approach (level flight to the braid) -> snip ->
+// leave. Hurtful on the way in and while snipping; the boost shield throws
+// her off before the snip (deflect), which saves the braid.
+const SCISSORS_ABOVE = 640;
+export class Scissors extends Enemy {
+  constructor(side, hFrom, hTo, player) {
+    super(side * (W / 2 + 100), clamp(player.maxY + SCISSORS_ABOVE, hFrom, hTo));
+    this.kind = 'scissors';
+    this.side = side; this.dir = -side;
+    this.hFrom = hFrom; this.hTo = hTo;   // the planned stretch, in the prince's plane
+    this.ly = 0;                    // her height on the tower layer, fixed once the snipping starts
+    this.lyFixed = null;
+    this.w = 96; this.h = 70;
+    this.phase = 'warn'; this.phaseT = 0;
+    this.warnTime = 1.0;
+    this.vx = 0; this.vy = 0; this.spin = 0;
+    this.frame = 0; this.blade = 0;  // scissors open (0) or closed (1)
+    this.hurtful = false;
+    this.cut = false; this.aborted = false; this.deflected = false;
+  }
+  get stompable() { return false; }
+  // Boosted into: thrown off her broom's course. Before the snip that saves the braid.
+  deflect(world) {
+    this.phase = 'leave'; this.phaseT = 0;
+    this.hurtful = false; this.deflected = true;
+    this.dir = this.x >= world.player.x ? 1 : -1;
+    this.vx = this.dir * 1000; this.vy = 450;
+    world.audio.witchSwoosh();
+    if (!this.cut) { this.aborted = true; world.onCutAborted(this); }
+  }
+  update(dt, world) {
+    this.t += dt; this.phaseT += dt;
+    this.frame = Math.floor(this.t * 7) % 2;
+    if (this.phase === 'leave') {
+      this.x += this.vx * dt; this.y += this.vy * dt;
+      if (this.deflected) { this.vy -= 600 * dt; this.spin += dt * 8; }
+      if (Math.random() < 0.6) world.particles.witchTrail(this.x, this.y);
+      if (this.x > W / 2 + 220 || this.x < -W / 2 - 220 || this.y < world.cam.y - 300 || this.y > world.cam.top + 400) this.alive = false;
+      return;
+    }
+    // Above the prince's highest point until the snipping starts; from then
+    // on glued to that point of the braid (a layer height) like a ribbon.
+    const p = world.player;
+    if (this.lyFixed == null) {
+      this.y = clamp(p.maxY + SCISSORS_ABOVE, this.hFrom, this.hTo);
+      this.ly = Platform.worldToLayer(this.y, PARALLAX_TOWER, world.cam.y);
+    } else {
+      this.ly = this.lyFixed;
+      this.y = Platform.layerToWorld(this.ly, PARALLAX_TOWER, world.cam.y);
+    }
+    const braidX = world.bg.braidX(this.ly, world.time);
+    const targetX = braidX + this.side * 70;            // she stops on her side of the braid
+    if (this.phase === 'warn') {
+      if (this.phaseT > this.warnTime) { this.phase = 'approach'; this.phaseT = 0; this.hurtful = true; world.audio.witchSwoosh(); }
+    } else if (this.phase === 'approach') {
+      const dx = targetX - this.x, step = 850 * dt;
+      if (Math.abs(dx) <= step) { this.x = targetX; this.phase = 'snip'; this.phaseT = 0; this.lyFixed = this.ly; world.audio.snip(); }
+      else this.x += Math.sign(dx) * step;
+      if (world.particles.items.length < 400 && Math.random() < 0.5) world.particles.witchTrail(this.x - this.dir * 40, this.y - 10);
+    } else if (this.phase === 'snip') {
+      this.x = targetX;                                 // the braid sways: stay beside it
+      this.blade = Math.floor(this.phaseT * 6) % 2;
+      if (!this.cut && this.phaseT > 0.35) { this.cut = true; world.cutBraid(this.ly, braidX, this.y); }
+      if (this.cut) this.blade = 1;
+      if (this.phaseT > 0.7) {
+        this.phase = 'leave'; this.phaseT = 0; this.hurtful = false;
+        this.dir = this.side; this.vx = this.side * 600; this.vy = 520;
+        world.audio.witchWarn();
+      }
+    }
+  }
+  draw(g, cam, art) {
+    if (this.phase === 'warn') {
+      // the marker at the edge where she will come in, with her scissors snapping
+      const sx = this.side < 0 ? 40 : W - 40, sy = clamp(cam.sy(this.y), 60, H - 60);
+      const blink = Math.floor(this.phaseT * 8) % 2 === 0;
+      g.text('!', sx, sy, 56, blink ? '#ff3b3b' : '#ffd1d1', 'center', true, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
+      g.blit(art.creatures.scissors[blink ? 0 : 1], sx - this.side * 52, sy, { flip: this.side > 0, glow: 0.3 });
+      return;
+    }
+    const set = this.dir > 0 ? art.creatures.witchR : art.creatures.witchL;
+    const sx = cam.sx(this.x), sy = cam.sy(this.y);
+    g.blit(set[this.frame], sx, sy, { rot: this.deflected ? this.spin * this.dir : 0 });
+    // the scissors in her outstretched hand, toward the braid
+    if (!this.deflected) g.blit(art.creatures.scissors[this.blade], sx + this.dir * 56, sy + 4 + this.frame * 2, { flip: this.dir < 0 });
   }
 }

@@ -89,11 +89,13 @@ aimed thrust hits the bot a little more, so the chance went to tier
 ## 3. Braid cut (`element/braid-cut`)
 
 From 300 m, every 120–180 m, never in a breather: the witch flies in with
-scissors at a layer height ~9 m above the prince, snips, and the braid
-below the cut falls with its ribbons and bows. The generator planned the
-stretch (`CUT_AHEAD` 900 px plus a 240 px margin) without braid-only rows
-and without dry branches, so it stays reachable. A boost into her during
-the approach or the snip aborts the cut.
+scissors 640 px above the prince's highest point, snips where she is once
+she reaches the braid, and the braid below the cut falls with its ribbons
+and bows. The generator planned the stretch (`CUT_AHEAD` 1600 px plus a
+240 px margin) without braid-only rows and without dry branches, and she
+only sets out while the prince is still `CUT_ROOM` (1000 px) below its
+top, so the cut lands inside the stretch and it stays reachable. A boost
+into her during the approach or the snip aborts the cut.
 
 - `level.js`: `cutPlan { from, yc, until }` rolled on `rngTower`; the
   layout filter in the stretch; `nextCutY` after a cut or an expired plan.
@@ -105,9 +107,34 @@ the approach or the snip aborts the cut.
 - `?at=300&spawn=scissors`; sounds `snip`, `braidFall`; particles
   `hairStrands`.
 
+Status: done. The generator check (12 seeds, 151 stretches with cuts
+forced every 15–25 m, 435 rows) found no braid-only row and no dry branch
+in a stretch; gaps between safe rows are the generator's usual ones
+(up to 560 px at the top tiers, the bounce is 648). A first `CUT_LEAD` of
+1300 px put the witch above the view, so the cut happened unseen; at 900
+she snips in the upper part of the screen. Paired seeds, 120 good bold
+runs: from 250 m 1.35 hits per 100 m (1.48 in the 300 m band), falls 48 %
+of deaths, mean climb 262 m (master 299 m, guards alone 268 m); from
+300 m 1.49 (1.41), 39 %, 237 m (master 275 m, guards alone 239 m). 171
+scissors events in 120 runs from 250 m, 116 cuts, 55 fended off by a
+boost, six falls within 15 m above a cut. Re-measured on the storey
+rhythm windows: from 250 m 1.43 (1.40 in the band), falls 42 %, mean
+climb 251 m; from 300 m 1.56 (1.71), 40 %, 243 m; a band moves by 0.2 to
+0.3 between builds that differ only in the windows' places, so that is
+the noise floor even at 120 runs.
+
+Playing it: the cut came too low, sometimes below the prince, because she
+aimed at the planned height while he kept climbing. Now she rides above
+his highest point and snips where she is; over 148 cuts the cut lands a
+median 560 px above his feet at 80 % of the view's height (tenth
+percentiles 235 px and 62 %), 5 % below him (boost chains), down from
+25 %. 120 paired runs: from 250 m 1.32 (1.23 in the band), falls 37 %,
+mean climb 276 m; from 300 m 1.50 (1.49), 42 %, 259 m.
+
 ## Targets
 
-Paired seeds (seedBase 100), 40 good bold runs, cap 800. Baseline on the
+Paired seeds (seedBase 100), 40 good bold runs, cap 800 (120 runs for
+the final tuning: 40 proved too noisy, the same build read 281 and 255 m). Baseline on the
 merged master: from 250 m mean climb 316 m, 1.05 hits per 100 m (0.62 in
 the 300 m band), falls 52 % of deaths; from 300 m mean climb 246 m, 1.44
 hits per 100 m (1.5 in the band), falls 48 %. Targets per element: 0.8 to

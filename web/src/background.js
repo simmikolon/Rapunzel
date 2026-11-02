@@ -6,6 +6,7 @@ import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleA
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
 import { windowsBetween } from './windows.js';
+import { fallDist, fallSwing } from './platforms.js';
 
 // Parallax environment. Layers from back to front:
 //   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
@@ -310,16 +311,32 @@ export class Background {
   }
 
   // The braid hangs down the tower, so it scrolls with the tower layer.
-  drawBraid(g, cam, time) {
+  // After a cut (`cut.ly`, layer height) only the part above it hangs, with
+  // a frayed end; the pieces below (`cut.pieces`: { top, bottom, t }) fall
+  // away, shifted down by fallDist(t) like the ribbons riding them.
+  drawBraid(g, cam, time, cut) {
     const t = this.art.tiles;
     const step = 40;
     const camF = cam.layerY(PARALLAX_TOWER);
     const start = Math.floor((camF + H + 60) / step) * step;
-    for (let ly = start; ly >= Math.max(-240, camF - 60); ly -= step) {
+    const cutLy = cut ? cut.ly : -Infinity;
+    const bottom = Math.max(-240, camF - 60, cutLy);
+    for (let ly = start; ly >= bottom; ly -= step) {
       g.blit(t.braid, W / 2 + this.braidX(ly, time) + cam.ox, H - (ly + step - camF) + cam.oy);
     }
+    if (cutLy > camF - 80 && cutLy < camF + H + 80) g.blit(t.braidCut, W / 2 + this.braidX(cutLy, time) + cam.ox, H - (cutLy - camF) + cam.oy);
+    if (cut) {
+      for (const pc of cut.pieces) {
+        const d = fallDist(pc.t), sw = fallSwing(pc.t);
+        const lo = Math.max(pc.bottom, camF - 60 + d), hi = Math.min(pc.top, camF + H + 60 + d);
+        for (let ly = Math.floor((hi - step) / step) * step; ly >= lo; ly -= step) {
+          g.blit(t.braid, W / 2 + this.braidX(ly, time) + sw + cam.ox, H - (ly + step - d - camF) + cam.oy);
+        }
+        if (pc.top - d > camF - 80 && pc.top - d < camF + H + 80) g.blit(t.braidCut, W / 2 + this.braidX(pc.top, time) + sw + cam.ox, H - (pc.top - d - camF) + cam.oy, { sy: -1 });
+      }
+    }
     // the loose end curls up on the lawn (which is in the prince's plane)
-    if (cam.y < 60) g.blit(t.braidEnd, cam.sx(this.braidX(0, time) + 30), cam.sy(-4));
+    if (cam.y < 60 && !(cutLy > -240)) g.blit(t.braidEnd, cam.sx(this.braidX(0, time) + 30), cam.sy(-4));
   }
 
   drawGround(g, cam) {
@@ -337,7 +354,7 @@ export class Background {
     this.atmo.drawBackFog(g, cam, time);
     this.drawTower(g, cam, time, world);
     this.atmo.drawDapple(g, cam, time);
-    this.drawBraid(g, cam, time);
+    this.drawBraid(g, cam, time, world && world.braidCut);
     this.drawSkyLanterns(g, cam, time, true);
     this.atmo.drawBackLeaves(g, cam);
     this.atmo.drawMidFog(g, cam, time);

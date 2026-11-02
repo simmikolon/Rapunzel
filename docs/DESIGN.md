@@ -174,8 +174,9 @@ build them. Each zone: elements, look, set piece.
    shuttered, flower box, curtains) in a steady storey rhythm, with stone
    string courses in the wall; ✅ guards reaching out of the windows for
    the prince, with crows, spiders and squirrels stepping back (0.6 / 0.5
-   / 0.5x) to make room; 🔜 the witch more present (she comes with
-   scissors for the braid), Rapunzel's cameo. Balconies were built for this band first and
+   / 0.5x) to make room; ✅ the witch more present: from 300 m on she
+   comes with scissors and cuts the braid above the prince, the ribbons
+   below fall away; 🔜 Rapunzel's cameo. Balconies were built for this band first and
    moved above the treeline: with trees on both sides a balcony made no
    sense (decision log, 2026-10-29). Doors later.
 4. **Above the trees, 400 to 550 m** (in progress): ✅ the trees end at a
@@ -235,9 +236,19 @@ is a pool to draw from, not a promise.
   × zone: windows 1.0, above the trees 0.6) into a free window within
   −60..+420 px of the row. In the windows band crows, spiders and
   squirrels step back (0.6 / 0.5 / 0.5x) to make room for him.
-- 💡 scissors cutting the braid from below a certain height: ribbons below
-  the cut fall away. A rising death line; strong pacing, harsh; late zones
-  only, loudly telegraphed.
+- ✅ the witch with scissors (braid cut): from 300 m on, every 120–180 m,
+  never in a breather, she comes for the braid 6.4 m above the prince's
+  highest point (edge marker with snapping scissors and a cackle for
+  1 s, level flight to the braid, 0.35 s of snipping) and cuts it there,
+  in the upper fifth of the view; the braid below the cut falls away with
+  every ribbon and bow on it, the hanging part ends in a frayed end. The
+  generator planned a 16 m stretch ahead whose rows hold no braid-only
+  layout and no dry branch; she only sets out while the prince is in its
+  lower 6 m, so the cut always lands inside it and the climb stays
+  possible without ribbons. A boost into her
+  on the way in or while snipping throws her off and saves the braid
+  (+3 suns like any punch). She is hurtful on the way in and while
+  snipping, never stompable. Rolled on the tower stream.
 - 💡 cross branches spanning the width, broken only by a boost. ⚠️ Only
   spawn with a guaranteed charge (a lantern just below or a generator check).
 - 💡 a bird swarm to boost through (set piece).
@@ -432,7 +443,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
 | 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
-| 4 | Windows zone | ✅ windows spread across the tower, guards reaching out of them; 🔜 the witch with scissors, Rapunzel's cameo (balconies moved above the treeline) | in progress |
+| 4 | Windows zone | ✅ windows spread across the tower, guards reaching out of them, the witch with scissors cutting the braid; 🔜 Rapunzel's cameo (balconies moved above the treeline) | in progress |
 | 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots; 🔜 bird swarm, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
@@ -469,9 +480,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
 | Window guard | tier 0 / 0 / 0.09 / 0.13 / 0.17 / 0.20 per row × pacing × zone (windows 1.0, sky 0.6); pike 130–160 px from hands 48 px above the sill, aim ± 0.35 rad; peek 0.5 s, thrust 0.15 s down + 0.4 s held, back 0.35 s, quiet 2–3.5 s (5 s after a punch) |
 | Windows band roster | crow 0.6, spider 0.5, squirrel 0.5 (were 0.8 / 0.7 / 0.6), window guard 1.0 |
+| Braid cut | from 300 m, then every 120–180 m; stretch of 1600 + 240 px above the planning row without braid-only rows or dry branches; the witch sets out when the prince reaches the stretch and is still 1000 px below its top, rides 640 px above his highest point, warn 1.0 s, approach 850 px/s, snip 0.35 s; cut pieces fall 525·t² px |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
-| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m |
+| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m, the witch with scissors 300 m |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -677,3 +689,43 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   runs), so the chance went to tier 0.09 → 0.20: from 250 m 1.40 hits per
   100 m (1.30 in the band), falls 43 %, mean climb 257 m (master 299 m);
   from 300 m 1.68 (1.49), 33 %, 244 m (master 275 m).
+- 2026-11-02: The braid cut (`element/braid-cut`): the scissors idea,
+  given to the witch (in the tale she is the one who cuts the braid).
+  The cut is planned by the generator before it happens, so the rows
+  below it have something that is not on the braid and nothing that
+  crumbles; the witch then comes when the prince is 900 px below the
+  planned height and snips at a layer height she keeps level with, so
+  the braid she cuts is the braid she flies next to. Ribbons and bows
+  below the cut ride the falling piece down (`fallAway`, shared
+  `fallDist` and `fallSwing` with the background's pieces). A first lead
+  of 1300 px put her above the view: the cut happened unseen. Paired
+  seeds, 120 good bold runs: from 250 m 1.35 hits per 100 m (1.48 in the
+  300 m band), falls 48 % of deaths, mean climb 262 m (master 299 m,
+  guards alone 268 m); from 300 m 1.49 (1.41), 39 %, 237 m (master 275 m,
+  guards alone 239 m). 171 scissors events in 120 runs from 250 m, 116
+  cuts, 55 fended off by a boost; six falls in the 15 m above a cut. The
+  bold bot takes the cut almost for free because it reads branches well;
+  for people it is the spectacle and the lost ribbons that count. Both
+  witches' edge markers got an outline (invisible on the birch trunks
+  before). Re-measured once the windows moved into their storey rhythm
+  (the guards sit in different windows now): from 250 m 1.43 hits per
+  100 m (1.40 in the band), falls 42 %, mean climb 251 m (−16 % against
+  master); from 300 m 1.56 (1.71), 40 %, 243 m (−12 %). The two readings
+  bracket the targets; between builds that differ only in where the
+  windows are, a band moves by 0.2 to 0.3, so that is the noise floor
+  even at 120 runs.
+- 2026-11-02: Playing the cut: it came too low, sometimes below the
+  prince and scrolling out of the bottom of the view, because the witch
+  aimed at the planned height while the prince kept climbing for the two
+  seconds she needs. She now rides 640 px above his highest point (the
+  upper fifth of the view) like the diving witch does while she warns,
+  snips where she is once she reaches the braid, and only sets out while
+  he is still 1000 px below the stretch's top (the stretch grew to 1600 +
+  240 px); a plan another witch blocked for too long is dropped. Warn
+  1.0 s, approach 850 px/s, snip 0.35 s. Measured over 148 cuts: the cut
+  lands a median 560 px above his feet (tenth percentile 235), at 80 % of
+  the view's height (tenth percentile 62 %); 5 % still land below him
+  when he boost-chains past her, down from 25 % before. Paired seeds, 120
+  good bold runs: from 250 m 1.32 hits per 100 m (1.23 in the band), falls
+  37 %, mean climb 276 m (master 299 m); from 300 m 1.50 (1.49), 42 %,
+  259 m (master 275 m).

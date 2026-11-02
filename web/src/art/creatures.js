@@ -177,6 +177,19 @@ function drawGauntlet(t, frame) {
   }
 }
 
+// The witch's scissors, 16 x 16 art px pointing right: two rings, a pivot,
+// two blades, open (frame 0) or closed (frame 1). Anchor centre.
+function drawScissors(t, frame) {
+  const { p, line, ring } = t;
+  const spread = frame ? 1 : 3;
+  ring(3, 4, 3, C.pole); ring(3, 12, 3, C.pole);
+  line(5, 6, 8, 7, C.pole, 2); line(5, 10, 8, 9, C.pole, 2);          // handles
+  line(8, 7, 15, 8 - spread, C.poleHi, 2); line(8, 8, 15, 8 + spread, C.poleHi, 2);   // blades
+  line(9, 8, 14, 8 - spread + 1, C.pole); line(9, 9, 14, 8 + spread, C.pole);         // their shadow edge
+  p(7, 7, 2, 2, C.goldDark); p(7, 7, 1, 1, C.gold);                   // pivot
+  p(15, 8 - spread, 1, 1, C.white); p(15, 8 + spread, 1, 1, C.white);  // the points
+}
+
 // Witch on a broom: 34 x 30 art px, flying right. Anchor center.
 function drawWitch(t, frame) {
   const { p, poly, disc, line, ellipse } = t;
@@ -248,6 +261,7 @@ export function buildCreatures() {
   const spider = [0, 1].map((f) => makeSprite(16, 12, (t) => drawSpider(t, f), { ax: 0.5, ay: 0 }));
   const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));
+  const scissors = [0, 1].map((f) => makeSprite(16, 16, (t) => drawScissors(t, f), { ax: 0.5, ay: 0.5 }));
   return {
     crowR, crowL: crowR.map(flipH),
     storkR, storkL: storkR.map(flipH),
@@ -255,7 +269,7 @@ export function buildCreatures() {
     guardHeadR, guardHeadL: guardHeadR.map(flipH), gauntletR, gauntletL: gauntletR.map(flipH),
     spider,
     squirrelR, squirrelL: squirrelR.map(flipH),
-    witchR, witchL: witchR.map(flipH),
+    witchR, witchL: witchR.map(flipH), scissors,
     sun: [0, 1].map((f) => makeSprite(11, 11, (t) => drawSun(t, f), { ax: 0.5, ay: 0.5 })),
     lantern: [0, 1].map((f) => makeSprite(12, 16, (t) => drawLantern(t, f), { ax: 0.5, ay: 0.5 })),
     heart: makeSprite(10, 10, (t) => drawHeart(t, false), { ax: 0.5, ay: 0.5 }),
