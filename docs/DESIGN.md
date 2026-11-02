@@ -694,4 +694,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   bold bot takes the cut almost for free because it reads branches well;
   for people it is the spectacle and the lost ribbons that count. Both
   witches' edge markers got an outline (invisible on the birch trunks
-  before).
+  before). Re-measured once the windows moved into their storey rhythm
+  (the guards sit in different windows now): from 250 m 1.43 hits per
+  100 m (1.40 in the band), falls 42 %, mean climb 251 m (−16 % against
+  master); from 300 m 1.56 (1.71), 40 %, 243 m (−12 %). The two readings
+  bracket the targets; between builds that differ only in where the
+  windows are, a band moves by 0.2 to 0.3, so that is the noise floor
+  even at 120 runs.

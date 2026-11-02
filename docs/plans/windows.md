@@ -107,7 +107,11 @@ runs: from 250 m 1.35 hits per 100 m (1.48 in the 300 m band), falls 48 %
 of deaths, mean climb 262 m (master 299 m, guards alone 268 m); from
 300 m 1.49 (1.41), 39 %, 237 m (master 275 m, guards alone 239 m). 171
 scissors events in 120 runs from 250 m, 116 cuts, 55 fended off by a
-boost, six falls within 15 m above a cut.
+boost, six falls within 15 m above a cut. Re-measured on the storey
+rhythm windows: from 250 m 1.43 (1.40 in the band), falls 42 %, mean
+climb 251 m; from 300 m 1.56 (1.71), 40 %, 243 m; a band moves by 0.2 to
+0.3 between builds that differ only in the windows' places, so that is
+the noise floor even at 120 runs.
 
 ## Targets
 
