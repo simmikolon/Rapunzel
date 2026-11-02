@@ -7,6 +7,7 @@ import { buildClouds } from './clouds.js';
 import { buildLanterns } from './lanterns.js';
 import { buildWind } from './wind.js';
 import { buildBalconies } from './balconies.js';
+import { buildWindows } from './windows.js';
 
 export function buildAllArt() {
   return {
@@ -19,5 +20,6 @@ export function buildAllArt() {
     lanterns: buildLanterns(),
     wind: buildWind(),
     balconies: buildBalconies(),
+    windows: buildWindows(),
   };
 }

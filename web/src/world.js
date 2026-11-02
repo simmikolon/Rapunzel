@@ -248,15 +248,7 @@ export class World {
   }
   onPlayerJump(pl, p) {
     if (p && p.dry && p.used) {
-      if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
-    else if (p.kind === 'skyLantern') {
-      // the glow breathes; the paper crumples on a landing
-      const fl = 0.3 + 0.08 * Math.sin(this.time * 7 + p.phase) + 0.05 * Math.sin(this.time * 2.3 + p.phase);
-      g.halo(cam.sx(p.x), cam.sy(p.y) + 74, 170, p.variant ? '#ff9ab8' : '#ffbe50', fl, { glow: 1 });
-      opts.sy = 1 - p.squash * 0.22; opts.sx = 1 + p.squash * 0.1;
-      opts.rot = Math.sin(this.time * 0.7 + p.phase) * 0.05;
-      opts.glow = 0.5;
-    } else if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
+      if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
       else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
     }
   }
@@ -329,7 +321,7 @@ export class World {
   draw(g) {
     const cam = this.cam;
     g.layer('bg');
-    this.bg.drawBack(g, cam, this.time);
+    this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
     const order = { swing: 0, balcony: 1, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);

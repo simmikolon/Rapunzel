@@ -169,10 +169,14 @@ build them. Each zone: elements, look, set piece.
    canopy dapple on the wall, boughs with birds, butterflies, owls in the
    knot holes, acorns, gusts and passing clouds; 🔜 thorny branches, the
    cross branch you must boost through; crows fade out (0.6x), spiders stay.
-3. **The tower's windows, 250 to 400 m** (🔜): windows spread left and
-   right, the witch more present, Rapunzel's cameo. Balconies were built
-   for this band first and moved above the treeline: with trees on both
-   sides a balcony made no sense (decision log, 2026-10-29). Doors later.
+3. **The tower's windows, 250 to 400 m** (in progress): ✅ windows left
+   and right of the braid on the tower layer (lit with a candle, dark,
+   shuttered, flower box, curtains) in a steady storey rhythm, with stone
+   string courses in the wall; 🔜 guards' arms reaching out of the
+   windows, the witch more present (she comes with scissors for the
+   braid), Rapunzel's cameo. Balconies were built for this band first and
+   moved above the treeline: with trees on both sides a balcony made no
+   sense (decision log, 2026-10-29). Doors later.
 4. **Above the trees, 400 to 550 m** (in progress): ✅ the trees end at a
    treeline (bare tops, crown tiles at 460 m) and cloud platforms take over
    in three lanes: thick, wispy (weak bounce, dissolves), drifting (patrols
@@ -332,6 +336,14 @@ is a pool to draw from, not a promise.
   motes speed up, the braid swings a little wider (ribbons move with it).
 - ✅ canopy dapple: soft dark blobs (multiply) scrolling with the bricks.
 - ✅ tower haze along the wall's edges; low mist on the lawn at the start.
+- ✅ tower windows left and right of the braid (`src/windows.js`, art in
+  `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
+  at a layer height, one per storey (440 layer px), left and right in
+  turn, so the tower reads as built rather than scattered and a height
+  always shows the same windows whatever the seed. Five looks (lit with a
+  flickering candle and a small glow, dark, shuttered, flower box,
+  curtains), never the same look twice in a row, none where a balcony
+  sits. The old centred window tile is a stone string course now.
 - ✅ near leaves and fog drift slightly against the prince's motion.
 - ✅ boughs hanging from the trunks; birds perch on them and take off when
   the prince comes near; acorns drop from them now and then.
@@ -407,7 +419,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
 | 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
-| 4 | Windows zone | Windows spread across the tower, the witch more present, Rapunzel's cameo (balconies moved above the treeline) | 🔜 |
+| 4 | Windows zone | ✅ windows spread across the tower; 🔜 guards' arms from the windows, the witch with scissors, Rapunzel's cameo (balconies moved above the treeline) | in progress |
 | 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots; 🔜 bird swarm, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
@@ -441,6 +453,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Storks | every 1200–2000 px of climb above the treeline; 380–640 px above the prince; 150–210 px/s; 150 px perch |
 | Updrafts | chance 0.10 → 0.16 per sky row (× 1.6 in breathers); 150 px wide; launch 9000 px/s² to 2300 px/s; rest 1.6 s |
 | Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
+| Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m |
@@ -605,3 +618,15 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   him, the flowerpot larger and really on the railing. Paired seeds, 40
   good bold runs from 450 m: 1.28 hits per 100 m, falls 44 %, mean climb
   337 m (master 361 m).
+- 2026-11-02: Tower windows (`element/tower-windows`, plan in
+  `docs/plans/windows.md`): the window was baked into a tile variant at
+  the wall's centre, where the braid hid it. Windows are now their own
+  sprites left and right of the braid (x = ±114, 40 px from the wall's
+  edge) in five looks, never under a balcony; the tile variant became a
+  stone string course. A first version scattered them per tile by hash
+  with a density per band (up to seven in view in the windows band);
+  playing it showed that as noise, so they sit one per storey of 440
+  layer px, left and right in turn, about three in view, looks still by
+  hash. Purely visual, the simulator is unaffected. Also fixed a
+  misplaced draw block in `World.onPlayerJump`
+  (a ReferenceError waiting for a fragile stork).
