@@ -66,6 +66,16 @@ heart; the boost shield knocks the arm back (+3 suns); not stompable.
 - Bot: a peeking or grabbing arm is a threat to step away from.
 - `?spawn=grabber`; sounds `creak`, `grab`; `clank` on a punch.
 
+Status: done. Two lessons: a spawned enemy on the tower layer must start
+with its height in the prince's plane (the cull runs right after
+generation, before the first update converts it), and the first density
+(tier 0.20 → 0.40, reach 150–190) was far too much (mean climb 192 m,
+1.66 hits per 100 m). Final, paired seeds, 40 good bold runs from 250 m:
+1.36 hits per 100 m (1.23 in the 300 m band, 14 of 33 guard hits there),
+falls 39 % of deaths, mean climb 281 m (baseline 316, −11 %), 300 m
+reached by every run. From 300 m: 1.72 (1.97 in the band; the baseline
+from there was already 1.5), mean climb 198 m (baseline 246).
+
 ## 3. Braid cut (`element/braid-cut`)
 
 From 300 m, every 120–180 m, never in a breather: the witch flies in with

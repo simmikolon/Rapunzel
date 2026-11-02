@@ -1,9 +1,10 @@
-import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY } from './config.js';
+import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER } from './config.js';
 import { Platform, CLOUD_SIZE } from './platforms.js';
-import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot } from './enemies.js';
+import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
 import { Sun, Lantern, Heart } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
+import { windowsBetween } from './windows.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -14,12 +15,12 @@ import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
 // stretches to 700 m with a final step beyond.
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00 },
-  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00 },
-  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, updraft: 0.10, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24, balcony: 0.60, guard: 0.25, pot: 0.25 },
-  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, updraft: 0.10, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30, balcony: 1.00, guard: 0.35, pot: 0.35 },
-  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, updraft: 0.10, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32, balcony: 1.00, guard: 0.40, pot: 0.40 },
-  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, updraft: 0.16, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34, balcony: 1.00, guard: 0.45, pot: 0.45 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00, grabber: 0.00 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00, grabber: 0.00 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, updraft: 0.10, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24, balcony: 0.60, guard: 0.25, pot: 0.25, grabber: 0.12 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, updraft: 0.10, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30, balcony: 1.00, guard: 0.35, pot: 0.35, grabber: 0.18 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, updraft: 0.10, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32, balcony: 1.00, guard: 0.40, pot: 0.40, grabber: 0.22 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, updraft: 0.16, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34, balcony: 1.00, guard: 0.45, pot: 0.45, grabber: 0.25 },
 ];
 
 // Zones: altitude bands that scale each element's spawn chance, so new
@@ -27,10 +28,10 @@ const TIERS = [
 // other. An element's rule is: tier chance x pacing x zone multiplier,
 // starting at the band where its multiplier first becomes positive.
 export const ZONES = [
-  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0 } },
-  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0 } },
-  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8 } },
+  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0 } },
+  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.8, spider: 0.7, squirrel: 0.6, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -71,12 +72,13 @@ export class Level {
     this.world = world;
     this.rng = rng;              // the geometry stream: rows, lengths, enemies, suns, lanterns
     this.rngHearts = rng;        // hearts depend on the prince's state, so they get a stream of their own
+    this.rngTower = rng;         // what the tower does (window guards): rolled apart so the geometry stays comparable
     this.forceLen = null;        // dev: every branch gets this length class
   }
 
   // A fresh stream for an entity that keeps rolling after it was spawned (a
   // squirrel's moods), seeded from the geometry stream so it replays too.
-  child() { return new RNG(this.rng.int(0, 0x7fffffff)); }
+  child(r = this.rng) { return new RNG(r.int(0, 0x7fffffff)); }
 
   reset() {
     this.nextY = 300;
@@ -163,6 +165,24 @@ export class Level {
     const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1), this.child());
     this.world.enemies.push(sq);
     return sq;
+  }
+
+  // A guard in one of the windows near this row. The windows are fixed per
+  // height (windows.js), so the roll is only whether one of them is manned;
+  // it runs on the tower stream so the geometry is the same with or
+  // without him. A window a balcony covers or that already has a guard is
+  // out.
+  spawnGrabber(y, arrivalCam) {
+    const rt = this.rngTower;
+    const lyRow = Platform.worldToLayer(y, PARALLAX_TOWER, arrivalCam);
+    const taken = this.world.enemies.filter((e) => e.kind === 'grabber');
+    const balconies = this.world.platforms.filter((p) => p.kind === 'balcony');
+    const free = windowsBetween(lyRow - 60, lyRow + 420, balconies).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
+    if (!free.length) return null;
+    const T = tierAt(y);
+    const gr = new Grabber(rt.pick(free), this.child(rt), 130 + 30 * clamp((T.index - 2.5) / 2.5, 0, 1), this.world.cam.y);
+    this.world.enemies.push(gr);
+    return gr;
   }
 
   makeRow() {
@@ -298,6 +318,7 @@ export class Level {
     }
 
     if (r.chance(T.squirrel * P.enemy * zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
+    if (this.rngTower.chance(T.grabber * P.enemy * zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony, never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {
       if (p.kind !== 'balcony' || p.dry) continue;

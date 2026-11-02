@@ -189,6 +189,16 @@ class Synth {
     // entering an updraft: a soft rising rush of air
     this.noise({ dur: 0.5, vol: 0.18, filter: 'bandpass', freq: 400, to: 1800, q: 0.7 });
   }
+  creak() {
+    // a window guard rising behind the sill: a visor's squeal and a knock
+    this.tone({ type: 'sawtooth', freq: 900, to: 1400, dur: 0.16, vol: 0.045, slide: 'linear' });
+    this.noise({ dur: 0.06, vol: 0.1, filter: 'lowpass', freq: 600 });
+  }
+  grab() {
+    // the arm shooting out: a quick whoosh and a jingle of mail
+    this.noise({ dur: 0.2, vol: 0.2, filter: 'bandpass', freq: 500, to: 2200, q: 1 });
+    this.noise({ dur: 0.1, vol: 0.07, filter: 'highpass', freq: 5000, delay: 0.12 });
+  }
   grunt() {
     // a guard winding up: a short low "hup"
     this.tone({ type: 'sawtooth', freq: 170, to: 110, dur: 0.14, vol: 0.12 });

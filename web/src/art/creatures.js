@@ -142,6 +142,41 @@ function drawPot(t, flower) {
   p(1, 8, 10, 1, '#d8784a'); p(2, 9, 8, 4, '#c8683a'); p(2, 9, 1, 4, '#e08a5a'); p(8, 10, 1, 3, '#8a4a28'); p(3, 12, 6, 1, '#8a4a28');
 }
 
+// The window guard as a bust, 12 x 19 art px, facing right: helmet with a
+// plume, a face with a moustache, a gold collar, red tunic with shoulders
+// (the arm leaves at row 13). Frame 1 scowls. Anchor at the bottom centre
+// so it can rise behind a window sill.
+function drawGuardHead(t, frame) {
+  const { p, line } = t;
+  p(5, 0, 2, 2, C.capeHi); p(4, 1, 1, 1, C.cape);                 // plume
+  p(2, 2, 8, 1, C.pole); p(1, 3, 10, 4, C.pole); p(0, 5, 12, 2, C.pole);
+  p(2, 3, 3, 1, C.poleHi); p(1, 4, 1, 2, C.poleHi);
+  p(2, 7, 8, 3, C.skin);                                           // face
+  if (frame) { line(3, 7, 5, 8, C.hair); line(8, 8, 6, 7, C.hair); p(4, 8, 1, 1, C.black); p(8, 8, 1, 1, C.black); }
+  else { p(4, 7, 1, 1, C.black); p(8, 7, 1, 1, C.black); p(3, 8, 1, 1, C.cheek); p(9, 8, 1, 1, C.cheek); }
+  p(4, 9, 5, 1, C.hair); p(3, 10, 1, 1, C.hair); p(9, 10, 1, 1, C.hair); // moustache
+  p(3, 11, 6, 1, C.gold);                                          // collar
+  p(0, 12, 12, 7, C.cape); p(0, 12, 12, 1, C.capeHi); p(0, 12, 1, 7, C.capeHi);   // tunic and shoulders
+  p(5, 13, 2, 3, C.gold); p(4, 14, 4, 1, C.gold); p(0, 17, 12, 1, C.gold);        // emblem and belt
+}
+
+// A gauntlet at the end of the arm, 10 x 9 art px reaching right: cuff
+// with gold trim, then an open hand (frame 0) or a fist (frame 1). Anchor
+// at the cuff's middle so it sits on the arm's tip.
+function drawGauntlet(t, frame) {
+  const { p } = t;
+  p(0, 1, 3, 7, C.cape); p(2, 1, 1, 7, C.gold);
+  if (frame === 0) {
+    p(3, 2, 4, 5, C.pole); p(4, 3, 2, 3, C.poleHi);
+    p(7, 1, 3, 1, C.poleHi); p(7, 3, 3, 1, C.poleHi); p(7, 5, 3, 1, C.poleHi); p(7, 7, 2, 1, C.poleHi);
+    p(4, 0, 3, 1, C.pole); p(6, 0, 1, 1, C.poleHi);
+  } else {
+    p(3, 2, 5, 5, C.pole); p(4, 3, 2, 2, C.poleHi);
+    p(8, 2, 1, 5, C.poleHi); p(7, 2, 1, 1, C.white); p(7, 4, 1, 1, C.white); p(7, 6, 1, 1, C.white);
+    p(4, 1, 3, 1, C.pole);
+  }
+}
+
 // Witch on a broom: 34 x 30 art px, flying right. Anchor center.
 function drawWitch(t, frame) {
   const { p, poly, disc, line, ellipse } = t;
@@ -208,6 +243,8 @@ export function buildCreatures() {
   const storkR = [0, 1].map((f) => makeSprite(42, 22, (t) => drawStork(t, f), undefined, { axPx: 21 * 4, ayPx: 8 * 4 }));
   const guardR = [0, 1, 2, 3, 4].map((f) => makeSprite(34, 48, (t) => drawGuard(t, f), undefined, { axPx: 14 * 4, ayPx: 48 * 4 }));
   const pots = [0, 1, 2].map((f) => makeSprite(12, 13, (t) => drawPot(t, f), { ax: 0.5, ay: 1 }));
+  const guardHeadR = [0, 1].map((f) => makeSprite(12, 19, (t) => drawGuardHead(t, f), { ax: 0.5, ay: 1 }));
+  const gauntletR = [0, 1].map((f) => makeSprite(10, 9, (t) => drawGauntlet(t, f), { ax: 0, ay: 0.5 }));
   const spider = [0, 1].map((f) => makeSprite(16, 12, (t) => drawSpider(t, f), { ax: 0.5, ay: 0 }));
   const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));
@@ -215,6 +252,7 @@ export function buildCreatures() {
     crowR, crowL: crowR.map(flipH),
     storkR, storkL: storkR.map(flipH),
     guardR, guardL: guardR.map(flipH), pots,
+    guardHeadR, guardHeadL: guardHeadR.map(flipH), gauntletR, gauntletL: gauntletR.map(flipH),
     spider,
     squirrelR, squirrelL: squirrelR.map(flipH),
     witchR, witchL: witchR.map(flipH),

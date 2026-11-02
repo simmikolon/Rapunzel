@@ -30,13 +30,16 @@ export class World {
   }
 
   reset(seed) {
-    // Three streams from one seed: the level geometry, the hearts (their
-    // timing depends on the prince's state) and the events (the witch), so a
-    // seeded round lays out the same tower however it is played.
+    // Streams from one seed: the level geometry, the hearts (their timing
+    // depends on the prince's state), the events (the witch), the
+    // background's gusts and what the tower itself does (window guards), so
+    // a seeded round lays out the same tower however it is played and the
+    // tower's hazards can be switched off without moving a branch.
     this.rng = new RNG(seed);
     this.rngEvents = new RNG(seed == null ? undefined : hash(seed + 1));
     this.level.rng = this.rng;
     this.level.rngHearts = new RNG(seed == null ? undefined : hash(seed + 2));
+    this.level.rngTower = new RNG(seed == null ? undefined : hash(seed + 4));
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
