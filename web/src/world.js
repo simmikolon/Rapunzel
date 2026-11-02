@@ -139,7 +139,7 @@ export class World {
     // Enemies
     const r = pl.rect;
     for (const e of this.enemies) {
-      if (!e.alive || e.dead || !overlaps(r, e.rect)) continue;
+      if (!e.alive || e.dead || !overlaps(r, e.rect) || (e.hits && !e.hits(r))) continue;
       if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }

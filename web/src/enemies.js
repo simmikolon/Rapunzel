@@ -494,43 +494,63 @@ export class Flowerpot extends Enemy {
 }
 
 // The window's opening starts 16 px above the sill height; the guard's bust
-// rises from there and his arm leaves at the shoulder.
+// rises from there and his pike leaves from his hands.
 const ARM_ABOVE_SILL = 40;
+const PIKE_UP = Math.PI / 2;        // the pike's rest angle: upright beside him (from the inward horizontal, world y up)
+const PIKE_AIM = 0.35;              // how far he can aim a thrust above or below level, in rad
 
 // A guard in a tower window. He stays hidden until the prince is inward of
-// his window and about level with it, then his helmet rises behind the
-// sill ("!"), his gauntleted arm shoots into the prince's plane, holds
-// there a moment and pulls back. The window sits on the tower layer, so
-// his height follows it every frame like a ribbon's. The arm costs a heart
-// on contact; the boost shield knocks it back and he keeps his head down
-// for a while; there is nothing to stomp, he stands behind the plane.
+// his window and about level with it, then his bust rises behind the sill
+// with his pike upright ("!"), he leans out and the pike sweeps down into a
+// thrust aimed at the prince, holds there a moment and comes back up. The
+// window sits on the tower layer, so his height follows it every frame like
+// a ribbon's. The pike costs a heart on contact; the boost shield knocks it
+// back and he keeps his head down for a while; there is nothing to stomp,
+// he stands behind the plane.
 export class Grabber extends Enemy {
   // `camY` is the view bottom at spawn time: the height starts in the
   // prince's plane (the cull runs before the first update would convert it).
   constructor(win, rng = new RNG(), reach = 130, camY = 0) {
     super(win.x, Platform.layerToWorld(win.ly, PARALLAX_TOWER, camY) + ARM_ABOVE_SILL);
     this.kind = 'grabber';
-    this.win = win;                 // { k, side, ly, x } from windows.js
+    this.win = win;                 // { i, side, ly, x } from windows.js
     this.ly = win.ly;               // the sill, in layer coordinates
-    this.dir = win.side === 'L' ? 1 : -1;   // the arm reaches inward
+    this.dir = win.side === 'L' ? 1 : -1;   // the thrust goes inward
     this.rng = rng;
-    this.reach = reach;
+    this.reach = reach;             // the pike's length, hands to tip
     this.state = 'hidden';          // hidden | peek | grab | retract
     this.stateT = 0;
     this.cooldown = rng.range(0, 1.5);
     this.punishT = 0;               // a longer cooldown after a punch
-    this.ext = 0;                   // arm extension 0..1
-    this.head = 0;                  // how far the helmet is up 0..1
+    this.ext = 0;                   // how far into the thrust 0..1
+    this.head = 0;                  // how far the bust is up 0..1
+    this.lean = 0;                  // how far he leans out 0..1
+    this.ang = PIKE_UP;             // the pike's angle now
+    this.aim = 0;                   // the angle of the current thrust
     this.hurtful = false;
     this.w = 44; this.h = 44;
     this.sillY = this.y; this.armY = this.y;
   }
   get stompable() { return false; }
-  // The arm: from the window's inner frame to the hand, only as far as it is out.
+  // His hands, where the pike leaves the window, and the pike's tip.
+  get gripX() { return this.win.x + this.dir * 22; }
+  get gripY() { return this.armY + 8; }
+  get tipX() { return this.gripX + this.dir * this.reach * Math.cos(this.ang); }
+  get tipY() { return this.gripY + this.reach * Math.sin(this.ang); }
+  // The pike: a box around the shaft from the hands to the tip, for the
+  // coarse test; `hits` then checks the shaft itself, so a slanted pike
+  // does not hit with the empty corners of its box.
   get rect() {
-    const len = this.reach * this.ext;
-    const x0 = this.win.x + this.dir * 30;
-    return { x: (this.dir > 0 ? x0 : x0 - len) - 10, y: this.armY - 22, w: len + 20, h: 44 };
+    const x0 = this.gripX, y0 = this.gripY, x1 = this.tipX, y1 = this.tipY, pad = 10;
+    return { x: Math.min(x0, x1) - pad, y: Math.min(y0, y1) - pad, w: Math.abs(x1 - x0) + 2 * pad, h: Math.abs(y1 - y0) + 2 * pad };
+  }
+  hits(r) {
+    const x0 = this.gripX, y0 = this.gripY, dx = this.tipX - x0, dy = this.tipY - y0, pad = 10;
+    for (let i = 0; i <= 12; i++) {
+      const x = x0 + dx * i / 12, y = y0 + dy * i / 12;
+      if (x > r.x - pad && x < r.x + r.w + pad && y > r.y - pad && y < r.y + r.h + pad) return true;
+    }
+    return false;
   }
   update(dt, world) {
     this.t += dt; this.stateT += dt;
@@ -542,45 +562,61 @@ export class Grabber extends Enemy {
     const inward = (p.x - this.win.x) * this.dir;
     const near = p.alive && inward > -30 && inward < this.reach + 40 && Math.abs(p.y + 110 - this.armY) < 120;
     if (this.state === 'hidden') {
-      this.head = Math.max(0, this.head - dt * 3);
+      this.head = Math.max(0, this.head - dt * 3); this.ang = PIKE_UP; this.lean = 0;
       if (near && this.cooldown <= 0) { this.state = 'peek'; this.stateT = 0; world.audio.creak(); }
     } else if (this.state === 'peek') {
       this.head = Math.min(1, this.stateT / 0.35);
-      if (this.stateT > 0.5) { this.state = 'grab'; this.stateT = 0; this.hurtful = true; world.audio.grab(); }
+      if (this.stateT > 0.5) {
+        // aim the thrust at the prince's body, within reason
+        this.aim = clamp(Math.atan2(p.y + 110 - this.gripY, Math.max(40, inward)), -PIKE_AIM, PIKE_AIM);
+        this.state = 'grab'; this.stateT = 0; world.audio.grab();
+      }
     } else if (this.state === 'grab') {
-      const k = Math.min(1, this.stateT / 0.22);
+      const k = Math.min(1, this.stateT / 0.15);
       this.ext = k * (2 - k);
-      if (this.stateT > 0.45) { this.state = 'retract'; this.stateT = 0; this.hurtful = false; }
+      this.hurtful = this.ext > 0.6;          // the sweep down is harmless, the thrust is not
+      if (this.stateT > 0.55) { this.state = 'retract'; this.stateT = 0; this.hurtful = false; }
     } else {
-      this.ext = Math.max(0, 1 - this.stateT / 0.4);
-      if (this.stateT > 0.4) { this.state = 'hidden'; this.stateT = 0; this.ext = 0; this.cooldown = this.punishT || this.rng.range(2, 3.5); this.punishT = 0; }
+      this.ext = Math.max(0, 1 - this.stateT / 0.35);
+      if (this.stateT > 0.35) { this.state = 'hidden'; this.stateT = 0; this.ext = 0; this.cooldown = this.punishT || this.rng.range(2, 3.5); this.punishT = 0; }
     }
-    // the arm's middle, so a hit pushes the prince away from the window
-    this.x = this.win.x + this.dir * (30 + this.reach * this.ext * 0.5);
+    if (this.state === 'grab' || this.state === 'retract') { this.ang = PIKE_UP + (this.aim - PIKE_UP) * this.ext; this.lean = this.ext; }
+    // the shaft's middle, so a hit pushes the prince away from the window
+    this.x = (this.gripX + this.tipX) / 2;
   }
-  // The shield met the arm: a clank, he pulls in and keeps his head down.
+  // The shield met the pike: a clank, he pulls it in and keeps his head down.
   stomped(world) {
     this.hurtful = false;
     this.state = 'retract'; this.stateT = 0.1; this.punishT = 5;
     world.audio.clank();
-    world.particles.stars(this.win.x + this.dir * (30 + this.reach * this.ext), this.armY);
+    world.particles.stars(this.tipX, this.tipY);
   }
   draw(g, cam, art) {
     const sx = cam.sx(this.win.x), sill = cam.sy(this.sillY) - 16;   // the opening's bottom edge
-    const heads = this.dir > 0 ? art.creatures.guardHeadR : art.creatures.guardHeadL;
-    const hands = this.dir > 0 ? art.creatures.gauntletR : art.creatures.gauntletL;
-    if (this.head > 0) g.blit(heads[this.state === 'peek' || this.state === 'grab' ? 1 : 0], sx, sill, { sy: this.head });
-    if (this.ext > 0) {
-      const len = Math.round(this.reach * this.ext), ay = cam.sy(this.armY);
-      const x0 = cam.sx(this.win.x + this.dir * 30);
-      const left = this.dir > 0 ? x0 : x0 - len;
-      g.rect(left, ay - 16, len, 32, '#4a1414');                   // outline
-      g.rect(left, ay - 12, len, 24, C.cape);
-      g.rect(left, ay - 12, len, 4, C.capeHi);
-      g.rect(left, ay + 6, len, 6, '#6e1d1d');
-      g.blit(hands[this.stateT > 0.22 || this.state === 'retract' ? 1 : 0], x0 + this.dir * len, ay);
+    const busts = this.dir > 0 ? art.creatures.guardHeadR : art.creatures.guardHeadL;
+    if (this.head > 0) {
+      // the bust leans out with the thrust
+      g.blit(busts[this.state === 'peek' || this.state === 'grab' ? 1 : 0], sx + this.dir * 14 * this.lean, sill, { sy: this.head, rot: this.dir * 0.14 * this.lean });
+      // the pike: a wooden shaft from his hands to a steel head with a red
+      // collar, his fists on the shaft (screen space, y down)
+      const gx = cam.sx(this.gripX), gy = cam.sy(this.gripY), tx = cam.sx(this.tipX), ty = cam.sy(this.tipY);
+      const ux = (tx - gx) / this.reach, uy = (ty - gy) / this.reach;
+      const rot = Math.atan2(uy, ux);
+      g.line(gx, gy, tx - ux * 20, ty - uy * 20, C.plankDark, 7);
+      g.line(gx, gy, tx - ux * 20, ty - uy * 20, C.plank, 3);
+      g.box(tx - ux * 26, ty - uy * 26, 12, 14, C.cape, 1, { rot });
+      g.path((pth) => {
+        pth.moveTo(tx + ux * 6, ty + uy * 6);
+        pth.lineTo(tx - ux * 20 - uy * 7, ty - uy * 20 + ux * 7);
+        pth.lineTo(tx - ux * 24, ty - uy * 24);
+        pth.lineTo(tx - ux * 20 + uy * 7, ty - uy * 20 - ux * 7);
+        pth.closePath();
+      }, { fill: C.poleHi, stroke: C.pole, width: 2 });
+      const fist = art.creatures.gauntletR[1];
+      g.blit(fist, gx + ux * 4, gy + uy * 4, { rot });
+      g.blit(fist, gx + ux * 30, gy + uy * 30, { rot });
     }
-    if (this.state === 'peek') g.text('!', sx, sill - 78, 22, '#ffe9a0', 'center', true);
+    if (this.state === 'peek') g.text('!', sx - this.dir * 30, sill - 92, 22, '#ffe9a0', 'center', true);
   }
 }
 
