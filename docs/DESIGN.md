@@ -123,8 +123,10 @@ presets full / bloom / off (F key, title button, `?fx=`).
   and the prince (1.0x), fireflies, vignette. Altitude-graded sky and
   lighting (forest, open sky, sunset, night). Squash and stretch,
   particles, screen shake, toasts. Synthesized sound with iOS unlock and
-  silent-switch handling. Title, pause, game over; best height saved; web
-  app manifest and icons. The prince follows the original app icon.
+  silent-switch handling. Title screen with the prince hopping on the
+  lawn and a 3-2-1 countdown on his landings, pause and game over with a
+  way back to the menu; best height saved; web app manifest and icons.
+  The prince follows the original app icon.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the
@@ -341,8 +343,16 @@ is a pool to draw from, not a promise.
   menu exist.
 
 **FX and atmosphere**
-- 💡 title screen: the tower behind, the prince bouncing happily in place,
-  flowers on the lawn (light rays already shine through the forest).
+- ✅ title screen (`src/title.js`, wordmark in `art/logo.js`): the tower
+  behind, the prince hopping in place on the lawn (a flip with sparkles
+  every few hops), two butterflies at the flowers, the pixel wordmark
+  bouncing letter by letter, PLAY in the middle, effects and tilt on the
+  lawn. PLAY (or a tap anywhere, or space) starts a countdown on his
+  landings: 3 at the tap, 2 and 1 on the next two hops, GO is the launch
+  at full strength; the title fades out meanwhile. MENU on the pause and
+  game-over screens leads back. `Game.startRound(config)` is the one way
+  into a round, so a mode or tower selection can sit between PLAY and the
+  countdown later. 💡 a splash image behind the wordmark once there is one.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
   the forest floor and in the deep forest, with dust motes drifting down
   the beams; passing clouds dim and restore the sun over 10–20 s.
@@ -451,8 +461,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
 
-Mode-independent polish (super jump portal, god rays, hit-stop, title
-idle scene) slots in wherever it fits.
+Mode-independent polish (super jump portal, god rays, hit-stop) slots in
+wherever it fits.
 
 ## 10. Tunables snapshot
 
@@ -731,3 +741,19 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   good bold runs: from 250 m 1.32 hits per 100 m (1.23 in the band), falls
   37 %, mean climb 276 m (master 299 m); from 300 m 1.50 (1.49), 42 %,
   259 m (master 275 m).
+- 2026-11-03: The game is called Sir Bouncealot (`element/title-screen`,
+  plan in `docs/plans/title-screen.md`): the knight on the pogo stick gives
+  it his name so the name is ours alone; Rapunzel stays the tale behind
+  the tower. Saved data moved to a new key with the old one read as a
+  fallback. A real title screen: the prince hops on the lawn by himself
+  (the world runs its physics before the round with a silent input, the
+  ground landing sets a small hop instead of the bounce, pickups and
+  enemies are skipped until the round starts), a pixel wordmark drawn on
+  the art grid, PLAY, and a countdown on his landings instead of an
+  abrupt launch (3 at the tap, 2 and 1 on the hops, GO is the launch; a
+  landing within 0.3 s of the tap does not count twice). `startRound`,
+  `beginPlaying` and `toTitle` replace the ad-hoc mode switches; MENU
+  from pause records the height first; `?at=` skips the countdown.
+  Purely visual and UI: the simulator calls `start()` directly and reads
+  the same numbers on the same seeds (20 good bold runs: median 423 m,
+  1.03 hits per 100 m on both master and the branch).

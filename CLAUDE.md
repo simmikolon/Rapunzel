@@ -18,7 +18,7 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
 
 ## Run and test
 - Serve: `python3 -m http.server 8000 --directory web` (or `http-server web`).
-- Dev helpers: `?at=150` starts at 150 m, `?spawn=squirrel` puts one on the
+- Dev helpers: `?at=150` starts at 150 m (and skips the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest
   window above, `?at=300&spawn=scissors` brings the witch with scissors at once,

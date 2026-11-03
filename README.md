@@ -48,8 +48,10 @@ home screen and runs full-screen in portrait.
 | Touch | hold the left or right half of the screen | the flame button | ⏸ |
 | Tilt | tilt the phone (enable on the title screen) | tap anywhere | ⏸ |
 
-`M` toggles sound, `F` (or the button on the title screen) cycles the
-screen effects. The best height and the effects choice are kept in
+PLAY on the title screen (or a tap anywhere, or space) starts a short
+countdown on the knight's hops; MENU on the pause and game-over screens
+leads back to the title. `M` toggles sound, `F` (or the button on the
+title screen) cycles the screen effects. The best height and the effects choice are kept in
 `localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
 `?spawn=squirrel` puts one on the next branch, `?dev=1` shows altitude and
 zone.
