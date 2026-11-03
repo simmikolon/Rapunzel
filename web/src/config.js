@@ -89,4 +89,7 @@ export const FX = {
   crt: { curvature: 0.035, aberration: 0.0022, scanline: 0.22, mask: 0.06, vignette: 0.22, flicker: 0.02 },
 };
 
-export const STORAGE_KEY = 'rapunzel.web.v1';
+export const STORAGE_KEY = 'bouncealot.web.v1';
+// The game was called Rapunzel until 2026-11-03; saves under the old key are
+// read once and written back under the new one.
+export const LEGACY_STORAGE_KEY = 'rapunzel.web.v1';

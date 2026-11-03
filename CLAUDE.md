@@ -1,4 +1,4 @@
-# Working on Rapunzel
+# Working on Sir Bouncealot
 
 Browser game (plain ES modules, WebGL via a vendored PixiJS, no build
 step) in `web/`. The design document `docs/DESIGN.md` is the guide for

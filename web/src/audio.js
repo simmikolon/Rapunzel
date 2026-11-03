@@ -1,6 +1,6 @@
 // Tiny WebAudio synthesizer. No audio files: every effect is generated.
 // The context is created lazily on the first user gesture (browser policy).
-import { STORAGE_KEY } from './config.js';
+import { STORAGE_KEY, LEGACY_STORAGE_KEY } from './config.js';
 
 // A 0.1 s silent WAV, built at runtime (no asset file). Playing it through an
 // <audio> element on a user gesture switches iOS's audio session from
@@ -37,7 +37,7 @@ class Synth {
       if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
     });
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + '.audio') || '{}');
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + '.audio') || localStorage.getItem(LEGACY_STORAGE_KEY + '.audio') || '{}');
       this.muted = !!saved.muted;
     } catch (_) { /* ignore */ }
   }

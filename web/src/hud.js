@@ -118,7 +118,7 @@ export class HUD {
     const bob = Math.sin(t * 2) * 6;
     g.layer('hud');
     // Title
-    g.text('RAPUNZEL', W / 2, 250 + bob, 62, C.braid, 'center', true, { glow: 0.5 });
+    g.text('SIR BOUNCEALOT', W / 2, 250 + bob, 48, C.braid, 'center', true, { glow: 0.5 });
     g.text('a pogo climb', W / 2, 322 + bob, 20, '#ffd1e3', 'center');
     const blink = Math.floor(t * 1.6) % 2 === 0;
     if (blink) g.text(input.isTouch ? 'TAP TO START' : 'PRESS SPACE TO START', W / 2, 560, 22, '#fff', 'center');
@@ -158,8 +158,8 @@ export class HUD {
     g.layer('overlay');
     g.rect(0, 0, W, H, '#081014', 0.6 * a);
     const o = { alpha: a };
-    const cause = world.player.deathCause === 'caught' ? 'The witch got him!' : 'The prince fell...';
-    g.text(cause, W / 2, H * 0.3, 26, '#ff9a9a', 'center', true, o);
+    const cause = world.player.deathCause === 'caught' ? 'The witch got Sir Bouncealot!' : 'Sir Bouncealot fell...';
+    g.text(cause, W / 2, H * 0.3, 22, '#ff9a9a', 'center', true, o);
     g.text(`${world.heightM} m`, W / 2, H * 0.3 + 90, 64, C.braid, 'center', true, { alpha: a, glow: 0.4 });
     g.text('climbed', W / 2, H * 0.3 + 150, 16, '#cfe8e3', 'center', true, o);
     if (isNewBest) g.text('NEW BEST!', W / 2, H * 0.3 + 200, 24, '#ffe9a0', 'center', true, { alpha: a, glow: 0.4 });

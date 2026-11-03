@@ -1,6 +1,8 @@
-# Rapunzel: design document
+# Sir Bouncealot: design document
 
-The living guide for the browser version of Rapunzel. It records the
+The living guide for the browser version of Sir Bouncealot, the pogo climb
+up Rapunzel's tower (the game carried her name until 2026-11-03; the knight
+on the pogo stick gives it his now, so the name is ours alone). It records the
 vision, the concepts we work with, every idea collected so far, how we
 work, and the order we currently intend to build things in.
 

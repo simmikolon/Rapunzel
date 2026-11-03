@@ -1,4 +1,4 @@
-import { W, H, STORAGE_KEY, FX } from './config.js';
+import { W, H, STORAGE_KEY, LEGACY_STORAGE_KEY, FX } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
@@ -7,7 +7,7 @@ import { HUD } from './hud.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 
-// Rapunzel - browser port of the SpriteKit prototype.
+// Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
 // canvas to the viewport while keeping that aspect ratio. Rendering is WebGL
 // through PixiJS (see src/gfx/), which makes the bloom and CRT passes possible.
@@ -63,7 +63,7 @@ class Game {
 
   loadSave() {
     try {
-      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || '{}');
       this.best = s.best || 0;
       if (PRESETS.includes(s.fx)) this.fxPreset = s.fx;
     } catch (_) { this.best = 0; }
@@ -126,7 +126,7 @@ class Game {
     this.frameErrors++;
     if (this.frameErrors < 3) { this.notice('Something went wrong, carrying on', 2); return; }
     this.halted = true;
-    showFallback(`Rapunzel hit an error and stopped: ${err && err.message ? err.message : err}. Reload the page to play again.`);
+    showFallback(`Sir Bouncealot hit an error and stopped: ${err && err.message ? err.message : err}. Reload the page to play again.`);
   }
 
   update(dt) {
@@ -222,20 +222,20 @@ const boot = async () => {
       gfx = await createRenderer(canvas, art, FX);
     } catch (err) {
       console.error('WebGL renderer failed to start', err);
-      showFallback('Rapunzel needs WebGL for this preview, and the browser did not provide it.');
+      showFallback('Sir Bouncealot needs WebGL for this preview, and the browser did not provide it.');
       return;
     }
     window.game = new Game(canvas, gfx, art);
   } catch (err) {
-    console.error('Rapunzel failed to start', err);
-    showFallback(`Rapunzel could not start: ${err && err.message ? err.message : err}`);
+    console.error('Sir Bouncealot failed to start', err);
+    showFallback(`Sir Bouncealot could not start: ${err && err.message ? err.message : err}`);
   }
 };
 // Errors outside the frame loop (event handlers, async work) are logged and,
 // while the game is not up yet, shown instead of leaving a blank page.
 const running = () => !!(window.game && window.game.gfx);
-window.addEventListener('error', (e) => { if (!running()) showFallback(`Rapunzel could not start: ${e.message}`); });
-window.addEventListener('unhandledrejection', (e) => { const r = e.reason; console.error('unhandled rejection', r); if (!running()) showFallback(`Rapunzel could not start: ${r && r.message ? r.message : r}`); });
+window.addEventListener('error', (e) => { if (!running()) showFallback(`Sir Bouncealot could not start: ${e.message}`); });
+window.addEventListener('unhandledrejection', (e) => { const r = e.reason; console.error('unhandled rejection', r); if (!running()) showFallback(`Sir Bouncealot could not start: ${r && r.message ? r.message : r}`); });
 if (document.fonts && document.fonts.load) {
   // Give the pixel font a moment to arrive; fall back to monospace if offline.
   Promise.race([document.fonts.load('16px "Press Start 2P"'), new Promise((r) => setTimeout(r, 1500))]).then(boot, boot);
