@@ -13,8 +13,9 @@ trademark minefield for a game; the knight on the pogo stick is ours.
 
 Decisions: the hero is Sir Bouncealot in the game's texts too (game over,
 manifest), Rapunzel stays the tale behind the tower in comments and this
-document; no logo exists, so the wordmark is drawn on the art grid like
-every other sprite; the title shows the game being cute before the first
+document; the drawn logo (`docs/art/title-source.png`) is brought onto
+the game's art grid by a small tool so it sits next to the procedural
+sprites without looking pasted on; the title shows the game being cute before the first
 tap (the prince hops, butterflies, fireflies, light shafts); PLAY starts
 a 3-2-1 countdown on the prince's hops rather than a timer, so the start
 is soft but never slow; a mode or tower selection comes later and gets a
@@ -26,11 +27,14 @@ single entry point now.
   game-over cause in `hud.js`, the doc headlines. `STORAGE_KEY` is
   `bouncealot.web.v1`; `LEGACY_STORAGE_KEY` is read as a fallback so the
   best height, the effects choice and mute survive.
-- `art/logo.js`: a 5 x 7 glyph set (S I R B O U N C E A L T), bold
-  strokes, bevel, outline, drop shadow; one sprite per letter of
-  BOUNCEALOT (scale 3), SIR with a crown (scale 2). `WORD_ADVANCE` places
-  the letters; the title bounces them in a wave.
-- `title.js`: `drawTitle(g, game, t, alpha)` (wordmark, tagline, best,
+- `tools/pixelate.py` (Pillow): trims the margins, scales to `--width`
+  art pixels with box filtering, hard alpha, median-cut palette of
+  `--colors`; writes `web/img/title.png` at one image pixel per art pixel
+  (150 x 112). `art/ui.js` loads it at boot (2.5 s timeout, text fallback)
+  and scales it up by PX without smoothing into a sprite the atlas packs
+  (atlas now 2048 x 3382, under the 4096 of older phones). A first
+  procedural wordmark (`art/logo.js`) was replaced by the picture.
+- `title.js`: `drawTitle(g, game, t, alpha)` (title picture, best,
   PLAY, hints, effects and tilt buttons on the lawn; `alpha` fades it out
   while the countdown runs) and `drawCount(g, world)` ("3", "2", "1" from
   `world.count`, "GO!" for the first 0.7 s of the round from
@@ -67,6 +71,6 @@ the countdown. Simulator unaffected: 20 good bold runs read the same on
 master and the branch (median 423 m, 1.03 hits per 100 m). Tunables:
 `HOP_VY`, `SHOWOFF_VY`, `COUNT_MIN_T` in `config.js`.
 
-Open: a splash image behind the wordmark once there is one
-(`tools/pixelate.py` would bring it onto the art grid); the mode or tower
-selection between PLAY and the countdown.
+Open: the mode or tower selection between PLAY and the countdown; the
+atlas is a single 2048-wide texture and will need a second page or a
+size check once it passes 4096 px.

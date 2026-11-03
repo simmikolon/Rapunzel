@@ -24,7 +24,9 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
   window above, `?at=300&spawn=scissors` brings the witch with scissors at once,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`.
-- Sprite sheet: `web/dev/sprites.html`.
+- Sprite sheet: `web/dev/sprites.html`. Title picture: `python3 tools/pixelate.py
+  docs/art/title-source.png web/img/title.png --width 150` brings a new
+  source onto the art grid (one image pixel = one art pixel).
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
   (also `kid`, `cautious`; then `<cap> <seedBase> <startM>`, e.g.
   `... 40 good bold 1100 100 450` measures the sky from 450 m). Target for

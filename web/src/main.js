@@ -1,5 +1,6 @@
 import { W, H, STORAGE_KEY, LEGACY_STORAGE_KEY, FX } from './config.js';
 import { buildAllArt } from './art/index.js';
+import { buildUi, loadImage } from './art/ui.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
@@ -263,6 +264,7 @@ const boot = async () => {
   const canvas = document.getElementById('game');
   try {
     const art = buildAllArt();
+    art.ui = buildUi(await loadImage('img/title.png'));   // the title picture joins the atlas
     let gfx;
     try {
       gfx = await createRenderer(canvas, art, FX);

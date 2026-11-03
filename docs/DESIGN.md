@@ -343,16 +343,17 @@ is a pool to draw from, not a promise.
   menu exist.
 
 **FX and atmosphere**
-- ✅ title screen (`src/title.js`, wordmark in `art/logo.js`): the tower
-  behind, the prince hopping in place on the lawn (a flip with sparkles
-  every few hops), two butterflies at the flowers, the pixel wordmark
-  bouncing letter by letter, PLAY in the middle, effects and tilt on the
-  lawn. PLAY (or a tap anywhere, or space) starts a countdown on his
+- ✅ title screen (`src/title.js`): the tower behind, the prince hopping
+  in place on the lawn (a flip with sparkles every few hops), two
+  butterflies at the flowers, the title picture (`web/img/title.png`,
+  the drawn logo brought onto the art grid with `tools/pixelate.py` from
+  `docs/art/title-source.png`: 150 art px wide, 32 colours, hard alpha)
+  bobbing with a squash, PLAY under it, effects and tilt on the lawn. PLAY (or a tap anywhere, or space) starts a countdown on his
   landings: 3 at the tap, 2 and 1 on the next two hops, GO is the launch
   at full strength; the title fades out meanwhile. MENU on the pause and
   game-over screens leads back. `Game.startRound(config)` is the one way
   into a round, so a mode or tower selection can sit between PLAY and the
-  countdown later. 💡 a splash image behind the wordmark once there is one.
+  countdown later.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
   the forest floor and in the deep forest, with dust motes drifting down
   the beams; passing clouds dim and restore the sun over 10–20 s.
@@ -748,8 +749,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   fallback. A real title screen: the prince hops on the lawn by himself
   (the world runs its physics before the round with a silent input, the
   ground landing sets a small hop instead of the bounce, pickups and
-  enemies are skipped until the round starts), a pixel wordmark drawn on
-  the art grid, PLAY, and a countdown on his landings instead of an
+  enemies are skipped until the round starts), the drawn logo brought onto
+  the art grid by `tools/pixelate.py` (a first procedural pixel wordmark
+  was replaced by it), PLAY, and a countdown on his landings instead of an
   abrupt launch (3 at the tap, 2 and 1 on the hops, GO is the launch; a
   landing within 0.3 s of the tap does not count twice). `startRound`,
   `beginPlaying` and `toTitle` replace the ad-hoc mode switches; MENU

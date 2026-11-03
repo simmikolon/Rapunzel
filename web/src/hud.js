@@ -17,7 +17,7 @@ export const ZONES = {
   sound: { id: 'sound', x: W - 164, y: 112, w: 64, h: 64 },
   boost: { id: 'boost', x: W - 190, y: H - 200, w: 160, h: 160 },
   // title: PLAY in the middle, the settings in a row on the lawn (the prince hops between them)
-  play: { id: 'play', x: W / 2 - 200, y: 520, w: 400, h: 96 },
+  play: { id: 'play', x: W / 2 - 200, y: 580, w: 400, h: 96 },
   fx: { id: 'fx', x: 28, y: H - 128, w: 230, h: 56 },
   tilt: { id: 'tilt', x: W - 258, y: H - 128, w: 230, h: 56 },
   // game over and pause

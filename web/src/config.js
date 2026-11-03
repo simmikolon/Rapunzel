@@ -24,7 +24,7 @@ export const HURT_VY = 900;           // small hop when hit so you can recover
 // Keep every value under 1120 (apex below the first row at 300 px) and 1320
 // (the camera would start climbing).
 export const HOP_VY = { 3: 820, 2: 900, 1: 980 };
-export const SHOWOFF_VY = 1040;       // every 4th to 6th idle hop: apex 258 px with a flip
+export const SHOWOFF_VY = 1000;       // every 4th to 6th idle hop: apex 238 px with a flip
 export const COUNT_MIN_T = 0.3;       // a landing this soon after a count shows no new number
 
 // Horizontal movement
