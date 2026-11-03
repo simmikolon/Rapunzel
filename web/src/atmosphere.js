@@ -13,6 +13,7 @@ import { invLerp, lerp, TAU, clamp, approach, RNG } from './util.js';
 import { deepForestAmount, shaftAmount, lifeAmount, hash } from './altitude.js';
 
 const SHAFT_ROT = 1.12, SHAFT_LEN = 2600;
+const LAWN = { landable: true };   // the lawn butterflies' stand-in for a branch
 
 export class Atmosphere {
   constructor(art, r) {
@@ -32,7 +33,7 @@ export class Atmosphere {
     this.dapple = Array.from({ length: 8 }, () => ({ f: PARALLAX_TOWER, x: r.range(W / 2 - TOWER_W / 2 + 40, W / 2 + TOWER_W / 2 - 40), ly: 0, rx: r.range(110, 200), ry: r.range(70, 130), ph: r.range(0, TAU), sp: r.range(0.2, 0.4), a: r.range(0.22, 0.34) }));
     this.lawnMist = Array.from({ length: 4 }, (_, i) => ({ x: -300 + i * 200 + r.range(-40, 40), y: r.range(14, 50), rx: r.range(240, 360), ry: r.range(38, 66), ph: r.range(0, TAU), drift: r.range(6, 14) * r.sign() }));
     this.birds = new Map();
-    this.butterflies = Array.from({ length: 4 }, (_, i) => ({ color: i % 3, home: null, x: 0, y: 0, t: r.range(0, 10), a: r.range(1.3, 2.1), b: r.range(1.7, 2.6), flee: 0, vx: 0, vy: 0, alive: false }));
+    this.butterflies = Array.from({ length: 6 }, (_, i) => ({ color: i % 3, home: null, x: 0, y: 0, t: r.range(0, 10), a: r.range(1.3, 2.1), b: r.range(1.7, 2.6), flee: 0, vx: 0, vy: 0, alive: false, lawnX: i >= 4 ? (i === 4 ? -170 : 170) : null }));
     this.acorns = [];
     this.acornTimer = 3;
     this.gust = { timer: 10, t: -1, dur: 3, strength: 0, dir: 1 };
@@ -208,10 +209,12 @@ export class Atmosphere {
       const q = cands[Math.floor(Math.random() * cands.length)];
       return { x: q.x + (q.kind === 'branchL' ? 85 : -85), y: q.y + 55, pf: q };
     };
+    // two of them live at the lawn's flowers while the lawn is in view (the title)
+    const lawnHome = (bf) => (cam.y <= 40 ? { x: bf.lawnX, y: 34, pf: LAWN } : null);
     for (const bf of this.butterflies) {
       if (life <= 0) { bf.alive = false; continue; }
       if (!bf.alive || !bf.home || bf.home.y < cam.y - 60 || !bf.home.pf.landable) {
-        const h = homeFor(cam.y + H * 0.3);
+        const h = bf.lawnX != null ? lawnHome(bf) : homeFor(cam.y + H * 0.3);
         if (!h) { bf.alive = false; continue; }
         bf.home = h; bf.alive = true; bf.flee = 0; bf.x = h.x; bf.y = h.y;
       }
@@ -219,7 +222,7 @@ export class Atmosphere {
       if (bf.flee > 0) {
         bf.flee -= dt;
         bf.x += bf.vx * dt; bf.y += bf.vy * dt;
-        if (bf.flee <= 0) { const h = homeFor(bf.y + 150); if (h) { bf.home = h; } else bf.alive = false; }
+        if (bf.flee <= 0) { const h = bf.lawnX != null ? lawnHome(bf) : homeFor(bf.y + 150); if (h) { bf.home = h; } else bf.alive = false; }
       } else {
         const tx = bf.home.x + Math.sin(bf.t * bf.a) * 44, ty = bf.home.y + Math.sin(bf.t * bf.b) * 26 + 10;
         bf.x = approach(bf.x, tx, 2.5, dt); bf.y = approach(bf.y, ty, 2.5, dt);

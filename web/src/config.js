@@ -20,6 +20,12 @@ export const BOOST_VY = 1500;         // added by a tap (pogo boost)
 export const MAX_FALL_SPEED = 2000;
 export const BONK_VY = -250;          // after hitting a plank swing from below
 export const HURT_VY = 900;           // small hop when hit so you can recover
+// Title hops: bounce off the lawn by countdown value (apex 160 / 193 / 229 px).
+// Keep every value under 1120 (apex below the first row at 300 px) and 1320
+// (the camera would start climbing).
+export const HOP_VY = { 3: 820, 2: 900, 1: 980 };
+export const SHOWOFF_VY = 1040;       // every 4th to 6th idle hop: apex 258 px with a flip
+export const COUNT_MIN_T = 0.3;       // a landing this soon after a count shows no new number
 
 // Horizontal movement
 export const MOVE_SPEED = 560;        // keyboard / touch-steer top speed

@@ -4,6 +4,8 @@ import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
 import { HUD } from './hud.js';
+import { drawTitle, drawCount } from './title.js';
+import { clamp } from './util.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 
@@ -23,8 +25,10 @@ class Game {
     this.input.anyInteraction = () => audio.unlock();
     this.hud = new HUD(this);
     this.world = new World(this);
+    // title -> countdown -> playing -> paused | gameover; MENU leads back.
     this.mode = 'title';
     this.modeT = 0;
+    this.round = { mode: 'endless' };   // what startRound() plays; a tower with its seed later
     this.best = 0;
     this.isNewBest = false;
     this.noticeText = '';
@@ -45,7 +49,12 @@ class Game {
     this.halted = false;
     this.setupDpr();
     window.addEventListener('resize', () => this.setupDpr());
-    document.addEventListener('visibilitychange', () => { if (document.hidden && this.mode === 'playing') this.setMode('paused'); });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) return;
+      if (this.mode === 'playing') this.setMode('paused');
+      else if (this.mode === 'countdown') this.toTitle();
+    });
+    this.setMode('title');
     requestAnimationFrame((t) => this.frame(t));
   }
 
@@ -71,6 +80,10 @@ class Game {
   save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ best: this.best, fx: this.fxPreset })); } catch (_) { /* ignore */ }
   }
+  recordBest() {
+    this.isNewBest = this.world.heightM > this.best;
+    if (this.isNewBest) { this.best = this.world.heightM; this.save(); }
+  }
 
   cycleFx() {
     this.fxPreset = this.gfx.nextPreset();
@@ -91,12 +104,38 @@ class Game {
 
   setMode(m) {
     this.mode = m; this.modeT = 0;
-    if (m === 'playing' && !this.world.started) {
-      if (this.dev.at) startAt(this.world, this.dev.at, this.dev.spawn);
+    if (m === 'title') this.world.hop();
+  }
+
+  // The one way into a round. `config` names the mode (endless now; a tower
+  // with its seed later, once there is a selection screen). The prince is on
+  // the lawn, hopping; the countdown runs on his next landings.
+  startRound(config = this.round) {
+    this.round = config;
+    if (this.world.started) this.world.reset(config.seed);
+    if (this.dev.at) {
+      // the dev teleport skips the countdown; it needs the fresh lawn state first
+      startAt(this.world, this.dev.at, this.dev.spawn);
       this.world.start();
-      if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
-      this.maybeIosSoundHint();
+      this.beginPlaying();
+      return;
     }
+    audio.click();
+    this.world.countdown();
+    this.setMode('countdown');
+  }
+
+  // The round is live: world.start() has run (the GO landing or the dev path).
+  beginPlaying() {
+    if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
+    this.maybeIosSoundHint();
+    this.setMode('playing');
+  }
+
+  toTitle() {
+    if (this.mode === 'paused') this.recordBest();
+    this.world.reset();
+    this.setMode('title');
   }
 
   frame(now) {
@@ -129,6 +168,20 @@ class Game {
     showFallback(`Sir Bouncealot hit an error and stopped: ${err && err.message ? err.message : err}. Reload the page to play again.`);
   }
 
+  // Semi-fixed step: the frame's time is split into equal steps no longer
+  // than STEP, so the simulation advances exactly once per display refresh
+  // at any rate (no skipped or doubled frames at 90 or 144 Hz, no tap lost in
+  // a frame without a step) while every step stays short enough for stable
+  // collisions at high speeds. The lawn phases use it too, so a countdown
+  // landing is as exact as a bounce in the round.
+  stepWorld(dt) {
+    if (dt <= 0) return;
+    let n = Math.ceil(dt / this.STEP);
+    if (n > this.MAX_STEPS) { n = this.MAX_STEPS; dt = n * this.STEP; }
+    const h = dt / n;
+    for (let i = 0; i < n; i++) this.world.update(h);
+  }
+
   update(dt) {
     this.modeT += dt;
     const input = this.input;
@@ -141,48 +194,40 @@ class Game {
       if (!muted) this.maybeIosSoundHint();
     }
     if (input.consumeFx() || input.consumeButton('fx')) this.cycleFx();
+    const tapOutsideButtons = () => input.consumeTap() && !input.taps.some((t) => input.zoneAt(t.x, t.y));
 
     switch (this.mode) {
       case 'title': {
-        this.world.update(dt, true);
-        const tapped = input.consumeTap();
-        input.consumeBoost();            // boosts queue until a round consumes them; none belongs to the title
-        // Taps on the title buttons (tilt, effects, sound) must not start the game.
-        const onButton = input.taps.some((t) => input.zoneAt(t.x, t.y));
-        if (onButton) break;
-        if (this.modeT > 0.3 && tapped) this.setMode('playing');
+        this.stepWorld(dt);
+        input.consumeBoost();            // clicks, space and tilt-taps queue boosts; none belongs to the title
+        input.consumePause();
+        const play = input.consumeButton('play');
+        if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();
+        break;
+      }
+      case 'countdown': {
+        this.stepWorld(dt);
+        input.consumeTap(); input.consumeBoost();   // taps during the count never reach the round's first step
+        if (input.consumePause()) { this.toTitle(); break; }
+        if (this.world.started) this.beginPlaying();
         break;
       }
       case 'playing': {
         if (input.consumePause() || input.consumeButton('pause')) { this.setMode('paused'); audio.click(); break; }
-        // Semi-fixed step: the frame's time is split into equal steps no
-        // longer than STEP, so the simulation advances exactly once per
-        // display refresh at any rate (no skipped or doubled frames at 90 or
-        // 144 Hz, no tap lost in a frame without a step) while every step
-        // stays short enough for stable collisions at high speeds.
-        if (dt > 0) {
-          let n = Math.ceil(dt / this.STEP);
-          if (n > this.MAX_STEPS) { n = this.MAX_STEPS; dt = n * this.STEP; }
-          const h = dt / n;
-          for (let i = 0; i < n; i++) this.world.update(h);
-        }
-        if (this.world.over) {
-          this.isNewBest = this.world.heightM > this.best;
-          if (this.isNewBest) { this.best = this.world.heightM; this.save(); }
-          this.setMode('gameover');
-        }
+        this.stepWorld(dt);
+        if (this.world.over) { this.recordBest(); this.setMode('gameover'); }
         break;
       }
       case 'paused': {
-        if (input.consumePause() || input.consumeButton('pause') || input.consumeTap()) { input.consumeBoost(); this.setMode('playing'); audio.click(); }
+        if (input.consumeButton('menu')) { this.toTitle(); audio.click(); break; }
+        if (input.consumePause() || input.consumeButton('pause') || tapOutsideButtons()) { input.consumeBoost(); this.setMode('playing'); audio.click(); }
         break;
       }
       case 'gameover': {
         input.consumeBoost();
-        if (this.modeT > 0.8 && input.consumeTap()) {
-          this.world.reset();
-          this.setMode('playing');
-        }
+        if (input.consumeButton('menu')) { this.toTitle(); audio.click(); break; }
+        const again = input.consumeButton('again');
+        if (this.modeT > 0.8 && (again || tapOutsideButtons())) this.startRound(this.round);
         break;
       }
     }
@@ -193,8 +238,9 @@ class Game {
     g.begin();
     this.world.draw(g);
     switch (this.mode) {
-      case 'title': this.hud.drawTitle(g, this.world, this.modeT); break;
-      case 'playing': this.hud.drawPlaying(g, this.world); break;
+      case 'title': drawTitle(g, this, this.world.time, 1); this.hud.drawSoundButton(g); break;
+      case 'countdown': drawTitle(g, this, this.world.time, 1 - clamp(this.modeT / 0.4, 0, 1)); this.hud.drawSoundButton(g); drawCount(g, this.world); break;
+      case 'playing': this.hud.drawPlaying(g, this.world); drawCount(g, this.world); break;
       case 'paused': this.hud.drawPlaying(g, this.world); this.hud.drawPaused(g); break;
       case 'gameover': this.hud.drawPlaying(g, this.world); this.hud.drawGameOver(g, this.world, this.modeT, this.isNewBest); break;
     }

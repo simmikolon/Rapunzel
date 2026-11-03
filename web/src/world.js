@@ -1,4 +1,4 @@
-import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS, PARALLAX_TOWER } from './config.js';
+import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY } from './config.js';
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
@@ -10,8 +10,11 @@ import { Background } from './background.js';
 import { Witch, Scissors } from './enemies.js';
 import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
-import { RNG, overlaps, clamp } from './util.js';
+import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
+
+// Before the round starts the prince hops on the lawn by himself.
+const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
 
 // One round of the game: entities, collisions, generation, FX callbacks.
 export class World {
@@ -61,6 +64,15 @@ export class World {
     this.over = false;
     this.overT = 0;
     this.started = false;
+    // The lawn before the round: 'idle' (title hops), 'countdown' (3-2-1 on
+    // the landings), then 'play' from start() on.
+    this.phase = 'idle';
+    this.count = 3;
+    this.countT = 0;
+    this.hopN = 0;
+    this.nextShowoff = 4 + Math.floor(Math.random() * 3);
+    this.showoff = null;          // { t, dur } while a show-off hop flips
+    this.showoffPending = false;
     this.level.generateUpTo(H + 900);
   }
 
@@ -68,28 +80,43 @@ export class World {
 
   start() {
     this.started = true;
+    this.phase = 'play'; this.count = 0; this.countT = 0;
+    this.showoff = null; this.showoffPending = false; this.player.flip = 0;
+    this.player.maxY = this.player.y;    // the hops on the lawn were not a climb
     this.player.launch();
     this.audio.start();
+  }
+
+  // The title's idle hop; a no-op while he is already in the air.
+  hop() { if (this.player.state === 'standing') this.player.launch(HOP_VY[this.count]); }
+
+  // PLAY was pressed: "3" now, "2" and "1" on the next landings, then the launch.
+  countdown() {
+    if (this.phase !== 'idle') return;
+    this.phase = 'countdown'; this.countT = 0;
+    this.hop();
+    this.audio.count(3);
   }
 
   toast(text, color = '#fff2a8', life = 1.6) { this.toasts.push({ text, color, life, maxLife: life }); }
 
   // ------------------------------------------------------------------ update
-  update(dt, idle = false) {
+  update(dt) {
     this.time += dt;
+    this.countT += dt;
     // Ribbons ride on the braid, so a wilder braid is the 'moving platform' mechanic.
     this.bg.swayAmp = 12 + clamp(this.level.difficulty.index, 0, 4) * 14;
     this.bg.updateFireflies(dt, this.cam, this.time, this);
     this.bg.updateAtmosphere(dt, this.cam, this.time, this);
     for (const t of this.toasts) t.life -= dt;
     this.toasts = this.toasts.filter((t) => t.life > 0);
-    if (idle) { this.player.idleT += dt; this.particles.update(dt); return; }
 
     const braidX = (ly) => this.bg.braidX(ly, this.time);
     for (const p of this.platforms) p.update(dt, this.time, braidX, this.cam);
 
     const pl = this.player;
-    pl.update(dt, this.input);
+    pl.update(dt, this.started ? this.input : IDLE_INPUT);
+    if (this.showoff) { this.showoff.t += dt; pl.flip = clamp(this.showoff.t / this.showoff.dur, 0, 1) * TAU; }
     if (pl.alive) this.collide();
 
     for (const e of this.enemies) e.update(dt, this);
@@ -100,7 +127,7 @@ export class World {
 
     this.level.generateUpTo(this.cam.top + 900);
     this.cull();
-    this.events();
+    if (this.started) this.events();
     // cut braid pieces fall out of the view and are forgotten
     if (this.braidCut.pieces.length) {
       const camF = this.cam.layerY(PARALLAX_TOWER);
@@ -135,6 +162,7 @@ export class World {
         if (prevHead <= p.bottom && head >= p.bottom && xOverlap(p)) { pl.bonk(p); break; }
       }
     }
+    if (!this.started) return;        // hopping on the lawn: nothing to collect, nothing that hurts
 
     // Enemies
     const r = pl.rect;
@@ -273,6 +301,7 @@ export class World {
 
   // ---------------------------------------------------------------- callbacks
   onPlayerLand(pl, p) {
+    if (p.kind === 'ground' && !this.started) return this.groundLanding(pl);
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
     else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.kind === 'skyLantern') { this.audio.paper(); this.particles.sparkles(pl.x, pl.y + 10, 7, '#ffd04a'); return; }
@@ -289,7 +318,38 @@ export class World {
     else if (p.kind === 'swing') this.particles.landingDust(pl.x, pl.y, 0.6);
     else this.particles.landingDust(pl.x, pl.y, 1.4);
   }
+  // The lawn before the round: small hops at rest, the countdown's beats, then
+  // the launch. Player.land() set bounceVy from the ground; this has the last word.
+  groundLanding(pl) {
+    pl.flip = 0; this.showoff = null;
+    if (this.phase === 'countdown' && this.countT >= COUNT_MIN_T) {
+      this.count--; this.countT = 0;
+      if (this.count === 0) {
+        this.start();                 // GO: launch() set JUMP_VY, audio.start() is the jingle
+        this.particles.landingDust(pl.x, pl.y, 1.4);
+        this.particles.sparkles(pl.x, pl.y + 60, 14, '#ffd04a');
+        return;
+      }
+      this.audio.count(this.count);
+    }
+    pl.bounceVy = HOP_VY[this.count];
+    if (this.phase === 'idle') {
+      this.audio.hop();
+      if (++this.hopN >= this.nextShowoff) {
+        this.hopN = 0; this.nextShowoff = 4 + Math.floor(Math.random() * 3);
+        pl.bounceVy = SHOWOFF_VY; this.showoffPending = true;
+      }
+    } else this.audio.bounce(0);
+    this.particles.landingDust(pl.x, pl.y, 0.8);
+  }
+
   onPlayerJump(pl, p) {
+    if (this.showoffPending) {
+      // a show-off hop: a full flip over the flight, sparkles on the way up
+      this.showoffPending = false;
+      this.showoff = { t: 0, dur: (2 * SHOWOFF_VY) / GRAVITY };
+      this.particles.sparkles(pl.x, pl.y + 40, 10, '#ffd04a');
+    }
     if (p && p.dry && p.used) {
       if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
       else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }

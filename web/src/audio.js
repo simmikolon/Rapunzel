@@ -277,8 +277,19 @@ class Synth {
   gameOver() {
     [392, 330, 262, 196].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.45, vol: 0.2, delay: i * 0.22 }));
   }
+  // GO: the round's jingle
   start() {
-    [523, 659, 784, 1047].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.25, vol: 0.16, delay: i * 0.08 }));
+    [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.28, vol: 0.16, delay: i * 0.07 }));
+  }
+  // countdown beats: a short blip rising toward the start
+  count(n) {
+    const f = { 3: 440, 2: 550, 1: 660 }[n] || 440;
+    this.tone({ type: 'triangle', freq: f, dur: 0.12, vol: 0.16 });
+    this.tone({ type: 'sine', freq: f * 2, dur: 0.08, vol: 0.06 });
+  }
+  // a small hop on the title's lawn: a soft pat instead of the bounce
+  hop() {
+    this.noise({ dur: 0.08, vol: 0.08, filter: 'lowpass', freq: 700, to: 250 });
   }
   click() { this.tone({ type: 'square', freq: 700, dur: 0.05, vol: 0.06 }); }
   chirp() {

@@ -34,6 +34,7 @@ export class Player {
     this.maxY = 0;
     this.deathCause = null;
     this.idleT = 0;
+    this.flip = 0;                 // rotation of a show-off hop on the title (radians)
   }
 
   get feetY() { return this.y; }
@@ -51,11 +52,12 @@ export class Player {
     this.stateT = 0;
   }
 
-  // Called when the round starts: push off the ground.
-  launch() {
+  // Push off the ground: the round's start at JUMP_VY, or a smaller hop on
+  // the title's lawn.
+  launch(vy = JUMP_VY) {
     this.setState('bouncing');
     this.landedOn = null;
-    this.bounceVy = JUMP_VY;
+    this.bounceVy = vy;
   }
 
   update(dt, input) {
@@ -239,8 +241,13 @@ export class Player {
     const blink = this.invuln > 0 && this.state !== 'dead' && Math.floor(this.invuln * 14) % 2 === 0;
     const alpha = blink ? 0.35 : 1;
     const bob = this.state === 'standing' ? Math.sin(this.idleT * 3) * 0.03 : 0;
-    const opts = { sx: this.sx, sy: this.sy + bob, alpha, rot: this.state === 'dead' ? this.spin : 0 };
-    const sx = cam.sx(this.x), sy = cam.sy(this.y);
+    const opts = { sx: this.sx, sy: this.sy + bob, alpha, rot: this.state === 'dead' ? this.spin : this.flip };
+    let sx = cam.sx(this.x), sy = cam.sy(this.y);
+    if (this.flip) {
+      // the sprite pivots at the feet; move them so the flip turns about the body's centre
+      const r = PLAYER_H * 0.5;
+      sx -= Math.sin(this.flip) * r; sy += Math.cos(this.flip) * r - r;
+    }
     if (this.shielded) {
       // boost shield: a warm aura around the prince that fades with the timer
       const k = this.shield / BOOST_SHIELD_TIME;
