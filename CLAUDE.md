@@ -18,15 +18,16 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
 
 ## Run and test
 - Serve: `python3 -m http.server 8000 --directory web` (or `http-server web`).
-- Dev helpers: `?at=150` starts at 150 m (and skips the title's countdown), `?spawn=squirrel` puts one on the
+- Dev helpers: `?at=150` starts at 150 m (and skips the ride down and the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest
   window above, `?at=300&spawn=scissors` brings the witch with scissors at once,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`.
-- Sprite sheet: `web/dev/sprites.html`. Title picture: `python3 tools/pixelate.py
-  docs/art/title-source.png web/img/title.png --width 150` brings a new
-  source onto the art grid (one image pixel = one art pixel).
+- Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
+  the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
+  (one image pixel = one art pixel); the title uses the procedural wordmark
+  in `web/src/art/logo.js` for now.
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
   (also `kid`, `cautious`; then `<cap> <seedBase> <startM>`, e.g.
   `... 40 good bold 1100 100 450` measures the sky from 450 m). Target for

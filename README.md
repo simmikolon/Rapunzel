@@ -106,7 +106,8 @@ custom engine instead of SpriteKit physics and GameplayKit:
 * **Shaders**: a real bloom on everything that glows (lanterns, sun drops,
   fireflies, flames, stars, the moon) and a CRT pass with a curved tube,
   scanlines, chromatic aberration and flicker. See below.
-* **Screens**: title with controls, pause, game over with best height.
+* **Screens**: a ride down the tower on load, then the title, pause and
+  game over on a wooden sign lowered in on ropes; best height saved.
 
 ### Art
 

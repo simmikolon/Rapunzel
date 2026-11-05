@@ -343,16 +343,21 @@ is a pool to draw from, not a promise.
   menu exist.
 
 **FX and atmosphere**
-- ✅ title screen (`src/title.js`): the tower behind, the prince hopping
-  in place on the lawn (a flip with sparkles every few hops), two
-  butterflies at the flowers, the title picture (`web/img/title.png`,
-  the drawn logo brought onto the art grid with `tools/pixelate.py` from
-  `docs/art/title-source.png`: 150 art px wide, 32 colours, hard alpha)
-  bobbing with a squash, PLAY under it, effects and tilt on the lawn. PLAY (or a tap anywhere, or space) starts a countdown on his
-  landings: 3 at the tap, 2 and 1 on the next two hops, GO is the launch
-  at full strength; the title fades out meanwhile. MENU on the pause and
-  game-over screens leads back. `Game.startRound(config)` is the one way
-  into a round, so a mode or tower selection can sit between PLAY and the
+- ✅ title screen (`src/title.js`, `src/sign.js`): the game loads with a
+  ride down the tower (the camera is drawn 40 m up and eases down to the
+  lawn in 2.6 s; a tap shortens it), then a wooden sign is lowered in on
+  two ropes: bark frame, nailed boards, a vine over two corners, a bow on
+  the right rope, drawn with rectangles on the art grid so one routine
+  serves every menu at any size. On it the pixel wordmark SIR BOUNCEALOT
+  (`art/logo.js`, the letters hopping in a wave), PLAY, the controls, and
+  effects, sound and tilt in its bottom row; under it the prince hops in
+  place (a flip with sparkles every few hops), two butterflies at the
+  flowers. PLAY (or a tap anywhere, or space) pulls the sign up and starts
+  a countdown on his landings: 3 at the tap, 2 and 1 on the next two
+  hops, GO is the launch at full strength. Pause and game over hang on
+  smaller signs of the same kind; MENU on both leads back (the sign is
+  lowered again, no ride). `Game.startRound(config)` is the one way into
+  a round, so a mode or tower selection can sit between PLAY and the
   countdown later.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
   the forest floor and in the deep forest, with dust motes drifting down
@@ -759,3 +764,19 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   Purely visual and UI: the simulator calls `start()` directly and reads
   the same numbers on the same seeds (20 good bold runs: median 423 m,
   1.03 hits per 100 m on both master and the branch).
+- 2026-11-05: Menus on a wooden sign, and a ride down on load (same
+  branch). Text straight on the scene looked cheap, so the title, the
+  pause and the game over hang on a sign (`src/sign.js`: frame, boards,
+  nails and ropes as rectangles on the art grid, vines and a bow as
+  sprites in `art/sign.js`) that is lowered in on its ropes and pulled up
+  when the round starts; a later mode or tower menu gets the same boards.
+  The drawn title picture went back out: at 150 art px it lost too much
+  and the procedural wordmark reads better; `tools/pixelate.py` and the
+  source stay for a picture drawn for the grid. On load the camera starts
+  40 m up and eases down to the lawn in 2.6 s before the sign comes
+  (`INTRO_FROM`, `INTRO_T`; the lift is a drawing offset only, the world
+  keeps running on the lawn, and the rows the ride passes are generated
+  once at its start); `?at=` and `?spawn=` skip it, a tap shortens it,
+  MENU does not repeat it. The show-off hop is a little lower (`SHOWOFF_VY`
+  960) so the prince's head stays under the sign. Simulator untouched
+  (10 good bold runs: 0.99 hits per 100 m).
