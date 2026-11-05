@@ -1,6 +1,7 @@
 import { W, H, BOOST_CHARGES, MAX_HEARTS } from './config.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
+import { drawSign, signHeight, BTN_FILL } from './sign.js';
 
 // Heads-up display and screens, drawn through the renderer facade `g`
 // (see gfx/renderer.js). Everything is in logical 768 x 1364 coordinates.
@@ -12,18 +13,35 @@ export function button(g, zone, label, opts = {}) {
   if (opts.glyph) opts.glyph(g, x + w / 2, y + h / 2);
 }
 
+// A button on a sign's boards: recessed, with a gold rim when it is the main one.
+export function signButton(g, zone, label, opts = {}) {
+  button(g, zone, label, { fill: BTN_FILL, ...opts, stroke: opts.stroke || (opts.primary ? C.gold : C.plankHi) });
+}
+
+export const CREAM = '#f2e2c4';    // secondary text on the boards
+
+// The signs the menus hang on (src/sign.js): the title's, the pause's, the game over's.
+export const SIGNS = {
+  title: { x: 24, y: 108, w: 720, h: signHeight(9) },     // down to 792; the prince hops under it
+  pause: { x: 124, y: H / 2 - signHeight(4) / 2, w: 520, h: signHeight(4) },
+  over: { x: 84, y: 300, w: 600, h: signHeight(7) },
+};
+// How far a sign moves to be lowered in from above the screen, or pulled up out of it.
+export const signTravel = (S) => S.y + S.h + 24;
+
 export const ZONES = {
   pause: { id: 'pause', x: W - 84, y: 112, w: 64, h: 64 },
   sound: { id: 'sound', x: W - 164, y: 112, w: 64, h: 64 },
   boost: { id: 'boost', x: W - 190, y: H - 200, w: 160, h: 160 },
-  // title: PLAY in the middle, the settings in a row on the lawn (the prince hops between them)
-  play: { id: 'play', x: W / 2 - 200, y: 520, w: 400, h: 96 },
-  fx: { id: 'fx', x: 28, y: H - 128, w: 230, h: 56 },
-  tilt: { id: 'tilt', x: W - 258, y: H - 128, w: 230, h: 56 },
-  // game over and pause
-  again: { id: 'again', x: W / 2 - 200, y: H * 0.62 - 20, w: 400, h: 80 },
-  menu: { id: 'menu', x: W / 2 - 110, y: H * 0.62 + 90, w: 220, h: 60 },
-  pauseMenu: { id: 'menu', x: W / 2 - 110, y: H / 2 + 110, w: 220, h: 60 },
+  // on the title's sign: PLAY in the middle, the settings in the bottom row
+  play: { id: 'play', x: W / 2 - 200, y: 470, w: 400, h: 96 },
+  fx: { id: 'fx', x: 72, y: 690, w: 240, h: 56 },
+  titleSound: { id: 'sound', x: W / 2 - 28, y: 690, w: 56, h: 56 },
+  tilt: { id: 'tilt', x: W - 312, y: 690, w: 240, h: 56 },
+  // on the game over's and the pause's sign
+  again: { id: 'again', x: W / 2 - 200, y: 616, w: 400, h: 80 },
+  menu: { id: 'menu', x: W / 2 - 110, y: 740, w: 220, h: 60 },
+  pauseMenu: { id: 'menu', x: W / 2 - 110, y: 720, w: 220, h: 60 },
 };
 
 export function drawSpeaker(g, cx, cy, muted) {
@@ -70,10 +88,9 @@ export class HUD {
     if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
     if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, ZONES.pauseMenu);
     if (mode === 'title') {
-      zones.push(ZONES.play, ZONES.sound, ZONES.fx);
+      zones.push(ZONES.play, ZONES.titleSound, ZONES.fx);
       if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(ZONES.tilt);
     }
-    if (mode === 'countdown') zones.push(ZONES.sound);
     if (mode === 'gameover') zones.push(ZONES.sound, ZONES.again, ZONES.menu);
     input.buttonZones = zones;
   }
@@ -121,12 +138,6 @@ export class HUD {
     }
   }
 
-  // The sound toggle alone: the title and the countdown share it with the game.
-  drawSoundButton(g) {
-    g.layer('hud');
-    button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
-  }
-
   // One-line message at the top, used for device hints (e.g. iOS silent switch).
   drawNotice(g, str, t) {
     const a = clamp(t / 0.4, 0, 1);
@@ -136,31 +147,39 @@ export class HUD {
   }
 
   drawPaused(g) {
+    const S = SIGNS.pause;
     g.layer('overlay');
-    g.rect(0, 0, W, H, 'rgba(8,16,20,0.55)');
-    g.text('PAUSED', W / 2, H / 2 - 30, 44, '#fff', 'center');
-    g.text('tap or press P to continue', W / 2, H / 2 + 40, 16, '#cfe8e3', 'center');
-    button(g, ZONES.pauseMenu, 'MENU', { size: 18 });
+    g.rect(0, 0, W, H, 'rgba(8,16,20,0.5)');
+    drawSign(g, this.game.art, S.x, S.y, S.w, S.h);
+    g.text('PAUSED', W / 2, S.y + 80, 44, '#fff', 'center', true, { glow: 0.2 });
+    g.text(this.game.input.isTouch ? 'tap to continue' : 'tap or press P to continue', W / 2, S.y + 140, 16, CREAM, 'center');
+    signButton(g, ZONES.pauseMenu, 'MENU', { size: 18 });
     button(g, ZONES.pause, null, { glyph: drawPauseGlyph });
     button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
   }
 
+  // The sign is lowered in from above with the verdict; the buttons wake up once it hangs.
   drawGameOver(g, world, t, isNewBest) {
-    const a = clamp(t / 0.5, 0, 1);
+    const S = SIGNS.over;
+    const a = clamp(t / 0.4, 0, 1);
+    const dy = -signTravel(S) * (1 - easeOutBack(clamp(t / 0.7, 0, 1), 0.8));
+    const Y = (y) => S.y + y + dy;
+    const shift = (z) => (dy ? { ...z, y: z.y + dy } : z);
     g.layer('overlay');
-    g.rect(0, 0, W, H, '#081014', 0.6 * a);
-    const o = { alpha: a };
+    g.rect(0, 0, W, H, '#081014', 0.55 * a);
+    drawSign(g, this.game.art, S.x, S.y + dy, S.w, S.h);
+    const o = {};
     const cause = world.player.deathCause === 'caught' ? 'The witch got Sir Bouncealot!' : 'Sir Bouncealot fell...';
-    g.text(cause, W / 2, H * 0.3, 22, '#ff9a9a', 'center', true, o);
-    g.text(`${world.heightM} m`, W / 2, H * 0.3 + 90, 64, C.braid, 'center', true, { alpha: a, glow: 0.4 });
-    g.text('climbed', W / 2, H * 0.3 + 150, 16, '#cfe8e3', 'center', true, o);
-    if (isNewBest) g.text('NEW BEST!', W / 2, H * 0.3 + 200, 24, '#ffe9a0', 'center', true, { alpha: a, glow: 0.4 });
-    else g.text(`best  ${this.game.best} m`, W / 2, H * 0.3 + 200, 18, '#cfe8e3', 'center', true, o);
-    g.text(`suns ${world.suns}   stomps ${world.stomps}`, W / 2, H * 0.3 + 250, 14, '#cfe8e3', 'center', true, o);
-    const ready = clamp((t - 0.5) / 0.4, 0, 1);
-    button(g, ZONES.again, 'TRY AGAIN', { size: 22, stroke: C.gold, alpha: ready });
-    if (!this.game.input.isTouch) g.text('space', W / 2, ZONES.again.y + ZONES.again.h + 20, 12, '#cfe8e3', 'center', true, { alpha: ready });
-    button(g, ZONES.menu, 'MENU', { size: 16, alpha: ready });
+    g.text(cause, W / 2, Y(64), 18, '#ff9a9a', 'center', true, o);
+    g.text(`${world.heightM} m`, W / 2, Y(140), 64, C.braid, 'center', true, { glow: 0.4 });
+    g.text('climbed', W / 2, Y(192), 16, CREAM, 'center', true, o);
+    if (isNewBest) g.text('NEW BEST!', W / 2, Y(236), 24, '#ffe9a0', 'center', true, { glow: 0.4 });
+    else g.text(`best  ${this.game.best} m`, W / 2, Y(236), 18, CREAM, 'center', true, o);
+    g.text(`suns ${world.suns}   stomps ${world.stomps}`, W / 2, Y(278), 14, CREAM, 'center', true, o);
+    const ready = clamp((t - 0.7) / 0.3, 0, 1);
+    signButton(g, shift(ZONES.again), 'TRY AGAIN', { size: 22, primary: true, alpha: ready });
+    if (!this.game.input.isTouch) g.text('space', W / 2, Y(414), 12, CREAM, 'center', true, { alpha: ready });
+    signButton(g, shift(ZONES.menu), 'MENU', { size: 16, alpha: ready });
     button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
   }
 }

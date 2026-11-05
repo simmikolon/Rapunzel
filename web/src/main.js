@@ -1,11 +1,11 @@
-import { W, H, STORAGE_KEY, LEGACY_STORAGE_KEY, FX } from './config.js';
+import { W, H, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
-import { HUD } from './hud.js';
+import { HUD, SIGNS, signTravel } from './hud.js';
 import { drawTitle, drawCount } from './title.js';
-import { clamp } from './util.js';
+import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 
@@ -25,8 +25,9 @@ class Game {
     this.input.anyInteraction = () => audio.unlock();
     this.hud = new HUD(this);
     this.world = new World(this);
-    // title -> countdown -> playing -> paused | gameover; MENU leads back.
+    // intro -> title -> countdown -> playing -> paused | gameover; MENU leads back.
     this.mode = 'title';
+    this.intro = null;      // { from, dur, t, ease } while the camera rides down to the lawn
     this.modeT = 0;
     this.round = { mode: 'endless' };   // what startRound() plays; a tower with its seed later
     this.best = 0;
@@ -54,7 +55,8 @@ class Game {
       if (this.mode === 'playing') this.setMode('paused');
       else if (this.mode === 'countdown') this.toTitle();
     });
-    this.setMode('title');
+    // the dev teleport goes straight to the title; everyone else rides down to the lawn first
+    this.setMode(this.dev.at || this.dev.spawn ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
   }
 
@@ -104,7 +106,23 @@ class Game {
 
   setMode(m) {
     this.mode = m; this.modeT = 0;
-    if (m === 'title') this.world.hop();
+    if (m === 'title' || m === 'intro') this.world.hop();
+    if (m === 'intro') this.startIntro();
+  }
+
+  // The ride down: the camera is drawn INTRO_FROM px above the lawn and eases
+  // down over INTRO_T s while the world already runs on the lawn (the lift is
+  // applied in draw() only, so nothing is generated or culled for it; the
+  // rows it passes are made once here). A tap shortens the rest to half a second.
+  startIntro() {
+    this.intro = { from: INTRO_FROM, dur: INTRO_T, t: 0, ease: easeInOutCubic };
+    this.world.level.generateUpTo(CAMERA_START_Y + INTRO_FROM + H + 900);
+  }
+  introLift() { const i = this.intro; return i ? i.from * (1 - i.ease(clamp(i.t / i.dur, 0, 1))) : 0; }
+  skipIntro() {
+    const i = this.intro;
+    if (!i || i.t > i.dur - 0.5) return;
+    this.intro = { from: this.introLift(), dur: 0.5, t: 0, ease: easeOutCubic };
   }
 
   // The one way into a round. `config` names the mode (endless now; a tower
@@ -197,6 +215,14 @@ class Game {
     const tapOutsideButtons = () => input.consumeTap() && !input.taps.some((t) => input.zoneAt(t.x, t.y));
 
     switch (this.mode) {
+      case 'intro': {
+        this.stepWorld(dt);
+        const tap = input.consumeTap(), boost = input.consumeBoost(), pause = input.consumePause();
+        if (tap || boost || pause) this.skipIntro();
+        this.intro.t += dt;
+        if (this.intro.t >= this.intro.dur) { this.intro = null; this.setMode('title'); }
+        break;
+      }
       case 'title': {
         this.stepWorld(dt);
         input.consumeBoost();            // clicks, space and tilt-taps queue boosts; none belongs to the title
@@ -234,12 +260,26 @@ class Game {
   }
 
   draw() {
-    const g = this.gfx;
+    const g = this.gfx, cam = this.world.cam;
     g.begin();
+    const camY = cam.y;
+    if (this.mode === 'intro') cam.y = camY + this.introLift();   // the ride is a drawing offset only
     this.world.draw(g);
+    cam.y = camY;
     switch (this.mode) {
-      case 'title': drawTitle(g, this, this.world.time, 1); this.hud.drawSoundButton(g); break;
-      case 'countdown': drawTitle(g, this, this.world.time, 1 - clamp(this.modeT / 0.4, 0, 1)); this.hud.drawSoundButton(g); drawCount(g, this.world); break;
+      case 'title': {
+        // the sign is lowered in on its ropes and settles with a small dip
+        const k = clamp(this.modeT / 0.7, 0, 1);
+        drawTitle(g, this, this.world.time, 1, -signTravel(SIGNS.title) * (1 - easeOutBack(k, 0.8)));
+        break;
+      }
+      case 'countdown': {
+        // and pulled up out of the way as the count runs
+        const k = clamp(this.modeT / 0.55, 0, 1);
+        drawTitle(g, this, this.world.time, 1, -signTravel(SIGNS.title) * k * k);
+        drawCount(g, this.world);
+        break;
+      }
       case 'playing': this.hud.drawPlaying(g, this.world); drawCount(g, this.world); break;
       case 'paused': this.hud.drawPlaying(g, this.world); this.hud.drawPaused(g); break;
       case 'gameover': this.hud.drawPlaying(g, this.world); this.hud.drawGameOver(g, this.world, this.modeT, this.isNewBest); break;

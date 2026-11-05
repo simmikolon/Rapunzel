@@ -9,6 +9,7 @@ import { buildWind } from './wind.js';
 import { buildBalconies } from './balconies.js';
 import { buildWindows } from './windows.js';
 import { buildLogo } from './logo.js';
+import { buildSign } from './sign.js';
 
 export function buildAllArt() {
   return {
@@ -23,5 +24,6 @@ export function buildAllArt() {
     balconies: buildBalconies(),
     windows: buildWindows(),
     logo: buildLogo(),
+    sign: buildSign(),
   };
 }

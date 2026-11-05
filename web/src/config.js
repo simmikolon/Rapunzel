@@ -24,8 +24,12 @@ export const HURT_VY = 900;           // small hop when hit so you can recover
 // Keep every value under 1120 (apex below the first row at 300 px) and 1320
 // (the camera would start climbing).
 export const HOP_VY = { 3: 820, 2: 900, 1: 980 };
-export const SHOWOFF_VY = 1000;       // every 4th to 6th idle hop: apex 238 px with a flip
+export const SHOWOFF_VY = 960;        // every 4th to 6th idle hop: apex 219 px with a flip, his head under the title's sign
 export const COUNT_MIN_T = 0.3;       // a landing this soon after a count shows no new number
+// The ride down when the game loads: the camera is drawn this far above the
+// lawn and eases down over INTRO_T seconds before the title's sign drops in.
+export const INTRO_FROM = 4000;
+export const INTRO_T = 2.6;
 
 // Horizontal movement
 export const MOVE_SPEED = 560;        // keyboard / touch-steer top speed
