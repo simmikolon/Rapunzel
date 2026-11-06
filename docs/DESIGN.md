@@ -803,5 +803,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   the text texture (`paint` option of the renderer's text; a tinted stroke
   would go dark with the ink), so it reads over the grain. Rapunzel peeks
   over the title sign's corner with her braid behind it and out under it:
-  doubled with the tower's braid on purpose, for the cuteness. Atlas
-  2048 x 3518.
+  doubled with the tower's braid on purpose, for the cuteness. The sign
+  did not stand off the scene enough, so once it hangs the scene behind
+  it dims to a third over 1.4 s (`TITLE_DIM`), never fully, and the dim
+  lifts with the sign when the countdown starts. Atlas 2048 x 3518.

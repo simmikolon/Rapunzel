@@ -268,15 +268,16 @@ class Game {
     cam.y = camY;
     switch (this.mode) {
       case 'title': {
-        // the sign is lowered in on its ropes and settles with a small dip
+        // the sign is lowered in on its ropes and settles with a small dip;
+        // once it hangs the scene behind it dims slowly
         const k = clamp(this.modeT / 0.7, 0, 1);
-        drawTitle(g, this, this.world.time, 1, -signTravel(SIGNS.title) * (1 - easeOutBack(k, 0.8)));
+        drawTitle(g, this, this.world.time, { dy: -signTravel(SIGNS.title) * (1 - easeOutBack(k, 0.8)), dim: clamp((this.modeT - 0.6) / 1.4, 0, 1) });
         break;
       }
       case 'countdown': {
-        // and pulled up out of the way as the count runs
+        // and pulled up out of the way as the count runs, the dim lifting with it
         const k = clamp(this.modeT / 0.55, 0, 1);
-        drawTitle(g, this, this.world.time, 1, -signTravel(SIGNS.title) * k * k);
+        drawTitle(g, this, this.world.time, { dy: -signTravel(SIGNS.title) * k * k, dim: 1 - clamp(this.modeT / 0.45, 0, 1) });
         drawCount(g, this.world);
         break;
       }

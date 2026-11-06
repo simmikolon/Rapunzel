@@ -7,17 +7,24 @@ import { WORD_ADVANCE } from './art/logo.js';
 
 // The title screen: a wooden sign over the idle world where the prince hops
 // on the lawn, and the countdown that follows PLAY. `t` is a running clock
-// (the world's time, so the wave does not jump between modes); `dy` moves
+// (the world's time, so the wave does not jump between modes). o.dy moves
 // the sign, which is lowered in on its ropes when the title opens and pulled
-// up again while the countdown runs; `alpha` is there for fades. 768 x 1364.
+// up again while the countdown runs; o.dim (0..1) is how far the scene
+// behind the sign is dimmed (it fades in once the sign hangs and out with
+// the countdown, never fully: the prince keeps hopping); o.alpha is there
+// for fades. 768 x 1364.
 
-export function drawTitle(g, game, t, alpha = 1, dy = 0) {
+const TITLE_DIM = 0.34;    // the scene behind the sign at full dim
+
+export function drawTitle(g, game, t, o = {}) {
   const S = SIGNS.title;
+  const alpha = o.alpha == null ? 1 : o.alpha, dy = o.dy || 0;
   if (alpha <= 0 || dy <= -signTravel(S)) return;
   const input = game.input, art = game.art, logo = art.logo;
   const Y = (y) => y + dy;
   const zone = (z) => (dy ? { ...z, y: z.y + dy } : z);
   g.layer('hud');
+  if (o.dim) g.rect(0, 0, W, H, '#081014', TITLE_DIM * o.dim * alpha);
   drawRapunzelBehind(g, art, t, S, Y, alpha);
   drawSign(g, art, S.x, Y(S.y), S.w, S.h, { alpha });
   drawRapunzelFront(g, art, t, S, Y, alpha);
