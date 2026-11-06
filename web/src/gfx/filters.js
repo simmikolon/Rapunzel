@@ -44,7 +44,7 @@ void main(void) {
 export class BloomFilter extends Filter {
   constructor({ spread = 1.5, passes = 2, gain = 1.2, resolution = 0.5 } = {}) {
     super({
-      glProgram: GlProgram.from({ vertex: defaultFilterVert, fragment: BLUR_FRAG, name: 'rapunzel-bloom' }),
+      glProgram: GlProgram.from({ vertex: defaultFilterVert, fragment: BLUR_FRAG, name: 'bouncealot-bloom' }),
       resources: {
         bloomUniforms: {
           uDir: { value: new Float32Array([1, 0]), type: 'vec2<f32>' },
@@ -151,7 +151,7 @@ void main(void) {
 export class CRTFilter extends Filter {
   constructor(o = {}) {
     super({
-      glProgram: GlProgram.from({ vertex: defaultFilterVert, fragment: CRT_FRAG, name: 'rapunzel-crt', preferredFragmentPrecision: 'highp' }),
+      glProgram: GlProgram.from({ vertex: defaultFilterVert, fragment: CRT_FRAG, name: 'bouncealot-crt', preferredFragmentPrecision: 'highp' }),
       resources: {
         crtUniforms: {
           uTime: { value: 0, type: 'f32' },

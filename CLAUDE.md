@@ -1,4 +1,4 @@
-# Working on Rapunzel
+# Working on Sir Bouncealot
 
 Browser game (plain ES modules, WebGL via a vendored PixiJS, no build
 step) in `web/`. The design document `docs/DESIGN.md` is the guide for
@@ -17,14 +17,19 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
   `docs/DESIGN.md` (status mark plus decision log).
 
 ## Run and test
-- Serve: `python3 -m http.server 8000 --directory web` (or `http-server web`).
-- Dev helpers: `?at=150` starts at 150 m, `?spawn=squirrel` puts one on the
+- Serve: `python3 tools/serve.py` (port 8000, caching off). A plain
+  `python3 -m http.server` lets the browser keep a stale module next to a
+  fresh one after a change; if that happens, hard-reload (Cmd+Shift+R).
+- Dev helpers: `?at=150` starts at 150 m (and skips the ride down and the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest
   window above, `?at=300&spawn=scissors` brings the witch with scissors at once,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`.
-- Sprite sheet: `web/dev/sprites.html`.
+- Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
+  the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
+  (one image pixel = one art pixel); the title uses the procedural wordmark
+  in `web/src/art/logo.js` for now.
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
   (also `kid`, `cautious`; then `<cap> <seedBase> <startM>`, e.g.
   `... 40 good bold 1100 100 450` measures the sky from 450 m). Target for

@@ -20,6 +20,16 @@ export const BOOST_VY = 1500;         // added by a tap (pogo boost)
 export const MAX_FALL_SPEED = 2000;
 export const BONK_VY = -250;          // after hitting a plank swing from below
 export const HURT_VY = 900;           // small hop when hit so you can recover
+// Title hops: bounce off the lawn by countdown value (apex 160 / 193 / 229 px).
+// Keep every value under 1120 (apex below the first row at 300 px) and 1320
+// (the camera would start climbing).
+export const HOP_VY = { 3: 820, 2: 900, 1: 980 };
+export const SHOWOFF_VY = 960;        // every 4th to 6th idle hop: apex 219 px with a flip, his head under the title's sign
+export const COUNT_MIN_T = 0.3;       // a landing this soon after a count shows no new number
+// The ride down when the game loads: the camera is drawn this far above the
+// lawn and eases down over INTRO_T seconds before the title's sign drops in.
+export const INTRO_FROM = 4000;
+export const INTRO_T = 2.6;
 
 // Horizontal movement
 export const MOVE_SPEED = 560;        // keyboard / touch-steer top speed
@@ -89,4 +99,7 @@ export const FX = {
   crt: { curvature: 0.035, aberration: 0.0022, scanline: 0.22, mask: 0.06, vignette: 0.22, flicker: 0.02 },
 };
 
-export const STORAGE_KEY = 'rapunzel.web.v1';
+export const STORAGE_KEY = 'bouncealot.web.v1';
+// The game was called Rapunzel until 2026-11-03; saves under the old key are
+// read once and written back under the new one.
+export const LEGACY_STORAGE_KEY = 'rapunzel.web.v1';

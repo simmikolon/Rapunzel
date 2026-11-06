@@ -1,6 +1,6 @@
 // Tiny WebAudio synthesizer. No audio files: every effect is generated.
 // The context is created lazily on the first user gesture (browser policy).
-import { STORAGE_KEY } from './config.js';
+import { STORAGE_KEY, LEGACY_STORAGE_KEY } from './config.js';
 
 // A 0.1 s silent WAV, built at runtime (no asset file). Playing it through an
 // <audio> element on a user gesture switches iOS's audio session from
@@ -37,7 +37,7 @@ class Synth {
       if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
     });
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + '.audio') || '{}');
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + '.audio') || localStorage.getItem(LEGACY_STORAGE_KEY + '.audio') || '{}');
       this.muted = !!saved.muted;
     } catch (_) { /* ignore */ }
   }
@@ -277,8 +277,21 @@ class Synth {
   gameOver() {
     [392, 330, 262, 196].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.45, vol: 0.2, delay: i * 0.22 }));
   }
+  // GO: the round's jingle
   start() {
-    [523, 659, 784, 1047].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.25, vol: 0.16, delay: i * 0.08 }));
+    [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.28, vol: 0.16, delay: i * 0.07 }));
+  }
+  // countdown beats: a short blip rising toward the start
+  count(n) {
+    const f = { 3: 440, 2: 550, 1: 660 }[n] || 440;
+    this.tone({ type: 'triangle', freq: f, dur: 0.12, vol: 0.16 });
+    this.tone({ type: 'sine', freq: f * 2, dur: 0.08, vol: 0.06 });
+  }
+  // the summary's counter ticking up
+  tick() { this.tone({ type: 'square', freq: 1400, dur: 0.025, vol: 0.035 }); }
+  // a small hop on the title's lawn: a soft pat instead of the bounce
+  hop() {
+    this.noise({ dur: 0.08, vol: 0.08, filter: 'lowpass', freq: 700, to: 250 });
   }
   click() { this.tone({ type: 'square', freq: 700, dur: 0.05, vol: 0.06 }); }
   chirp() {

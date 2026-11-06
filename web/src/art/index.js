@@ -8,6 +8,8 @@ import { buildLanterns } from './lanterns.js';
 import { buildWind } from './wind.js';
 import { buildBalconies } from './balconies.js';
 import { buildWindows } from './windows.js';
+import { buildLogo } from './logo.js';
+import { buildSign } from './sign.js';
 
 export function buildAllArt() {
   return {
@@ -21,5 +23,7 @@ export function buildAllArt() {
     wind: buildWind(),
     balconies: buildBalconies(),
     windows: buildWindows(),
+    logo: buildLogo(),
+    sign: buildSign(),
   };
 }

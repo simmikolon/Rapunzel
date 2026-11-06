@@ -1,35 +1,85 @@
 import { W, H, BOOST_CHARGES, MAX_HEARTS } from './config.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
+import { drawSign, signHeight, drawPlankTag, drawRibbon, drawPlaque, paint, INK_RED, FRAME, BOARD } from './sign.js';
+import { drawWord, wordWidth } from './art/logo.js';
+import { audio } from './audio.js';
 
 // Heads-up display and screens, drawn through the renderer facade `g`
 // (see gfx/renderer.js). Everything is in logical 768 x 1364 coordinates.
 
 export function button(g, zone, label, opts = {}) {
   const { x, y, w, h } = zone;
-  g.roundRect(x, y, w, h, 14, { fill: opts.fill || 'rgba(16,32,36,0.72)', stroke: opts.stroke || C.uiLine, width: 4 });
-  if (label) g.text(label, x + w / 2, y + h / 2 + 2, opts.size || 22, opts.color || '#fff', 'center', false);
+  g.roundRect(x, y, w, h, 14, { fill: opts.fill || 'rgba(16,32,36,0.72)', stroke: opts.stroke || C.uiLine, width: 4, alpha: opts.alpha });
+  if (label) g.text(label, x + w / 2, y + h / 2 + 2, opts.size || 22, opts.color || '#fff', 'center', false, { alpha: opts.alpha });
   if (opts.glyph) opts.glyph(g, x + w / 2, y + h / 2);
 }
+
+// A small button on a sign: a light board nailed on, the label painted in
+// ink, a symbol left of it when opts.icon(g, x, y, alpha) is given.
+// opts: alpha, on, size, icon
+export function tagButton(g, zone, label, opts = {}) {
+  const { x, y, w, h } = zone;
+  const a = opts.alpha == null ? 1 : opts.alpha;
+  drawPlankTag(g, x, y, w, h, { alpha: a, on: opts.on });
+  const cx = x + w / 2, cy = y + h / 2;
+  if (opts.icon) opts.icon(g, label ? x + 40 : cx, cy, a);
+  if (label) paint(g, label, opts.icon ? x + 68 : cx, cy + 1, opts.size || 14, opts.icon ? 'left' : 'center', { alpha: a });
+}
+
+// The main button: a ribbon banner with the word in gold letters.
+// opts: alpha, t (the ribbon's tails flutter)
+export function ribbonButton(g, art, zone, word, opts = {}) {
+  const { x, y, w, h } = zone;
+  const a = opts.alpha == null ? 1 : opts.alpha;
+  drawRibbon(g, x, y, w, h, { alpha: a, t: opts.t });
+  const set = art.logo.gold2;
+  drawWord(g, set, word, x + w / 2, y + h / 2 + set.body / 2 - 2, { alpha: a, glow: 0.3 * a });
+}
+
+// The best height on a brass plate with a crown.
+export function drawBest(g, art, cx, cy, best, alpha = 1) {
+  const label = `BEST ${best} m`;
+  const w = Math.ceil((label.length * 14 + 84) / 8) * 8, h = 40;
+  drawPlaque(g, cx - w / 2, cy - h / 2, w, h, { alpha });
+  g.blit(art.logo.crown, cx - w / 2 + 28, cy, { alpha });
+  paint(g, label, cx - w / 2 + 52, cy + 1, 14, 'left', { alpha });
+}
+
+// The signs the menus hang on (src/sign.js): the title's, the pause's, the game over's.
+export const SIGNS = {
+  title: { x: 24, y: 108, w: 720, h: signHeight(9) },     // down to 792; the prince hops under it
+  pause: { x: 124, y: H / 2 - signHeight(4) / 2, w: 520, h: signHeight(4) },
+  over: { x: 44, y: 280, w: 680, h: signHeight(8) },   // a row per board: cause, three counts, best, TRY AGAIN, MENU
+};
+// How far a sign moves to be lowered in from above the screen, or pulled up out of it.
+export const signTravel = (S) => S.y + S.h + 24;
 
 export const ZONES = {
   pause: { id: 'pause', x: W - 84, y: 112, w: 64, h: 64 },
   sound: { id: 'sound', x: W - 164, y: 112, w: 64, h: 64 },
   boost: { id: 'boost', x: W - 190, y: H - 200, w: 160, h: 160 },
-  tilt: { id: 'tilt', x: W / 2 - 220, y: H - 330, w: 440, h: 76 },
-  fx: { id: 'fx', x: W / 2 - 220, y: H - 236, w: 440, h: 60 },
+  // on the title's sign: PLAY in the middle, the settings in the bottom row
+  play: { id: 'play', x: W / 2 - 248, y: 468, w: 496, h: 96 },     // a ribbon: its tails take the outer 48 px
+  fx: { id: 'fx', x: 72, y: 688, w: 240, h: 56 },
+  titleSound: { id: 'sound', x: W / 2 - 28, y: 688, w: 56, h: 56 },
+  tilt: { id: 'tilt', x: W - 312, y: 688, w: 240, h: 56 },
+  // on the game over's and the pause's sign
+  again: { id: 'again', x: W / 2 - 272, y: 684, w: 544, h: 88 },
+  menu: { id: 'menu', x: W / 2 - 112, y: 808, w: 224, h: 56 },
+  pauseMenu: { id: 'menu', x: W / 2 - 112, y: 720, w: 224, h: 60 },
 };
 
-export function drawSpeaker(g, cx, cy, muted) {
+export function drawSpeaker(g, cx, cy, muted, color = '#fff') {
   g.path((p) => {
     p.moveTo(cx - 16, cy - 7); p.lineTo(cx - 6, cy - 7); p.lineTo(cx + 6, cy - 17); p.lineTo(cx + 6, cy + 17);
     p.lineTo(cx - 6, cy + 7); p.lineTo(cx - 16, cy + 7); p.closePath();
-  }, { fill: '#fff' });
+  }, { fill: color });
   if (muted) {
     g.path((p) => { p.moveTo(cx + 10, cy - 10); p.lineTo(cx + 22, cy + 10); p.moveTo(cx + 22, cy - 10); p.lineTo(cx + 10, cy + 10); }, { stroke: '#ff6b6b', width: 4 });
   } else {
-    g.path((p) => p.arc(cx + 8, cy, 12, -0.9, 0.9), { stroke: '#fff', width: 4 });
-    g.path((p) => p.arc(cx + 8, cy, 20, -0.9, 0.9), { stroke: '#fff', width: 4 });
+    g.path((p) => p.arc(cx + 8, cy, 12, -0.9, 0.9), { stroke: color, width: 4 });
+    g.path((p) => p.arc(cx + 8, cy, 20, -0.9, 0.9), { stroke: color, width: 4 });
   }
 }
 
@@ -54,19 +104,62 @@ export function drawFlame(g, cx, cy, s = 1, alpha = 1, glow = 0.8) {
   g.circle(cx, cy + 14 * s, 6 * s, { fill: C.flame1, alpha, glow });
 }
 
+// The game-over summary: once the sign hangs, the height counts up with
+// ticks, then the suns (a pickup chime each), then the stomps (a thud
+// each), then the best height or NEW BEST!; the buttons wake after that.
+// A tap while it runs finishes it at once. Times are seconds of game-over.
+export function summaryPlan(world, isNewBest) {
+  const h = world.heightM, suns = world.suns, stomps = world.stomps;
+  const rows = [];
+  let t = 0.9;                                             // the sign hangs
+  const add = (key, n, dur) => { rows.push({ key, n, from: t, dur }); t += dur + 0.3; };
+  add('climbed', h, Math.min(1.3, 0.3 + h / 250));
+  add('suns', suns, Math.min(0.9, suns * 0.09));
+  add('stomps', stomps, Math.min(0.9, stomps * 0.11));
+  const best = t;
+  return { rows, best, ready: best + (isNewBest ? 0.6 : 0.25) };
+}
+const wordWidthGold = (L, str) => wordWidth(L.gold2, str);
+const rowValue = (row, t) => (row.dur > 0 ? row.n * clamp((t - row.from) / row.dur, 0, 1) : t >= row.from ? row.n : 0);
+
 export class HUD {
-  constructor(game) { this.game = game; }
+  constructor(game) { this.game = game; this.summary = null; }
+
+  beginSummary(world, isNewBest) {
+    this.summary = { plan: summaryPlan(world, isNewBest), isNewBest, played: { climbed: 0, suns: 0, stomps: 0, best: false }, tickT: -1 };
+  }
+  summaryDone(t) { return !this.summary || t >= this.summary.plan.ready; }
+  // Finish the counting now; returns the time to jump to. Nothing is heard for the skipped part.
+  skipSummary() {
+    const s = this.summary;
+    for (const r of s.plan.rows) s.played[r.key] = r.n;
+    s.played.best = true;
+    return s.plan.ready;
+  }
+  // The counting's sounds, from the game-over update.
+  updateSummary(t) {
+    const s = this.summary;
+    if (!s) return;
+    for (const r of s.plan.rows) {
+      const v = Math.floor(rowValue(r, t));
+      if (v <= s.played[r.key]) continue;
+      if (r.key === 'climbed') { if (t - s.tickT >= 0.05) { audio.tick(); s.tickT = t; } s.played.climbed = v; }
+      else { s.played[r.key]++; if (r.key === 'suns') audio.pickup(); else audio.stomp(); }
+    }
+    if (!s.played.best && t >= s.plan.best) { s.played.best = true; if (s.isNewBest) audio.milestone(); }
+  }
 
   // Register touch zones for this frame.
   layout(mode) {
     const input = this.game.input;
     const zones = [];
-    if (mode === 'playing' || mode === 'paused') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
+    if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
+    if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, ZONES.pauseMenu);
     if (mode === 'title') {
-      zones.push(ZONES.sound, ZONES.fx);
+      zones.push(ZONES.play, ZONES.titleSound, ZONES.fx);
       if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(ZONES.tilt);
     }
-    if (mode === 'gameover') zones.push(ZONES.sound);
+    if (mode === 'gameover') zones.push(ZONES.sound, ZONES.again, ZONES.menu);
     input.buttonZones = zones;
   }
 
@@ -113,29 +206,6 @@ export class HUD {
     }
   }
 
-  drawTitle(g, world, t) {
-    const input = this.game.input;
-    const bob = Math.sin(t * 2) * 6;
-    g.layer('hud');
-    // Title
-    g.text('RAPUNZEL', W / 2, 250 + bob, 62, C.braid, 'center', true, { glow: 0.5 });
-    g.text('a pogo climb', W / 2, 322 + bob, 20, '#ffd1e3', 'center');
-    const blink = Math.floor(t * 1.6) % 2 === 0;
-    if (blink) g.text(input.isTouch ? 'TAP TO START' : 'PRESS SPACE TO START', W / 2, 560, 22, '#fff', 'center');
-    // Controls
-    const lines = input.isTouch
-      ? ['hold left / right side to steer', 'tap the flame to boost', 'or enable tilt and tap anywhere']
-      : ['arrows / A D to steer', 'space or click to boost', 'bounce on branches and ribbons'];
-    lines.forEach((l, i) => g.text(l, W / 2, 640 + i * 34, 14, '#cfe8e3', 'center'));
-    if (this.game.best > 0) g.text(`best  ${this.game.best} m`, W / 2, 760, 18, '#ffe9a0', 'center');
-    if (input.buttonZones.includes(ZONES.tilt)) {
-      button(g, ZONES.tilt, input.tiltEnabled ? 'TILT: ON  (tap to turn off)' : 'ENABLE TILT STEERING', { size: 15, stroke: input.tiltEnabled ? C.gold : C.uiLine });
-    }
-    if (input.tiltMessageT > 0) g.text(input.tiltMessage, W / 2, ZONES.tilt.y - 30, 14, '#ffe9a0', 'center');
-    button(g, ZONES.fx, `EFFECTS: ${this.game.fxLabel.toUpperCase()}${input.isTouch ? '' : '  [F]'}`, { size: 14, color: '#ffe9a0' });
-    button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
-  }
-
   // One-line message at the top, used for device hints (e.g. iOS silent switch).
   drawNotice(g, str, t) {
     const a = clamp(t / 0.4, 0, 1);
@@ -145,27 +215,61 @@ export class HUD {
   }
 
   drawPaused(g) {
+    const S = SIGNS.pause, art = this.game.art;
     g.layer('overlay');
-    g.rect(0, 0, W, H, 'rgba(8,16,20,0.55)');
-    g.text('PAUSED', W / 2, H / 2 - 30, 44, '#fff', 'center');
-    g.text('tap or press P to continue', W / 2, H / 2 + 40, 16, '#cfe8e3', 'center');
+    g.rect(0, 0, W, H, 'rgba(8,16,20,0.5)');
+    drawSign(g, art, S.x, S.y, S.w, S.h);
+    drawWord(g, art.logo.gold2, 'PAUSED', W / 2, S.y + 118, { glow: 0.3 });
+    paint(g, this.game.input.isTouch ? 'tap to continue' : 'tap or press P to continue', W / 2, S.y + 164, 14, 'center');
+    tagButton(g, ZONES.pauseMenu, 'MENU');
     button(g, ZONES.pause, null, { glyph: drawPauseGlyph });
     button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
   }
 
+  // The sign is lowered in from above with the verdict, then the summary
+  // counts up row by row (see summaryPlan); the buttons wake up after it.
   drawGameOver(g, world, t, isNewBest) {
-    const a = clamp(t / 0.5, 0, 1);
+    const S = SIGNS.over, art = this.game.art, L = art.logo;
+    const plan = (this.summary && this.summary.plan) || summaryPlan(world, isNewBest);
+    const a = clamp(t / 0.4, 0, 1);
+    const dy = -signTravel(S) * (1 - easeOutBack(clamp(t / 0.7, 0, 1), 0.8));
+    const Y = (y) => S.y + y + dy;
+    const shift = (z) => (dy ? { ...z, y: z.y + dy } : z);
+    const ix = S.x + FRAME, iw = S.w - 2 * FRAME;
+    const boardY = (i) => Y(FRAME + i * BOARD + 34);         // the centre line of board i
     g.layer('overlay');
-    g.rect(0, 0, W, H, '#081014', 0.6 * a);
-    const o = { alpha: a };
-    const cause = world.player.deathCause === 'caught' ? 'The witch got him!' : 'The prince fell...';
-    g.text(cause, W / 2, H * 0.3, 26, '#ff9a9a', 'center', true, o);
-    g.text(`${world.heightM} m`, W / 2, H * 0.3 + 90, 64, C.braid, 'center', true, { alpha: a, glow: 0.4 });
-    g.text('climbed', W / 2, H * 0.3 + 150, 16, '#cfe8e3', 'center', true, o);
-    if (isNewBest) g.text('NEW BEST!', W / 2, H * 0.3 + 200, 24, '#ffe9a0', 'center', true, { alpha: a, glow: 0.4 });
-    else g.text(`best  ${this.game.best} m`, W / 2, H * 0.3 + 200, 18, '#cfe8e3', 'center', true, o);
-    g.text(`suns ${world.suns}   stomps ${world.stomps}`, W / 2, H * 0.3 + 250, 14, '#cfe8e3', 'center', true, o);
-    if (t > 0.8 && Math.floor(t * 1.6) % 2 === 0) g.text(this.game.input.isTouch ? 'TAP TO TRY AGAIN' : 'SPACE TO TRY AGAIN', W / 2, H * 0.62, 20, '#fff', 'center', true, o);
+    g.rect(0, 0, W, H, '#081014', 0.55 * a);
+    drawSign(g, art, S.x, S.y + dy, S.w, S.h);
+    const cause = world.player.deathCause === 'caught' ? 'The witch got Sir Bouncealot!' : 'Sir Bouncealot fell...';
+    paint(g, cause, W / 2, boardY(0), 18, 'center', { color: INK_RED });
+    // the rows: a symbol, the label, a dotted leader, the value counting up
+    const icons = { climbed: art.sign.tower, suns: art.creatures.sun[0], stomps: art.sign.star };
+    const labels = { climbed: 'CLIMBED', suns: 'SUNS', stomps: 'STOMPS' };
+    plan.rows.forEach((row, i) => {
+      const k = clamp((t - row.from + 0.15) / 0.2, 0, 1);    // the row slides in just before its count
+      if (k <= 0) return;
+      const cy = boardY(i + 1), slide = (1 - k) * 24;
+      const v = rowValue(row, t), done = t >= row.from + row.dur;
+      const pop = done ? 1 + 0.18 * (1 - easeOutBack(clamp((t - row.from - row.dur) / 0.25, 0, 1))) : 1;
+      g.blit(icons[row.key], ix + 40 + slide, cy, { alpha: k, glow: row.key === 'suns' ? 0.4 : 0.2 });
+      paint(g, labels[row.key], ix + 80 + slide, cy + 1, 16, 'left', { alpha: k });
+      const text = row.key === 'climbed' ? `${Math.floor(v)} m` : `${Math.floor(v)}`;
+      const vx = ix + iw - 24;
+      drawWord(g, L.gold2, text, vx, cy + L.gold2.body / 2 - 2, { align: 'right', alpha: k, glow: 0.3 * k, scale: pop });
+      const x0 = ix + 80 + labels[row.key].length * 16 + 20, x1 = vx - wordWidthGold(L, text) - 20;
+      for (let x = Math.ceil(x0 / 16) * 16; x < x1; x += 16) g.rect(x, cy - 2, 4, 4, '#3b2a1e', 0.4 * k);
+    });
+    // the best height, or NEW BEST! with sparkles
+    if (t >= plan.best) {
+      const k = clamp((t - plan.best) / 0.3, 0, 1), cy = boardY(4);
+      if (isNewBest) {
+        drawWord(g, L.pink2, 'NEW BEST!', W / 2, cy + L.pink2.body / 2 - 2, { glow: 0.5, scale: easeOutBack(k), dy: (i) => Math.max(0, Math.sin(world.time * 3 - i * 0.5)) * -6 });
+        [[-230, -18], [230, -14], [-200, 22], [205, 20]].forEach(([dx, dyy], i) => g.blit(art.sign.sparkle, W / 2 + dx, cy + dyy, { alpha: k * (0.55 + 0.45 * Math.sin(world.time * 7 + i * 1.7)), glow: 0.6 }));
+      } else drawBest(g, art, W / 2, cy, this.game.best, k);
+    }
+    const ready = clamp((t - plan.ready) / 0.3, 0, 1);
+    ribbonButton(g, art, shift(ZONES.again), 'TRY AGAIN', { alpha: ready, t: world.time });
+    tagButton(g, shift(ZONES.menu), 'MENU', { alpha: ready });
     button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
   }
 }

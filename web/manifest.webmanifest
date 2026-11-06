@@ -1,7 +1,7 @@
 {
-  "name": "Rapunzel",
-  "short_name": "Rapunzel",
-  "description": "Bounce the prince up Rapunzel's tower on his pogo stick.",
+  "name": "Sir Bouncealot",
+  "short_name": "Bouncealot",
+  "description": "Bounce Sir Bouncealot up the witch's tower on his pogo stick.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

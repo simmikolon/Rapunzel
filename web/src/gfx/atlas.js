@@ -45,7 +45,7 @@ export function buildAtlas(art) {
   const ctx = canvas.getContext('2d');
   for (const s of order) ctx.drawImage(s.canvas, s._atlasX, s._atlasY);
 
-  const source = new CanvasSource({ resource: canvas, scaleMode: 'nearest', label: 'rapunzel-atlas' });
+  const source = new CanvasSource({ resource: canvas, scaleMode: 'nearest', label: 'bouncealot-atlas' });
   for (const s of order) {
     s.tex = new Texture({ source, frame: new Rectangle(s._atlasX, s._atlasY, s.w, s.h) });
     delete s._atlasX; delete s._atlasY;

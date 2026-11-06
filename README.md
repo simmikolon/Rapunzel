@@ -1,6 +1,6 @@
-# Rapunzel
+# Sir Bouncealot
 
-Rapunzel is a game heavily inspired by some of the drawings made by my five year old daughter. At her age she has already some incredible drawing skill - at least in my opinion. During the last year she fell in love with Rapunzel. For those who don’t know. Rapunzel is a fairy tale / story of a princess kept in a tower by an evil queen. In order to rescue her a prince tries to climb up that tower using Rapunzels hair as a ladder.
+Sir Bouncealot is a game heavily inspired by some of the drawings made by my five year old daughter. At her age she has already some incredible drawing skill - at least in my opinion. During the last year she fell in love with Rapunzel. For those who don’t know: Rapunzel is a fairy tale / story of a princess kept in a tower by an evil witch. In order to rescue her a prince tries to climb up that tower using Rapunzel’s hair as a ladder. That prince on his pogo stick is Sir Bouncealot, and the game carries his name; the fairy tale stays the backdrop.
 
 ## The game (`web/`)
 
@@ -18,7 +18,7 @@ and the roadmap are collected in [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ```sh
 # any static file server works; for example:
-python3 -m http.server 8000 --directory web
+python3 tools/serve.py        # http://localhost:8000, caching off
 # then open http://localhost:8000
 ```
 
@@ -48,8 +48,10 @@ home screen and runs full-screen in portrait.
 | Touch | hold the left or right half of the screen | the flame button | ⏸ |
 | Tilt | tilt the phone (enable on the title screen) | tap anywhere | ⏸ |
 
-`M` toggles sound, `F` (or the button on the title screen) cycles the
-screen effects. The best height and the effects choice are kept in
+PLAY on the title screen (or a tap anywhere, or space) starts a short
+countdown on the knight's hops; MENU on the pause and game-over screens
+leads back to the title. `M` toggles sound, `F` (or the button on the
+title screen) cycles the screen effects. The best height and the effects choice are kept in
 `localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
 `?spawn=squirrel` puts one on the next branch, `?dev=1` shows altitude and
 zone.
@@ -104,7 +106,8 @@ custom engine instead of SpriteKit physics and GameplayKit:
 * **Shaders**: a real bloom on everything that glows (lanterns, sun drops,
   fireflies, flames, stars, the moon) and a CRT pass with a curved tube,
   scanlines, chromatic aberration and flicker. See below.
-* **Screens**: title with controls, pause, game over with best height.
+* **Screens**: a ride down the tower on load, then the title, pause and
+  game over on a wooden sign lowered in on ropes; best height saved.
 
 ### Art
 

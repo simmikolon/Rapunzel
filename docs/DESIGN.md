@@ -1,6 +1,8 @@
-# Rapunzel: design document
+# Sir Bouncealot: design document
 
-The living guide for the browser version of Rapunzel. It records the
+The living guide for the browser version of Sir Bouncealot, the pogo climb
+up Rapunzel's tower (the game carried her name until 2026-11-03; the knight
+on the pogo stick gives it his now, so the name is ours alone). It records the
 vision, the concepts we work with, every idea collected so far, how we
 work, and the order we currently intend to build things in.
 
@@ -121,8 +123,10 @@ presets full / bloom / off (F key, title button, `?fx=`).
   and the prince (1.0x), fireflies, vignette. Altitude-graded sky and
   lighting (forest, open sky, sunset, night). Squash and stretch,
   particles, screen shake, toasts. Synthesized sound with iOS unlock and
-  silent-switch handling. Title, pause, game over; best height saved; web
-  app manifest and icons. The prince follows the original app icon.
+  silent-switch handling. Title screen with the prince hopping on the
+  lawn and a 3-2-1 countdown on his landings, pause and game over with a
+  way back to the menu; best height saved; web app manifest and icons.
+  The prince follows the original app icon.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the
@@ -339,8 +343,35 @@ is a pool to draw from, not a promise.
   menu exist.
 
 **FX and atmosphere**
-- 💡 title screen: the tower behind, the prince bouncing happily in place,
-  flowers on the lawn (light rays already shine through the forest).
+- ✅ title screen (`src/title.js`, `src/sign.js`): the game loads with a
+  ride down the tower (the camera is drawn 40 m up and eases down to the
+  lawn in 2.6 s; a tap shortens it), then a wooden sign is lowered in on
+  two ropes: bark frame, nailed boards, a vine over two corners, a bow on
+  the right rope, drawn with rectangles on the art grid so one routine
+  serves every menu at any size. Rapunzel peeks over its top-right corner
+  (blinking, bobbing), hands on the edge, her braid running down behind
+  the sign and out under it with a bow swinging at its end. On the boards
+  the pixel wordmark SIR BOUNCEALOT (`art/logo.js`, the letters hopping
+  in a wave), the best height on a brass plate with a crown, PLAY on a
+  pink ribbon banner with fluttering tails and the word in the game's
+  gold lettering, the controls painted in ink with a light edge, and
+  effects, sound and tilt as light boards nailed on with symbols (a
+  sparkle, the speaker, a tilted phone) in its bottom row; under it the
+  prince hops in place (a flip with sparkles every few hops), two
+  butterflies at the flowers. PLAY (or a tap anywhere, or space) pulls the sign up and starts
+  a countdown on his landings: 3 at the tap, 2 and 1 on the next two
+  hops, GO is the launch at full strength. Pause and game over hang on
+  smaller signs of the same kind with the same pieces (PAUSED in the
+  pixel lettering, TRY AGAIN on a ribbon, MENU on a board). The game
+  over is a summary that counts: a row per board with a symbol, a label,
+  a dotted leader and the value in gold letters; the height counts up
+  with ticks once the sign hangs, then the suns with a chime each, then
+  the stomps with a thud each, then the best height on its brass plate or
+  NEW BEST! popping in with sparkles and a jingle; the buttons wake after
+  that, and a tap while it counts finishes it; MENU on both leads back
+  (the sign is lowered again, no ride). `Game.startRound(config)` is the one way into
+  a round, so a mode or tower selection can sit between PLAY and the
+  countdown later.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
   the forest floor and in the deep forest, with dust motes drifting down
   the beams; passing clouds dim and restore the sun over 10–20 s.
@@ -449,8 +480,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
 
-Mode-independent polish (super jump portal, god rays, hit-stop, title
-idle scene) slots in wherever it fits.
+Mode-independent polish (super jump portal, god rays, hit-stop) slots in
+wherever it fits.
 
 ## 10. Tunables snapshot
 
@@ -729,3 +760,65 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   good bold runs: from 250 m 1.32 hits per 100 m (1.23 in the band), falls
   37 %, mean climb 276 m (master 299 m); from 300 m 1.50 (1.49), 42 %,
   259 m (master 275 m).
+- 2026-11-03: The game is called Sir Bouncealot (`element/title-screen`,
+  plan in `docs/plans/title-screen.md`): the knight on the pogo stick gives
+  it his name so the name is ours alone; Rapunzel stays the tale behind
+  the tower. Saved data moved to a new key with the old one read as a
+  fallback. A real title screen: the prince hops on the lawn by himself
+  (the world runs its physics before the round with a silent input, the
+  ground landing sets a small hop instead of the bounce, pickups and
+  enemies are skipped until the round starts), the drawn logo brought onto
+  the art grid by `tools/pixelate.py` (a first procedural pixel wordmark
+  was replaced by it), PLAY, and a countdown on his landings instead of an
+  abrupt launch (3 at the tap, 2 and 1 on the hops, GO is the launch; a
+  landing within 0.3 s of the tap does not count twice). `startRound`,
+  `beginPlaying` and `toTitle` replace the ad-hoc mode switches; MENU
+  from pause records the height first; `?at=` skips the countdown.
+  Purely visual and UI: the simulator calls `start()` directly and reads
+  the same numbers on the same seeds (20 good bold runs: median 423 m,
+  1.03 hits per 100 m on both master and the branch).
+- 2026-11-05: Menus on a wooden sign, and a ride down on load (same
+  branch). Text straight on the scene looked cheap, so the title, the
+  pause and the game over hang on a sign (`src/sign.js`: frame, boards,
+  nails and ropes as rectangles on the art grid, vines and a bow as
+  sprites in `art/sign.js`) that is lowered in on its ropes and pulled up
+  when the round starts; a later mode or tower menu gets the same boards.
+  The drawn title picture went back out: at 150 art px it lost too much
+  and the procedural wordmark reads better; `tools/pixelate.py` and the
+  source stay for a picture drawn for the grid. On load the camera starts
+  40 m up and eases down to the lawn in 2.6 s before the sign comes
+  (`INTRO_FROM`, `INTRO_T`; the lift is a drawing offset only, the world
+  keeps running on the lawn, and the rows the ride passes are generated
+  once at its start); `?at=` and `?spawn=` skip it, a tap shortens it,
+  MENU does not repeat it. The show-off hop is a little lower (`SHOWOFF_VY`
+  960) so the prince's head stays under the sign. Simulator untouched
+  (10 good bold runs: 0.99 hits per 100 m).
+- 2026-11-06: The menus' text and buttons looked like a prototype on the
+  sign, so they are made of game material now. The lettering of the
+  wordmark (`art/logo.js`) grew into a full glyph set (A to Z, digits, !
+  and m) with per-character sprites in gold at two sizes and pink at one;
+  `drawWord()` sets PLAY, TRY AGAIN, PAUSED, the height and NEW BEST!
+  from them, so no heading uses the font any more. The main button is a
+  pink ribbon banner with forked, fluttering tails (the ribbons on the
+  braid, the banner in the first logo sketch); the small ones are light
+  boards nailed on with a symbol instead of a technical label (sparkle,
+  speaker, tilted phone, gold rim when tilt is on); the best height sits
+  on a brass plate with a crown; suns and stomps show their symbols. Small
+  text is painted in ink on the boards with a thin light edge baked into
+  the text texture (`paint` option of the renderer's text; a tinted stroke
+  would go dark with the ink), so it reads over the grain. Rapunzel peeks
+  over the title sign's corner with her braid behind it and out under it:
+  doubled with the tower's braid on purpose, for the cuteness. The sign
+  did not stand off the scene enough, so once it hangs the scene behind
+  it dims to a third over 1.4 s (`TITLE_DIM`), never fully, and the dim
+  lifts with the sign when the countdown starts. Atlas 2048 x 3518.
+  The game over looked untidy (a stack of differently styled lines, the
+  small stats hard to see), so it became a counting summary on the wide
+  sign: `summaryPlan()` in `hud.js` schedules a row per board (height
+  with ticks, suns with the pickup chime each, stomps with the stomp
+  thud each, then the best or NEW BEST! with the milestone jingle), the
+  rows slide in one after the other, a finished value pops, the buttons
+  wake at the end; a tap during the count finishes it (`skipSummary`),
+  the next one restarts. Row heights follow the boards (72 px), so the
+  sign reads as a scoreboard. The tower, sun and star symbols are the
+  row icons; a small tower sprite joined `art/sign.js`.

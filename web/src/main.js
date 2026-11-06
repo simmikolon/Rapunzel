@@ -1,13 +1,15 @@
-import { W, H, STORAGE_KEY, FX } from './config.js';
+import { W, H, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
 import { World } from './world.js';
-import { HUD } from './hud.js';
+import { HUD, SIGNS, signTravel } from './hud.js';
+import { drawTitle, drawCount } from './title.js';
+import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 
-// Rapunzel - browser port of the SpriteKit prototype.
+// Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
 // canvas to the viewport while keeping that aspect ratio. Rendering is WebGL
 // through PixiJS (see src/gfx/), which makes the bloom and CRT passes possible.
@@ -23,8 +25,11 @@ class Game {
     this.input.anyInteraction = () => audio.unlock();
     this.hud = new HUD(this);
     this.world = new World(this);
+    // intro -> title -> countdown -> playing -> paused | gameover; MENU leads back.
     this.mode = 'title';
+    this.intro = null;      // { from, dur, t, ease } while the camera rides down to the lawn
     this.modeT = 0;
+    this.round = { mode: 'endless' };   // what startRound() plays; a tower with its seed later
     this.best = 0;
     this.isNewBest = false;
     this.noticeText = '';
@@ -45,7 +50,13 @@ class Game {
     this.halted = false;
     this.setupDpr();
     window.addEventListener('resize', () => this.setupDpr());
-    document.addEventListener('visibilitychange', () => { if (document.hidden && this.mode === 'playing') this.setMode('paused'); });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) return;
+      if (this.mode === 'playing') this.setMode('paused');
+      else if (this.mode === 'countdown') this.toTitle();
+    });
+    // the dev teleport goes straight to the title; everyone else rides down to the lawn first
+    this.setMode(this.dev.at || this.dev.spawn ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
   }
 
@@ -63,13 +74,17 @@ class Game {
 
   loadSave() {
     try {
-      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || '{}');
       this.best = s.best || 0;
       if (PRESETS.includes(s.fx)) this.fxPreset = s.fx;
     } catch (_) { this.best = 0; }
   }
   save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ best: this.best, fx: this.fxPreset })); } catch (_) { /* ignore */ }
+  }
+  recordBest() {
+    this.isNewBest = this.world.heightM > this.best;
+    if (this.isNewBest) { this.best = this.world.heightM; this.save(); }
   }
 
   cycleFx() {
@@ -91,12 +106,54 @@ class Game {
 
   setMode(m) {
     this.mode = m; this.modeT = 0;
-    if (m === 'playing' && !this.world.started) {
-      if (this.dev.at) startAt(this.world, this.dev.at, this.dev.spawn);
+    if (m === 'title' || m === 'intro') this.world.hop();
+    if (m === 'intro') this.startIntro();
+  }
+
+  // The ride down: the camera is drawn INTRO_FROM px above the lawn and eases
+  // down over INTRO_T s while the world already runs on the lawn (the lift is
+  // applied in draw() only, so nothing is generated or culled for it; the
+  // rows it passes are made once here). A tap shortens the rest to half a second.
+  startIntro() {
+    this.intro = { from: INTRO_FROM, dur: INTRO_T, t: 0, ease: easeInOutCubic };
+    this.world.level.generateUpTo(CAMERA_START_Y + INTRO_FROM + H + 900);
+  }
+  introLift() { const i = this.intro; return i ? i.from * (1 - i.ease(clamp(i.t / i.dur, 0, 1))) : 0; }
+  skipIntro() {
+    const i = this.intro;
+    if (!i || i.t > i.dur - 0.5) return;
+    this.intro = { from: this.introLift(), dur: 0.5, t: 0, ease: easeOutCubic };
+  }
+
+  // The one way into a round. `config` names the mode (endless now; a tower
+  // with its seed later, once there is a selection screen). The prince is on
+  // the lawn, hopping; the countdown runs on his next landings.
+  startRound(config = this.round) {
+    this.round = config;
+    if (this.world.started) this.world.reset(config.seed);
+    if (this.dev.at) {
+      // the dev teleport skips the countdown; it needs the fresh lawn state first
+      startAt(this.world, this.dev.at, this.dev.spawn);
       this.world.start();
-      if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
-      this.maybeIosSoundHint();
+      this.beginPlaying();
+      return;
     }
+    audio.click();
+    this.world.countdown();
+    this.setMode('countdown');
+  }
+
+  // The round is live: world.start() has run (the GO landing or the dev path).
+  beginPlaying() {
+    if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
+    this.maybeIosSoundHint();
+    this.setMode('playing');
+  }
+
+  toTitle() {
+    if (this.mode === 'paused') this.recordBest();
+    this.world.reset();
+    this.setMode('title');
   }
 
   frame(now) {
@@ -126,7 +183,21 @@ class Game {
     this.frameErrors++;
     if (this.frameErrors < 3) { this.notice('Something went wrong, carrying on', 2); return; }
     this.halted = true;
-    showFallback(`Rapunzel hit an error and stopped: ${err && err.message ? err.message : err}. Reload the page to play again.`);
+    showFallback(`Sir Bouncealot hit an error and stopped: ${err && err.message ? err.message : err}. Reload the page to play again.`);
+  }
+
+  // Semi-fixed step: the frame's time is split into equal steps no longer
+  // than STEP, so the simulation advances exactly once per display refresh
+  // at any rate (no skipped or doubled frames at 90 or 144 Hz, no tap lost in
+  // a frame without a step) while every step stays short enough for stable
+  // collisions at high speeds. The lawn phases use it too, so a countdown
+  // landing is as exact as a bounce in the round.
+  stepWorld(dt) {
+    if (dt <= 0) return;
+    let n = Math.ceil(dt / this.STEP);
+    if (n > this.MAX_STEPS) { n = this.MAX_STEPS; dt = n * this.STEP; }
+    const h = dt / n;
+    for (let i = 0; i < n; i++) this.world.update(h);
   }
 
   update(dt) {
@@ -141,60 +212,80 @@ class Game {
       if (!muted) this.maybeIosSoundHint();
     }
     if (input.consumeFx() || input.consumeButton('fx')) this.cycleFx();
+    const tapOutsideButtons = () => input.consumeTap() && !input.taps.some((t) => input.zoneAt(t.x, t.y));
 
     switch (this.mode) {
+      case 'intro': {
+        this.stepWorld(dt);
+        const tap = input.consumeTap(), boost = input.consumeBoost(), pause = input.consumePause();
+        if (tap || boost || pause) this.skipIntro();
+        this.intro.t += dt;
+        if (this.intro.t >= this.intro.dur) { this.intro = null; this.setMode('title'); }
+        break;
+      }
       case 'title': {
-        this.world.update(dt, true);
-        const tapped = input.consumeTap();
-        input.consumeBoost();            // boosts queue until a round consumes them; none belongs to the title
-        // Taps on the title buttons (tilt, effects, sound) must not start the game.
-        const onButton = input.taps.some((t) => input.zoneAt(t.x, t.y));
-        if (onButton) break;
-        if (this.modeT > 0.3 && tapped) this.setMode('playing');
+        this.stepWorld(dt);
+        input.consumeBoost();            // clicks, space and tilt-taps queue boosts; none belongs to the title
+        input.consumePause();
+        const play = input.consumeButton('play');
+        if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();
+        break;
+      }
+      case 'countdown': {
+        this.stepWorld(dt);
+        input.consumeTap(); input.consumeBoost();   // taps during the count never reach the round's first step
+        if (input.consumePause()) { this.toTitle(); break; }
+        if (this.world.started) this.beginPlaying();
         break;
       }
       case 'playing': {
         if (input.consumePause() || input.consumeButton('pause')) { this.setMode('paused'); audio.click(); break; }
-        // Semi-fixed step: the frame's time is split into equal steps no
-        // longer than STEP, so the simulation advances exactly once per
-        // display refresh at any rate (no skipped or doubled frames at 90 or
-        // 144 Hz, no tap lost in a frame without a step) while every step
-        // stays short enough for stable collisions at high speeds.
-        if (dt > 0) {
-          let n = Math.ceil(dt / this.STEP);
-          if (n > this.MAX_STEPS) { n = this.MAX_STEPS; dt = n * this.STEP; }
-          const h = dt / n;
-          for (let i = 0; i < n; i++) this.world.update(h);
-        }
-        if (this.world.over) {
-          this.isNewBest = this.world.heightM > this.best;
-          if (this.isNewBest) { this.best = this.world.heightM; this.save(); }
-          this.setMode('gameover');
-        }
+        this.stepWorld(dt);
+        if (this.world.over) { this.recordBest(); this.setMode('gameover'); this.hud.beginSummary(this.world, this.isNewBest); }
         break;
       }
       case 'paused': {
-        if (input.consumePause() || input.consumeButton('pause') || input.consumeTap()) { input.consumeBoost(); this.setMode('playing'); audio.click(); }
+        if (input.consumeButton('menu')) { this.toTitle(); audio.click(); break; }
+        if (input.consumePause() || input.consumeButton('pause') || tapOutsideButtons()) { input.consumeBoost(); this.setMode('playing'); audio.click(); }
         break;
       }
       case 'gameover': {
         input.consumeBoost();
-        if (this.modeT > 0.8 && input.consumeTap()) {
-          this.world.reset();
-          this.setMode('playing');
-        }
+        this.hud.updateSummary(this.modeT);
+        if (input.consumeButton('menu')) { this.toTitle(); audio.click(); break; }
+        const again = input.consumeButton('again') || tapOutsideButtons();
+        if (!this.hud.summaryDone(this.modeT)) {
+          // a tap while the summary counts finishes it; the next one starts the round
+          if (again && this.modeT > 0.8) this.modeT = this.hud.skipSummary();
+        } else if (again) this.startRound(this.round);
         break;
       }
     }
   }
 
   draw() {
-    const g = this.gfx;
+    const g = this.gfx, cam = this.world.cam;
     g.begin();
+    const camY = cam.y;
+    if (this.mode === 'intro') cam.y = camY + this.introLift();   // the ride is a drawing offset only
     this.world.draw(g);
+    cam.y = camY;
     switch (this.mode) {
-      case 'title': this.hud.drawTitle(g, this.world, this.modeT); break;
-      case 'playing': this.hud.drawPlaying(g, this.world); break;
+      case 'title': {
+        // the sign is lowered in on its ropes and settles with a small dip;
+        // once it hangs the scene behind it dims slowly
+        const k = clamp(this.modeT / 0.7, 0, 1);
+        drawTitle(g, this, this.world.time, { dy: -signTravel(SIGNS.title) * (1 - easeOutBack(k, 0.8)), dim: clamp((this.modeT - 0.6) / 1.4, 0, 1) });
+        break;
+      }
+      case 'countdown': {
+        // and pulled up out of the way as the count runs, the dim lifting with it
+        const k = clamp(this.modeT / 0.55, 0, 1);
+        drawTitle(g, this, this.world.time, { dy: -signTravel(SIGNS.title) * k * k, dim: 1 - clamp(this.modeT / 0.45, 0, 1) });
+        drawCount(g, this.world);
+        break;
+      }
+      case 'playing': this.hud.drawPlaying(g, this.world); drawCount(g, this.world); break;
       case 'paused': this.hud.drawPlaying(g, this.world); this.hud.drawPaused(g); break;
       case 'gameover': this.hud.drawPlaying(g, this.world); this.hud.drawGameOver(g, this.world, this.modeT, this.isNewBest); break;
     }
@@ -222,20 +313,20 @@ const boot = async () => {
       gfx = await createRenderer(canvas, art, FX);
     } catch (err) {
       console.error('WebGL renderer failed to start', err);
-      showFallback('Rapunzel needs WebGL for this preview, and the browser did not provide it.');
+      showFallback('Sir Bouncealot needs WebGL for this preview, and the browser did not provide it.');
       return;
     }
     window.game = new Game(canvas, gfx, art);
   } catch (err) {
-    console.error('Rapunzel failed to start', err);
-    showFallback(`Rapunzel could not start: ${err && err.message ? err.message : err}`);
+    console.error('Sir Bouncealot failed to start', err);
+    showFallback(`Sir Bouncealot could not start: ${err && err.message ? err.message : err}`);
   }
 };
 // Errors outside the frame loop (event handlers, async work) are logged and,
 // while the game is not up yet, shown instead of leaving a blank page.
 const running = () => !!(window.game && window.game.gfx);
-window.addEventListener('error', (e) => { if (!running()) showFallback(`Rapunzel could not start: ${e.message}`); });
-window.addEventListener('unhandledrejection', (e) => { const r = e.reason; console.error('unhandled rejection', r); if (!running()) showFallback(`Rapunzel could not start: ${r && r.message ? r.message : r}`); });
+window.addEventListener('error', (e) => { if (!running()) showFallback(`Sir Bouncealot could not start: ${e.message}`); });
+window.addEventListener('unhandledrejection', (e) => { const r = e.reason; console.error('unhandled rejection', r); if (!running()) showFallback(`Sir Bouncealot could not start: ${r && r.message ? r.message : r}`); });
 if (document.fonts && document.fonts.load) {
   // Give the pixel font a moment to arrive; fall back to monospace if offline.
   Promise.race([document.fonts.load('16px "Press Start 2P"'), new Promise((r) => setTimeout(r, 1500))]).then(boot, boot);
