@@ -1,1 +1,7 @@
 .DS_Store
+
+# Xcode (ios/): generated project is committed, user state and build output are not
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/DerivedData/
+ios/build/

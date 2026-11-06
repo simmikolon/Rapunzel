@@ -1,0 +1,4 @@
+// Bump CURRENT_PROJECT_VERSION before every TestFlight upload; MARKETING_VERSION
+// is the version testers see. Read by both XcodeGen and Xcode, no regeneration.
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1

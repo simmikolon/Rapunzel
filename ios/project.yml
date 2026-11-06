@@ -1,0 +1,79 @@
+# XcodeGen source of the Xcode project. After editing: `xcodegen generate` in ios/
+# and commit the regenerated SirBouncealot.xcodeproj with it. Version and build
+# number live in Version.xcconfig so a bump needs no regeneration.
+name: SirBouncealot
+options:
+  bundleIdPrefix: com.simonkemper
+  xcodeVersion: "26.3"
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Version.xcconfig
+  Release: Version.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    DEVELOPMENT_TEAM: 7KRY479XMN
+    CODE_SIGN_STYLE: Automatic
+targets:
+  SirBouncealot:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: App
+        excludes:
+          - Info.plist
+      # The game itself: a folder reference, copied as-is into the bundle as web/,
+      # so whatever is checked out runs on the phone without a sync step.
+      - path: ../web
+        name: web
+        type: folder
+        buildPhase: resources
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Sir Bouncealot
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UIRequiredDeviceCapabilities: [arm64]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: true
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_NAME: SirBouncealot
+        PRODUCT_BUNDLE_IDENTIFIER: com.simonkemper.sirbouncealot
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SUPPORTS_MACCATALYST: false
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+schemes:
+  SirBouncealot:
+    build:
+      targets:
+        SirBouncealot: all
+    run:
+      config: Debug
+      # Tick this in the scheme editor to start at 150 m with the dev label
+      # (any of web/src/dev.js's helpers and ?fx= work the same way).
+      commandLineArguments:
+        '-gameQuery "at=150&dev=1"': false
+    archive:
+      config: Release

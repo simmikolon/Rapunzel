@@ -1,2 +1,3 @@
 # Only web/ is deployed (see vercel.json).
 README.md
+ios/
