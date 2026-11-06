@@ -61,6 +61,9 @@ final class NativeBridge: NSObject, WKScriptMessageHandler {
         case "log":
             let text = body["message"] as? String ?? ""
             log.error("js: \(text, privacy: .public)")
+            #if DEBUG
+            print("js: \(text)")   // reaches `devicectl device process launch --console`
+            #endif
         default:
             log.error("unknown message \(type, privacy: .public)")
         }

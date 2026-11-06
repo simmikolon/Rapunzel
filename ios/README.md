@@ -12,7 +12,11 @@ What the shell adds over Safari:
 - Tilt steering from CoreMotion: no permission prompt, same dead zone and
   full-tilt angle as in the browser.
 - Best height, effects preset and mute live in `UserDefaults`.
-- Light haptics on bonk, stomp, hit and game over.
+- Haptics on the Taptic Engine (Core Haptics): a light tap on every landing
+  that firms up with the combo, a softer one on clouds, lanterns and dry
+  branches, a springy double on the bow, a kick and a rush on the boost,
+  hard hits on bonk, helmet, stomp and hurt, a falling triple at game over.
+  The patterns are one table in `App/Haptics.swift`.
 - The ring/silent switch mutes the game; music from another app keeps
   playing (ambient audio session).
 - The screen never dims while steering by tilt; the game pauses when the
@@ -53,10 +57,20 @@ Arguments, or `xcrun simctl launch booted com.simonkemper.sirbouncealot ...`):
   game from a script (`window.game.startRound()`, for example).
 
 Debug builds are inspectable from Safari (Develop menu). Page errors and
-the bridge's complaints go to the system log under the bundle id:
+the bridge's complaints go to the system log:
 
 ```sh
-xcrun simctl spawn booted log stream --predicate 'subsystem == "com.simonkemper.sirbouncealot"'
+xcrun simctl spawn booted log stream --predicate 'process == "SirBouncealot"'
+```
+
+On the phone, attach the console instead (the app's arguments follow a
+`--`; the environment variable turns the system log into console output;
+detaching ends the app):
+
+```sh
+xcrun devicectl device process launch --console --terminate-existing \
+  -e '{"OS_ACTIVITY_DT_MODE":"enable"}' --device Simmi \
+  com.simonkemper.sirbouncealot -- -gameQuery "at=150&dev=1"
 ```
 
 Saved values sit in the app's container, not in the global defaults domain:

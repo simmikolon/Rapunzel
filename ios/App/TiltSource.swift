@@ -23,7 +23,9 @@ final class TiltSource {
             // upright. Near vertical it runs away like Safari's; input.js clamps at 80.
             var gamma = atan2(g.x, -g.z) * 180 / .pi
             gamma = min(80, max(-80, gamma))
-            guard gamma.isFinite, abs(gamma - self.last) >= 0.05 else { return }   // a still phone costs no round trips
+            // The first sample always goes out (last is NaN, and NaN compares false
+            // with everything); after that a still phone costs no round trips.
+            guard gamma.isFinite, self.last.isNaN || abs(gamma - self.last) >= 0.05 else { return }
             self.last = gamma
             sample(gamma)
         }
