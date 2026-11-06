@@ -4,6 +4,41 @@ How the browser game in `web/` could reach iOS (preferred) and Android,
 which routes we considered, and what to keep doing now so a port stays
 cheap later. Like `DESIGN.md`, this guides and does not restrict.
 
+## Decision (2026-11-06)
+
+Route 1, as a hand-written `WKWebView` shell in Swift, in this repository
+under `ios/`. No Capacitor (iOS only for now, and the repo stays free of a
+build step), no separate repository (the shell is a few files and the Xcode
+project references `../web` as a folder, so any checkout runs on the phone
+with Cmd+R). The game talks to the shell only through `web/src/platform.js`;
+in a browser every call there is the plain web API, so the web version is
+unchanged. See `ios/README.md` for building, the dev launch arguments and
+the TestFlight steps.
+
+The bridge contract (`platform.js` on one side, `ios/App/NativeBridge.swift`
+on the other):
+
+- Before the first script of every load the shell injects
+  `window.__native = { platform, storage, tilt: { available }, safe, debug }`:
+  the saved values as strings under their localStorage keys, whether
+  CoreMotion exists, the safe-area insets in CSS px.
+- Page to shell, `window.webkit.messageHandlers.native.postMessage({ type, ... })`:
+  `storage.set { key, value }`, `haptic { kind }`, `tilt.start`, `tilt.stop`,
+  `log { message }`.
+- Shell to page: `window.__nativeTilt(gammaDeg)` while tilt is on (CoreMotion,
+  DeviceOrientation's gamma convention, 60 Hz), `window.__nativePause()`
+  when the app resigns active.
+
+What the shell changes in the game's behaviour: the silent-WAV trick that
+lifts Safari's audio session to "playback" is skipped, so the ring/silent
+switch mutes the game (the "No sound?" hint stays, it is now exactly
+right); tilt needs no permission prompt; the picture fills the screen and
+the HUD keeps out of the Dynamic Island and the home indicator (that part
+is the game's own, `config.js` `H` and `SAFE`, and holds in Safari too).
+
+Capacitor stays a possible later step for Android: its `webDir` would simply
+point at `web/`, and `platform.js` would grow a second backend.
+
 ## Summary
 
 | Route | Effort | Platforms | Verdict |

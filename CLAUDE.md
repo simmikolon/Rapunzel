@@ -41,8 +41,28 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
   screenshots are reliable but the climb bot is not; use the simulator for
   gameplay numbers.
 
+## iOS shell
+- `ios/` wraps `web/` in a native WKWebView app (Swift, UIKit, no
+  Capacitor). Open `ios/SirBouncealot.xcodeproj` in Xcode and Run on the
+  phone: the project references `../web` as a folder, so the current
+  checkout is what runs. `ios/README.md` has the details and the TestFlight
+  steps.
+- The project is generated: edit `ios/project.yml`, run `xcodegen generate`
+  in `ios/`, commit both. Version and build number are in
+  `ios/Version.xcconfig` (bump the build before every upload).
+- The game talks to the shell only through `web/src/platform.js` (storage,
+  tilt, haptics, pause, safe area); in a browser every call there is the
+  plain web API, so the web version must stay byte-for-byte the same in
+  behaviour. Platform workarounds stay in `audio.js`, `input.js`, `main.js`.
+- Debug builds take launch arguments `-gameQuery "at=150&dev=1"` (the URL
+  helpers above) and `-gameEval "<js>"` (a script after load).
+
 ## Conventions
-- Logical resolution 768 x 1364, world y up, 100 px = 1 m, `beat` = 300 px.
+- Logical width 768; the height is 1364 in a 9:16 window and in the
+  simulator and follows the screen on phones (`H` in `config.js`, read live;
+  `SAFE` keeps the HUD out of the notch and the home indicator; the sign
+  screens are laid out for 1364 and centred). World y up, 100 px = 1 m,
+  `beat` = 300 px.
 - Drawing goes through the renderer facade `g` (`web/src/gfx/renderer.js`);
   gameplay code never touches PixiJS. Pass `glow` on draw calls for bloom.
 - Keep kids in mind: hazards telegraphed, no trap without a way out.

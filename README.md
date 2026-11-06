@@ -4,8 +4,10 @@ Sir Bouncealot is a game heavily inspired by some of the drawings made by my fiv
 
 ## The game (`web/`)
 
-The game runs in any modern browser, phone or desktop, with the same
-portrait aspect ratio as the original iOS scene (768 x 1364, about 9:16).
+The game runs in any modern browser, phone or desktop. The picture is 768
+logical pixels wide like the original iOS scene and as tall as the screen:
+1364 (9:16) in a desktop window, taller on a phone so it fills the screen
+edge to edge. There is also a native iOS shell in [`ios/`](ios/README.md).
 It is plain JavaScript (ES modules) rendered with WebGL through
 [PixiJS](https://pixijs.com) (vendored in `web/vendor/`, MIT): no build
 step, nothing to install, nothing to compile.
@@ -39,6 +41,15 @@ Or from the command line: `npx vercel` in the repo root (`npx vercel --prod`
 for production). Tilt steering needs HTTPS, which Vercel provides. The game
 ships a web app manifest and icons, so on a phone it can be added to the
 home screen and runs full-screen in portrait.
+
+### Run it on an iPhone
+
+`ios/` is a small native shell (Swift, one `WKWebView`) around the same
+`web/` folder: open `ios/SirBouncealot.xcodeproj` in Xcode and Run on your
+phone. It loads the game from the app bundle, steers by CoreMotion without
+a permission prompt, keeps the best height in `UserDefaults`, adds light
+haptics and respects the ring/silent switch. See [`ios/README.md`](ios/README.md)
+for the dev launch arguments and the TestFlight steps.
 
 ### Controls
 

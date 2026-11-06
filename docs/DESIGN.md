@@ -531,7 +531,9 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   the same seeds gives the same numbers every time.
 - Generator stress test: ~3900 rows, every consecutive pair reachable even
   with the camera far above the model.
-- Real-device checks stay manual (iOS audio, tilt, performance).
+- Real-device checks stay manual (iOS audio, tilt, performance). The iOS
+  shell in `ios/` runs any checkout on the phone from Xcode, with the dev
+  helpers as the launch argument `-gameQuery "at=150&dev=1"`.
 
 ## 12. Decision log
 
@@ -822,3 +824,12 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   the next one restarts. Row heights follow the boards (72 px), so the
   sign reads as a scoreboard. The tower, sun and star symbols are the
   row icons; a small tower sprite joined `art/sign.js`.
+- 2026-11-06: A native iOS shell (`ios/`, WKWebView in Swift, no Capacitor)
+  in this repository, aimed at TestFlight first; the game talks to it only
+  through `web/src/platform.js` (storage in UserDefaults, tilt from
+  CoreMotion without a prompt, haptics, pause when the app resigns active).
+  The ring/silent switch mutes the game there. See `docs/PORTING.md`.
+- 2026-11-06: The picture fills a phone screen: the logical height follows
+  the screen's shape (`H` in `config.js`, 1664 on an iPhone 17, 1364 in a
+  9:16 window and in the simulator), the HUD keeps out of the safe area and
+  the sign screens sit centred. About 3 m more world is visible on a phone.
