@@ -141,8 +141,9 @@ class Synth {
 
   // Effects --------------------------------------------------------------
   // Haptics ride on the events (before the tones, so they play when muted);
-  // in a browser platform.haptic() is a no-op. Landings are light, a combo
-  // makes them a little firmer, like the pitch; hits are hard, the boost a rush.
+  // in a browser platform.haptic() is a no-op. Landings and pickups are light
+  // taps, a combo makes a landing firmer, like the pitch; hits are hard, the
+  // boost a rush.
   bounce(combo = 0) {
     platform.haptic('bounce', 0.6 + Math.min(combo, 12) / 30);
     const base = 300 + Math.min(combo, 12) * 18;
@@ -269,15 +270,18 @@ class Synth {
     this.tone({ type: 'sawtooth', freq: 400, to: 90, dur: 0.35, vol: 0.18 });
     this.noise({ dur: 0.25, vol: 0.2, filter: 'highpass', freq: 800 });
   }
-  pickup() {
+  pickup(haptic = true) {
+    if (haptic) platform.haptic('bounce', 0.8);
     this.tone({ type: 'sine', freq: 880, dur: 0.1, vol: 0.18 });
     this.tone({ type: 'sine', freq: 1320, dur: 0.18, vol: 0.18, delay: 0.07 });
   }
   lantern() {
+    platform.haptic('bounce', 1);
     const notes = [523, 659, 784, 1047, 1319];
     notes.forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.35, vol: 0.14, delay: i * 0.06 }));
   }
   heart() {
+    platform.haptic('bounce', 1);
     [659, 784, 988, 1319].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.3, vol: 0.16, delay: i * 0.08 }));
   }
   witchWarn() {

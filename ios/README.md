@@ -13,7 +13,7 @@ What the shell adds over Safari:
   full-tilt angle as in the browser.
 - Best height, effects preset and mute live in `UserDefaults`.
 - Haptics on the Taptic Engine (Core Haptics): a light tap on every landing
-  that firms up with the combo, a softer one on clouds, lanterns and dry
+  and every pickup, firmer with the combo, a softer one on clouds, lanterns and dry
   branches, a springy double on the bow, a kick and a rush on the boost,
   hard hits on bonk, helmet, stomp and hurt, a falling triple at game over.
   The patterns are one table in `App/Haptics.swift`.
