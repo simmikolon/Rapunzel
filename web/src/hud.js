@@ -144,7 +144,7 @@ export class HUD {
       const v = Math.floor(rowValue(r, t));
       if (v <= s.played[r.key]) continue;
       if (r.key === 'climbed') { if (t - s.tickT >= 0.05) { audio.tick(); s.tickT = t; } s.played.climbed = v; }
-      else { s.played[r.key]++; if (r.key === 'suns') audio.pickup(); else audio.stomp(); }
+      else { s.played[r.key]++; if (r.key === 'suns') audio.pickup(); else audio.stomp(false); }
     }
     if (!s.played.best && t >= s.plan.best) { s.played.best = true; if (s.isNewBest) audio.milestone(); }
   }

@@ -1,11 +1,13 @@
 // Tiny WebAudio synthesizer. No audio files: every effect is generated.
 // The context is created lazily on the first user gesture (browser policy).
 import { STORAGE_KEY, LEGACY_STORAGE_KEY } from './config.js';
+import { platform } from './platform.js';
 
 // A 0.1 s silent WAV, built at runtime (no asset file). Playing it through an
 // <audio> element on a user gesture switches iOS's audio session from
 // "ambient" (silenced by the ring/silent switch) to "playback", which is the
-// only way Web Audio output gets past that switch.
+// only way Web Audio output gets past that switch. The native shell skips it
+// on purpose: there the game stays ambient and respects the switch.
 function silentWavUrl() {
   const rate = 8000, samples = 800;
   const buf = new ArrayBuffer(44 + samples);
@@ -37,7 +39,7 @@ class Synth {
       if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
     });
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + '.audio') || localStorage.getItem(LEGACY_STORAGE_KEY + '.audio') || '{}');
+      const saved = JSON.parse(platform.storage.get(STORAGE_KEY + '.audio') || platform.storage.get(LEGACY_STORAGE_KEY + '.audio') || '{}');
       this.muted = !!saved.muted;
     } catch (_) { /* ignore */ }
   }
@@ -69,7 +71,7 @@ class Synth {
         src.start(0);
       } catch (_) { /* ignore */ }
     }
-    this.primeSession();
+    if (!platform.isNative) this.primeSession();
   }
 
   primeSession() {
@@ -91,7 +93,7 @@ class Synth {
   setMuted(m) {
     this.muted = m;
     if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.5, this.ctx.currentTime, 0.02);
-    try { localStorage.setItem(STORAGE_KEY + '.audio', JSON.stringify({ muted: m })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY + '.audio', JSON.stringify({ muted: m })); } catch (_) { /* ignore */ }
   }
   toggleMute() { this.setMuted(!this.muted); return this.muted; }
 
@@ -241,15 +243,20 @@ class Synth {
     this.noise({ dur: 0.5, vol: 0.3, filter: 'lowpass', freq: 900, to: 120, q: 0.6, delay: 0.03 });
     this.tone({ type: 'sine', freq: 110, to: 38, dur: 0.45, vol: 0.2, delay: 0.03 });
   }
+  // Haptics ride on the events below (before the tones, so they play when
+  // muted); in a browser platform.haptic() is a no-op.
   bonk() {
+    platform.haptic('light');
     this.tone({ type: 'sine', freq: 140, to: 50, dur: 0.22, vol: 0.4 });
     this.noise({ dur: 0.08, vol: 0.2, filter: 'lowpass', freq: 900 });
   }
-  stomp() {
+  stomp(haptic = true) {
+    if (haptic) platform.haptic('light');
     this.tone({ type: 'square', freq: 260, to: 90, dur: 0.14, vol: 0.14 });
     this.noise({ dur: 0.12, vol: 0.15, filter: 'bandpass', freq: 500, q: 2 });
   }
   hurt() {
+    platform.haptic('heavy');
     this.tone({ type: 'sawtooth', freq: 400, to: 90, dur: 0.35, vol: 0.18 });
     this.noise({ dur: 0.25, vol: 0.2, filter: 'highpass', freq: 800 });
   }
@@ -275,6 +282,7 @@ class Synth {
     this.noise({ dur: 0.7, vol: 0.28, filter: 'bandpass', freq: 300, to: 2500, q: 0.8 });
   }
   gameOver() {
+    platform.haptic('error');
     [392, 330, 262, 196].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.45, vol: 0.2, delay: i * 0.22 }));
   }
   // GO: the round's jingle

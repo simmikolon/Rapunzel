@@ -1,5 +1,6 @@
 import { W, H, TILT_DEAD_ZONE, TILT_FULL } from './config.js';
 import { clamp, approach } from './util.js';
+import { platform } from './platform.js';
 
 // Unified input: keyboard (arrows / A D, space / up / W / enter, M mute, F effects), pointer
 // (mouse + touch) and device tilt. The game reads `axis` (-1..1), the
@@ -15,8 +16,10 @@ export class Input {
     this.tilt = 0;              // smoothed, -1..1
     this.tiltRaw = 0;
     this.tiltEnabled = false;
-    this.tiltSupported = typeof DeviceOrientationEvent !== 'undefined';
-    this.tiltNeedsPermission = this.tiltSupported && typeof DeviceOrientationEvent.requestPermission === 'function';
+    // In the native shell tilt comes from CoreMotion through platform.js: no
+    // permission prompt (the WKWebView would show one for DeviceOrientation).
+    this.tiltSupported = platform.isNative ? platform.tilt.available : typeof DeviceOrientationEvent !== 'undefined';
+    this.tiltNeedsPermission = !platform.isNative && this.tiltSupported && typeof DeviceOrientationEvent.requestPermission === 'function';
     this.isTouch = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
     this.pointers = new Map();  // pointerId -> {x, y, role}
     this.taps = [];             // {x, y} logical coords, consumed each frame
@@ -100,6 +103,7 @@ export class Input {
     });
 
     window.addEventListener('deviceorientation', (e) => this.onOrientation(e));
+    platform.tilt.onSample((g) => this.onNativeTilt(g));
   }
 
   zoneAt(x, y) {
@@ -120,6 +124,16 @@ export class Input {
     else if (angle === -90 || angle === 270) v = -b;
     else if (angle === 180) v = -g;
     else v = g;
+    this.setTiltDegrees(v);
+  }
+
+  // The shell's CoreMotion samples: gamma in degrees, portrait only.
+  onNativeTilt(gammaDeg) {
+    if (!this.tiltEnabled || typeof gammaDeg !== 'number') return;
+    this.setTiltDegrees(gammaDeg);
+  }
+
+  setTiltDegrees(v) {
     // Phones held nearly flat report wild gamma values when beta flips sign;
     // the magnitude check keeps that from flinging the player.
     if (Math.abs(v) > 80) v = Math.sign(v) * 80;
@@ -132,6 +146,7 @@ export class Input {
   async requestTilt() {
     if (!this.tiltSupported) return false;
     try {
+      if (platform.isNative) { platform.tilt.start(); this.tiltEnabled = true; return true; }
       if (this.tiltNeedsPermission) {
         const res = await DeviceOrientationEvent.requestPermission();
         if (res !== 'granted') return false;
@@ -143,7 +158,10 @@ export class Input {
     }
   }
 
-  disableTilt() { this.tiltEnabled = false; this.tilt = 0; this.tiltRaw = 0; }
+  disableTilt() {
+    this.tiltEnabled = false; this.tilt = 0; this.tiltRaw = 0;
+    if (platform.isNative) platform.tilt.stop();
+  }
 
   // Called once per frame by the game loop before update.
   poll(dt) {

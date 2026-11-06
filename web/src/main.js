@@ -8,6 +8,7 @@ import { drawTitle, drawCount } from './title.js';
 import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
 import { createRenderer, PRESETS } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
+import { platform } from './platform.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -50,11 +51,15 @@ class Game {
     this.halted = false;
     this.setupDpr();
     window.addEventListener('resize', () => this.setupDpr());
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) return;
+    // Pause when the page goes away. The native shell also calls this when the
+    // app resigns active (Control Centre, a call, the lock screen), which a
+    // WKWebView does not report as visibilitychange.
+    const hide = () => {
       if (this.mode === 'playing') this.setMode('paused');
       else if (this.mode === 'countdown') this.toTitle();
-    });
+    };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
+    platform.onPause(hide);
     // the dev teleport goes straight to the title; everyone else rides down to the lawn first
     this.setMode(this.dev.at || this.dev.spawn ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
@@ -74,13 +79,13 @@ class Game {
 
   loadSave() {
     try {
-      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || '{}');
+      const s = JSON.parse(platform.storage.get(STORAGE_KEY) || platform.storage.get(LEGACY_STORAGE_KEY) || '{}');
       this.best = s.best || 0;
       if (PRESETS.includes(s.fx)) this.fxPreset = s.fx;
     } catch (_) { this.best = 0; }
   }
   save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ best: this.best, fx: this.fxPreset })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.best, fx: this.fxPreset })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best;
