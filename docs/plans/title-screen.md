@@ -78,8 +78,13 @@ the climb ahead.
   for the lawn phases and the round. Taps and boosts queued during the
   intro, the title or the countdown never reach the round's first step.
 - `hud.js`: pause and game over on signs (the game over's is lowered in
-  over 0.7 s, its buttons wake after that); TRY AGAIN and MENU on game
-  over, MENU on pause; `button()` takes an alpha.
+  over 0.7 s). The game over is a counting summary: `summaryPlan(world,
+  isNewBest)` schedules the rows (CLIMBED, SUNS, STOMPS, then the best),
+  `HUD.beginSummary / updateSummary / summaryDone / skipSummary` run it
+  with the sounds from the game-over update, `drawGameOver` draws a row
+  per board with its symbol, label, dotted leader and the value in gold;
+  TRY AGAIN and MENU wake at the end. MENU on pause; `button()` takes an
+  alpha.
 - `atmosphere.js`: two butterflies with a home at the lawn's flowers
   while the lawn is in view.
 - `audio.js`: `count(n)` beats, `hop()` pat, a five-note `start()`.

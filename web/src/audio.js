@@ -287,6 +287,8 @@ class Synth {
     this.tone({ type: 'triangle', freq: f, dur: 0.12, vol: 0.16 });
     this.tone({ type: 'sine', freq: f * 2, dur: 0.08, vol: 0.06 });
   }
+  // the summary's counter ticking up
+  tick() { this.tone({ type: 'square', freq: 1400, dur: 0.025, vol: 0.035 }); }
   // a small hop on the title's lawn: a soft pat instead of the bounce
   hop() {
     this.noise({ dur: 0.08, vol: 0.08, filter: 'lowpass', freq: 700, to: 250 });

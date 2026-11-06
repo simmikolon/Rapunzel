@@ -241,7 +241,7 @@ class Game {
       case 'playing': {
         if (input.consumePause() || input.consumeButton('pause')) { this.setMode('paused'); audio.click(); break; }
         this.stepWorld(dt);
-        if (this.world.over) { this.recordBest(); this.setMode('gameover'); }
+        if (this.world.over) { this.recordBest(); this.setMode('gameover'); this.hud.beginSummary(this.world, this.isNewBest); }
         break;
       }
       case 'paused': {
@@ -251,9 +251,13 @@ class Game {
       }
       case 'gameover': {
         input.consumeBoost();
+        this.hud.updateSummary(this.modeT);
         if (input.consumeButton('menu')) { this.toTitle(); audio.click(); break; }
-        const again = input.consumeButton('again');
-        if (this.modeT > 0.8 && (again || tapOutsideButtons())) this.startRound(this.round);
+        const again = input.consumeButton('again') || tapOutsideButtons();
+        if (!this.hud.summaryDone(this.modeT)) {
+          // a tap while the summary counts finishes it; the next one starts the round
+          if (again && this.modeT > 0.8) this.modeT = this.hud.skipSummary();
+        } else if (again) this.startRound(this.round);
         break;
       }
     }

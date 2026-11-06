@@ -361,9 +361,14 @@ is a pool to draw from, not a promise.
   butterflies at the flowers. PLAY (or a tap anywhere, or space) pulls the sign up and starts
   a countdown on his landings: 3 at the tap, 2 and 1 on the next two
   hops, GO is the launch at full strength. Pause and game over hang on
-  smaller signs of the same kind with the same pieces (PAUSED, the height
-  and NEW BEST! in the pixel lettering, TRY AGAIN on a ribbon, MENU on a
-  board, suns and stomps with their symbols); MENU on both leads back
+  smaller signs of the same kind with the same pieces (PAUSED in the
+  pixel lettering, TRY AGAIN on a ribbon, MENU on a board). The game
+  over is a summary that counts: a row per board with a symbol, a label,
+  a dotted leader and the value in gold letters; the height counts up
+  with ticks once the sign hangs, then the suns with a chime each, then
+  the stomps with a thud each, then the best height on its brass plate or
+  NEW BEST! popping in with sparkles and a jingle; the buttons wake after
+  that, and a tap while it counts finishes it; MENU on both leads back
   (the sign is lowered again, no ride). `Game.startRound(config)` is the one way into
   a round, so a mode or tower selection can sit between PLAY and the
   countdown later.
@@ -807,3 +812,13 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   did not stand off the scene enough, so once it hangs the scene behind
   it dims to a third over 1.4 s (`TITLE_DIM`), never fully, and the dim
   lifts with the sign when the countdown starts. Atlas 2048 x 3518.
+  The game over looked untidy (a stack of differently styled lines, the
+  small stats hard to see), so it became a counting summary on the wide
+  sign: `summaryPlan()` in `hud.js` schedules a row per board (height
+  with ticks, suns with the pickup chime each, stomps with the stomp
+  thud each, then the best or NEW BEST! with the milestone jingle), the
+  rows slide in one after the other, a finished value pops, the buttons
+  wake at the end; a tap during the count finishes it (`skipSummary`),
+  the next one restarts. Row heights follow the boards (72 px), so the
+  sign reads as a scoreboard. The tower, sun and star symbols are the
+  row icons; a small tower sprite joined `art/sign.js`.

@@ -151,11 +151,13 @@ export function wordWidth(set, str) {
 }
 
 // Draw `str` from a character set with its baseline at y. o: align
-// ('center' | 'left'), alpha, glow, dy(i) for a per-letter offset (a wave).
+// ('center' | 'left' | 'right'), alpha, glow, scale (about the baseline),
+// dy(i) for a per-letter offset (a wave).
 export function drawWord(g, set, str, x, y, o = {}) {
   const align = o.align || 'center';
-  let cx = align === 'center' ? x - wordWidth(set, str) / 2 : x;
-  const opts = (o.alpha != null || o.glow) ? { alpha: o.alpha, glow: o.glow } : undefined;
+  const w = wordWidth(set, str);
+  let cx = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+  const opts = (o.alpha != null || o.glow || o.scale) ? { alpha: o.alpha, glow: o.glow, sx: o.scale, sy: o.scale } : undefined;
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
     if (ch === ' ') { cx += set.space; continue; }

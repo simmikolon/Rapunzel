@@ -68,9 +68,18 @@ function drawPhone(t, on) {
 }
 function drawStar(t) {
   const { p } = t;
-  for (let i = 0; i < 7; i++) { p(3, i, 1, 1, C.braidDark); p(i, 3, 1, 1, C.braidDark); }
-  for (let i = 1; i < 6; i++) { p(3, i, 1, 1, C.sun2); p(i, 3, 1, 1, C.sun2); }
-  p(2, 2, 3, 3, C.sun1); p(2, 2, 1, 1, C.sun2); p(4, 4, 1, 1, C.sun3);
+  for (let i = 0; i < 9; i++) { p(4, i, 1, 1, C.braidDark); p(i, 4, 1, 1, C.braidDark); }
+  for (let i = 1; i < 8; i++) { p(4, i, 1, 1, C.sun2); p(i, 4, 1, 1, C.sun2); }
+  for (const [x, y] of [[2, 2], [6, 2], [2, 6], [6, 6]]) p(x, y, 1, 1, C.sun3);
+  p(3, 3, 3, 3, C.sun1); p(5, 5, 1, 1, C.sun3);
+}
+// A little tower for the height row of the summary: 9 x 12 art px.
+function drawTower(t) {
+  const { p } = t;
+  for (const x of [0, 3, 6]) p(x, 0, 2, 2, C.brickLight);
+  p(0, 2, 9, 10, C.brickMid); p(0, 2, 1, 10, C.brickLight); p(8, 2, 1, 10, C.brickDark);
+  p(0, 5, 9, 1, C.mortar); p(0, 8, 9, 1, C.mortar); p(4, 2, 1, 3, C.mortar); p(2, 9, 1, 3, C.mortar); p(6, 9, 1, 3, C.mortar);
+  p(3, 6, 3, 2, C.uiDark); p(4, 6, 1, 1, C.lanternGlow);
 }
 
 // Rapunzel peeking over the sign's top edge: her head and shoulders (drawn
@@ -114,7 +123,8 @@ export function buildSign() {
     sparkle: makeSprite(9, 9, drawSparkle, { ax: 0.5, ay: 0.5 }),
     phone: makeSprite(11, 12, (t) => drawPhone(t, false), { ax: 0.5, ay: 0.5 }),
     phoneOn: makeSprite(11, 12, (t) => drawPhone(t, true), { ax: 0.5, ay: 0.5 }),
-    star: makeSprite(7, 7, drawStar, { ax: 0.5, ay: 0.5 }),
+    star: makeSprite(9, 9, drawStar, { ax: 0.5, ay: 0.5 }),
+    tower: makeSprite(9, 12, drawTower, { ax: 0.5, ay: 0.5 }),
     vineTL: makeSprite(VINE_W, VINE_H, (t) => drawVine(t, false), undefined, { axPx: 9 * PX, ayPx: 9 * PX }),
     vineBR: makeSprite(VINE_W, VINE_H, (t) => drawVine(t, true), undefined, { axPx: (VINE_W - 10) * PX, ayPx: (VINE_H - 10) * PX }),
     bow: makeSprite(14, 10, ({ p }) => BOW.forEach((row, y) => row.split('').forEach((ch, x) => p(x, y, 1, 1, BOW_COL[ch]))), undefined, { axPx: 7 * PX, ayPx: 4 * PX }),
