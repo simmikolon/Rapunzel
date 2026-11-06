@@ -17,7 +17,9 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
   `docs/DESIGN.md` (status mark plus decision log).
 
 ## Run and test
-- Serve: `python3 -m http.server 8000 --directory web` (or `http-server web`).
+- Serve: `python3 tools/serve.py` (port 8000, caching off). A plain
+  `python3 -m http.server` lets the browser keep a stale module next to a
+  fresh one after a change; if that happens, hard-reload (Cmd+Shift+R).
 - Dev helpers: `?at=150` starts at 150 m (and skips the ride down and the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest

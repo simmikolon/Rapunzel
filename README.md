@@ -18,7 +18,7 @@ and the roadmap are collected in [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ```sh
 # any static file server works; for example:
-python3 -m http.server 8000 --directory web
+python3 tools/serve.py        # http://localhost:8000, caching off
 # then open http://localhost:8000
 ```
 
