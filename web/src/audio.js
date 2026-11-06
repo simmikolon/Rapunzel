@@ -140,20 +140,27 @@ class Synth {
   }
 
   // Effects --------------------------------------------------------------
+  // Haptics ride on the events (before the tones, so they play when muted);
+  // in a browser platform.haptic() is a no-op. Landings are light, a combo
+  // makes them a little firmer, like the pitch; hits are hard, the boost a rush.
   bounce(combo = 0) {
+    platform.haptic('bounce', 0.6 + Math.min(combo, 12) / 30);
     const base = 300 + Math.min(combo, 12) * 18;
     this.tone({ type: 'triangle', freq: base, to: base * 2.2, dur: 0.16, vol: 0.22 });
     this.tone({ type: 'sine', freq: base * 0.5, to: base * 0.8, dur: 0.12, vol: 0.18 });
   }
   weakBounce() {
+    platform.haptic('soft');
     this.tone({ type: 'triangle', freq: 240, to: 380, dur: 0.14, vol: 0.18 });
     this.noise({ dur: 0.25, vol: 0.12, filter: 'bandpass', freq: 1800, to: 600, q: 0.7 });
   }
   spring() {
+    platform.haptic('spring');
     this.tone({ type: 'square', freq: 320, to: 1100, dur: 0.28, vol: 0.12 });
     this.tone({ type: 'sine', freq: 500, to: 1600, dur: 0.3, vol: 0.2 });
   }
   boost() {
+    platform.haptic('boost');
     this.noise({ dur: 0.35, vol: 0.25, filter: 'bandpass', freq: 600, to: 4000, q: 1.2 });
     this.tone({ type: 'sine', freq: 420, to: 1300, dur: 0.3, vol: 0.14 });
   }
@@ -166,6 +173,7 @@ class Synth {
   }
   poof(soft = false) {
     // a cloud landing: a soft airy thump, rounder than the branch bounce
+    platform.haptic('soft');
     this.noise({ dur: soft ? 0.22 : 0.18, vol: soft ? 0.16 : 0.2, filter: 'lowpass', freq: 1400, to: 300, q: 0.6 });
     this.tone({ type: 'sine', freq: soft ? 220 : 280, to: soft ? 300 : 420, dur: 0.14, vol: soft ? 0.1 : 0.14 });
   }
@@ -175,6 +183,7 @@ class Synth {
   }
   paper() {
     // landing on a paper lantern: a soft thump with a crackle
+    platform.haptic('soft');
     this.noise({ dur: 0.16, vol: 0.18, filter: 'lowpass', freq: 900, to: 250, q: 0.7 });
     this.noise({ dur: 0.08, vol: 0.07, filter: 'highpass', freq: 3000, delay: 0.02 });
     this.tone({ type: 'sine', freq: 190, to: 280, dur: 0.12, vol: 0.1 });
@@ -184,6 +193,7 @@ class Synth {
     for (let i = 0; i < 3; i++) this.noise({ dur: 0.14, vol: 0.1, filter: 'bandpass', freq: 500, to: 250, q: 1.2, delay: i * 0.22 });
   }
   squawk() {
+    platform.haptic('soft');   // the stork catches him
     this.tone({ type: 'sawtooth', freq: 760, to: 420, dur: 0.12, vol: 0.1 });
     this.tone({ type: 'sawtooth', freq: 680, to: 380, dur: 0.14, vol: 0.09, delay: 0.14 });
   }
@@ -220,6 +230,7 @@ class Synth {
   }
   clank() {
     // a pogo on a helmet
+    platform.haptic('clank');
     this.tone({ type: 'square', freq: 1100, to: 420, dur: 0.16, vol: 0.12 });
     this.noise({ dur: 0.12, vol: 0.18, filter: 'highpass', freq: 2500 });
     this.tone({ type: 'sine', freq: 300, to: 120, dur: 0.2, vol: 0.14 });
@@ -243,20 +254,18 @@ class Synth {
     this.noise({ dur: 0.5, vol: 0.3, filter: 'lowpass', freq: 900, to: 120, q: 0.6, delay: 0.03 });
     this.tone({ type: 'sine', freq: 110, to: 38, dur: 0.45, vol: 0.2, delay: 0.03 });
   }
-  // Haptics ride on the events below (before the tones, so they play when
-  // muted); in a browser platform.haptic() is a no-op.
   bonk() {
-    platform.haptic('light');
+    platform.haptic('bonk');
     this.tone({ type: 'sine', freq: 140, to: 50, dur: 0.22, vol: 0.4 });
     this.noise({ dur: 0.08, vol: 0.2, filter: 'lowpass', freq: 900 });
   }
   stomp(haptic = true) {
-    if (haptic) platform.haptic('light');
+    if (haptic) platform.haptic('stomp');
     this.tone({ type: 'square', freq: 260, to: 90, dur: 0.14, vol: 0.14 });
     this.noise({ dur: 0.12, vol: 0.15, filter: 'bandpass', freq: 500, q: 2 });
   }
   hurt() {
-    platform.haptic('heavy');
+    platform.haptic('hurt');
     this.tone({ type: 'sawtooth', freq: 400, to: 90, dur: 0.35, vol: 0.18 });
     this.noise({ dur: 0.25, vol: 0.2, filter: 'highpass', freq: 800 });
   }
@@ -282,7 +291,7 @@ class Synth {
     this.noise({ dur: 0.7, vol: 0.28, filter: 'bandpass', freq: 300, to: 2500, q: 0.8 });
   }
   gameOver() {
-    platform.haptic('error');
+    platform.haptic('over');
     [392, 330, 262, 196].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.45, vol: 0.2, delay: i * 0.22 }));
   }
   // GO: the round's jingle

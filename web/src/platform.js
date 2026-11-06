@@ -35,8 +35,13 @@ export const platform = {
     },
   },
 
-  // 'light' | 'medium' | 'heavy' | 'error'; silently nothing in a browser.
-  haptic(kind) { if (handler()) post({ type: 'haptic', kind }); },
+  // A game event for the Taptic Engine: 'bounce' (strength 0..1 scales it),
+  // 'soft', 'spring', 'boost', 'bonk', 'clank', 'stomp', 'hurt', 'over'. The
+  // shell owns the patterns (ios/App/Haptics.swift); silently nothing in a browser.
+  haptic(kind, strength) {
+    if (!handler()) return;
+    post(strength == null ? { type: 'haptic', kind } : { type: 'haptic', kind, strength });
+  },
 
   // The shell's safe-area insets in CSS px ({ top, bottom, left, right }), or
   // null in a browser, where style.css exposes env() instead. WebKit hands a

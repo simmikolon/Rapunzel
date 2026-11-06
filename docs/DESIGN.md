@@ -829,6 +829,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   through `web/src/platform.js` (storage in UserDefaults, tilt from
   CoreMotion without a prompt, haptics, pause when the app resigns active).
   The ring/silent switch mutes the game there. See `docs/PORTING.md`.
+- 2026-11-06: Haptics as part of the feel on the phone: every landing taps
+  (firmer with the combo), the boost kicks and rushes, bonk, helmet, stomp
+  and hurt hit hard, game over falls in three. The game names the event
+  (`platform.haptic('bounce')`), the shell owns the Core Haptics pattern.
 - 2026-11-06: The picture fills a phone screen: the logical height follows
   the screen's shape (`H` in `config.js`, 1664 on an iPhone 17, 1364 in a
   9:16 window and in the simulator), the HUD keeps out of the safe area and

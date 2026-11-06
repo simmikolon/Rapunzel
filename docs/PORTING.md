@@ -23,8 +23,11 @@ on the other):
   the saved values as strings under their localStorage keys, whether
   CoreMotion exists, the safe-area insets in CSS px.
 - Page to shell, `window.webkit.messageHandlers.native.postMessage({ type, ... })`:
-  `storage.set { key, value }`, `haptic { kind }`, `tilt.start`, `tilt.stop`,
-  `log { message }`.
+  `storage.set { key, value }`, `haptic { kind, strength? }`, `tilt.start`,
+  `tilt.stop`, `log { message }`. Haptic kinds are game events (`bounce`,
+  `soft`, `spring`, `boost`, `bonk`, `clank`, `stomp`, `hurt`, `over`); the
+  shell owns the patterns (`ios/App/Haptics.swift`, Core Haptics), `strength`
+  0..1 scales one.
 - Shell to page: `window.__nativeTilt(gammaDeg)` while tilt is on (CoreMotion,
   DeviceOrientation's gamma convention, 60 Hz), `window.__nativePause()`
   when the app resigns active.

@@ -7,7 +7,7 @@ import os
 /// synchronous loadSave() keeps working.
 ///
 ///   storage.set { key, value }   -> UserDefaults (keys with the game's prefix only)
-///   haptic { kind }              -> Haptics
+///   haptic { kind, strength? }   -> Haptics (a game event, the shell owns the pattern)
 ///   tilt.start / tilt.stop       -> TiltSource; samples go back as window.__nativeTilt(gammaDeg)
 ///   log { message }              -> the system log, for page errors
 final class NativeBridge: NSObject, WKScriptMessageHandler {
@@ -53,7 +53,7 @@ final class NativeBridge: NSObject, WKScriptMessageHandler {
             guard let key = body["key"] as? String, key.hasPrefix(Self.storagePrefix), let value = body["value"] as? String else { return }
             defaults.set(value, forKey: key)
         case "haptic":
-            haptics.play(body["kind"] as? String ?? "light")
+            haptics.play(body["kind"] as? String ?? "", strength: Float((body["strength"] as? NSNumber)?.doubleValue ?? 1))
         case "tilt.start":
             tilt.start { [weak self] gamma in self?.pushTilt(gamma) }
         case "tilt.stop":
