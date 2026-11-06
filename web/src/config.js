@@ -1,9 +1,22 @@
 // All gameplay tunables in one place. Units: logical pixels and seconds.
-// The logical canvas keeps the original SpriteKit scene size (768 x 1364),
-// which is the portrait phone aspect ratio the game was designed for.
+// The logical canvas is 768 wide like the original SpriteKit scene. Its
+// height follows the screen: 1364 (9:16, the scene's size) in a desktop
+// window and in the simulator, taller on a phone so the picture fills the
+// screen without bars (an iPhone's 9:19.5 gives 1664). Gameplay reads H live;
+// the HUD keeps out of the safe area and the sign screens, laid out for
+// 768 x 1364, sit centred (see hud.js signShift).
 
 export const W = 768;
-export const H = 1364;
+export let H = 1364;
+export const H_MIN = 1364;
+export const H_MAX = 1920;            // taller windows are letterboxed (style.css caps the canvas the same way)
+// Safe area in logical px: the notch / Dynamic Island and the home indicator.
+export const SAFE = { top: 0, bottom: 0, left: 0, right: 0 };
+export function setViewport(height, safe) {
+  H = Math.round(Math.max(H_MIN, Math.min(H_MAX, height || H_MIN)));
+  if (safe) Object.assign(SAFE, safe);
+  return H;
+}
 
 // Size of one "art pixel". bg.png from the prototype uses 4-px blocks.
 export const PX = 4;

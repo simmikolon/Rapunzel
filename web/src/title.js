@@ -1,7 +1,7 @@
 import { W, H } from './config.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
-import { tagButton, ribbonButton, drawBest, drawSpeaker, ZONES, SIGNS, signTravel } from './hud.js';
+import { tagButton, ribbonButton, drawBest, drawSpeaker, ZONES, SIGNS, signTravel, signShift, shiftZone } from './hud.js';
 import { drawSign, paint, INK } from './sign.js';
 import { WORD_ADVANCE } from './art/logo.js';
 
@@ -12,7 +12,7 @@ import { WORD_ADVANCE } from './art/logo.js';
 // up again while the countdown runs; o.dim (0..1) is how far the scene
 // behind the sign is dimmed (it fades in once the sign hangs and out with
 // the countdown, never fully: the prince keeps hopping); o.alpha is there
-// for fades. 768 x 1364.
+// for fades. Laid out on 768 x 1364 and centred on a taller screen (signShift).
 
 const TITLE_DIM = 0.34;    // the scene behind the sign at full dim
 
@@ -21,8 +21,9 @@ export function drawTitle(g, game, t, o = {}) {
   const alpha = o.alpha == null ? 1 : o.alpha, dy = o.dy || 0;
   if (alpha <= 0 || dy <= -signTravel(S)) return;
   const input = game.input, art = game.art, logo = art.logo;
-  const Y = (y) => y + dy;
-  const zone = (z) => (dy ? { ...z, y: z.y + dy } : z);
+  const shift = signShift();
+  const Y = (y) => y + shift + dy;
+  const zone = (z) => shiftZone(z, dy);
   g.layer('hud');
   if (o.dim) g.rect(0, 0, W, H, '#081014', TITLE_DIM * o.dim * alpha);
   drawRapunzelBehind(g, art, t, S, Y, alpha);

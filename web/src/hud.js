@@ -1,4 +1,4 @@
-import { W, H, BOOST_CHARGES, MAX_HEARTS } from './config.js';
+import { W, H, H_MIN, SAFE, BOOST_CHARGES, MAX_HEARTS } from './config.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
 import { drawSign, signHeight, drawPlankTag, drawRibbon, drawPlaque, paint, INK_RED, FRAME, BOARD } from './sign.js';
@@ -6,7 +6,10 @@ import { drawWord, wordWidth } from './art/logo.js';
 import { audio } from './audio.js';
 
 // Heads-up display and screens, drawn through the renderer facade `g`
-// (see gfx/renderer.js). Everything is in logical 768 x 1364 coordinates.
+// (see gfx/renderer.js). Everything is in logical coordinates, 768 wide.
+// The screen is 1364 tall on a 9:16 window and taller on a phone (config.js
+// H): what hangs from the top or stands on the bottom keeps out of the safe
+// area (SAFE), and the sign screens, laid out for 768 x 1364, sit centred.
 
 export function button(g, zone, label, opts = {}) {
   const { x, y, w, h } = zone;
@@ -46,19 +49,24 @@ export function drawBest(g, art, cx, cy, best, alpha = 1) {
   paint(g, label, cx - w / 2 + 52, cy + 1, 14, 'left', { alpha });
 }
 
-// The signs the menus hang on (src/sign.js): the title's, the pause's, the game over's.
+// The signs the menus hang on (src/sign.js): the title's, the pause's, the game
+// over's, laid out on 768 x 1364 and moved down by signShift() on a taller screen.
 export const SIGNS = {
   title: { x: 24, y: 108, w: 720, h: signHeight(9) },     // down to 792; the prince hops under it
-  pause: { x: 124, y: H / 2 - signHeight(4) / 2, w: 520, h: signHeight(4) },
+  pause: { x: 124, y: H_MIN / 2 - signHeight(4) / 2, w: 520, h: signHeight(4) },
   over: { x: 44, y: 280, w: 680, h: signHeight(8) },   // a row per board: cause, three counts, best, TRY AGAIN, MENU
 };
+// The sign screens sit centred on a screen taller than 1364: everything keyed
+// to a sign (the signs, their buttons, the title's lettering) moves by this.
+export const signShift = () => (H - H_MIN) / 2;
+export const shiftZone = (z, dy = 0) => { const d = signShift() + dy; return d ? { ...z, y: z.y + d } : z; };
 // How far a sign moves to be lowered in from above the screen, or pulled up out of it.
-export const signTravel = (S) => S.y + S.h + 24;
+export const signTravel = (S) => S.y + signShift() + S.h + 24;
 
 export const ZONES = {
-  pause: { id: 'pause', x: W - 84, y: 112, w: 64, h: 64 },
-  sound: { id: 'sound', x: W - 164, y: 112, w: 64, h: 64 },
-  boost: { id: 'boost', x: W - 190, y: H - 200, w: 160, h: 160 },
+  pause: { id: 'pause', x: W - 84, get y() { return 112 + SAFE.top; }, w: 64, h: 64 },
+  sound: { id: 'sound', x: W - 164, get y() { return 112 + SAFE.top; }, w: 64, h: 64 },
+  boost: { id: 'boost', x: W - 190, get y() { return H - 200 - SAFE.bottom; }, w: 160, h: 160 },
   // on the title's sign: PLAY in the middle, the settings in the bottom row
   play: { id: 'play', x: W / 2 - 248, y: 468, w: 496, h: 96 },     // a ribbon: its tails take the outer 48 px
   fx: { id: 'fx', x: 72, y: 688, w: 240, h: 56 },
@@ -154,29 +162,30 @@ export class HUD {
     const input = this.game.input;
     const zones = [];
     if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
-    if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, ZONES.pauseMenu);
+    if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, shiftZone(ZONES.pauseMenu));
     if (mode === 'title') {
-      zones.push(ZONES.play, ZONES.titleSound, ZONES.fx);
-      if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(ZONES.tilt);
+      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx));
+      if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(shiftZone(ZONES.tilt));
     }
-    if (mode === 'gameover') zones.push(ZONES.sound, ZONES.again, ZONES.menu);
+    if (mode === 'gameover') zones.push(ZONES.sound, shiftZone(ZONES.again), shiftZone(ZONES.menu));
     input.buttonZones = zones;
   }
 
   drawPlaying(g, world) {
     const pl = world.player, art = this.game.art;
     g.layer('hud');
+    const top = SAFE.top, bottom = SAFE.bottom;
     // Height
-    g.text(`${world.heightM} m`, 28, 64, 40, '#fff');
-    if (this.game.best > 0) g.text(`best ${this.game.best} m`, 28, 112, 16, '#cfe8e3');
-    if (world.suns) { g.blit(art.creatures.sun[0], 44, 152, { glow: 0.5 }); g.text(`${world.suns}`, 76, 154, 18, '#ffe9a0'); }
+    g.text(`${world.heightM} m`, 28, top + 64, 40, '#fff');
+    if (this.game.best > 0) g.text(`best ${this.game.best} m`, 28, top + 112, 16, '#cfe8e3');
+    if (world.suns) { g.blit(art.creatures.sun[0], 44, top + 152, { glow: 0.5 }); g.text(`${world.suns}`, 76, top + 154, 18, '#ffe9a0'); }
     // Hearts
     for (let i = 0; i < MAX_HEARTS; i++) {
       const full = i < pl.hearts;
-      g.blit(full ? art.creatures.heart : art.creatures.heartEmpty, W - 48 - i * 50, 60, full ? { glow: 0.35 } : undefined);
+      g.blit(full ? art.creatures.heart : art.creatures.heartEmpty, W - 48 - i * 50, top + 60, full ? { glow: 0.35 } : undefined);
     }
     // Boost charges
-    const bx = 28, by = H - 78;
+    const bx = 28, by = H - 78 - bottom;
     g.text('boost', bx, by - 36, 14, '#cfe8e3');
     for (let i = 0; i < BOOST_CHARGES; i++) {
       const full = pl.boost >= i + 1;
@@ -210,18 +219,18 @@ export class HUD {
   drawNotice(g, str, t) {
     const a = clamp(t / 0.4, 0, 1);
     g.layer('overlay');
-    g.roundRect(24, 196, W - 48, 64, 12, { fill: 'rgba(16,32,36,0.8)', stroke: C.uiLine, width: 3, alpha: a });
-    g.text(str, W / 2, 228, 13, '#ffe9a0', 'center', false, { wrap: W - 100, alpha: a });
+    g.roundRect(24, SAFE.top + 196, W - 48, 64, 12, { fill: 'rgba(16,32,36,0.8)', stroke: C.uiLine, width: 3, alpha: a });
+    g.text(str, W / 2, SAFE.top + 228, 13, '#ffe9a0', 'center', false, { wrap: W - 100, alpha: a });
   }
 
   drawPaused(g) {
-    const S = SIGNS.pause, art = this.game.art;
+    const S = SIGNS.pause, art = this.game.art, sy = S.y + signShift();
     g.layer('overlay');
     g.rect(0, 0, W, H, 'rgba(8,16,20,0.5)');
-    drawSign(g, art, S.x, S.y, S.w, S.h);
-    drawWord(g, art.logo.gold2, 'PAUSED', W / 2, S.y + 118, { glow: 0.3 });
-    paint(g, this.game.input.isTouch ? 'tap to continue' : 'tap or press P to continue', W / 2, S.y + 164, 14, 'center');
-    tagButton(g, ZONES.pauseMenu, 'MENU');
+    drawSign(g, art, S.x, sy, S.w, S.h);
+    drawWord(g, art.logo.gold2, 'PAUSED', W / 2, sy + 118, { glow: 0.3 });
+    paint(g, this.game.input.isTouch ? 'tap to continue' : 'tap or press P to continue', W / 2, sy + 164, 14, 'center');
+    tagButton(g, shiftZone(ZONES.pauseMenu), 'MENU');
     button(g, ZONES.pause, null, { glyph: drawPauseGlyph });
     button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
   }
@@ -233,13 +242,13 @@ export class HUD {
     const plan = (this.summary && this.summary.plan) || summaryPlan(world, isNewBest);
     const a = clamp(t / 0.4, 0, 1);
     const dy = -signTravel(S) * (1 - easeOutBack(clamp(t / 0.7, 0, 1), 0.8));
-    const Y = (y) => S.y + y + dy;
-    const shift = (z) => (dy ? { ...z, y: z.y + dy } : z);
+    const Y = (y) => S.y + signShift() + y + dy;
+    const shift = (z) => shiftZone(z, dy);
     const ix = S.x + FRAME, iw = S.w - 2 * FRAME;
     const boardY = (i) => Y(FRAME + i * BOARD + 34);         // the centre line of board i
     g.layer('overlay');
     g.rect(0, 0, W, H, '#081014', 0.55 * a);
-    drawSign(g, art, S.x, S.y + dy, S.w, S.h);
+    drawSign(g, art, S.x, Y(0), S.w, S.h);
     const cause = world.player.deathCause === 'caught' ? 'The witch got Sir Bouncealot!' : 'Sir Bouncealot fell...';
     paint(g, cause, W / 2, boardY(0), 18, 'center', { color: INK_RED });
     // the rows: a symbol, the label, a dotted leader, the value counting up

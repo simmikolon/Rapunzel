@@ -102,9 +102,13 @@ export class Renderer {
   nextPreset() { return this.setPreset(PRESETS[(PRESETS.indexOf(this.preset) + 1) % PRESETS.length]); }
 
   // Backing store = logical size x scale (device pixels per logical pixel).
+  // H can change with the window's shape (config.js), so the filter areas
+  // follow it; the vignette texture is stretched in vignette().
   resize(scale) {
     this.resolution = scale;
     this.renderer.resize(W, H, scale);
+    this.root.filterArea = SCREEN();
+    this.layers.glow.c.filterArea = SCREEN();
   }
 
   // ------------------------------------------------------------- frame
@@ -347,7 +351,7 @@ export class Renderer {
     sp.pivot.set(0, 0);
     sp.position.set(0, 0);
     sp.rotation = 0;
-    sp.scale.set(1, 1);
+    sp.scale.set(W / this.vignetteTex.width, H / this.vignetteTex.height);
     sp.alpha = 1;
     sp.tint = 0xffffff;
   }

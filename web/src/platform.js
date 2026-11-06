@@ -38,6 +38,12 @@ export const platform = {
   // 'light' | 'medium' | 'heavy' | 'error'; silently nothing in a browser.
   haptic(kind) { if (handler()) post({ type: 'haptic', kind }); },
 
+  // The shell's safe-area insets in CSS px ({ top, bottom, left, right }), or
+  // null in a browser, where style.css exposes env() instead. WebKit hands a
+  // WKWebView page its env() values some time after the load, too late for
+  // the boot, so the shell sends them along with the saved state.
+  get safeArea() { const s = state(); return (s && s.safe) || null; },
+
   // Tilt from CoreMotion: the shell pushes gamma in degrees (the
   // DeviceOrientation convention, right edge down is positive) through
   // window.__nativeTilt while started.

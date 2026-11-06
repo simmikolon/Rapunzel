@@ -1,4 +1,4 @@
-import { W, H, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T } from './config.js';
+import { W, H, SAFE, setViewport, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
@@ -51,6 +51,8 @@ class Game {
     this.halted = false;
     this.setupDpr();
     window.addEventListener('resize', () => this.setupDpr());
+    // a mobile browser's toolbars collapsing, or the safe-area insets arriving late
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', () => this.setupDpr());
     // Pause when the page goes away. The native shell also calls this when the
     // app resigns active (Control Centre, a call, the lock screen), which a
     // WKWebView does not report as visibilitychange.
@@ -100,10 +102,11 @@ class Game {
   }
 
   // The backing store matches the CSS size in device pixels, so nothing is
-  // resampled by the compositor; all drawing stays in logical 768 x 1364.
+  // resampled by the compositor; all drawing stays in logical coordinates,
+  // 768 wide and as tall as the screen's shape asks for.
   setupDpr() {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = measureViewport(this.canvas);
     const cssW = rect.width || W;
     const scale = (cssW * dpr) / W;
     this.gfx.resize(scale);
@@ -295,9 +298,23 @@ class Game {
       case 'gameover': this.hud.drawPlaying(g, this.world); this.hud.drawGameOver(g, this.world, this.modeT, this.isNewBest); break;
     }
     if (this.noticeT > 0) this.hud.drawNotice(g, this.noticeText, this.noticeT);
-    if (this.dev.dev) { g.layer('overlay'); g.text(devLabel(this.world), W / 2, H - 24, 12, '#8fd1c7', 'center'); }
+    if (this.dev.dev) { g.layer('overlay'); g.text(devLabel(this.world), W / 2, H - 24 - SAFE.bottom, 12, '#8fd1c7', 'center'); }
     g.end(this.dt);
   }
+}
+
+// The canvas is sized by style.css (the whole screen on a phone, a 9:16 box
+// on a wide window); the logical height follows its shape, and the safe-area
+// insets come in through the custom properties the stylesheet sets from env().
+function measureViewport(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const cssW = rect.width || W, cssH = rect.height || cssW * 1364 / W;
+  const perCss = W / cssW;
+  const native = platform.safeArea;
+  const cs = native ? null : getComputedStyle(document.documentElement);
+  const inset = (name) => ((native ? native[name] : parseFloat(cs.getPropertyValue('--safe-' + name))) || 0) * perCss;
+  setViewport(W * cssH / cssW, { top: inset('top'), bottom: inset('bottom'), left: inset('left'), right: inset('right') });
+  return rect;
 }
 
 function showFallback(message) {
@@ -312,6 +329,7 @@ function showFallback(message) {
 const boot = async () => {
   const canvas = document.getElementById('game');
   try {
+    measureViewport(canvas);     // H must be known before the renderer and the world exist
     const art = buildAllArt();
     let gfx;
     try {
