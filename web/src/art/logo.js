@@ -2,27 +2,55 @@ import { PX } from '../config.js';
 import { makeSprite } from './sprite.js';
 import { PAL as C } from '../palette.js';
 
-// The wordmark: SIR BOUNCEALOT in chunky pixel letters drawn on the art grid
-// like every other sprite, so the title screen keeps the game's look.
-// Each glyph is 5 x 7 cells; a cell becomes k x k art pixels and every stroke
-// is thickened by one art pixel (bold), so the counters stay open while the
-// letters read as chunky. Letters get a top highlight, a bottom and right
-// shade (a bevel), a dark outline and a drop shadow. The big word is one
-// sprite per letter so the title can bounce them one after the other.
+// The game's lettering: chunky pixel glyphs drawn on the art grid like every
+// other sprite, so headings and button labels keep the game's look instead
+// of a font. Each glyph is 5 x 7 cells; a cell becomes k x k art pixels and
+// every stroke is thickened by one art pixel (bold), so the counters stay
+// open while the letters read as chunky. Letters get a top highlight, a
+// bottom and right shade (a bevel), a dark outline and a drop shadow. The
+// wordmark SIR BOUNCEALOT is one sprite per letter so the title can bounce
+// them one after the other; drawWord() sets any other string from the
+// per-character sets (gold at two sizes, pink at one).
 
 const GLYPHS = {
-  S: ['.###.', '#...#', '#....', '.###.', '....#', '#...#', '.###.'],
-  I: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '#####'],
-  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
-  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
-  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
-  C: ['.###.', '#...#', '#....', '#....', '#....', '#...#', '.###.'],
-  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
   A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
+  C: ['.###.', '#...#', '#....', '#....', '#....', '#...#', '.###.'],
+  D: ['####.', '#...#', '#...#', '#...#', '#...#', '#...#', '####.'],
+  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
+  F: ['#####', '#....', '#....', '####.', '#....', '#....', '#....'],
+  G: ['.###.', '#...#', '#....', '#.###', '#...#', '#...#', '.####'],
+  H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  I: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '#####'],
+  J: ['..###', '...#.', '...#.', '...#.', '...#.', '#..#.', '.##..'],
+  K: ['#...#', '#..#.', '#.#..', '##...', '#.#..', '#..#.', '#...#'],
   L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
+  N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
+  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'],
+  Q: ['.###.', '#...#', '#...#', '#...#', '#.#.#', '#..#.', '.##.#'],
+  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
+  S: ['.###.', '#...#', '#....', '.###.', '....#', '#...#', '.###.'],
   T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
+  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  V: ['#...#', '#...#', '#...#', '#...#', '#...#', '.#.#.', '..#..'],
+  W: ['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '##.##', '#...#'],
+  X: ['#...#', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '#...#'],
+  Y: ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..', '..#..'],
+  Z: ['#####', '....#', '...#.', '..#..', '.#...', '#....', '#####'],
+  0: ['.###.', '#...#', '#..##', '#.#.#', '##..#', '#...#', '.###.'],
+  1: ['..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'],
+  2: ['.###.', '#...#', '....#', '...#.', '..#..', '.#...', '#####'],
+  3: ['#####', '...#.', '..#..', '...#.', '....#', '#...#', '.###.'],
+  4: ['...#.', '..##.', '.#.#.', '#..#.', '#####', '...#.', '...#.'],
+  5: ['#####', '#....', '####.', '....#', '....#', '#...#', '.###.'],
+  6: ['..##.', '.#...', '#....', '####.', '#...#', '#...#', '.###.'],
+  7: ['#####', '....#', '...#.', '..#..', '.#...', '.#...', '.#...'],
+  8: ['.###.', '#...#', '#...#', '.###.', '#...#', '#...#', '.###.'],
+  9: ['.###.', '#...#', '#...#', '.####', '....#', '...#.', '.##..'],
+  '!': ['..#..', '..#..', '..#..', '..#..', '..#..', '.....', '..#..'],
+  m: ['.....', '.....', '##.#.', '#.#.#', '#.#.#', '#.#.#', '#.#.#'],
 };
 const GW = 5, GH = 7;
 const OUTLINE = 1, SHADOW = 2;
@@ -30,9 +58,10 @@ const OUTLINE = 1, SHADOW = 2;
 export const WORD = 'BOUNCEALOT';
 export const WORD_SCALE = 3;
 const BOLD = 1;                 // extra art pixels on every stroke's right and bottom
-// Advance between the big letters in logical px: the bold glyph plus one art
-// pixel of air; the outlines touch, which keeps the word inside the screen.
-export const WORD_ADVANCE = (GW * WORD_SCALE + BOLD + 1) * PX;
+// Advance between letters in logical px: the bold glyph plus one art pixel
+// of air; the outlines touch, which keeps a word compact.
+const advance = (k) => (GW * k + BOLD + 1) * PX;
+export const WORD_ADVANCE = advance(WORD_SCALE);
 
 const GOLD = { hi: C.braidHi, mid: C.braid, lo: C.braidShade, edge: C.braidDark, outline: C.uiDark, shadow: 'rgba(8,16,20,0.55)' };
 const PINK = { hi: C.bowHi, mid: C.ribbonHi, lo: C.ribbon, edge: C.ribbonDark, outline: C.uiDark, shadow: 'rgba(8,16,20,0.55)' };
@@ -80,7 +109,7 @@ function wordSprite(text, k, pal, { gap = 1, crown = false } = {}) {
   }, { ax: 0.5, ay: 1 }, { axPx: (OUTLINE + cols / 2) * PX, ayPx: (OUTLINE + crownH + rows) * PX });
 }
 
-// A small crown above the middle letter: three points, a jewel, an outline.
+// A small crown: three points, a jewel, an outline.
 function drawCrown(p, cx, top) {
   const o = C.uiDark;
   p(cx - 4, top, 9, 5, o);                        // outline block, then the crown on top of it
@@ -95,9 +124,43 @@ function nearFilled(at, x, y) {
   return false;
 }
 
+// One sprite per character at scale k: { k, adv, space, body, map }.
+// `body` is the glyph's height in logical px (baseline to the top of a
+// capital), so a word can be centred vertically.
+function charSet(k, pal) {
+  const map = {};
+  for (const ch of Object.keys(GLYPHS)) map[ch] = wordSprite(ch, k, pal);
+  return { k, adv: advance(k), space: (Math.floor((GW * k) / 2) + 1) * PX, body: (GH * k + BOLD) * PX, map };
+}
+
 export function buildLogo() {
   return {
     sir: wordSprite('SIR', 2, PINK, { gap: 1, crown: true }),
     letters: WORD.split('').map((ch) => wordSprite(ch, WORD_SCALE, GOLD)),
+    crown: makeSprite(9, 5, ({ p }) => drawCrown(p, 4, 0), { ax: 0.5, ay: 0.5 }),
+    gold2: charSet(2, GOLD),
+    gold3: charSet(3, GOLD),
+    pink2: charSet(2, PINK),
   };
+}
+
+export function wordWidth(set, str) {
+  let w = 0;
+  for (const ch of str) w += ch === ' ' ? set.space : set.adv;
+  return w - PX;   // no air after the last letter
+}
+
+// Draw `str` from a character set with its baseline at y. o: align
+// ('center' | 'left'), alpha, glow, dy(i) for a per-letter offset (a wave).
+export function drawWord(g, set, str, x, y, o = {}) {
+  const align = o.align || 'center';
+  let cx = align === 'center' ? x - wordWidth(set, str) / 2 : x;
+  const opts = (o.alpha != null || o.glow) ? { alpha: o.alpha, glow: o.glow } : undefined;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === ' ') { cx += set.space; continue; }
+    const s = set.map[ch] || set.map[ch.toUpperCase()];
+    if (s) g.blit(s, cx + s.ax - OUTLINE * PX, y + (o.dy ? o.dy(i) : 0), opts);
+    cx += set.adv;
+  }
 }

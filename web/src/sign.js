@@ -12,7 +12,6 @@ export const BOARD = 72;               // a board with the gap under it
 export const FRAME = 20;               // outline, bark band and the recess
 export const ROPE_IN = 166;            // the ropes this far in from the sides
 export const signHeight = (boards) => 2 * FRAME - 4 + boards * BOARD;
-export const BTN_FILL = 'rgba(40,30,22,0.88)';   // a recessed button on the boards
 
 const SH = C.barkShadow;
 
@@ -90,4 +89,75 @@ function drawRope(r, rx, y) {
   for (let yy = 4; yy < y - 8; yy += 16) r(rx + ((yy / 16) % 2 ? 4 : 0), yy, 4, 4, (yy / 16) % 2 ? C.rope : C.ropeDark);
   r(rx - 4, y - 8, 16, 12, C.ropeDark);
   r(rx, y - 4, 8, 4, C.rope);
+}
+
+// ---------------------------------------------------------------- pieces
+// What sits on the boards: text painted in ink, a light board nailed on as
+// a small button, a ribbon banner for the main one, a brass plate for the
+// best height. All on the 4-px grid; x, y, w, h multiples of 4.
+export const INK = '#3b2a1e';           // painted text
+export const INK_RED = '#6e1a22';       // painted bad news
+const HALO = 'rgba(245,222,190,0.85)';  // a light edge so painted text reads over the grain
+
+// Text painted on the boards: dark with a thin light edge, no outline.
+// o: alpha, color (the ink), wrap
+export function paint(g, str, x, y, size, align = 'center', o = {}) {
+  g.text(str, x, y, size, '#fff', align, false, { alpha: o.alpha, wrap: o.wrap, paint: { fill: o.color || INK, stroke: HALO, width: 2 } });
+}
+const TAG_HI = '#f1d3a8';
+const RIB_EDGE = '#73213f';
+const BRASS = C.goldDark, BRASS_HI = C.gold, BRASS_LO = '#7d5c1a';
+
+// o: alpha, on (a gold rim inside the edge)
+export function drawPlankTag(g, x, y, w, h, o = {}) {
+  const a = o.alpha == null ? 1 : o.alpha;
+  const r = (xx, yy, ww, hh, c) => g.rect(xx, yy, ww, hh, c, a);
+  g.rect(x + 4, y + 4, w, h, '#000', 0.22 * a);
+  r(x + 4, y, w - 8, 4, SH); r(x + 4, y + h - 4, w - 8, 4, SH); r(x, y + 4, 4, h - 8, SH); r(x + w - 4, y + 4, 4, h - 8, SH);
+  r(x + 4, y + 4, w - 8, h - 8, C.plankHi);
+  r(x + 8, y + 4, w - 16, 4, TAG_HI);
+  r(x + 4, y + h - 12, w - 8, 8, C.plank);
+  if (o.on) { r(x + 8, y + 8, w - 16, 4, C.gold); r(x + 8, y + h - 12, w - 16, 4, C.gold); r(x + 8, y + 12, 4, h - 24, C.gold); r(x + w - 12, y + 12, 4, h - 24, C.gold); }
+  const ny = y + Math.floor(h / 8) * 4 - 4;
+  for (const nx of [x + 8, x + w - 16]) { r(nx, ny, 8, 8, C.pole); r(nx, ny, 4, 4, C.poleHi); }
+}
+
+// A ribbon banner: the body with a lit top and a shaded bottom, forked
+// tails hanging from both ends behind it (they take the outer TAIL px of
+// the width). o: alpha, t (the tails flutter with it)
+export const TAIL = 48;
+export function drawRibbon(g, x, y, w, h, o = {}) {
+  const a = o.alpha == null ? 1 : o.alpha;
+  const r = (xx, yy, ww, hh, c) => g.rect(xx, yy, ww, hh, c, a);
+  const bx = x + TAIL, bw = w - 2 * TAIL;
+  g.rect(x + 8, y + 10, w, h, '#000', 0.22 * a);
+  const th = h - 16, rows = th / 4, mid = (rows - 1) / 2;
+  const notch = (i) => Math.max(0, 16 - 4 * (Math.abs(i - mid) - 0.5));
+  for (const side of [-1, 1]) {
+    const ty = y + 16 + (o.t == null ? 0 : Math.round(Math.sin(o.t * 2.5 + (side < 0 ? 0 : 1.6))) * 4);
+    const row = (i, inset, c) => {
+      const n = notch(i) + inset;
+      if (side < 0) r(x + n, ty + i * 4, TAIL - n + 8, 4, c);
+      else r(bx + bw - 8, ty + i * 4, TAIL - n + 8, 4, c);
+    };
+    for (let i = 0; i < rows; i++) row(i, 0, RIB_EDGE);
+    for (let i = 1; i < rows - 1; i++) row(i, 4, C.ribbon);
+    // the crease where the tail goes behind the body
+    r(side < 0 ? bx - 8 : bx + bw, ty + 4, 8, th - 8, C.ribbonDark);
+  }
+  r(bx + 4, y, bw - 8, 4, RIB_EDGE); r(bx + 4, y + h - 4, bw - 8, 4, RIB_EDGE); r(bx, y + 4, 4, h - 8, RIB_EDGE); r(bx + bw - 4, y + 4, 4, h - 8, RIB_EDGE);
+  r(bx + 4, y + 4, bw - 8, h - 8, C.ribbon);
+  r(bx + 8, y + 4, bw - 16, 8, C.ribbonHi);
+  r(bx + 4, y + h - 12, bw - 8, 8, C.ribbonDark);
+}
+
+// A brass plate screwed to the boards. o: alpha
+export function drawPlaque(g, x, y, w, h, o = {}) {
+  const a = o.alpha == null ? 1 : o.alpha;
+  const r = (xx, yy, ww, hh, c) => g.rect(xx, yy, ww, hh, c, a);
+  g.rect(x + 4, y + 4, w, h, '#000', 0.2 * a);
+  r(x, y, w, h, BRASS_LO);
+  r(x + 4, y + 4, w - 8, h - 8, BRASS);
+  r(x + 4, y + 4, w - 8, 4, BRASS_HI); r(x + 4, y + 4, 4, h - 8, BRASS_HI);
+  for (const [sx, sy] of [[x + 8, y + 8], [x + w - 12, y + 8], [x + 8, y + h - 12], [x + w - 12, y + h - 12]]) r(sx, sy, 4, 4, BRASS_LO);
 }

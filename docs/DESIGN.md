@@ -348,15 +348,23 @@ is a pool to draw from, not a promise.
   lawn in 2.6 s; a tap shortens it), then a wooden sign is lowered in on
   two ropes: bark frame, nailed boards, a vine over two corners, a bow on
   the right rope, drawn with rectangles on the art grid so one routine
-  serves every menu at any size. On it the pixel wordmark SIR BOUNCEALOT
-  (`art/logo.js`, the letters hopping in a wave), PLAY, the controls, and
-  effects, sound and tilt in its bottom row; under it the prince hops in
-  place (a flip with sparkles every few hops), two butterflies at the
-  flowers. PLAY (or a tap anywhere, or space) pulls the sign up and starts
+  serves every menu at any size. Rapunzel peeks over its top-right corner
+  (blinking, bobbing), hands on the edge, her braid running down behind
+  the sign and out under it with a bow swinging at its end. On the boards
+  the pixel wordmark SIR BOUNCEALOT (`art/logo.js`, the letters hopping
+  in a wave), the best height on a brass plate with a crown, PLAY on a
+  pink ribbon banner with fluttering tails and the word in the game's
+  gold lettering, the controls painted in ink with a light edge, and
+  effects, sound and tilt as light boards nailed on with symbols (a
+  sparkle, the speaker, a tilted phone) in its bottom row; under it the
+  prince hops in place (a flip with sparkles every few hops), two
+  butterflies at the flowers. PLAY (or a tap anywhere, or space) pulls the sign up and starts
   a countdown on his landings: 3 at the tap, 2 and 1 on the next two
   hops, GO is the launch at full strength. Pause and game over hang on
-  smaller signs of the same kind; MENU on both leads back (the sign is
-  lowered again, no ride). `Game.startRound(config)` is the one way into
+  smaller signs of the same kind with the same pieces (PAUSED, the height
+  and NEW BEST! in the pixel lettering, TRY AGAIN on a ribbon, MENU on a
+  board, suns and stomps with their symbols); MENU on both leads back
+  (the sign is lowered again, no ride). `Game.startRound(config)` is the one way into
   a round, so a mode or tower selection can sit between PLAY and the
   countdown later.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
@@ -780,3 +788,20 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   MENU does not repeat it. The show-off hop is a little lower (`SHOWOFF_VY`
   960) so the prince's head stays under the sign. Simulator untouched
   (10 good bold runs: 0.99 hits per 100 m).
+- 2026-11-06: The menus' text and buttons looked like a prototype on the
+  sign, so they are made of game material now. The lettering of the
+  wordmark (`art/logo.js`) grew into a full glyph set (A to Z, digits, !
+  and m) with per-character sprites in gold at two sizes and pink at one;
+  `drawWord()` sets PLAY, TRY AGAIN, PAUSED, the height and NEW BEST!
+  from them, so no heading uses the font any more. The main button is a
+  pink ribbon banner with forked, fluttering tails (the ribbons on the
+  braid, the banner in the first logo sketch); the small ones are light
+  boards nailed on with a symbol instead of a technical label (sparkle,
+  speaker, tilted phone, gold rim when tilt is on); the best height sits
+  on a brass plate with a crown; suns and stomps show their symbols. Small
+  text is painted in ink on the boards with a thin light edge baked into
+  the text texture (`paint` option of the renderer's text; a tinted stroke
+  would go dark with the ink), so it reads over the grain. Rapunzel peeks
+  over the title sign's corner with her braid behind it and out under it:
+  doubled with the tower's braid on purpose, for the cuteness. Atlas
+  2048 x 3518.

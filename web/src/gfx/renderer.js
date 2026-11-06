@@ -387,7 +387,9 @@ export class Renderer {
   // ------------------------------------------------------------- text
   // Pixel font text with an optional dark outline. Text objects are pooled
   // per style so a string is only rasterized again when it changes.
-  // o: alpha, family, weight, wrap (width), scale, glow
+  // o: alpha, family, weight, wrap (width), scale, glow, paint { fill,
+  // stroke, width } (colours baked into the text instead of the tint, for
+  // dark text with a light edge; `color` is ignored then)
   text(str, x, y, size, color = '#fff', align = 'left', outline = true, o = {}) {
     this._textAt(this.cur, str, x, y, size, color, align, outline, o, 1);
     if (o.glow) this._textAt(this.layers.glow, str, x, y, size, color, align, outline, o, o.glow);
@@ -396,16 +398,17 @@ export class Renderer {
     size = Math.max(1, Math.round(size));
     const family = o.family || FONT;
     const wrap = o.wrap || 0;
-    const key = `${size}|${outline ? 1 : 0}|${align}|${wrap}|${typeof family === 'string' ? family : family[0]}|${o.weight || ''}`;
+    const paint = o.paint;
+    const key = `${size}|${outline ? 1 : 0}|${align}|${wrap}|${typeof family === 'string' ? family : family[0]}|${o.weight || ''}|${paint ? `${paint.fill}/${paint.stroke}/${paint.width}` : ''}`;
     const t = this._text(L, key, () => {
-      const width = Math.max(4, size * 0.28);
+      const width = paint ? paint.width : Math.max(4, size * 0.28);
       const style = new TextStyle({
         fontFamily: family,
         fontSize: size,
         fontWeight: o.weight || 'normal',
-        fill: 0xffffff,
+        fill: paint ? paint.fill : 0xffffff,
         align,
-        stroke: outline ? { color: 'rgba(10,20,24,0.85)', width, join: 'round' } : undefined,
+        stroke: paint ? { color: paint.stroke, width, join: 'round' } : outline ? { color: 'rgba(10,20,24,0.85)', width, join: 'round' } : undefined,
         padding: Math.ceil(width) + 2,
         wordWrap: wrap > 0,
         wordWrapWidth: wrap || 100,
@@ -413,7 +416,7 @@ export class Renderer {
       return new Text({ text: str, style });
     });
     t.text = str;
-    const c = this._col(color);
+    const c = this._col(paint ? '#fff' : color);
     t.tint = c.rgb;
     t.alpha = c.a * (o.alpha == null ? 1 : o.alpha) * mul;
     t.anchor.set(align === 'center' ? 0.5 : align === 'right' ? 1 : 0, 0.5);

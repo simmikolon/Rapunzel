@@ -33,9 +33,11 @@ the climb ahead.
   game-over cause in `hud.js`, the doc headlines. `STORAGE_KEY` is
   `bouncealot.web.v1`; `LEGACY_STORAGE_KEY` is read as a fallback so the
   best height, the effects choice and mute survive.
-- `art/logo.js`: a 5 x 7 glyph set on the art grid, bold strokes, bevel,
-  outline, drop shadow; one sprite per letter of BOUNCEALOT so the title
-  can hop them in a wave, SIR with a crown in ribbon pink.
+- `art/logo.js`: a 5 x 7 glyph set (A to Z, digits, ! and m) on the art
+  grid, bold strokes, bevel, outline, drop shadow; one sprite per letter
+  of BOUNCEALOT so the title can hop them in a wave, SIR with a crown in
+  ribbon pink; per-character sets `gold2`, `gold3`, `pink2` and
+  `drawWord()` for every other heading and button word.
 - `sign.js`: `drawSign(g, art, x, y, w, h, o)` draws a sign of any size
   with rectangles on the 4-px grid (outline, bark band with a bevel and
   streaks, recess, boards of 72 px with grain, knots and nails, two
@@ -43,8 +45,14 @@ the climb ahead.
   trimmings from `art/sign.js` (vines over two corners, a bow on the
   right rope). `signHeight(n)` gives the height for n boards;
   `signTravel(S)` how far it moves to come in from above the screen.
-  `hud.js` holds the three signs (`SIGNS.title`, `pause`, `over`), the
-  zones on them and `signButton()` (recessed, gold rim for the main one).
+  The pieces on the boards: `drawPlankTag()` (a light board nailed on,
+  the small buttons), `drawRibbon()` (a banner with forked tails that
+  flutter, the main button), `drawPlaque()` (brass, the best height),
+  `paint()` (text in ink with a light edge, via the renderer's `paint`
+  text option). `hud.js` holds the three signs (`SIGNS.title`, `pause`,
+  `over`), the zones on them, `tagButton()`, `ribbonButton()` and
+  `drawBest()`. `art/sign.js` has the vines, the bow, the button symbols
+  and Rapunzel (head, blink frame, hands) for the title's corner.
 - `title.js`: `drawTitle(g, game, t, alpha, dy)` draws the title's sign
   (wordmark, best, PLAY, hints, effects / sound / tilt in the bottom row)
   moved by `dy`; `drawCount(g, world)` ("3", "2", "1" from `world.count`,
@@ -93,5 +101,5 @@ geometry in `hud.js` (`SIGNS`) and `sign.js` (`BOARD`, `FRAME`,
 
 Open: the mode or tower selection between PLAY and the countdown (more
 boards on the title's sign, or a second sign); the atlas is a single
-2048-wide texture and will need a second page or a size check once it
-passes 4096 px.
+2048-wide texture at 3518 px now and will need a second page or a size
+check once it passes 4096 px.
