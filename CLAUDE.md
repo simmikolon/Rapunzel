@@ -43,10 +43,13 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
 
 ## iOS shell
 - `ios/` wraps `web/` in a native WKWebView app (Swift, UIKit, no
-  Capacitor). Open `ios/SirBouncealot.xcodeproj` in Xcode and Run on the
-  phone: the project references `../web` as a folder, so the current
-  checkout is what runs. `ios/README.md` has the details and the TestFlight
-  steps.
+  Capacitor). The project references `../web` as a folder, so the current
+  checkout is what runs on the phone. `ios/README.md` has the details and
+  the TestFlight steps.
+- Phone first, TestFlight later: changes are played on Simon's own iPhone
+  ("Simmi") from the checkout, `tools/ios_run.sh [device] [launch args]`
+  builds, installs and launches (or Run in Xcode). TestFlight is for a
+  first version worth handing out, not for every change.
 - The project is generated: edit `ios/project.yml`, run `xcodegen generate`
   in `ios/`, commit both. Version and build number are in
   `ios/Version.xcconfig` (bump the build before every upload).

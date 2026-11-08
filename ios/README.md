@@ -27,9 +27,20 @@ What the shell adds over Safari:
 
 ## Build and run
 
-Open `ios/SirBouncealot.xcodeproj` in Xcode (26.3 or newer), pick your
-iPhone and press Run. The project references `../web` as a folder, so the
-checkout you have is what runs on the phone: switch branches, press Run.
+Day to day the game is played on a paired iPhone straight from the
+checkout; TestFlight comes once a version is worth handing out. One
+command builds the Debug app, installs it and launches it:
+
+```sh
+tools/ios_run.sh                                   # the phone "Simmi"
+tools/ios_run.sh "My iPhone" -gameQuery "at=150&dev=1"
+```
+
+The name is what `xcrun devicectl list devices` shows; the phone needs to
+be unlocked. Or open `ios/SirBouncealot.xcodeproj` in Xcode (26.3 or
+newer), pick the iPhone and press Run. Either way the project references
+`../web` as a folder, so the checkout you have is what runs on the phone:
+switch branches, run again.
 
 From the command line (Simulator):
 
