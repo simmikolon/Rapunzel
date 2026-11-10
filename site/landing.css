@@ -66,9 +66,7 @@ body {
   padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
   font: 600 16px/1.55 var(--round);
   color: var(--ink-deep);
-  background: linear-gradient(to bottom,
-    var(--night) 0, var(--night-deep) 16%, var(--dusk) 30%,
-    var(--teal-dark) 48%, var(--scene) 66%, var(--forest) 100%);
+  background: var(--night);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -95,7 +93,13 @@ canvas { image-rendering: pixelated; }
 
 /* ------------------------------------------------------------------ scene */
 /* The page is the tower, top to bottom: the night sky, the tower with
-   Rapunzel's braid all the way down, the forest closing in, the lawn. */
+   Rapunzel's braid all the way down, the forest closing in, the lawn.
+   Three planes like in the game: the far one (sky, stars, moon, lanterns,
+   forest), the middle one (tower, braid, the prince, the creatures) and
+   the page itself in front (signs, text, buttons). Without parallax both
+   scene planes simply span the page; with it (html.parallax, landing.js)
+   the scene is fixed to the window and its planes are moved by the
+   scroll, the far one at 0.3, the middle one at 0.7 of it. */
 .scene {
   position: absolute;
   inset: 0;
@@ -103,7 +107,18 @@ canvas { image-rendering: pixelated; }
   overflow: hidden;
   pointer-events: none;
 }
-.scene > * { position: absolute; }
+.layer { position: absolute; inset: 0; }
+.layer > * { position: absolute; }
+.layer--far {
+  background: linear-gradient(to bottom,
+    var(--night) 0, var(--night-deep) 16%, var(--dusk) 30%,
+    var(--teal-dark) 48%, var(--scene) 66%, var(--forest) 100%);
+}
+
+html.parallax .scene { position: fixed; }
+html.parallax .layer { bottom: auto; }          /* landing.js sets the height */
+html.parallax .scene__tower,
+html.parallax .scene__braid { bottom: 0; }      /* on down behind the lawn */
 
 .scene__stars {
   inset: 0 0 auto 0;
@@ -194,15 +209,20 @@ canvas { image-rendering: pixelated; }
   filter: drop-shadow(0 0 calc(var(--art) * 5) rgba(255, 179, 71, 0.8));
   animation: rise var(--d) linear var(--delay) infinite;
 }
-/* the witch crosses the night sky now and then (landing.js flaps her broom) */
-.scene .witch {
-  position: absolute;
-  top: 38vh;
+/* Creatures on the tower's plane (landing.js flaps their wings): the witch
+   crosses the night sky, a stork and a crow cross further down, and a
+   spider hangs on her thread beside the braid; those three sit in the gaps
+   between the signs, where the tower shows. */
+.flyer {
+  top: var(--y);
   left: 0;
-  --z: 1;
   transform: translateX(-40vw);
-  animation: fly 30s linear 6s infinite;
+  animation: fly var(--d) linear var(--delay) infinite;
 }
+.witch { --y: 38vh; --d: 30s; --delay: 6s; }
+.stork { --d: 26s; --delay: 2s; }          /* top: landing.js, in a gap between signs */
+.crow  { --d: 18s; --delay: 5s; }
+.spider { left: calc(50% + var(--art) * 16); }
 @keyframes fly {
   0%   { transform: translate(-25vw, 0); }
   20%  { transform: translate(30vw, -3vh); }
@@ -387,21 +407,15 @@ canvas { image-rendering: pixelated; }
   outline-offset: calc(var(--art) * 3);
 }
 
-/* Sir Bouncealot on his cloud, under the first sign and a little over it */
+/* Sir Bouncealot on his cloud under the first sign: this keeps his place
+   in the page, landing.js puts him on the tower's plane right there. */
 .stage {
-  position: relative;
-  z-index: 2;
-  margin-top: calc(var(--art) * -34);
+  width: min(100%, calc(var(--art) * 192));
+  aspect-ratio: 192 / 154;
+  margin: calc(var(--art) * -24) auto 0;
   pointer-events: none;
 }
-.stage:empty { margin: 0; }   /* no art: nothing to overlap the sign with */
-.stage__art {
-  display: block;
-  width: calc(var(--art) * 192);
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-}
+html:not(.art) .stage { display: none; }
 
 /* ------------------------------------------------------------------ story */
 .climb {
@@ -575,8 +589,8 @@ kbd {
 
 /* ----------------------------------------------------------------- motion */
 @media (prefers-reduced-motion: reduce) {
-  .cloud, .lantern, .scene .witch { animation: none; }
-  .scene .witch { display: none; }
+  .cloud, .lantern, .flyer { animation: none; }
+  .flyer { display: none; }
   .lantern { opacity: 0.8; transform: translateY(-40vh); }
   .play { transition: none; }
 }

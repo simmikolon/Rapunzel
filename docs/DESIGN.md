@@ -133,6 +133,9 @@ presets full / bloom / off (F key, title button, `?fx=`).
   the first sign, the prince bouncing on a cloud, a cast of friends and
   foes, the controls and a note on the iPhone app. Drawn by the game's
   art code at runtime, PLAY leads to the full-screen game everywhere.
+  Three planes with parallax like in the game: sky and forest at 0.3 of
+  the scroll, tower, braid, the prince and the creatures (witch, stork,
+  crow, a spider) at 0.7, the signs at 1.0; none with reduced motion.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the
@@ -849,6 +852,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   scrolling page fights the touch steering, the collapsing toolbars, the
   safe area and the tilt prompt. The page draws its art with the game's
   own modules, so it cannot drift from the game; it reads without them.
+  The same day: parallax in three planes. The signs stay at the scroll's
+  pace (text that moves against the finger is hard to read); the scene's
+  planes are fixed to the window and moved by the scroll, each long enough
+  to reach the lawn at the end and to stay on it when scrolling back. The
+  creatures sit in the gaps between the signs, where the tower shows,
+  computed for the moment the gap is in the middle of the window; on a
+  phone the signs cover almost the whole width, so the gaps are where the
+  middle plane is seen.
 - 2026-11-06: The picture fills a phone screen: the logical height follows
   the screen's shape (`H` in `config.js`, 1664 on an iPhone 17, 1364 in a
   9:16 window and in the simulator), the HUD keeps out of the safe area and

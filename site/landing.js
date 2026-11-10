@@ -166,19 +166,55 @@ async function main() {
     draw: (g, b) => sign.drawPlankTag(g, b.x, b.y, b.w, b.h),
   }));
   document.querySelectorAll('.card').forEach((el) => cast(el, ctx));
-  stage(document.querySelector('.stage'), ctx);
   lawn(document.querySelector('.lawn'), ctx);
   const signs = [...document.querySelectorAll('[data-sign]')];
   signs.forEach((el, i) => woodenSign(el, signs[i - 1] || null, ctx));
+  // after the signs: he stands where the first sign ends
+  const prince = stage(document.querySelector('.stage'), ctx);
+  const planes = parallax();
 
   root.classList.add('art');
   const relayout = () => boxes.forEach((b) => b.layout());
   relayout();
-  // The pixel font changes the text's height once it has loaded.
+  // Whenever the page changes height (signs growing a board, the pixel font
+  // arriving) the prince moves with his place and the planes get new lengths.
+  const settle = () => { if (prince) prince.place(); if (planes) planes.size(); placeCreatures(); };
+  new ResizeObserver(settle).observe(document.body);
   if (document.fonts) document.fonts.ready.then(relayout);
   let pending = 0;
-  addEventListener('resize', () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(relayout); });
+  addEventListener('resize', () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(() => { relayout(); settle(); }); });
+  settle();
   if (!STILL) requestAnimationFrame(loop);
+}
+
+// ---------------------------------------------------------------- parallax
+// The scene's two planes follow the scroll more slowly than the page: the
+// far one (sky, forest) at FAR, the middle one (tower, braid, the prince and
+// the creatures) at MID of it, so the signs pass in front of the tower and
+// the tower in front of the sky. A plane is long enough to reach the
+// bottom of the page at the last scroll position, plus what the page itself
+// would still move over it when scrolling back (so the tower never lifts
+// off the lawn). Nothing moves with reduced motion; the planes then span
+// the page as they do without this script.
+const FAR = 0.3, MID = 0.7;
+function parallax() {
+  if (STILL) return null;
+  const far = document.querySelector('.layer--far'), mid = document.querySelector('.layer--mid');
+  if (!far || !mid) return null;
+  root.classList.add('parallax');
+  const place = () => {
+    const y = scrollY;
+    far.style.transform = `translate3d(0, ${(-y * FAR).toFixed(1)}px, 0)`;
+    mid.style.transform = `translate3d(0, ${(-y * MID).toFixed(1)}px, 0)`;
+  };
+  const size = () => {
+    const vh = innerHeight, max = Math.max(0, root.scrollHeight - vh);
+    far.style.height = `${Math.ceil(max * FAR + vh * (2 - FAR))}px`;
+    mid.style.height = `${Math.ceil(max * MID + vh * (2 - MID))}px`;
+    place();
+  };
+  addEventListener('scroll', place, { passive: true });
+  return { size };
 }
 
 // ------------------------------------------------------------------ scene
@@ -237,22 +273,15 @@ function scene({ art }) {
     c.style.setProperty('--delay', `${[-20, -55, -90][i]}s`);
     sky.append(c);
   });
-  // the witch on her broom, flapping between her two frames while she flies
-  if (!STILL) {
-    const frames = art.creatures.witchR;
-    const witch = canvas('sprite witch');
-    const wg = painter(witch, frames[0].w, frames[0].h);
-    witch.style.setProperty('--w', witch.width);
-    witch.style.setProperty('--h', witch.height);
-    document.querySelector('.scene').append(witch);
-    let shown = -1;
-    moving(witch, (t) => {
-      const f = step(t, 4, 2);
-      if (f === shown) return;
-      shown = f;
-      wg.clear();
-      wg.blit(frames[f], frames[f].ax, frames[f].ay);
-    });
+  // the creatures on the tower's plane: the witch over the first sign, the
+  // others each in a gap between two signs (placed by placeCreatures)
+  const mid = document.querySelector('.layer--mid');
+  if (mid && !STILL) {
+    const c = art.creatures;
+    flyer(mid, c.witchR, 'witch', 4);
+    gapped.push([spider(mid, c.spider), '#story', '#cast']);
+    gapped.push([flyer(mid, c.storkR, 'stork', 3), '#cast', '#controls']);
+    gapped.push([flyer(mid, c.crowR, 'crow', 8), '#controls', '#iphone']);
   }
 
   const spots = [[6, 0.9, 30, -4], [17, 0.5, 24, -14], [83, 0.75, 34, -9], [93, 0.5, 27, -20], [72, 0.4, 22, -2], [28, 0.4, 38, -25]];
@@ -264,6 +293,59 @@ function scene({ art }) {
     c.style.setProperty('--delay', `${delay}s`);
     sky.append(c);
   });
+}
+
+// A creature in the gap between two signs, where the tower shows: on the
+// tower's plane, so it sits at the height where the gap is when that gap
+// is in the middle of the window (with parallax the plane has fallen
+// behind the page by then).
+const gapped = [];
+function placeCreatures() {
+  const k = root.classList.contains('parallax') ? 1 - MID : 0;
+  const vh = innerHeight, max = Math.max(0, root.scrollHeight - vh);
+  for (const [el, a, b] of gapped) {
+    const above = document.querySelector(a), below = document.querySelector(b);
+    if (!above || !below) continue;
+    const center = (above.getBoundingClientRect().bottom + below.getBoundingClientRect().top) / 2 + scrollY;
+    const s = Math.min(max, Math.max(0, center - vh / 2));
+    el.style.top = `${Math.round(center - k * s - el.offsetHeight / 2)}px`;
+  }
+}
+
+// A creature crossing the plane (the path is CSS, .flyer), its frames
+// flipping at `fps` while it is on screen.
+function flyer(plane, frames, cls, fps) {
+  const c = canvas(`sprite flyer ${cls}`);
+  const g = painter(c, frames[0].w, frames[0].h);
+  c.style.setProperty('--w', c.width);
+  c.style.setProperty('--h', c.height);
+  plane.append(c);
+  let shown = -1;
+  moving(c, (t) => {
+    const f = step(t, fps, frames.length);
+    if (f === shown) return;
+    shown = f;
+    g.clear();
+    g.blit(frames[f], frames[f].ax, frames[f].ay);
+  });
+  return c;
+}
+
+// A spider bobbing on her thread beside the braid, short enough for a gap.
+function spider(plane, frames) {
+  const c = canvas('sprite spider');
+  const W = frames[0].w, H = 30 * A;
+  const g = painter(c, W, H);
+  c.style.setProperty('--w', c.width);
+  c.style.setProperty('--h', c.height);
+  plane.append(c);
+  moving(c, (t) => {
+    const y = 24 + (1 - Math.cos(t * 1.1)) * 20;
+    g.clear();
+    g.rect(W / 2 - 2, 0, 4, y + 4, '#e8e8f0', 0.75);
+    g.blit(frames[step(t, 3, 2)], W / 2, y);
+  });
+  return c;
 }
 
 // A sprite on its own little canvas, shown at --art (times --z) per art pixel.
@@ -515,9 +597,18 @@ const CAST = {
 // of a run: hops of the title's height, now and then a higher one with a
 // flip and sparkles (title.js / config.js HOP_VY and SHOWOFF_VY).
 function stage(el, { art }) {
-  if (!el) return;
+  if (!el) return null;
+  const plane = document.querySelector('.layer--mid');
   const c = canvas('stage__art');
-  el.append(c);
+  (plane || el).append(c);
+  // his place in the page, in the plane's coordinates (the same as the
+  // page's at the top, where both planes start)
+  const place = () => {
+    const r = el.getBoundingClientRect();
+    Object.assign(c.style, {
+      left: `${r.left}px`, top: `${r.top + scrollY}px`, width: `${r.width}px`, height: `${r.height}px`,
+    });
+  };
   const W = 768, H = 616, GROUND = 560, G = 2100;
   const g = painter(c, W, H);
   const cloud = art.clouds.thick.normal[0];
@@ -562,7 +653,8 @@ function stage(el, { art }) {
   };
   hop();
   frame(0);
-  if (!STILL) moving(el, frame);
+  if (!STILL) moving(c, frame);
+  return { place };
 }
 
 // --------------------------------------------------------------- odds and ends
