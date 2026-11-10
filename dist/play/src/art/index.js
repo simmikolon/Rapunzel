@@ -1,0 +1,29 @@
+import { buildPrince } from './prince.js';
+import { buildPlatforms } from './platforms.js';
+import { buildCreatures } from './creatures.js';
+import { buildTiles } from './tiles.js';
+import { buildTrees } from './trees.js';
+import { buildClouds } from './clouds.js';
+import { buildLanterns } from './lanterns.js';
+import { buildWind } from './wind.js';
+import { buildBalconies } from './balconies.js';
+import { buildWindows } from './windows.js';
+import { buildLogo } from './logo.js';
+import { buildSign } from './sign.js';
+
+export function buildAllArt() {
+  return {
+    prince: buildPrince(),
+    platforms: buildPlatforms(),
+    creatures: buildCreatures(),
+    tiles: buildTiles(),
+    trees: buildTrees(),
+    clouds: buildClouds(),
+    lanterns: buildLanterns(),
+    wind: buildWind(),
+    balconies: buildBalconies(),
+    windows: buildWindows(),
+    logo: buildLogo(),
+    sign: buildSign(),
+  };
+}

@@ -1,0 +1,582 @@
+/* The landing page (site/, served at /; the game is at /play/). landing.js
+   draws the scene, the signs and the lettering with the game's own art code;
+   everything here also stands on its own, with plain wood and gold type, for
+   the moment before that script runs or if it cannot. */
+
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/play/fonts/press-start-2p-latin.woff2") format("woff2");
+}
+
+:root {
+  /* CSS px per art pixel: one art pixel is 4 of the game's logical px, and
+     the game on a phone shows about 2 CSS px per art pixel. landing.js reads it. */
+  --art: 2px;
+  --gutter: 12px;
+
+  /* the game's palette (web/src/palette.js) */
+  --night: #1c1834;
+  --night-deep: #1e193e;
+  --dusk: #27283e;
+  --teal-dark: #1c4a5b;
+  --scene: #1e3c3f;
+  --forest: #11262a;
+  --plank: #b9875a;
+  --plank-hi: #dbb083;
+  --plank-dark: #7a5235;
+  --bark: #625243;
+  --bark-dark: #4c3637;
+  --bark-shadow: #302820;
+  --ink: #3b2a1e;            /* sign.js INK, the painted text */
+  --ink-deep: #2a1b10;       /* a shade darker for running text */
+  --gold: #f7d35b;
+  --gold-hi: #fff1a8;
+  --gold-dark: #a87a1c;
+  --outline: #102024;
+  --pink: #e85d8a;
+  --pink-hi: #ff9ab8;
+  --pink-dark: #a83a62;
+  --pink-edge: #73213f;
+  --grass: #4ada62;
+
+  --pixel: "Press Start 2P", "Courier New", monospace;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+
+@media (min-width: 760px) {
+  :root { --art: 3px; --gutter: 24px; }
+}
+
+html {
+  background: var(--night);
+  overflow-x: hidden;            /* older browsers; body clips below */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  font: 600 16px/1.55 var(--round);
+  color: var(--ink-deep);
+  background: linear-gradient(to bottom,
+    var(--night) 0, var(--night-deep) 16%, var(--dusk) 30%,
+    var(--teal-dark) 48%, var(--scene) 66%, var(--forest) 100%);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 760px) {
+  body { font-size: 17px; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowrap { white-space: nowrap; }
+
+/* Pixel art stays pixel art at any size. */
+canvas { image-rendering: pixelated; }
+
+/* ------------------------------------------------------------------ scene */
+/* The page is the tower, top to bottom: the night sky, the tower with
+   Rapunzel's braid all the way down, the forest closing in, the lawn. */
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.scene > * { position: absolute; }
+
+.scene__stars {
+  inset: 0 0 auto 0;
+  height: min(60%, 240vh);
+  background-image: var(--stars, none);
+  background-size: calc(var(--art) * 160);
+  image-rendering: pixelated;
+  -webkit-mask-image: linear-gradient(#000 35%, transparent);
+  mask-image: linear-gradient(#000 35%, transparent);
+}
+
+.scene__sky { inset: 0 0 auto 0; height: 200vh; }
+
+.scene__forest {
+  inset: 42% 0 0 0;
+  background-image: var(--forest, none);
+  background-size: calc(var(--art) * 192) auto;
+  background-position: center top;
+  image-rendering: pixelated;
+  opacity: 0.75;
+  -webkit-mask-image: linear-gradient(transparent, #000 22%);
+  mask-image: linear-gradient(transparent, #000 22%);
+}
+
+.scene__tower,
+.scene__braid {
+  top: 0;
+  bottom: calc(var(--art) * 32 + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+}
+
+.scene__tower {
+  width: calc(var(--art) * 95);
+  background: var(--tower, linear-gradient(90deg, #465e66, #79a1ae 20%, #79a1ae 80%, #465e66));
+  background-size: 100% auto;
+}
+/* night at the top, the forest's shade below, haze along the edges */
+.scene__tower::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(16, 32, 36, 0.55), transparent 18%, transparent 82%, rgba(16, 32, 36, 0.55)),
+    linear-gradient(rgba(28, 24, 52, 0.62), rgba(28, 24, 52, 0.3) 30%, rgba(20, 50, 52, 0.2) 60%, rgba(10, 30, 28, 0.45));
+}
+
+.scene__braid {
+  width: calc(var(--art) * 44);
+  background: var(--braid, none) repeat-y center top;
+  background-size: 100% auto;
+}
+
+/* the moon, drifting clouds and lanterns rising into the night (landing.js) */
+.sprite {
+  display: block;
+  width: calc(var(--w) * var(--art) * var(--z, 1));
+  height: calc(var(--h) * var(--art) * var(--z, 1));
+}
+.scene__sky .sprite { position: absolute; }
+
+.moon {
+  top: calc(env(safe-area-inset-top) + var(--art) * 14);
+  right: max(6%, calc(50% - 560px));
+  --z: 1.5;
+  filter: drop-shadow(0 0 calc(var(--art) * 6) rgba(255, 244, 207, 0.35));
+}
+
+.cloud {
+  top: var(--y);
+  left: 0;
+  opacity: 0.22;
+  --z: 1;
+  animation: drift var(--d) linear var(--delay) infinite;
+}
+@keyframes drift {
+  from { transform: translateX(-30vw); }
+  to   { transform: translateX(130vw); }
+}
+
+.lantern {
+  bottom: 0;
+  left: var(--x);
+  width: calc(var(--w) * var(--art) * var(--z) * 0.5);
+  height: calc(var(--h) * var(--art) * var(--z) * 0.5);
+  opacity: 0;
+  filter: drop-shadow(0 0 calc(var(--art) * 5) rgba(255, 179, 71, 0.8));
+  animation: rise var(--d) linear var(--delay) infinite;
+}
+/* the witch crosses the night sky now and then (landing.js flaps her broom) */
+.scene .witch {
+  position: absolute;
+  top: 38vh;
+  left: 0;
+  --z: 1;
+  transform: translateX(-40vw);
+  animation: fly 30s linear 6s infinite;
+}
+@keyframes fly {
+  0%   { transform: translate(-25vw, 0); }
+  20%  { transform: translate(30vw, -3vh); }
+  45%  { transform: translate(115vw, -9vh); }
+  100% { transform: translate(115vw, -9vh); }
+}
+
+@keyframes rise {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  12%  { opacity: 0.9; }
+  50%  { transform: translate(calc(var(--art) * 10), -100vh); }
+  85%  { opacity: 0.85; }
+  100% { transform: translate(calc(var(--art) * -6), -190vh); opacity: 0; }
+}
+
+/* ------------------------------------------------------------------ signs */
+/* A section on the game's wooden sign. landing.js draws the sign behind it
+   (adding .drawn) and grows it to whole boards; until then, plain wood. */
+.sign {
+  --w: 720px;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: min(100% - 2 * var(--gutter), var(--w));
+  margin: calc(var(--art) * 30) auto 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.sign:not(.drawn) {
+  background:
+    repeating-linear-gradient(transparent 0 calc(var(--art) * 14), var(--plank-dark) 0 calc(var(--art) * 16), var(--plank-hi) 0 calc(var(--art) * 17)),
+    var(--plank);
+  border: calc(var(--art) * 4) solid var(--bark);
+  box-shadow: inset 0 0 0 var(--art) var(--bark-shadow), calc(var(--art) * 3) calc(var(--art) * 3) 0 rgba(0, 0, 0, 0.25);
+}
+.sign__body {
+  padding: calc(var(--art) * 14) calc(var(--art) * 12);
+}
+.sign__body > :first-child { margin-top: 0; }
+.sign__body > :last-child { margin-bottom: 0; }
+
+.backdrop {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.sign--wide { --w: 940px; }
+.sign--controls { --w: 900px; }
+.sign--narrow { --w: 600px; }
+
+.sign p { margin: 0 0 0.9em; }
+.sign p:last-child { margin-bottom: 0; }
+
+/* Running text sits on a light board nailed onto the sign (sign.js
+   drawPlankTag), so the seams between the boards never cross a line. */
+.panel {
+  position: relative;
+  isolation: isolate;
+  padding: calc(var(--art) * 7) calc(var(--art) * 9) calc(var(--art) * 9);
+}
+.panel:not(.drawn) {
+  background: var(--plank-hi);
+  border: var(--art) solid var(--bark-shadow);
+}
+
+/* Headings in the game's gold letters (drawn), gold type until then. */
+.letters {
+  margin: 0 0 calc(var(--art) * 8);
+  font: 400 calc(var(--art) * 8)/1.3 var(--pixel);
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--gold);
+  text-shadow:
+    -2px 0 var(--outline), 2px 0 var(--outline), 0 -2px var(--outline), 0 2px var(--outline),
+    4px 4px rgba(8, 16, 20, 0.55);
+}
+.letters.drawn { text-shadow: none; line-height: 0; }
+.letters__art { display: block; margin: 0 auto; }
+
+/* ------------------------------------------------------------------- hero */
+.hero {
+  position: relative;
+  z-index: 1;
+  padding-top: calc(env(safe-area-inset-top) + var(--art) * 24);
+}
+.hero .sign { margin-top: 0; }
+.sign--hero .sign__body {
+  text-align: center;
+  padding-top: calc(var(--art) * 9);
+  padding-bottom: calc(var(--art) * 8);
+}
+
+.wordmark {
+  margin: 0 auto;
+  font: 400 calc(var(--art) * 12)/1.15 var(--pixel);
+  text-transform: uppercase;
+}
+.wordmark__sir,
+.wordmark__word { display: block; }
+.wordmark__sir { color: var(--pink-hi); font-size: 0.6em; }
+.wordmark__word {
+  color: var(--gold);
+  text-shadow: -2px 0 var(--outline), 2px 0 var(--outline), 0 -2px var(--outline), 0 2px var(--outline);
+}
+.wordmark.drawn { line-height: 0; }
+.wordmark.drawn > span {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.wordmark__art {
+  display: block;
+  width: min(100%, calc(var(--art) * 180));
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 0 calc(var(--art) * 4) rgba(255, 220, 120, 0.25));
+}
+
+.tagline {
+  margin: calc(var(--art) * 4) 0 0 !important;
+  font: 400 calc(var(--art) * 4.5)/1.6 var(--pixel);
+  color: var(--pink-dark);
+  text-shadow: 0 0 2px rgba(245, 222, 190, 0.85), 0 0 1px rgba(245, 222, 190, 0.85) !important;
+}
+
+.best {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  margin: calc(var(--art) * 7) auto 0 !important;
+  padding: calc(var(--art) * 4) calc(var(--art) * 6) calc(var(--art) * 4) calc(var(--art) * 13);
+  font: 400 calc(var(--art) * 4.5)/1 var(--pixel);
+  color: var(--ink);
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 238, 158, 0.6) !important;
+}
+.best[hidden] { display: none; }
+.best:not(.drawn) { background: #c9a84a; border: var(--art) solid #7d5c1a; }
+.best__m { margin-left: 0.6em; }
+
+.free {
+  margin: 0 !important;
+  font: 400 calc(var(--art) * 4)/1.7 var(--pixel);
+  color: var(--ink);
+  text-shadow: 0 0 2px rgba(245, 222, 190, 0.9), 0 0 1px rgba(245, 222, 190, 0.9) !important;
+}
+
+/* PLAY on the game's ribbon banner */
+.play {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: calc(var(--art) * 124);
+  height: calc(var(--art) * 24);
+  margin: calc(var(--art) * 8) auto calc(var(--art) * 6);
+  text-decoration: none;
+  transition: transform 0.12s ease-out;
+}
+.play:not(.drawn) .play__label {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0 calc(var(--art) * 12);
+  box-sizing: border-box;
+  background: var(--pink);
+  border: var(--art) solid var(--pink-edge);
+  box-shadow: inset 0 calc(var(--art) * 2) 0 var(--pink-hi), inset 0 calc(var(--art) * -2) 0 var(--pink-dark);
+  font: 400 calc(var(--art) * 8)/1 var(--pixel);
+  color: var(--gold);
+  text-transform: uppercase;
+  text-shadow: -2px 0 var(--outline), 2px 0 var(--outline), 0 -2px var(--outline), 0 2px var(--outline);
+}
+.play.drawn .play__label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.play:hover { transform: translateY(calc(var(--art) * -1)) scale(1.03); }
+.play:active { transform: translateY(var(--art)) scale(0.99); }
+.play:focus-visible {
+  outline: calc(var(--art) * 1.5) dashed var(--gold-hi);
+  outline-offset: calc(var(--art) * 3);
+}
+
+/* Sir Bouncealot on his cloud, under the first sign and a little over it */
+.stage {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(var(--art) * -34);
+  pointer-events: none;
+}
+.stage:empty { margin: 0; }   /* no art: nothing to overlap the sign with */
+.stage__art {
+  display: block;
+  width: calc(var(--art) * 192);
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------ story */
+.climb {
+  list-style: none;
+  margin: calc(var(--art) * 8) 0;
+  padding: 0;
+}
+.climb li {
+  display: flex;
+  gap: 0.8em;
+  align-items: baseline;
+  padding: 0.3em 0 0.3em 0.9em;
+  border-left: calc(var(--art) * 2) solid var(--plank-dark);
+  text-shadow: 0 1px 0 rgba(255, 236, 205, 0.4);
+}
+.climb__m {
+  flex: none;
+  min-width: 5.5em;
+  font: 400 11px/1 var(--pixel);
+  color: var(--pink-dark);
+}
+.ask {
+  font: 400 calc(var(--art) * 4.5)/1.6 var(--pixel);
+  color: var(--pink-dark);
+  text-align: center;
+  margin-top: 1.4em !important;
+}
+
+/* ------------------------------------------------------------------- cast */
+#cast { --w: 940px; }
+.cast__group { margin: calc(var(--art) * 10) 0 calc(var(--art) * 5); }
+.letters--pink { color: var(--pink-hi); font-size: calc(var(--art) * 6); }
+.cast {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);   /* four friends, six foes: no card left alone */
+  gap: calc(var(--art) * 5);
+}
+@media (min-width: 900px) {
+  .cast--friends { grid-template-columns: repeat(4, 1fr); }
+  .cast--foes { grid-template-columns: repeat(3, 1fr); }
+}
+.card,
+.way {
+  position: relative;
+  isolation: isolate;
+  padding: calc(var(--art) * 6) calc(var(--art) * 7) calc(var(--art) * 8);
+}
+.card:not(.drawn),
+.way:not(.drawn) {
+  background: var(--plank-hi);
+  border: var(--art) solid var(--bark-shadow);
+}
+.card { text-align: center; }
+.card__art {
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.card__sprite { display: block; }
+.card h4,
+.way h3 {
+  margin: 0.8em 0 0.5em;
+  font: 400 11px/1.4 var(--pixel);
+  color: var(--ink);
+}
+.card p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  text-shadow: none;
+}
+
+/* on a phone a card is a row: picture left, words right */
+@media (max-width: 559px) {
+  .cast { grid-template-columns: 1fr; }
+  .card {
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    column-gap: 12px;
+    align-items: center;
+    text-align: left;
+  }
+  .card__art { grid-row: 1 / span 2; height: 136px; width: 104px; }
+  .card h4 { margin: 0 0 0.4em; align-self: end; }
+  .card p { align-self: start; }
+}
+
+/* --------------------------------------------------------------- controls */
+#controls { --w: 900px; }
+.ways {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: calc(var(--art) * 5);
+  margin-top: calc(var(--art) * 8);
+}
+.way h3 { margin-top: 0.2em; }
+.way ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.way li { padding: 0.25em 0; }
+kbd {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0.35em 0.45em 0.3em;
+  font: 400 10px/1 "Press Start 2P", ui-rounded, system-ui, sans-serif;  /* the arrows come from the system font */
+  text-align: center;
+  color: var(--ink);
+  background: #f1d3a8;
+  border: 2px solid var(--bark-shadow);
+  border-radius: 2px;
+  box-shadow: 0 2px 0 var(--bark-shadow);
+  vertical-align: 0.1em;
+}
+
+/* ----------------------------------------------------------------- iphone */
+.app-icon {
+  display: block;
+  width: calc(var(--art) * 32);
+  height: calc(var(--art) * 32);
+  margin: 0 auto calc(var(--art) * 6);
+  border-radius: 22%;
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 var(--art) var(--bark-shadow), calc(var(--art) * 2) calc(var(--art) * 2) 0 rgba(0, 0, 0, 0.3);
+}
+#iphone .sign__body { text-align: center; }
+#iphone p { max-width: 34em; margin-left: auto; margin-right: auto; }
+
+/* ------------------------------------------------------------------- lawn */
+.lawn {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 0;
+}
+.lawn .sign__body { text-align: center; }
+.lawn .play { margin-bottom: calc(var(--art) * 2); }
+.lawn__ground {
+  position: relative;
+  height: calc(var(--art) * 36 + env(safe-area-inset-bottom));
+  margin-top: calc(var(--art) * 40);
+  background: var(--ground, linear-gradient(var(--grass) 0 12%, #1c8730 12% 34%, #25581f 34%)) repeat-x center top;
+  background-size: calc(var(--art) * 192) calc(var(--art) * 36);
+  background-color: #25581f;
+  image-rendering: pixelated;
+}
+.braid-end {
+  position: absolute;
+  left: calc(50% - var(--art) * 7);
+  top: calc(var(--art) * -10);
+}
+.credits {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom) + var(--art) * 6);
+  margin: 0;
+  padding: 0 var(--gutter);
+  font: 400 9px/1.8 var(--pixel);
+  text-align: center;
+  color: #d8f0cf;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+/* ----------------------------------------------------------------- motion */
+@media (prefers-reduced-motion: reduce) {
+  .cloud, .lantern, .scene .witch { animation: none; }
+  .scene .witch { display: none; }
+  .lantern { opacity: 0.8; transform: translateY(-40vh); }
+  .play { transition: none; }
+}

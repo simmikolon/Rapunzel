@@ -22,6 +22,9 @@ import { BloomFilter, CRTFilter } from './filters.js';
 
 export const FONT = ['Press Start 2P', 'Courier New', 'monospace'];
 export const PRESETS = ['full', 'bloom', 'off'];
+// The game starts without screen effects (the plain picture looked better);
+// bloom and CRT are there for whoever picks them (F, the title's button).
+export const DEFAULT_PRESET = 'off';
 const LAYERS = ['bg', 'world', 'light', 'glow', 'hud', 'overlay'];
 const SCREEN = () => new Rectangle(0, 0, W, H);
 
@@ -86,12 +89,12 @@ export class Renderer {
     this.bloom = new BloomFilter(fx.bloom);
     this.crt = new CRTFilter(fx.crt);
     this.cur = this.layers.bg;
-    this.setPreset('full');
+    this.setPreset(DEFAULT_PRESET);
   }
 
   // 'full' = bloom + CRT, 'bloom' = bloom only, 'off' = plain WebGL.
   setPreset(p) {
-    if (!PRESETS.includes(p)) p = 'full';
+    if (!PRESETS.includes(p)) p = DEFAULT_PRESET;
     this.preset = p;
     const bloom = p !== 'off', crt = p === 'full';
     this.layers.glow.c.visible = bloom;

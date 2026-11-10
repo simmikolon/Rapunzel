@@ -1,0 +1,118 @@
+// All gameplay tunables in one place. Units: logical pixels and seconds.
+// The logical canvas is 768 wide like the original SpriteKit scene. Its
+// height follows the screen: 1364 (9:16, the scene's size) in a desktop
+// window and in the simulator, taller on a phone so the picture fills the
+// screen without bars (an iPhone's 9:19.5 gives 1664). Gameplay reads H live;
+// the HUD keeps out of the safe area and the sign screens, laid out for
+// 768 x 1364, sit centred (see hud.js signShift).
+
+export const W = 768;
+export let H = 1364;
+export const H_MIN = 1364;
+export const H_MAX = 1920;            // taller windows are letterboxed (style.css caps the canvas the same way)
+// Safe area in logical px: the notch / Dynamic Island and the home indicator.
+export const SAFE = { top: 0, bottom: 0, left: 0, right: 0 };
+export function setViewport(height, safe) {
+  H = Math.round(Math.max(H_MIN, Math.min(H_MAX, height || H_MIN)));
+  if (safe) Object.assign(SAFE, safe);
+  return H;
+}
+
+// Size of one "art pixel". bg.png from the prototype uses 4-px blocks.
+export const PX = 4;
+
+// --- Physics (ported from the SpriteKit prototype, then tuned) ---
+// SpriteKit used g = 9.8 m/s^2 * 150 pt/m = 1470 and a jump of 1500 pt/s,
+// which felt floaty. These values give a snappier arc of ~650 px per bounce.
+export const GRAVITY = 2100;
+export const JUMP_VY = 1650;          // bounce off a normal platform
+export const WEAK_JUMP_VY = 1550;     // bounce off a crumbling branch (still clears the max row gap)
+export const SPRING_VY = 2650;        // bounce off a ribbon bow
+export const STOMP_VY = 1500;         // bounce off an enemy's head
+export const BOOST_VY = 1500;         // added by a tap (pogo boost)
+export const MAX_FALL_SPEED = 2000;
+export const BONK_VY = -250;          // after hitting a plank swing from below
+export const HURT_VY = 900;           // small hop when hit so you can recover
+// Title hops: bounce off the lawn by countdown value (apex 160 / 193 / 229 px).
+// Keep every value under 1120 (apex below the first row at 300 px) and 1320
+// (the camera would start climbing).
+export const HOP_VY = { 3: 820, 2: 900, 1: 980 };
+export const SHOWOFF_VY = 960;        // every 4th to 6th idle hop: apex 219 px with a flip, his head under the title's sign
+export const COUNT_MIN_T = 0.3;       // a landing this soon after a count shows no new number
+// The ride down when the game loads: the camera is drawn this far above the
+// lawn and eases down over INTRO_T seconds before the title's sign drops in.
+export const INTRO_FROM = 4000;
+export const INTRO_T = 2.6;
+
+// Horizontal movement
+export const MOVE_SPEED = 560;        // keyboard / touch-steer top speed
+export const MOVE_ACCEL = 5200;
+export const MOVE_DECEL = 3800;
+export const TILT_SPEED = 820;        // full tilt top speed
+export const TILT_DEAD_ZONE = 2;      // degrees
+export const TILT_FULL = 22;          // degrees for full speed
+
+// Player body
+export const PLAYER_W = 104;
+export const PLAYER_H = 232;
+export const PLAYER_BODY_W = 40;      // narrow collision box like the original (30 pt)
+export const PLAYER_FOOT_INSET = 0;   // pogo tip is the sprite bottom
+
+// Boost meter: 3 charges, refilled by landing on platforms and lanterns.
+// While boosting the prince is shielded: enemies he touches are knocked
+// away instead of hurting him (boost is the game's "go through" verb).
+export const BOOST_SHIELD_TIME = 0.5;
+export const PUNCH_SUNS = 3;          // suns awarded for boosting through an enemy
+export const BOOST_CHARGES = 3;
+export const BOOST_REFILL_PER_LANDING = 0.5; // half a charge per landing
+export const BOOST_COOLDOWN = 0.18;
+
+// Camera (original: follow when player climbs 500 px above the camera anchor)
+export const CAMERA_PLAYER_OFFSET = 520;  // player's foot height above view bottom
+export const CAMERA_SMOOTH = 10;          // exponential follow rate (per second)
+export const CAMERA_START_Y = -100;       // view bottom at the start (shows the lawn)
+
+// Parallax factors relative to the prince's plane (1.0). Like the original
+// SpriteKit layers: the tower with its windows and Rapunzel's hair (and the
+// ribbons tied to it) scroll slower, the trees with their branches and
+// swings are in front and share the prince's plane.
+export const PARALLAX_FAR = 0.3;
+export const PARALLAX_FOREST = 0.55;
+export const PARALLAX_TOWER = 0.9;
+// A ribbon on the tower layer drifts upward relative to the prince as the
+// camera climbs, so a gap from a front-plane platform up to a row with only
+// ribbons is capped to stay reachable even after two boosts in a row
+// (camera up to ~1700 px above the modelled height -> ~170 px of drift).
+export const LAYER_GAP_CAP = 430;      // take-off from a healthy branch / swing
+export const LAYER_GAP_CAP_DRY = 370;  // take-off from a crumbling branch (weaker bounce)
+
+// Level structure (original beat length)
+export const BEAT = 300;
+export const SAFE_GAP = 520;          // max vertical distance between two non-crumbling platforms
+export const GROUND_Y = 0;
+
+// Lives
+export const MAX_HEARTS = 3;
+export const INVULNERABLE_TIME = 1.6;
+
+// Scoring: 100 px == 1 m of tower climbed
+export const PX_PER_METER = 100;
+
+// --- Post-processing (WebGL renderer, see src/gfx/) ---
+// Presets: 'full' (bloom + CRT), 'bloom', 'off'; F key / the title button cycle
+// them, ?fx=<preset> forces one for a visit.
+export const FX = {
+  // Selective bloom: glowing things are drawn again into a glow layer that
+  // is rendered at `resolution` x the screen, blurred `passes` times with a
+  // 9-tap Gaussian `spread` texels wide and added over the scene x `gain`.
+  bloom: { resolution: 0.5, spread: 1.6, passes: 2, gain: 1.25 },
+  // CRT pass: barrel curvature (corners bend off screen), chromatic
+  // aberration (fraction of the frame at the edges), scanline depth (one
+  // line per art pixel), phosphor mask depth, corner shading, flicker.
+  crt: { curvature: 0.035, aberration: 0.0022, scanline: 0.22, mask: 0.06, vignette: 0.22, flicker: 0.02 },
+};
+
+export const STORAGE_KEY = 'bouncealot.web.v1';
+// The game was called Rapunzel until 2026-11-03; saves under the old key are
+// read once and written back under the new one.
+export const LEGACY_STORAGE_KEY = 'rapunzel.web.v1';

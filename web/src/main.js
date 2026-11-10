@@ -6,7 +6,7 @@ import { World } from './world.js';
 import { HUD, SIGNS, signTravel } from './hud.js';
 import { drawTitle, drawCount } from './title.js';
 import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
-import { createRenderer, PRESETS } from './gfx/renderer.js';
+import { createRenderer, PRESETS, DEFAULT_PRESET } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 import { platform } from './platform.js';
 
@@ -36,7 +36,8 @@ class Game {
     this.noticeText = '';
     this.noticeT = 0;
     this.iosSoundHintShown = false;
-    this.fxPreset = 'full';
+    this.fxPreset = DEFAULT_PRESET;
+    this.fxPick = null;       // the preset the player chose (F, the title's button); null: the default
     this.dev = devParams();
     if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
     this.loadSave();
@@ -83,11 +84,15 @@ class Game {
     try {
       const s = JSON.parse(platform.storage.get(STORAGE_KEY) || platform.storage.get(LEGACY_STORAGE_KEY) || '{}');
       this.best = s.best || 0;
-      if (PRESETS.includes(s.fx)) this.fxPreset = s.fx;
+      // Only a preset the player picked is kept. Saves from before the
+      // default became 'off' wrote 'full' with every best height whether or
+      // not anyone chose it, so an old `fx` counts only when it is not 'full'.
+      const pick = PRESETS.includes(s.fxPick) ? s.fxPick : (s.fx === 'bloom' || s.fx === 'off') ? s.fx : null;
+      if (pick) { this.fxPick = pick; this.fxPreset = pick; }
     } catch (_) { this.best = 0; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.best, fx: this.fxPreset })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.best, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best;
@@ -96,6 +101,7 @@ class Game {
 
   cycleFx() {
     this.fxPreset = this.gfx.nextPreset();
+    this.fxPick = this.fxPreset;
     this.save();
     audio.click();
     this.notice(`Effects: ${this.fxLabel}`, 1.6);
