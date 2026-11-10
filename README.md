@@ -62,8 +62,8 @@ for the dev launch arguments and the TestFlight steps.
 PLAY on the title screen (or a tap anywhere, or space) starts a short
 countdown on the knight's hops; MENU on the pause and game-over screens
 leads back to the title. `M` toggles sound, `F` (or the button on the
-title screen) cycles the screen effects. The best height and the effects choice are kept in
-`localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
+title screen) cycles the screen effects (off to begin with). The best
+height and the effects the player picked are kept in `localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
 `?spawn=squirrel` puts one on the next branch, `?dev=1` shows altitude and
 zone.
 
@@ -166,9 +166,10 @@ Everything sits in a root container that carries the CRT filter.
   faint phosphor triad at retina densities, shades the corners and flickers
   by a few percent. Scanlines are counted in device pixels, so they stay
   the same size whatever the window.
-* **Presets**: `full` (bloom + CRT), `bloom` and `off`. `F` or the title
-  screen button cycle them, `?fx=full|bloom|off` in the URL forces one for a
-  visit. The choice is saved with the best height.
+* **Presets**: `full` (bloom + CRT), `bloom` and `off`; the game starts
+  with `off`. `F` or the title screen button cycle them, `?fx=full|bloom|off`
+  in the URL forces one for a visit. A preset the player picks is saved with
+  the best height (`fxPick`); the default is never saved.
 * **Art** stays procedural: at start-up `web/src/gfx/atlas.js` packs every
   sprite canvas into one 2048-px-wide texture with nearest-neighbour
   sampling, so the whole scene batches into a handful of draw calls and the

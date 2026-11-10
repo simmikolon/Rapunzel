@@ -1,0 +1,83 @@
+/* The pixel font is served from here (SIL Open Font License, see
+   fonts/OFL.txt) so the game has no runtime dependency on a font CDN. */
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/press-start-2p-latin.woff2") format("woff2");
+}
+
+:root {
+  /* The game reads these (src/main.js measureViewport) to keep its HUD out of
+     the notch / Dynamic Island and the home indicator; the canvas itself runs
+     under them. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0b1a1c;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: system-ui, sans-serif;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, #16302f 0%, #0b1a1c 70%);
+}
+
+#nowebgl {
+  position: absolute;
+  inset: auto 24px;
+  padding: 16px 20px;
+  border: 2px solid #8fd1c7;
+  border-radius: 12px;
+  background: rgba(16, 32, 36, 0.92);
+  color: #ffe9a0;
+  font: 14px/1.5 "Press Start 2P", "Courier New", monospace;
+  text-align: center;
+}
+
+#game {
+  /* A portrait screen is filled edge to edge: 768 logical px wide, as tall as
+     the screen's shape asks for (config.js H follows the canvas). A viewport
+     wider than 9:16 gets a 9:16 box of full height instead, and a very narrow
+     one is capped at 768:1920 and letterboxed (H_MAX). dvh follows a mobile
+     browser's collapsing toolbars. */
+  width: 100vw;
+  height: min(100vh, calc(100vw * 1920 / 768));
+  display: block;
+  background: #1e3c3f;
+  touch-action: none;
+}
+
+@media (min-aspect-ratio: 768 / 1364) {
+  #game {
+    width: calc(100vh * 768 / 1364);
+    height: 100vh;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@supports (height: 100dvh) {
+  #game { height: min(100dvh, calc(100dvw * 1920 / 768)); }
+  @media (min-aspect-ratio: 768 / 1364) {
+    #game { width: calc(100dvh * 768 / 1364); height: 100dvh; }
+  }
+}
