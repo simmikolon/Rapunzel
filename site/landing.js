@@ -139,6 +139,7 @@ const snapH = (el, s) => Math.round(el.offsetHeight / s) * A;
 // ------------------------------------------------------------------- main
 async function main() {
   const load = (p) => import(GAME + p);
+  const episodes = fetch('/devlog/episodes.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
   const [
     { buildPrince }, { buildCreatures }, { buildSign }, { buildLogo, drawWord, wordWidth, WORD_ADVANCE },
     { buildTiles }, { buildLanterns }, { buildWindows }, { buildPlatforms }, { buildClouds },
@@ -161,7 +162,8 @@ async function main() {
   document.querySelectorAll('.letters').forEach((el) => letters(el, ctx));
   document.querySelectorAll('.play').forEach((el) => ribbon(el, ctx));
   best(document.querySelector('.best'), ctx);
-  document.querySelectorAll('.card, .way, .panel').forEach((el) => drawnBox(el, {
+  devlog(await episodes);
+  document.querySelectorAll('.card, .way, .panel, .episode').forEach((el) => drawnBox(el, {
     measure: (s) => ({ w: snapW(el, s), h: snapH(el, s), m: [0, 0, 4, 4] }),
     draw: (g, b) => sign.drawPlankTag(g, b.x, b.y, b.w, b.h),
   }));
@@ -329,7 +331,7 @@ function scene({ art, C }) {
     const has = (a, b) => document.querySelector(a) && document.querySelector(b);
     if (has('#story', '#cast')) gapped.push([spider(mid, c.spider), '#story', '#cast']);
     if (has('#cast', '#controls')) gapped.push([flyer(mid, c.storkR, 'stork', 3), '#cast', '#controls']);
-    if (has('#controls', '#iphone')) gapped.push([flyer(mid, c.crowR, 'crow', 8), '#controls', '#iphone']);
+    if (has('#controls', '#devlog')) gapped.push([flyer(mid, c.crowR, 'crow', 8), '#controls', '#devlog']);
   }
 
   const spots = [[6, 0.9, 30, -4], [17, 0.5, 24, -14], [83, 0.75, 34, -9], [93, 0.5, 27, -20], [72, 0.4, 22, -2], [28, 0.4, 38, -25]];
@@ -341,6 +343,72 @@ function scene({ art, C }) {
     c.style.setProperty('--delay', `${delay}s`);
     sky.append(c);
   });
+}
+
+// ----------------------------------------------------------------- devlog
+// The video devlog from /devlog/episodes.json ({ channel, episodes: [{ id,
+// date, title, text }] }, newest first; tools/devlog_add.py adds one). Each
+// list marked data-devlog shows the episodes (data-limit: only the newest
+// few). Nothing is loaded from YouTube until a video is clicked: the
+// picture is the one tools/devlog_add.py saved next to the list, the video
+// comes from youtube-nocookie.com after the click (the privacy policy says
+// so). Without episodes the page keeps its "coming soon" text.
+function devlog(data) {
+  const list = data && Array.isArray(data.episodes) ? data.episodes : [];
+  if (!list.length) return;
+  for (const ul of document.querySelectorAll('[data-devlog]')) {
+    const limit = parseInt(ul.dataset.limit, 10) || list.length;
+    for (const ep of list.slice(0, limit)) ul.append(episodeCard(ep));
+    ul.hidden = false;
+  }
+  for (const el of document.querySelectorAll('[data-devlog-intro]')) el.textContent = el.dataset.devlogIntro;
+  for (const el of document.querySelectorAll('[data-devlog-more]')) el.hidden = list.length <= (parseInt(el.dataset.devlogMore, 10) || 0);
+  for (const a of document.querySelectorAll('.devlog__channel')) {
+    if (data.channel) { a.href = data.channel; a.hidden = false; }
+  }
+  // the footer gets its link once there is something to see
+  for (const nav of document.querySelectorAll('.links')) {
+    if (nav.querySelector('a[href="/devlog/"]')) continue;
+    const a = document.createElement('a');
+    a.href = '/devlog/';
+    a.textContent = 'Devlog';
+    nav.insertBefore(a, nav.querySelector('a[href="/impressum/"]'));
+  }
+}
+
+function episodeCard(ep) {
+  const id = String(ep.id || '').replace(/[^A-Za-z0-9_-]/g, '');
+  const li = document.createElement('li');
+  li.className = 'episode';
+  const when = ep.date ? new Date(`${ep.date}T12:00:00`) : null;
+  const date = when && !isNaN(when) ? when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  li.innerHTML = `
+    <div class="episode__video">
+      <button class="episode__play" type="button">
+        <img src="/devlog/thumbs/${id}.jpg" alt="" loading="lazy" decoding="async" width="640" height="360">
+        <span class="episode__badge" aria-hidden="true"></span>
+        <span class="sr-only"></span>
+      </button>
+    </div>
+    <h3></h3>
+    ${date ? `<time datetime="${ep.date}">${date}</time>` : ''}
+    <p class="episode__text"></p>
+    <p class="episode__note">A click loads the video from YouTube (Google) and sends them your IP address. <a href="/datenschutz/#youtube">Privacy</a> · <a class="episode__out" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Watch on YouTube</a></p>`;
+  li.querySelector('h3').textContent = ep.title || '';
+  li.querySelector('.episode__text').textContent = ep.text || '';
+  li.querySelector('.episode__play .sr-only').textContent = `Play “${ep.title || 'video'}” (loads YouTube)`;
+  li.querySelector('.episode__play').addEventListener('click', () => {
+    const frame = document.createElement('iframe');
+    frame.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
+    frame.title = ep.title || 'Devlog video';
+    frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    const box = li.querySelector('.episode__video');
+    box.replaceChildren(frame);
+    frame.focus();
+  });
+  return li;
 }
 
 // --------------------------------------------------------------- the summit

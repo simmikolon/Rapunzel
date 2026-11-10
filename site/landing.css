@@ -699,6 +699,111 @@ kbd {
   vertical-align: 0.1em;
 }
 
+/* ----------------------------------------------------------------- devlog */
+/* Episodes on light boards: the video's picture (saved on this site) with a
+   pink play button; a click swaps in YouTube's player (landing.js). */
+.episodes {
+  list-style: none;
+  margin: calc(var(--art) * 6) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(var(--art) * 6);
+}
+.episodes[hidden] { display: none; }
+@media (min-width: 900px) {
+  .episodes { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+.episode {
+  position: relative;
+  isolation: isolate;
+  padding: calc(var(--art) * 5) calc(var(--art) * 5) calc(var(--art) * 7);
+}
+.episode:not(.drawn) { background: var(--plank-hi); border: var(--art) solid var(--bark-shadow); }
+.episode__video {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--outline);
+  border: 2px solid var(--bark-shadow);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.25);
+}
+.episode__video img,
+.episode__video iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+.episode__play {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.episode__play:focus-visible { outline: 3px dashed var(--gold-hi); outline-offset: -6px; }
+.episode__badge {                          /* a pink button with a gold triangle */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 44px;
+  margin: -22px 0 0 -32px;
+  background: var(--pink);
+  border: 3px solid var(--pink-edge);
+  box-shadow: inset 0 4px 0 var(--pink-hi), inset 0 -4px 0 var(--pink-dark), 3px 3px 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s ease-out;
+}
+.episode__badge::after {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: 10px;
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: transparent transparent transparent var(--gold);
+}
+.episode__play:hover .episode__badge { transform: scale(1.08); }
+.episode h3 {
+  margin: 0.9em 0 0.3em;
+  font: 400 11px/1.5 var(--pixel);
+  color: var(--ink);
+}
+.episode time {
+  display: block;
+  margin-bottom: 0.5em;
+  font: 400 9px/1.5 var(--pixel);
+  color: var(--pink-dark);
+}
+.episode__text { font-size: 15px; line-height: 1.45; margin: 0 0 0.6em !important; }
+.episode__note { font-size: 12px; font-weight: 500; line-height: 1.4; margin: 0 !important; opacity: 0.85; }
+.episode__note a { color: var(--ink-deep); }
+.devlog__more {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5em 2em;
+  margin: calc(var(--art) * 6) 0 0 !important;
+  font: 400 10px/1.8 var(--pixel);
+}
+.devlog__more[hidden], .devlog__more a[hidden] { display: none; }
+.devlog__more a {                          /* small light boards, readable on the grain */
+  padding: 0.5em 0.9em 0.4em;
+  color: var(--ink);
+  text-decoration: none;
+  background: #f1d3a8;
+  border: 2px solid var(--bark-shadow);
+  box-shadow: 0 3px 0 var(--bark-shadow);
+}
+.devlog__more a:hover { background: #fff1d6; }
+.devlog__more a:focus-visible { outline: 2px dashed var(--pink-dark); outline-offset: 4px; }
+#devlog { --w: 940px; }
+#devlog .play { margin-top: calc(var(--art) * 8); }
+
 /* ----------------------------------------------------------------- iphone */
 .app-icon {
   display: block;
