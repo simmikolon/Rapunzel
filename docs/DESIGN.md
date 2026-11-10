@@ -103,7 +103,7 @@ the game, in its zone, in the simulator, and one line in this document.
 resolution, deployed from `master` via Vercel. Rendering is WebGL through
 PixiJS behind a small immediate-mode facade (`web/src/gfx/renderer.js`);
 gameplay code never touches PixiJS. Selective bloom and a CRT pass with
-presets full / bloom / off (F key, title button, `?fx=`).
+presets full / bloom / off (F key, title button, `?fx=`), off by default.
 
 - Prince on a pogo stick: automatic bounce, tap to boost (three charges,
   refilled by landings and lanterns), keys, touch halves or phone tilt,
@@ -833,6 +833,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   every pickup taps (a landing firmer with the combo), the boost kicks and rushes, bonk, helmet, stomp
   and hurt hit hard, game over falls in three. The game names the event
   (`platform.haptic('bounce')`), the shell owns the Core Haptics pattern.
+- 2026-11-10: Screen effects off by default: the plain picture looks
+  better, bloom and CRT stay a choice (F, the title's button). Only a
+  preset the player picks is saved (`fxPick`); the old saves wrote 'full'
+  with every best height whether chosen or not, so an old `fx: 'full'` is
+  ignored and an old 'bloom' or 'off' is kept as a pick.
 - 2026-11-06: The picture fills a phone screen: the logical height follows
   the screen's shape (`H` in `config.js`, 1664 on an iPhone 17, 1364 in a
   9:16 window and in the simulator), the HUD keeps out of the safe area and

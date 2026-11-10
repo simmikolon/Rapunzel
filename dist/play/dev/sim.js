@@ -1,0 +1,233 @@
+// Headless gameplay simulator: runs World.update() in a tight loop with a
+// scripted player and collects attrition statistics. No rendering.
+import { buildAllArt } from '../src/art/index.js';
+import { World } from '../src/world.js';
+import { GRAVITY, JUMP_VY, W, H, PX_PER_METER } from '../src/config.js';
+import { RNG } from '../src/util.js';
+import { startAt } from '../src/dev.js';
+
+const STEP = 1 / 120;
+
+// Skill presets: how fast the scripted player reacts and how often it
+// hesitates. "kid" is a cautious five-year-old, "good" an adult who knows
+// the game.
+const SKILLS = {
+  kid: { reaction: 0.22, hesitate: 0.25, dodgeRange: 110 },
+  good: { reaction: 0.10, hesitate: 0.05, dodgeRange: 150 },
+};
+
+class BotInput {
+  constructor() { this.axis = 0; this.usingTilt = false; this.boostQueued = 0; }
+  consumeBoost() { const v = this.boostQueued > 0; this.boostQueued = 0; return v; }
+}
+
+// The scripted player: steers toward the next platform, dodges enemies in
+// its path and uses boosts to save a fall or (policy 'bold') to punch
+// through an enemy above.
+class Bot {
+  constructor(world, input, skill, policy, rng) {
+    this.world = world; this.input = input; this.s = SKILLS[skill]; this.policy = policy; this.rng = rng;
+    this.timer = 0;
+  }
+  step(dt) {
+    this.timer -= dt;
+    if (this.timer > 0) return;
+    this.timer = this.s.reaction;
+    if (this.rng.next() < this.s.hesitate) return;   // hesitation: keep doing what we did
+    const w = this.world, p = w.player, cam = w.cam;
+    if (!p.alive) { this.input.axis = 0; return; }
+    // A stork is only worth chasing while it will still be on screen and
+    // within reach when we get there; otherwise it is scenery.
+    const storkOk = (q) => {
+      if (q.kind !== 'stork') return true;
+      const dy = q.y - p.y, disc = p.vy * p.vy - 2 * GRAVITY * dy;
+      const tl = disc >= 0 ? (p.vy + Math.sqrt(disc)) / GRAVITY : 0.6;
+      const ax = q.x + q.vx * tl;
+      return Math.abs(ax) < W / 2 - 60 && Math.abs(ax - p.x) < 320;
+    };
+    const plats = w.platforms.filter((q) => q.landable && q.kind !== 'ground' && q.y > cam.y - 50 && q.y < cam.top + 800 && storkOk(q));
+    let above = null, below = null;
+    for (const q of plats) {
+      if (q.y > p.y + 10 && (!above || q.y < above.y)) above = q;
+      if (q.y <= p.y + 10 && q.y > cam.y && (!below || q.y > below.y)) below = q;
+    }
+    // In a row with two platforms a player aims for the bigger one (a stub
+    // next to a ribbon is the optional target, not the route).
+    const widest = (ref) => { let best = ref; for (const q of plats) if (Math.abs(q.y - ref.y) <= 40 && q.w > best.w) best = q; return best; };
+    if (above) above = widest(above);
+    if (below) below = widest(below);
+    const apexLeft = p.vy > 0 ? (p.vy * p.vy) / (2 * GRAVITY) : 0;
+    let target = p.vy > 0 ? (above && above.y - p.y < apexLeft + 60 ? above : (below || above)) : (below || above);
+    if (target && target.kind === 'swing' && target.y > p.y) target = { x: p.x < 0 ? -195 : 195, y: target.y, kind: 'side' };
+    let axis = 0;
+    if (target) {
+      // a drifting cloud: aim where it will be when we come down on it
+      let aimX = target.x;
+      if (target.vx) {
+        const dy = target.y - p.y, disc = p.vy * p.vy - 2 * GRAVITY * dy;
+        const tl = disc >= 0 ? (p.vy + Math.sqrt(disc)) / GRAVITY : 0.6;
+        aimX = target.x + target.vx * tl;
+      }
+      let dx = aimX - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+      if (Math.abs(dx) > 16) axis = dx > 0 ? 1 : -1;
+    }
+    // Enemies in the way: within dodgeRange horizontally and in the body's vertical path.
+    let threat = null;
+    for (const e of w.enemies) {
+      if (!e.alive || e.dead) continue;
+      let dx = e.x - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+      if (e.kind === 'lightning') {
+        // keep out of the column while the storm cloud charges or strikes
+        const body = p.y + 110, under = body < e.y && body > e.y - 480;
+        if (e.phase !== 'calm' && under && Math.abs(dx) < 90) { if (!threat) threat = { e, dx: dx || 1, dy: e.y - body }; }
+        continue;
+      }
+      if (e.kind === 'pot') {
+        // a falling pot above us within its column: step aside
+        const body = p.y + 110, dy = e.y - body;
+        if (e.state === 'fall' && Math.abs(dx) < 70 && dy > -120 && dy < 700) { if (!threat) threat = { e, dx: dx || 1, dy }; }
+        continue;
+      }
+      if (e.kind === 'grabber') {
+        // A guard peeking or grabbing from a window: once the helmet is up the
+        // arm comes within half a second, so step away from the window, unless
+        // we are about to land on a branch on that side (the landing counts
+        // more than a heart). Punch only an arm that is really out.
+        if (!((e.state === 'peek' && e.stateT > 0.1) || e.state === 'grab')) continue;
+        const body = p.y + 110, dy = e.armY - body, inward = (p.x - e.win.x) * e.dir;
+        if (Math.abs(dy) > 180 || inward < -60 || inward > e.reach + 80) continue;
+        if (target && p.vy < 0 && target.kind === (e.win.side === 'L' ? 'branchL' : 'branchR') && Math.abs(target.y - e.armY) < 260) continue;
+        let wx = e.win.x - p.x; if (wx > W / 2) wx -= W; else if (wx < -W / 2) wx += W;
+        if (!threat) threat = { e, dx: wx || -e.dir, dy, noPunch: !e.hurtful };
+        continue;
+      }
+      if (!e.hurtful || e.phase === 'warn') continue;
+      const dy = e.y - (p.y + 110);
+      const ahead = p.vy > 0 ? (dy > -80 && dy < 360) : (dy < 80 && dy > -360);
+      if (Math.abs(dx) < this.s.dodgeRange && ahead) { if (!threat || Math.abs(dy) < Math.abs(threat.dy)) threat = { e, dx, dy }; }
+    }
+    if (threat) {
+      const e = threat.e;
+      const canPunch = this.policy === 'bold' && !threat.noPunch && p.boost >= 1 && p.vy > -200 && threat.dy > 0 && threat.dy < 300;
+      if ((e.kind === 'squirrel' || e.kind === 'guard') && target && e.platform === target) {
+        // A squirrel on the branch we are landing on: a bold player stomps it
+        // (aim at it while falling from above), a cautious one lands on the
+        // far end of the branch instead of fleeing the platform altogether.
+        if (this.policy === 'bold' && p.vy < 0 && p.y > e.y + 10) axis = e.x > p.x + 8 ? 1 : e.x < p.x - 8 ? -1 : 0;
+        else {
+          const away = e.x > target.x ? target.left + 30 : target.right - 30;
+          let dx = away - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+          axis = Math.abs(dx) > 12 ? (dx > 0 ? 1 : -1) : 0;
+        }
+      } else if (canPunch) this.input.boostQueued++;
+      else axis = threat.dx > 0 ? -1 : 1;               // steer away
+    }
+    // Save a fall: nothing landable below in view.
+    if (p.vy < -300 && p.boost >= 1 && !below && p.boostCooldown <= 0) this.input.boostQueued++;
+    // Reach a platform that is just out of bounce range.
+    if (p.vy > 0 && p.vy < 500 && above && !below && above.y - p.y > apexLeft + 40 && p.boost >= 1) this.input.boostQueued++;
+    this.input.axis = axis;
+  }
+}
+
+function makeWorld(input) {
+  const art = makeWorld.art || (makeWorld.art = buildAllArt());
+  return new World({ art, input, best: 0 });
+}
+
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0 } = {}) {
+  const input = new BotInput();
+  const world = makeWorld(input);
+  world.reset(seed);
+  if (startM) startAt(world, startM);
+  world.start();
+  const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0 };
+  const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
+  const origHurt = world.onPlayerHurt.bind(world);
+  world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
+  const origCollect = world.collect.bind(world);
+  world.collect = (k) => { if (k.kind === 'heart') stats.hearts++; if (k.kind === 'lantern') stats.lanterns++; origCollect(k); };
+  const origBoost = world.onPlayerBoost.bind(world);
+  world.onPlayerBoost = (pl) => { stats.boosts++; origBoost(pl); };
+  const origStomp = world.onPlayerStomp.bind(world);
+  world.onPlayerStomp = (pl, e) => { stats.stomps++; origStomp(pl, e); };
+  if (world.onBoostPunch) { const o = world.onBoostPunch.bind(world); world.onBoostPunch = (pl, e) => { stats.punches++; o(pl, e); }; }
+  const origCut = world.cutBraid.bind(world);
+  world.cutBraid = (ly, bx, y) => { stats.cuts++; stats.cutAt.push(world.player.maxY); origCut(ly, bx, y); };
+  let t = 0, witchSeen = 0, scissorsSeen = 0;
+  while (!world.over && t < maxTime && world.heightM < cap) {
+    bot.step(STEP);
+    world.update(STEP);
+    t += STEP;
+    const wc = world.enemies.filter((e) => e.kind === 'witch').length;
+    if (wc > witchSeen) stats.witches++;
+    witchSeen = wc;
+    const sc = world.enemies.filter((e) => e.kind === 'scissors').length;
+    if (sc > scissorsSeen) stats.scissors++;
+    scissorsSeen = sc;
+  }
+  stats.height = world.heightM;
+  stats.climb = Math.max(0, world.heightM - startM);
+  stats.time = t;
+  stats.cause = world.over ? world.player.deathCause : (world.heightM >= cap ? 'cap' : 'timeout');
+  if (stats.cause === 'fell') stats.fellBand = band();
+  // a fall in the 15 m above a cut is the cut's doing (the stretch without ribbons)
+  if (stats.cause === 'fell' && stats.cutAt.some((c) => world.player.maxY >= c && world.player.maxY - c < 1500)) stats.fellAfterCut = 1;
+  return stats;
+}
+
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0 } = {}) {
+  const all = [];
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM }));
+  return summarize(all, { runs, skill, policy, cap, startM });
+}
+
+function summarize(all, cfg) {
+  const heights = all.map((s) => s.height).sort((a, b) => a - b);
+  const q = (p) => heights[Math.min(heights.length - 1, Math.floor(p * heights.length))];
+  const total = (k) => all.reduce((a, s) => a + (s[k] || 0), 0);
+  const hits = {};
+  for (const s of all) for (const k of Object.keys(s.hits)) hits[k] = (hits[k] || 0) + s.hits[k];
+  const bands = {}, bandKinds = {};
+  for (const s of all) for (const b of Object.keys(s.hitsByBand)) bands[b] = (bands[b] || 0) + s.hitsByBand[b];
+  for (const s of all) for (const b of Object.keys(s.hitsByBandKind)) { const o = bandKinds[b] || (bandKinds[b] = {}); for (const k of Object.keys(s.hitsByBandKind[b])) o[k] = (o[k] || 0) + s.hitsByBandKind[b][k]; }
+  // metres climbed inside each 100 m band, summed over runs, for a rate
+  const bandMetres = {};
+  for (const s of all) { for (let b = Math.floor(s.startM / 100) * 100; b < s.height; b += 100) bandMetres[b] = (bandMetres[b] || 0) + Math.min(100, s.height - b) - Math.max(0, s.startM - b); }
+  const causes = {};
+  for (const s of all) causes[s.cause] = (causes[s.cause] || 0) + 1;
+  const fallsByBand = {};
+  for (const s of all) if (s.fellBand != null) fallsByBand[s.fellBand] = (fallsByBand[s.fellBand] || 0) + 1;
+  const deaths = all.filter((s) => s.cause === 'fell' || s.cause === 'caught').length;
+  const totalM = all.reduce((a, s) => a + s.climb, 0);
+  return {
+    cfg,
+    runs: all.length,
+    heightMedian: q(0.5), heightMean: Math.round(heights.reduce((a, b) => a + b, 0) / all.length), heightMax: heights[heights.length - 1], climbMean: Math.round(totalM / all.length),
+    reach: { 100: all.filter((s) => s.height >= 100).length, 200: all.filter((s) => s.height >= 200).length, 300: all.filter((s) => s.height >= 300).length, 500: all.filter((s) => s.height >= 500).length, 800: all.filter((s) => s.height >= 800).length },
+    causes, fallsByBand, fallShare: deaths ? +((causes.fell || 0) / deaths).toFixed(2) : 0,
+    hits, hitsPer100m: totalM ? +(Object.values(hits).reduce((a, b) => a + b, 0) / totalM * 100).toFixed(2) : 0,
+    hitsPer100mByBand: Object.fromEntries(Object.keys(bandMetres).sort((a, b) => a - b).map((b) => [b, +((bands[b] || 0) / bandMetres[b] * 100).toFixed(2)])),
+    hitsByBandKind: bandKinds,
+    hearts: total('hearts'), lanterns: total('lanterns'), boosts: total('boosts'), stomps: total('stomps'), punches: total('punches'), witches: total('witches'),
+    scissors: total('scissors'), cuts: total('cuts'), fellAfterCut: total('fellAfterCut'),
+    runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
+  };
+}
+
+export function formatReport(r) {
+  const n = r.runs;
+  const pct = (v) => `${Math.round((v / n) * 100)}%`;
+  const lines = [];
+  lines.push(`config: ${JSON.stringify(r.cfg)}`);
+  lines.push(`height: median ${r.heightMedian} m, mean ${r.heightMean} m, max ${r.heightMax} m${r.cfg.startM ? ` (from ${r.cfg.startM} m, mean climb ${r.climbMean} m)` : ''}`);
+  lines.push(`reached: 100 m ${pct(r.reach[100])}, 200 m ${pct(r.reach[200])}, 300 m ${pct(r.reach[300])}, 500 m ${pct(r.reach[500])}, 800 m ${pct(r.reach[800])}`);
+  lines.push(`deaths: ${JSON.stringify(r.causes)}  falls: ${Math.round(r.fallShare * 100)}% of deaths, by band ${JSON.stringify(r.fallsByBand)}`);
+  lines.push(`hits per 100 m: ${r.hitsPer100m}  by enemy: ${JSON.stringify(r.hits)}`);
+  lines.push(`hits per 100 m by band: ${JSON.stringify(r.hitsPer100mByBand)}`);
+  lines.push(`hits by band and enemy: ${JSON.stringify(r.hitsByBandKind)}`);
+  lines.push(`hearts ${r.hearts}, lanterns ${r.lanterns}, boosts ${r.boosts}, stomps ${r.stomps}, boost-punches ${r.punches}, witch events ${r.witches}`);
+  lines.push(`scissors events ${r.scissors}, braid cuts ${r.cuts}, falls within 15 m above a cut ${r.fellAfterCut}`);
+  return lines.join('\n');
+}
