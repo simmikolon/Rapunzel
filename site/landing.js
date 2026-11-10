@@ -282,9 +282,11 @@ function scene({ art }) {
   if (mid && !STILL) {
     const c = art.creatures;
     flyer(mid, c.witchR, 'witch', 4);
-    gapped.push([spider(mid, c.spider), '#story', '#cast']);
-    gapped.push([flyer(mid, c.storkR, 'stork', 3), '#cast', '#controls']);
-    gapped.push([flyer(mid, c.crowR, 'crow', 8), '#controls', '#iphone']);
+    // only where the page has those signs (not on the Impressum)
+    const has = (a, b) => document.querySelector(a) && document.querySelector(b);
+    if (has('#story', '#cast')) gapped.push([spider(mid, c.spider), '#story', '#cast']);
+    if (has('#cast', '#controls')) gapped.push([flyer(mid, c.storkR, 'stork', 3), '#cast', '#controls']);
+    if (has('#controls', '#iphone')) gapped.push([flyer(mid, c.crowR, 'crow', 8), '#controls', '#iphone']);
   }
 
   const spots = [[6, 0.9, 30, -4], [17, 0.5, 24, -14], [83, 0.75, 34, -9], [93, 0.5, 27, -20], [72, 0.4, 22, -2], [28, 0.4, 38, -25]];
@@ -469,11 +471,13 @@ function letters(el, { art, drawWord, wordWidth }) {
 // PLAY on the game's ribbon banner with fluttering tails (hud.js ribbonButton).
 function ribbon(el, { art, sign, drawWord }) {
   const set = art.logo.gold2;
+  // the link's own word (PLAY, HOME, ...), in the letters the set has
+  const word = (el.textContent.trim().toUpperCase().replace(/[^A-Z0-9! ]/g, '') || 'PLAY');
   drawnBox(el, {
     measure: (s) => ({ w: snapW(el, s), h: snapH(el, s), m: [0, 8, 12, 20] }),
     draw(g, b, t) {
       sign.drawRibbon(g, b.x, b.y, b.w, b.h, { t });
-      drawWord(g, set, 'PLAY', b.x + b.w / 2, b.y + b.h / 2 + set.body / 2 - 2);
+      drawWord(g, set, word, b.x + b.w / 2, b.y + b.h / 2 + set.body / 2 - 2);
     },
     live: true,
   });

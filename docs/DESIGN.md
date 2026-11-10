@@ -136,6 +136,8 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   Three planes with parallax like in the game: sky and forest at 0.3 of
   the scroll, tower, braid, the prince and the creatures (witch, stork,
   crow, a spider) at 0.7, the signs at 1.0; none with reduced motion.
+  Footer on the lawn with the Impressum (`/impressum/`, the same scene and
+  a sign, kept out of search results); the site's address is bouncealot.de.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the

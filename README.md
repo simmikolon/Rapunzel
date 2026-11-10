@@ -34,7 +34,7 @@ landing page (`site/`) at <http://localhost:8000> and the game at
 ### Deploy on Vercel
 
 One Vercel project serves the landing page at `/` and the game at
-`/play/`. Nothing is compiled: `vercel.json` runs `tools/build_site.sh`,
+`/play/`, at <https://bouncealot.de>; the Impressum is `site/impressum/`. Nothing is compiled: `vercel.json` runs `tools/build_site.sh`,
 which copies `site/` and `web/` into `dist/` (the game under `play/`), and
 serves that. `web/` stays the one folder the game lives in, for the iOS
 shell and the simulator alike. The landing page draws its pictures with

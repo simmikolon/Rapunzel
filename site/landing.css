@@ -583,8 +583,10 @@ kbd {
 .lawn .play { margin-bottom: calc(var(--art) * 2); }
 .lawn__ground {
   position: relative;
-  height: calc(var(--art) * 36 + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  min-height: calc(var(--art) * 36 + env(safe-area-inset-bottom));
   margin-top: calc(var(--art) * 40);
+  padding: calc(var(--art) * 15) var(--gutter) calc(env(safe-area-inset-bottom) + var(--art) * 6);
   background: var(--ground, linear-gradient(var(--grass) 0 12%, #1c8730 12% 34%, #25581f 34%)) repeat-x center top;
   background-size: calc(var(--art) * 192) calc(var(--art) * 36);
   background-color: #25581f;
@@ -595,19 +597,51 @@ kbd {
   left: calc(50% - var(--art) * 7);
   top: calc(var(--art) * -10);
 }
+/* the footer's links and credits, on the soil under the grass */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4em 1.8em;
+  margin: 0 0 calc(var(--art) * 3);
+  font: 400 10px/1.8 var(--pixel);
+}
+.links a {
+  color: var(--gold-hi);
+  text-decoration: none;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid rgba(255, 241, 168, 0.35);
+}
+.links a:hover { color: #fff; border-bottom-color: currentColor; }
+.links a:focus-visible { outline: 2px dashed var(--gold-hi); outline-offset: 4px; }
 .credits {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(env(safe-area-inset-bottom) + var(--art) * 6);
+  position: relative;
   margin: 0;
-  padding: 0 var(--gutter);
   font: 400 9px/1.8 var(--pixel);
   text-align: center;
   color: #d8f0cf;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-  z-index: 2;
 }
+
+/* ------------------------------------------------------------- sub pages */
+/* A page with little on it (the Impressum): the lawn stays at the bottom. */
+.subpage {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.subpage main { padding-top: calc(env(safe-area-inset-top) + var(--art) * 6); }
+.subpage .lawn { margin-top: auto; }
+.legal h2 {
+  margin: 1.4em 0 0.5em;
+  font: 400 10px/1.6 var(--pixel);
+  color: var(--ink);
+}
+.legal h2:first-child { margin-top: 0; }
+.legal p { margin: 0 0 0.6em; }
+.legal a { color: var(--ink-deep); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.legal__en { font-size: 14px; font-weight: 500; opacity: 0.85; }
 
 /* ----------------------------------------------------------------- motion */
 @media (prefers-reduced-motion: reduce) {
