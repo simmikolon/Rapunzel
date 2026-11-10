@@ -145,7 +145,7 @@ html.parallax .scene__braid { bottom: 0; }      /* on down behind the lawn */
 
 .scene__tower,
 .scene__braid {
-  top: 0;
+  top: calc(var(--art) * 92);       /* the tower's bricks start under the eaves (landing.js SUMMIT) */
   bottom: calc(var(--art) * 32 + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
@@ -168,9 +168,43 @@ html.parallax .scene__braid { bottom: 0; }      /* on down behind the lawn */
 }
 
 .scene__braid {
+  top: calc(var(--art) * 146);      /* the braid starts at Rapunzel's window sill */
   width: calc(var(--art) * 44);
   background: var(--braid, none) repeat-y center top;
   background-size: 100% auto;
+}
+
+/* Stars that twinkle in the star field (landing.js places them): a small
+   plus that flickers like a real star, now and then a cross that flashes. */
+.twinkle {
+  position: absolute;
+  width: calc(var(--art) * 3);
+  height: calc(var(--art) * 3);
+  background: var(--twinkle) center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+  opacity: 0.5;
+  animation: twinkle var(--d) ease-in-out var(--delay) infinite;
+}
+.twinkle--big {
+  width: calc(var(--art) * 7);
+  height: calc(var(--art) * 7);
+  margin: calc(var(--art) * -2) 0 0 calc(var(--art) * -2);
+  background-image: var(--sparkle);
+  animation-name: sparkle;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; }
+  18% { opacity: 0.9; }
+  32% { opacity: 0.5; }
+  50% { opacity: 1; }
+  64% { opacity: 0.45; }
+  82% { opacity: 0.8; }
+}
+@keyframes sparkle {
+  0%, 70%, 100% { opacity: 0.25; transform: scale(0.45); }
+  78% { opacity: 1; transform: scale(1); }
+  84% { opacity: 0.7; transform: scale(0.8); }
+  90% { opacity: 0.9; transform: scale(1.15); }
 }
 
 /* the moon, drifting clouds and lanterns rising into the night (landing.js) */
@@ -219,7 +253,7 @@ html.parallax .scene__braid { bottom: 0; }      /* on down behind the lawn */
   transform: translateX(-40vw);
   animation: fly var(--d) linear var(--delay) infinite;
 }
-.witch { --y: 38vh; --d: 30s; --delay: 6s; }
+.witch { --y: calc(var(--art) * 210 + 38vh); --d: 30s; --delay: 6s; }   /* under the summit */
 .stork { --d: 26s; --delay: 2s; }          /* top: landing.js, in a gap between signs */
 .crow  { --d: 18s; --delay: 5s; }
 .spider { left: calc(50% + var(--art) * 16); }
@@ -304,6 +338,56 @@ html.parallax .scene__braid { bottom: 0; }      /* on down behind the lawn */
 }
 .letters.drawn { text-shadow: none; line-height: 0; }
 .letters__art { display: block; margin: 0 auto; }
+
+/* ----------------------------------------------------------------- summit */
+/* The top of the tower, above where the page opens (an inline script in
+   index.html scrolls past it on load). landing.js draws the roof, the
+   window and Rapunzel on the tower's plane; this keeps their place and
+   holds her speech bubble, which pops up whenever the summit is in view. */
+.summit {
+  position: relative;
+  z-index: 1;
+  height: calc(var(--art) * 210);
+}
+.layer--mid .summit-art {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--art) * 150);
+  height: calc(var(--art) * 210);
+  filter: brightness(0.92);
+}
+.bubble {
+  position: absolute;
+  left: calc(50% + var(--art) * 26);
+  top: calc(var(--art) * 100);
+  max-width: min(calc(50% - var(--art) * 26 - 12px), 230px);
+  margin: 0;
+  padding: calc(var(--art) * 4) calc(var(--art) * 5);
+  font: 400 9px/1.7 var(--pixel);
+  color: var(--ink);
+  background: #fff8ec;
+  border: 2px solid var(--outline);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  transform-origin: 0 100%;
+  transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.6, 1);
+}
+.bubble::after {                     /* the tail, toward her window */
+  content: "";
+  position: absolute;
+  left: -10px;
+  bottom: 8px;
+  width: 8px;
+  height: 8px;
+  background: #fff8ec;
+  border: 2px solid var(--outline);
+  border-right: 0;
+}
+.bubble__hi { display: block; color: var(--pink-dark); margin-bottom: 0.3em; }
+html.art .summit:not(.seen) .bubble { transform: scale(0); }
+@media (min-width: 760px) {
+  .bubble { font-size: 11px; }
+}
 
 /* ------------------------------------------------------------------- hero */
 .hero {
@@ -645,7 +729,8 @@ kbd {
 
 /* ----------------------------------------------------------------- motion */
 @media (prefers-reduced-motion: reduce) {
-  .cloud, .lantern, .flyer { animation: none; }
+  .cloud, .lantern, .flyer, .twinkle { animation: none; }
+  .bubble { transition: none; }
   .flyer { display: none; }
   .lantern { opacity: 0.8; transform: translateY(-40vh); }
   .play { transition: none; }

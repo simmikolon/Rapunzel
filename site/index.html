@@ -48,6 +48,12 @@
     </div>
   </div>
 
+  <!-- The top of the tower, above where the page opens: found by scrolling up.
+       landing.js draws the tower's top on the scene; this holds its place. -->
+  <section class="summit" aria-label="The top of the tower">
+    <p class="bubble"><span class="bubble__hi">You found me!</span> I'm waiting up here for Sir Bouncealot.</p>
+  </section>
+
   <header class="hero">
     <div class="sign sign--hero" data-sign="top">
       <div class="sign__body">
@@ -182,6 +188,15 @@
     </div>
   </footer>
 
+  <script>
+    // Open at the first sign; the top of the tower above it is there to be found.
+    (function () {
+      var summit = document.querySelector('.summit');
+      if (!summit || location.hash) return;
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, summit.offsetHeight);
+    })();
+  </script>
   <script type="module" src="/landing.js"></script>
 </body>
 </html>
