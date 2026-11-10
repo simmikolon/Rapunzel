@@ -143,7 +143,9 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   window, her braid over the sill and down the tower, a speech bubble),
   found by scrolling up; the first sign hangs from a beam under it. Down to
   the opening position the tower's plane moves with the page, so roof,
-  window and beam stay together; the parallax starts below.
+  window and beam stay together; the parallax starts below. The story is
+  Simon's letter, with Emma's drawing and the first game design from back
+  then taped into it (`site/img/`, a tap opens them large).
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the

@@ -521,10 +521,65 @@ html:not(.art) .stage { display: none; }
   font: 400 11px/1 var(--pixel);
   color: var(--pink-dark);
 }
+/* The drawings from back then, taped onto the letter with pink tape,
+   a little crooked; beside the text on a wide screen, between the
+   paragraphs on a phone. A tap opens the big picture. */
+.photo {
+  --tilt: 1.6deg;
+  margin: calc(var(--art) * 9) auto calc(var(--art) * 8);
+  width: min(86%, 340px);
+}
+.photo a {
+  position: relative;
+  display: block;
+  transform: rotate(var(--tilt));
+  transition: transform 0.2s ease-out;
+}
+.photo a:hover { transform: rotate(0deg) scale(1.02); }
+.photo a:focus-visible { outline: 3px dashed var(--pink-dark); outline-offset: 6px; }
+.photo img {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  padding: 6px;
+  background: #f6f1e7;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 4px 6px 0 rgba(48, 40, 32, 0.35);
+}
+.photo a::before,
+.photo a::after {                          /* the tape */
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: -9px;
+  width: 30%;
+  height: 18px;
+  background: rgba(255, 154, 184, 0.8);
+  box-shadow: 0 1px 0 rgba(115, 33, 63, 0.25);
+}
+.photo a::before { left: 6%; transform: rotate(-9deg); }
+.photo a::after { right: 6%; transform: rotate(8deg); }
+.photo figcaption {
+  margin-top: 1em;
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--ink);
+}
+.photo--left { --tilt: -1.8deg; }
+@media (min-width: 760px) {
+  .photo { float: right; width: 44%; margin: 1.2em 0 1.2em 1.8em; }   /* room above for the tape */
+  .photo--left { float: left; clear: both; margin: 1.2em 1.8em 1.2em 0; }
+}
+
 /* the story is a letter: a bow before the dedication, the signature right */
+.letter { display: flow-root; }            /* the photos' floats stay on the board */
 .letter p { margin-bottom: 0.8em; }
 .letter strong { font-weight: 800; }
 .letter__bow {
+  clear: both;
   display: flex;
   justify-content: center;
   margin: calc(var(--art) * 8) 0 calc(var(--art) * 5);
@@ -734,4 +789,5 @@ kbd {
   .flyer { display: none; }
   .lantern { opacity: 0.8; transform: translateY(-40vh); }
   .play { transition: none; }
+  .photo a { transition: none; }
 }
