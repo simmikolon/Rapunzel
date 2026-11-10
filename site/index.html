@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sir Bouncealot · a pogo climb up the witch's tower</title>
+  <meta name="description" content="Bounce Sir Bouncealot up the witch's tower on his pogo stick, from the forest floor to the clouds. A free browser game for phone and desktop, inspired by a five-year-old's drawings.">
+  <meta name="theme-color" content="#1c1834">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sir Bouncealot">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Sir Bouncealot">
+  <meta property="og:description" content="A pogo climb up the witch's tower. Free in your browser, on phone and desktop.">
+  <meta property="og:image" content="/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/play/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/play/icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="/play/icons/apple-touch-icon.png">
+  <link rel="preload" href="/play/fonts/press-start-2p-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // Straight into the game when this page is opened from a home screen
+    // (installs from before the landing pointed here) or with the game's dev
+    // helpers in the URL (?at=150, ?spawn=..., ?dev=1, ?fx=..., ?len=...).
+    (function () {
+      var standalone = navigator.standalone || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
+      var dev = /[?&](at|spawn|dev|fx|len)=/.test(location.search);
+      if (standalone || dev) location.replace('/play/' + location.search);
+    })();
+  </script>
+  <link rel="stylesheet" href="/landing.css">
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="scene__stars"></div>
+    <div class="scene__sky"></div>
+    <div class="scene__forest"></div>
+    <div class="scene__tower"></div>
+    <div class="scene__braid"></div>
+  </div>
+
+  <header class="hero">
+    <div class="sign sign--hero" data-sign="top">
+      <div class="sign__body">
+        <h1 class="wordmark">
+          <span class="wordmark__sir">Sir</span>
+          <span class="wordmark__word">Bouncealot</span>
+        </h1>
+        <p class="tagline">a pogo climb up the witch's tower</p>
+        <p class="best" hidden><span class="best__label">Best</span> <span class="best__m">0</span> m</p>
+        <a class="play" href="/play/"><span class="play__label">Play</span></a>
+        <p class="free">Free in your browser · phone &amp; desktop</p>
+      </div>
+    </div>
+    <div class="stage" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <section class="sign" id="story" data-sign aria-labelledby="story-h">
+      <div class="sign__body">
+        <h2 class="letters" id="story-h">The story</h2>
+        <div class="panel">
+        <p>Sir Bouncealot is inspired by the drawings of a five-year-old who fell in love with Rapunzel: a princess locked in a tower by a wicked witch, a golden braid as the only way up, and a prince who comes to the rescue. Ours brought a pogo stick.</p>
+        <p>Bounce from branch to ribbon to cloud, through the deep forest, past the tower's windows and up above the treetops. Every stretch of the tower has its own weather, its own platforms and its own trouble.</p>
+        <ol class="climb" aria-label="The climb">
+          <li><span class="climb__m">400 m</span> above the trees: clouds, lanterns, storks</li>
+          <li><span class="climb__m">250 m</span> the tower's windows and the guards in them</li>
+          <li><span class="climb__m">120 m</span> the deep forest, home of the squirrels</li>
+          <li><span class="climb__m">0 m</span> the forest floor, where every climb begins</li>
+        </ol>
+        <p class="ask">How high can you get?</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sign" id="cast" data-sign aria-labelledby="cast-h">
+      <div class="sign__body">
+        <h2 class="letters" id="cast-h">The cast</h2>
+        <h3 class="cast__group letters letters--pink">Friends</h3>
+        <ul class="cast cast--friends">
+          <li class="card" data-cast="prince"><div class="card__art"></div><h4>Sir Bouncealot</h4><p>Brave, bouncy and a little reckless. His pogo stick has a horse's head, a spring and a flame for emergencies.</p></li>
+          <li class="card" data-cast="rapunzel"><div class="card__art"></div><h4>Rapunzel</h4><p>Waits at the very top. Her golden braid hangs all the way down, and its ribbons and bows bounce you higher.</p></li>
+          <li class="card" data-cast="stork"><div class="card__art"></div><h4>The stork</h4><p>A friend above the clouds. Land on his back for one big bounce and three suns.</p></li>
+          <li class="card" data-cast="goodies"><div class="card__art"></div><h4>Goodies</h4><p>Collect the suns. Lanterns refill your boost, hearts heal you all the way.</p></li>
+        </ul>
+        <h3 class="cast__group letters letters--pink">Foes</h3>
+        <ul class="cast cast--foes">
+          <li class="card" data-cast="witch"><div class="card__art"></div><h4>The witch</h4><p>Swoops by on her broom. Higher up she brings her scissors and goes for the braid!</p></li>
+          <li class="card" data-cast="squirrel"><div class="card__art"></div><h4>Squirrel</h4><p>Nibbles an acorn on his branch until you come too close. Land on his head first.</p></li>
+          <li class="card" data-cast="crow"><div class="card__art"></div><h4>Crow</h4><p>Flaps across the forest, beak first. Time your bounce.</p></li>
+          <li class="card" data-cast="spider"><div class="card__art"></div><h4>Spider</h4><p>Dangles on her thread right where you wanted to land.</p></li>
+          <li class="card" data-cast="guard"><div class="card__art"></div><h4>Guards</h4><p>Poke pikes out of the windows and patrol the balconies. The ones on balconies can be stomped.</p></li>
+          <li class="card" data-cast="pot"><div class="card__art"></div><h4>Flowerpot</h4><p>Wobbles on a balcony railing, then drops when you pass below.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sign" id="controls" data-sign aria-labelledby="controls-h">
+      <div class="sign__body">
+        <h2 class="letters" id="controls-h">How to play</h2>
+        <div class="panel"><p>Every landing bounces you up. Steer left and right to find the next platform, and boost when a jump falls short: three charges, refilled by landings and lanterns.</p></div>
+        <div class="ways">
+          <div class="way">
+            <h3>Keyboard</h3>
+            <ul>
+              <li><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer</li>
+              <li><kbd>Space</kbd> or a click boosts</li>
+              <li><kbd>P</kbd> pauses, <kbd>M</kbd> mutes</li>
+            </ul>
+          </div>
+          <div class="way">
+            <h3>Touch</h3>
+            <ul>
+              <li>Hold the left or right half of the screen to steer</li>
+              <li>Tap the flame to boost</li>
+            </ul>
+          </div>
+          <div class="way">
+            <h3>Tilt</h3>
+            <ul>
+              <li>Switch tilt on at the title screen</li>
+              <li>Tilt your phone to steer, tap anywhere to boost</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sign sign--narrow" id="iphone" data-sign aria-labelledby="iphone-h">
+      <div class="sign__body">
+        <img class="app-icon" src="/play/icons/icon-192.png" alt="" width="192" height="192">
+        <h2 class="letters" id="iphone-h">Soon on iPhone</h2>
+        <div class="panel"><p>Sir Bouncealot is on its way to the iPhone as an app: tilt steering right away, a little tap of haptics on every landing, and it plays offline. Until then, the browser version runs on your phone right now.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="lawn">
+    <div class="sign sign--narrow" data-sign aria-labelledby="ready-h">
+      <div class="sign__body">
+        <h2 class="letters" id="ready-h">Ready?</h2>
+        <a class="play" href="/play/"><span class="play__label">Play</span></a>
+      </div>
+    </div>
+    <div class="lawn__ground" aria-hidden="true"></div>
+    <p class="credits">Made with a five-year-old art director · <span class="nowrap">© 2026 Sir Bouncealot</span></p>
+  </footer>
+
+  <script type="module" src="/landing.js"></script>
+</body>
+</html>

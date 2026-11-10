@@ -1,3 +1,4 @@
-# Only web/ is deployed (see vercel.json).
+# Vercel builds the site from site/ and web/ (tools/build_site.sh, vercel.json).
 README.md
 ios/
+docs/
