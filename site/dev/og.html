@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sir Bouncealot · share picture</title>
+  <!--
+    The picture link previews show (site/og.png, 1200 x 630), drawn from the
+    game's own art like the landing page. To make it again after the art
+    changed: `python3 tools/serve.py --site`, open /dev/og.html in a window of
+    at least 1200 x 630 and save the canvas (right click, Save image as) over
+    site/og.png.
+  -->
+  <style>
+    @font-face { font-family: "Press Start 2P"; src: url("/play/fonts/press-start-2p-latin.woff2") format("woff2"); }
+    html, body { margin: 0; background: #222; }
+    canvas { display: block; width: 1200px; height: 630px; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <canvas id="og" width="1200" height="630"></canvas>
+  <script type="module">
+    const load = (p) => import('/play/src/' + p);
+    const [{ buildPrince }, { buildSign }, { buildLogo, drawWord, WORD_ADVANCE }, { buildTiles }, { buildLanterns }, { buildClouds }, { PAL: C }, sign] = await Promise.all([
+      load('art/prince.js'), load('art/sign.js'), load('art/logo.js'), load('art/tiles.js'), load('art/lanterns.js'), load('art/clouds.js'), load('palette.js'), load('sign.js'),
+    ]);
+    const art = { prince: buildPrince(), sign: buildSign(), logo: buildLogo(), tiles: buildTiles(), lanterns: buildLanterns(), clouds: buildClouds() };
+    await document.fonts.load('20px "Press Start 2P"');
+
+    const c = document.getElementById('og');
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    // the renderer facade at one canvas pixel per logical px (gfx/renderer.js blit and rect)
+    const g = {
+      rect(x, y, w, h, color, a = 1) { ctx.globalAlpha = a; ctx.fillStyle = color; ctx.fillRect(x, y, w, h); },
+      blit(s, x, y, o) {
+        const sx = o && o.sx != null ? o.sx : 1, sy = o && o.sy != null ? o.sy : 1;
+        ctx.globalAlpha = o && o.alpha != null ? o.alpha : 1;
+        ctx.drawImage(s.canvas, Math.round(x - s.ax * sx), Math.round(y - s.ay * sy), s.w * sx, s.h * sy);
+      },
+    };
+    const W = 1200, H = 630, A = 4;
+
+    // night sky and stars
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, C.night); sky.addColorStop(0.6, C.nightDeep); sky.addColorStop(1, C.dusk);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    let seed = 11;
+    const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+    for (let i = 0; i < 120; i++) g.rect(Math.floor(rnd() * 300) * A, Math.floor(rnd() * 158) * A, A, A, ['#ffffff', '#fff1a8', '#a5cbbb', '#ffd1e3'][i % 4], 0.35 + rnd() * 0.5);
+
+    // the tower with the braid, a little shaded for the night
+    const TX = 1004;
+    for (let y = 0; y < H + 192; y += 192) g.blit(art.tiles.tower[(y / 192) % 4], TX, y + 192);
+    const shade = ctx.createLinearGradient(TX - 190, 0, TX + 190, 0);
+    shade.addColorStop(0, 'rgba(16,32,36,0.6)'); shade.addColorStop(0.2, 'rgba(28,24,52,0.35)'); shade.addColorStop(0.8, 'rgba(28,24,52,0.35)'); shade.addColorStop(1, 'rgba(16,32,36,0.6)');
+    ctx.globalAlpha = 1; ctx.fillStyle = shade; ctx.fillRect(TX - 190, 0, 380, H);
+    for (let y = -40; y < H; y += 40) g.blit(art.tiles.braid, TX, y);
+
+    // lanterns rising
+    for (const [x, y, k] of [[860, 150, 0.5], [1150, 330, 0.6], [470, 556, 0.35]]) g.blit(art.lanterns.big[0], x, y, { sx: k, sy: k, alpha: 0.95 });
+
+    // the sign with Rapunzel peeking over it (title.js drawTitle, moved over)
+    const SX = 40, SY = 72, SW = 760, SH = sign.signHeight(6), hx = SX + SW - 108;
+    g.blit(art.tiles.braid, hx + 36, SY - 40);
+    g.blit(art.sign.rapunzel, hx, SY + 4);
+    sign.drawSign(g, art, SX, SY, SW, SH);
+    g.blit(art.sign.hands, hx, SY + 8);
+    for (let i = 0; i < 2; i++) g.blit(art.tiles.braid, hx + 36 + 3 + 5 * i, SY + SH - 12 + i * 40);
+    g.blit(art.sign.bow, hx + 36 + 10, SY + SH + 74);
+    const cx = SX + SW / 2;
+    g.blit(art.logo.sir, cx, SY + 112);
+    art.logo.letters.forEach((s, i) => g.blit(s, cx + (i - 4.5) * WORD_ADVANCE, SY + 240 - Math.max(0, Math.sin(1.2 - i * 0.55)) * 12));
+    ctx.globalAlpha = 1;
+    ctx.font = '18px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(245,222,190,0.85)'; ctx.fillStyle = C.ribbonDark;
+    ctx.strokeText("a pogo climb up the witch's tower", cx, SY + 286); ctx.fillText("a pogo climb up the witch's tower", cx, SY + 286);
+    sign.drawRibbon(g, cx - 248, SY + 330, 496, 96, { t: 0.4 });
+    drawWord(g, art.logo.gold2, 'PLAY', cx, SY + 330 + 48 + art.logo.gold2.body / 2 - 2);
+
+    // Sir Bouncealot in mid-bounce over a cloud by the braid
+    g.blit(art.clouds.thick.normal[0], TX, 572);
+    g.blit(art.prince.left.jumpUp, TX - 4, 470);
+  </script>
+</body>
+</html>

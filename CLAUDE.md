@@ -1,8 +1,11 @@
 # Working on Sir Bouncealot
 
 Browser game (plain ES modules, WebGL via a vendored PixiJS, no build
-step) in `web/`. The design document `docs/DESIGN.md` is the guide for
-what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
+step) in `web/`; its landing page is `site/`. Deployed, the landing page
+is `/` and the game `/play/` (`vercel.json` runs `tools/build_site.sh`,
+which only copies the two folders together). The design document
+`docs/DESIGN.md` is the guide for what we build and why;
+`docs/ANALYSIS-phase1.md` shows how we measure.
 
 ## How we work
 - The endless game is the sandbox: every element (enemy, platform, trap,
@@ -20,6 +23,13 @@ what we build and why; `docs/ANALYSIS-phase1.md` shows how we measure.
 - Serve: `python3 tools/serve.py` (port 8000, caching off). A plain
   `python3 -m http.server` lets the browser keep a stale module next to a
   fresh one after a change; if that happens, hard-reload (Cmd+Shift+R).
+- Landing page: `python3 tools/serve.py --site` serves `site/` at `/` and
+  `web/` at `/play/`, as deployed. `site/landing.js` draws with the game's
+  modules (`art/*.js` builders, `sign.js` drawSign / drawRibbon /
+  drawPlankTag / drawPlaque, `art/logo.js` drawWord): renaming or
+  reshaping those breaks the landing page's pictures (the page then falls
+  back to plain CSS), so check `/` after such a change. On a deployed URL
+  the dev helpers go after `/play/`; `/?at=150` forwards there.
 - Dev helpers: `?at=150` starts at 150 m (and skips the ride down and the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest

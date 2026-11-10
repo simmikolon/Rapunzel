@@ -127,6 +127,17 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   lawn and a 3-2-1 countdown on his landings, pause and game over with a
   way back to the menu; best height saved; web app manifest and icons.
   The prince follows the original app icon.
+- ✅ Landing page (`site/`, served at `/`; the game moved to `/play/`):
+  the page is the tower from the night sky down to the lawn, with the
+  game's own signs on ropes, the hopping wordmark, Rapunzel peeking over
+  the first sign, the prince bouncing on a cloud, a cast of friends and
+  foes, the controls and a note on the iPhone app. Drawn by the game's
+  art code at runtime, PLAY leads to the full-screen game everywhere.
+  Three planes with parallax like in the game: sky and forest at 0.3 of
+  the scroll, tower, braid, the prince and the creatures (witch, stork,
+  crow, a spider) at 0.7, the signs at 1.0; none with reduced motion.
+  Footer on the lawn with the Impressum (`/impressum/`, the same scene and
+  a sign, kept out of search results); the site's address is bouncealot.de.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the
@@ -833,12 +844,30 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   every pickup taps (a landing firmer with the combo), the boost kicks and rushes, bonk, helmet, stomp
   and hurt hit hard, game over falls in three. The game names the event
   (`platform.haptic('bounce')`), the shell owns the Core Haptics pattern.
+- 2026-11-06: The picture fills a phone screen: the logical height follows
+  the screen's shape (`H` in `config.js`, 1664 on an iPhone 17, 1364 in a
+  9:16 window and in the simulator), the HUD keeps out of the safe area and
+  the sign screens sit centred. About 3 m more world is visible on a phone.
+- 2026-11-10: A landing page in front of the game, in the same Vercel
+  project (not a subdomain): one deploy, one origin, so the page can show
+  the best height from the game's own save, and preview URLs keep working
+  per branch. The game moved to `/play/`; `web/` stays as it is (the iOS
+  shell bundles it, the simulator runs it), the deploy copies `site/` and
+  `web/` together. The game is not embedded in the page: PLAY opens it
+  full screen on phone and desktop alike, because a game inside a
+  scrolling page fights the touch steering, the collapsing toolbars, the
+  safe area and the tilt prompt. The page draws its art with the game's
+  own modules, so it cannot drift from the game; it reads without them.
+  The same day: parallax in three planes. The signs stay at the scroll's
+  pace (text that moves against the finger is hard to read); the scene's
+  planes are fixed to the window and moved by the scroll, each long enough
+  to reach the lawn at the end and to stay on it when scrolling back. The
+  creatures sit in the gaps between the signs, where the tower shows,
+  computed for the moment the gap is in the middle of the window; on a
+  phone the signs cover almost the whole width, so the gaps are where the
+  middle plane is seen.
 - 2026-11-10: Screen effects off by default: the plain picture looks
   better, bloom and CRT stay a choice (F, the title's button). Only a
   preset the player picks is saved (`fxPick`); the old saves wrote 'full'
   with every best height whether chosen or not, so an old `fx: 'full'` is
   ignored and an old 'bloom' or 'off' is kept as a pick.
-- 2026-11-06: The picture fills a phone screen: the logical height follows
-  the screen's shape (`H` in `config.js`, 1664 on an iPhone 17, 1364 in a
-  9:16 window and in the simulator), the HUD keeps out of the safe area and
-  the sign screens sit centred. About 3 m more world is visible on a phone.

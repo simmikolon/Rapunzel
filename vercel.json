@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "outputDirectory": "web",
-  "cleanUrls": true,
+  "framework": null,
+  "buildCommand": "sh tools/build_site.sh",
+  "outputDirectory": "dist",
+  "trailingSlash": true,
   "headers": [
     {
       "source": "/(.*)",
@@ -11,11 +13,11 @@
       ]
     },
     {
-      "source": "/manifest.webmanifest",
+      "source": "/play/manifest.webmanifest",
       "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
     },
     {
-      "source": "/fonts/(.*)",
+      "source": "/play/fonts/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
     }
   ]

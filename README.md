@@ -27,15 +27,30 @@ python3 tools/serve.py        # http://localhost:8000, caching off
 or `npx serve web`. Opening `index.html` directly from the file system
 will not work because ES modules need an HTTP origin.
 
+`python3 tools/serve.py --site` serves the site as it is deployed: the
+landing page (`site/`) at <http://localhost:8000> and the game at
+<http://localhost:8000/play/>.
+
 ### Deploy on Vercel
 
-The repo is a static site with no build step. `vercel.json` at the root
-points Vercel's output directory at `web/`, so nothing needs configuring:
+One Vercel project serves the landing page at `/` and the game at
+`/play/`, at <https://bouncealot.de>; the Impressum is `site/impressum/`. Nothing is compiled: `vercel.json` runs `tools/build_site.sh`,
+which copies `site/` and `web/` into `dist/` (the game under `play/`), and
+serves that. `web/` stays the one folder the game lives in, for the iOS
+shell and the simulator alike. The landing page draws its pictures with
+the game's own art code from `/play/src/`, so it always looks like the
+current game; `site/og.png`, the picture link previews show, is made from
+`site/dev/og.html`.
 
 1. Import the GitHub repository at <https://vercel.com/new> and keep the
-   defaults (framework "Other", root directory `.`, no build command).
+   defaults (framework "Other", root directory `.`); `vercel.json` sets the
+   build command and the output directory.
 2. Every push to the production branch redeploys; other branches get
    preview URLs.
+
+The game's URL helpers work on the deployed site as `/play/?at=150`;
+`/?at=150` (and the other helpers) forwards there. A home screen install
+made before the landing page existed opens it and is sent on to the game.
 
 Or from the command line: `npx vercel` in the repo root (`npx vercel --prod`
 for production). Tilt steering needs HTTPS, which Vercel provides. The game
