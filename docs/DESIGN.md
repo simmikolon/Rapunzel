@@ -138,6 +138,12 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   crow, a spider) at 0.7, the signs at 1.0; none with reduced motion.
   Footer on the lawn with the Impressum (`/impressum/`, the same scene and
   a sign, kept out of search results); the site's address is bouncealot.de.
+  Twinkling stars in the sky, and a secret above where the page opens: the
+  top of the tower (pointed roof with a pennant, Rapunzel waiting at her
+  window, her braid over the sill and down the tower, a speech bubble),
+  found by scrolling up; the first sign hangs from a beam under it. Down to
+  the opening position the tower's plane moves with the page, so roof,
+  window and beam stay together; the parallax starts below.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the

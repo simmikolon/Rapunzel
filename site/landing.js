@@ -142,18 +142,18 @@ async function main() {
   const [
     { buildPrince }, { buildCreatures }, { buildSign }, { buildLogo, drawWord, wordWidth, WORD_ADVANCE },
     { buildTiles }, { buildLanterns }, { buildWindows }, { buildPlatforms }, { buildClouds },
-    sign,
+    sign, { PAL },
   ] = await Promise.all([
     load('art/prince.js'), load('art/creatures.js'), load('art/sign.js'), load('art/logo.js'),
     load('art/tiles.js'), load('art/lanterns.js'), load('art/windows.js'), load('art/platforms.js'), load('art/clouds.js'),
-    load('sign.js'),
+    load('sign.js'), load('palette.js'),
   ]);
   const art = {
     prince: buildPrince(), creatures: buildCreatures(), sign: buildSign(), logo: buildLogo(),
     tiles: buildTiles(), lanterns: buildLanterns(), windows: buildWindows(), platforms: buildPlatforms(),
     clouds: buildClouds(),
   };
-  const ctx = { art, sign, drawWord, wordWidth, WORD_ADVANCE };
+  const ctx = { art, sign, drawWord, wordWidth, WORD_ADVANCE, C: PAL };
 
   // What sits on the signs first, so a sign measures its text at its final size.
   scene(ctx);
@@ -171,7 +171,7 @@ async function main() {
   document.querySelectorAll('.pixel-heart').forEach((el) => { el.textContent = ''; el.append(sprite(art.creatures.heart, 'heart')); });
   lawn(document.querySelector('.lawn'), ctx);
   const signs = [...document.querySelectorAll('[data-sign]')];
-  signs.forEach((el, i) => woodenSign(el, signs[i - 1] || null, ctx));
+  signs.forEach((el, i) => woodenSign(el, signs[i - 1] || document.querySelector('.summit'), ctx));
   // after the signs: he stands where the first sign ends
   const prince = stage(document.querySelector('.stage'), ctx);
   const planes = parallax();
@@ -182,6 +182,7 @@ async function main() {
   // Whenever the page changes height (signs growing a board, the pixel font
   // arriving) the prince moves with his place and the planes get new lengths.
   const settle = () => { if (prince) prince.place(); if (planes) planes.size(); placeCreatures(); };
+  summitSeen(document.querySelector('.summit'));
   new ResizeObserver(settle).observe(document.body);
   if (document.fonts) document.fonts.ready.then(relayout);
   let pending = 0;
@@ -199,21 +200,33 @@ async function main() {
 // would still move over it when scrolling back (so the tower never lifts
 // off the lawn). Nothing moves with reduced motion; the planes then span
 // the page as they do without this script.
+//
+// Above the first sign is the top of the tower (.summit), found by scrolling
+// up from where the page opens. Down to that opening position the middle
+// plane moves with the page, so the tower's top, Rapunzel's window and the
+// beam the first sign hangs from stay together; the parallax starts below.
 const FAR = 0.3, MID = 0.7;
+// How far a plane has moved at scroll position s (no parallax: as the page).
+let farT = (s) => s, midT = (s) => s;
 function parallax() {
   if (STILL) return null;
   const far = document.querySelector('.layer--far'), mid = document.querySelector('.layer--mid');
   if (!far || !mid) return null;
   root.classList.add('parallax');
+  const summit = document.querySelector('.summit');
+  let s0 = 0;                                    // the page opens here (the summit's height)
+  farT = (s) => s * FAR;
+  midT = (s) => (s <= s0 ? s : s0 + (s - s0) * MID);
   const place = () => {
     const y = scrollY;
-    far.style.transform = `translate3d(0, ${(-y * FAR).toFixed(1)}px, 0)`;
-    mid.style.transform = `translate3d(0, ${(-y * MID).toFixed(1)}px, 0)`;
+    far.style.transform = `translate3d(0, ${(-farT(y)).toFixed(1)}px, 0)`;
+    mid.style.transform = `translate3d(0, ${(-midT(y)).toFixed(1)}px, 0)`;
   };
   const size = () => {
+    s0 = summit ? summit.offsetHeight : 0;
     const vh = innerHeight, max = Math.max(0, root.scrollHeight - vh);
-    far.style.height = `${Math.ceil(max * FAR + vh * (2 - FAR))}px`;
-    mid.style.height = `${Math.ceil(max * MID + vh * (2 - MID))}px`;
+    far.style.height = `${Math.ceil(farT(max) + vh * (2 - FAR))}px`;
+    mid.style.height = `${Math.ceil(midT(max) + vh * (2 - MID))}px`;
     place();
   };
   addEventListener('scroll', place, { passive: true });
@@ -224,7 +237,7 @@ function parallax() {
 // The page is the tower: night sky with the moon and rising lanterns at the
 // top, the tower with its windows and Rapunzel's braid all the way down,
 // the forest closing in toward the bottom and the lawn at the very end.
-function scene({ art }) {
+function scene({ art, C }) {
   const { tiles, windows, platforms } = art;
   const r = rng(7);
   const set = (name, value) => root.style.setProperty(name, value);
@@ -261,13 +274,40 @@ function scene({ art }) {
     g.blit(platforms.bow, (BW / 2) * A, 420 * A);
   }));
 
+  // stars that twinkle: a small plus that flickers, and a few bigger crosses
+  // that flash up now and then; they live in the star field (and its fade)
+  set('--twinkle', bake(3, 3, (g) => {
+    g.rect(4, 4, 4, 4, '#ffffff');
+    for (const [x, y] of [[0, 1], [2, 1], [1, 0], [1, 2]]) g.rect(x * A, y * A, A, A, '#cfe3ff', 0.75);
+  }));
+  set('--sparkle', bake(7, 7, (g) => {
+    g.rect(3 * A, 3 * A, A, A, '#ffffff');
+    for (const [d, a] of [[1, 0.95], [2, 0.6], [3, 0.3]]) {
+      for (const [x, y] of [[3 - d, 3], [3 + d, 3], [3, 3 - d], [3, 3 + d]]) g.rect(x * A, y * A, A, A, d === 1 ? '#ffffff' : '#cfe3ff', a);
+    }
+    for (const [x, y] of [[2, 2], [4, 2], [2, 4], [4, 4]]) g.rect(x * A, y * A, A, A, '#ffffff', 0.35);
+  }));
+  const field = document.querySelector('.scene__stars');
+  if (field) {
+    for (let i = 0; i < 34; i++) {
+      const big = i % 4 === 0;
+      const star = document.createElement('i');
+      star.className = big ? 'twinkle twinkle--big' : 'twinkle';
+      star.style.left = `${(2 + r() * 96).toFixed(1)}%`;
+      star.style.top = `${(1 + r() * 62).toFixed(1)}%`;
+      star.style.setProperty('--d', `${(big ? 5 + r() * 6 : 2.2 + r() * 3).toFixed(2)}s`);
+      star.style.setProperty('--delay', `${(-r() * 10).toFixed(2)}s`);
+      field.append(star);
+    }
+  }
+
   set('--forest', bake(192, 48, (g) => g.blit(tiles.forest[0], 0 + tiles.forest[0].ax, 48 * A)));
   set('--ground', bake(192, 36, (g) => g.blit(tiles.ground, tiles.ground.ax, tiles.ground.ay)));
 
   const sky = document.querySelector('.scene__sky');
   if (!sky) return;
   // the moon, a few clouds drifting by and lanterns rising into the night
-  const moon = sprite(tiles.moon, 'moon');
+  moon = sprite(tiles.moon, 'moon');
   sky.append(moon);
   tiles.clouds.forEach((s, i) => {
     const c = sprite(s, 'cloud');
@@ -276,6 +316,9 @@ function scene({ art }) {
     c.style.setProperty('--delay', `${[-20, -55, -90][i]}s`);
     sky.append(c);
   });
+  // the top of the tower, on the tower's plane above where the page opens
+  if (document.querySelector('.layer--mid') && document.querySelector('.summit')) towerTop(document.querySelector('.layer--mid'), art, C);
+
   // the creatures on the tower's plane: the witch over the first sign, the
   // others each in a gap between two signs (placed by placeCreatures)
   const mid = document.querySelector('.layer--mid');
@@ -300,22 +343,93 @@ function scene({ art }) {
   });
 }
 
+// --------------------------------------------------------------- the summit
+// The top of the tower above where the page opens: a pointed roof with a
+// pennant, the eaves, and Rapunzel at her window, waiting, her braid over
+// the sill and down the tower (the braid's strip starts at the sill). Drawn
+// at one pixel per art pixel on a 150 x 210 piece of the tower's plane; the
+// tower's bricks start under the eaves (landing.css: --summit-*).
+const SUMMIT = { w: 150, h: 210, eave: 92, sill: 146 };
+function towerTop(plane, art, C) {
+  const c = canvas('summit-art');
+  plane.append(c);
+  const g = painter(c, SUMMIT.w * A, SUMMIT.h * A);
+  const R = (x, y, w, h, color, a) => g.rect(x * A, y * A, w * A, h * A, color, a);
+  const B = (s, x, y, o) => g.blit(s, x * A, y * A, o);
+  // an arch: the upper half of a circle on a rectangle down to `bottom`
+  const arch = (cx, cy, r, bottom, color, a) => {
+    for (let dy = -r; dy < 0; dy++) { const h = Math.round(Math.sqrt(r * r - dy * dy)); R(cx - h, cy + dy, 2 * h, 1, color, a); }
+    R(cx - r, cy, 2 * r, bottom - cy, color, a);
+  };
+  const ROOF = { hi: '#b86aa8', mid: '#8a4a86', lo: '#5e2e62', line: '#4a2350', edge: '#2a1430' };
+  const CX = SUMMIT.w / 2, TIP = 24, E = SUMMIT.eave, S = SUMMIT.sill;
+  const frame = (t) => {
+    g.clear();
+    // the pennant on its pole, fluttering
+    R(CX - 1, 6, 2, TIP - 6, C.pole); R(CX - 1, 6, 1, TIP - 6, C.poleHi);
+    R(CX - 2, 3, 4, 3, C.gold); R(CX - 1, 3, 1, 1, C.braidHi);
+    const flag = step(t, 3, 2) ? [12, 13, 12, 10, 8, 6, 3, 1] : [10, 12, 13, 12, 9, 6, 4, 1];
+    flag.forEach((len, i) => { R(CX + 1, 7 + i, len, 1, i < 2 ? C.bowHi : C.bow); R(CX + len, 7 + i, 1, 1, C.bowDark); });
+    // the roof, row by row: lit on the left, in shade on the right, rows of tiles
+    for (let y = TIP; y < E; y++) {
+      const hw = Math.round(2 + ((y - TIP) / (E - TIP)) * 60), x0 = CX - hw;
+      R(x0, y, 2 * hw, 1, ROOF.mid);
+      R(x0, y, Math.max(1, Math.round(hw * 0.4)), 1, ROOF.hi);
+      R(CX + Math.round(hw * 0.4), y, hw - Math.round(hw * 0.4), 1, ROOF.lo);
+      if ((y - TIP) % 6 === 5) for (let x = x0 + ((y / 6) % 2 ? 0 : 2); x < CX + hw - 1; x += 4) R(x, y, 2, 1, ROOF.line);
+      R(x0 - 1, y, 1, 1, ROOF.edge); R(CX + hw, y, 1, 1, ROOF.edge);
+    }
+    // the eaves: a stone band with corbels under it
+    R(9, E, SUMMIT.w - 18, 6, C.stoneDark); R(9, E, SUMMIT.w - 18, 2, C.stoneLight); R(9, E + 4, SUMMIT.w - 18, 2, C.stoneShade);
+    for (let x = 16; x < SUMMIT.w - 16; x += 10) { R(x, E + 6, 4, 3, C.stoneDark); R(x, E + 6, 4, 1, C.stone); }
+    // Rapunzel's window: warm light, a stone frame, her braid behind her
+    arch(CX, S - 22, 26, S + 6, C.lanternGlow, 0.08);
+    arch(CX, S - 24, 20, S + 2, C.stoneShade);
+    arch(CX, S - 24, 19, S + 1, C.stone);
+    arch(CX, S - 24, 16, S, '#221a33');
+    arch(CX, S - 20, 12, S, '#3a2a45');
+    const bob = Math.round(Math.sin(t * 1.7) * 0.6);
+    B(art.tiles.braid, CX, S - 20); B(art.tiles.braid, CX, S - 10);
+    B((t % 4.3) < 0.13 ? art.sign.rapunzelBlink : art.sign.rapunzel, CX - 8, S + 1 + bob);
+    R(CX - 23, S, 46, 5, C.stone); R(CX - 23, S, 46, 1, C.stoneLight); R(CX - 23, S + 4, 46, 1, C.stoneShade);
+    B(art.sign.hands, CX - 8, S + 3);
+    for (let y = S; y < SUMMIT.h; y += 10) B(art.tiles.braid, CX, y);
+    B(art.creatures.pots[0], CX + 17, S);
+  };
+  frame(1);
+  if (!STILL) moving(c, frame);
+}
+
+// The speech bubble pops up whenever the summit comes into view.
+function summitSeen(el) {
+  if (!el) return;
+  new IntersectionObserver((entries) => {
+    for (const e of entries) el.classList.toggle('seen', e.isIntersecting);
+  }, { threshold: 0.35 }).observe(el);
+}
+
 // A creature in the gap between two signs, where the tower shows: on the
 // tower's plane, so it sits at the height where the gap is when that gap
 // is in the middle of the window (with parallax the plane has fallen
 // behind the page by then).
 const gapped = [];
 function placeCreatures() {
-  const k = root.classList.contains('parallax') ? 1 - MID : 0;
   const vh = innerHeight, max = Math.max(0, root.scrollHeight - vh);
   for (const [el, a, b] of gapped) {
     const above = document.querySelector(a), below = document.querySelector(b);
     if (!above || !below) continue;
     const center = (above.getBoundingClientRect().bottom + below.getBoundingClientRect().top) / 2 + scrollY;
     const s = Math.min(max, Math.max(0, center - vh / 2));
-    el.style.top = `${Math.round(center - k * s - el.offsetHeight / 2)}px`;
+    el.style.top = `${Math.round(center - (s - midT(s)) - el.offsetHeight / 2)}px`;
+  }
+  // the moon at the top right of the window where the page opens, and
+  // from there drifting down a little when scrolling up to the summit
+  if (moon) {
+    const summit = document.querySelector('.summit');
+    moon.style.top = `${Math.round(farT(summit ? summit.offsetHeight : 0) + 14 * artPx())}px`;
   }
 }
+let moon = null;
 
 // A creature crossing the plane (the path is CSS, .flyer), its frames
 // flipping at `fps` while it is on screen.
@@ -368,7 +482,7 @@ function sprite(s, cls) {
 // needs, hanging on two ropes from the sign above it (the first one from the
 // top of the page). Rapunzel peeks over the first one like on the title.
 const RAP_X = 108;                    // title.js: her head this far in from the sign's right edge
-function woodenSign(el, above, { art, sign }) {
+function woodenSign(el, above, { art, sign, C }) {
   const body = el.querySelector('.sign__body');
   const top = el.dataset.sign === 'top';
   const M = 48;                       // room for the vines and the shadow
@@ -393,6 +507,24 @@ function woodenSign(el, above, { art, sign }) {
         g.blit((t % 4.3) < 0.13 ? art.sign.rapunzelBlink : art.sign.rapunzel, hx, b.y + 4 + bob);
       }
       sign.drawSign(g, art, b.x, b.y, b.w, b.h);
+      if (top && b.y >= 24) {
+        // the beam across the tower the first sign hangs from, under Rapunzel's window
+        const x0 = b.x - 36, x1 = b.x + b.w + 36;
+        g.rect(x0 + 8, 8, x1 - x0, 20, '#000', 0.25);
+        g.rect(x0, 0, x1 - x0, 20, C.barkDark);
+        g.rect(x0, 0, x1 - x0, 4, C.barkLight);
+        g.rect(x0, 16, x1 - x0, 4, C.barkShadow);
+        g.rect(x0, 0, 4, 20, C.barkShadow); g.rect(x1 - 4, 0, 4, 20, C.barkShadow);
+        for (let x = x0 + 40; x < x1 - 40; x += 96) g.rect(x, 8, 24, 4, C.barkMid);
+        // iron bands where it lies across the tower's edges (the tower is 95 art px wide)
+        for (const ex of [b.x + b.w / 2 - 190, b.x + b.w / 2 + 190]) {
+          g.rect(ex - 6, 0, 12, 20, C.grip); g.rect(ex - 6, 0, 12, 4, C.poleHi); g.rect(ex - 2, 8, 4, 4, C.pole);
+        }
+        for (const rx of [b.x + sign.ROPE_IN, b.x + b.w - sign.ROPE_IN - 8]) {
+          g.rect(rx - 4, 0, 16, 24, C.ropeDark);   // the rope wound round the beam
+          g.rect(rx, 4, 8, 4, C.rope); g.rect(rx, 12, 8, 4, C.rope);
+        }
+      }
       if (top) {
         g.blit(art.sign.hands, hx, b.y + 8);
         const sway = Math.sin(t * 1.4), bottom = b.y + b.h;
