@@ -49,6 +49,19 @@ current game; `site/og.png`, the picture link previews show, is made from
 2. Every push to the production branch redeploys; other branches get
    preview URLs.
 
+**Devlog.** Episodes live in `site/devlog/episodes.json`; one command adds
+one (it saves the video's picture next to it, so visitors load nothing from
+YouTube until they click a video):
+
+```sh
+python3 tools/devlog_add.py https://youtu.be/<id> "Episode 1: The tower" "One or two sentences."
+python3 tools/devlog_add.py --channel https://www.youtube.com/@<channel>
+```
+
+Commit the JSON and the picture: the landing page shows the newest three,
+`/devlog/` all of them, and the footer gets its Devlog link. Until the first
+episode the landing page says the devlog is on its way.
+
 The game's URL helpers work on the deployed site as `/play/?at=150`;
 `/?at=150` (and the other helpers) forwards there. A home screen install
 made before the landing page existed opens it and is sent on to the game.

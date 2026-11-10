@@ -147,6 +147,11 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   window and beam stay together; the parallax starts below. The story is
   Simon's letter, with Emma's drawing and the first game design from back
   then taped into it (`site/img/`, a tap opens them large).
+  Devlog: a sign on the landing page with the newest three episodes and
+  `/devlog/` with all, from `site/devlog/episodes.json` (added with
+  `tools/devlog_add.py`); the pictures are saved on the site and YouTube's
+  player loads only on a click (two clicks, as German privacy law wants).
+  Until the first episode the sign says it is on its way.
 
 **Phase 1, the ceiling (✅ on branch `phase-1-ceiling`)**: boost shield
 (0.5 s after a boost the prince knocks enemies away for three suns; the

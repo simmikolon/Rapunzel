@@ -30,6 +30,7 @@ which only copies the two folders together). The design document
   reshaping those breaks the landing page's pictures (the page then falls
   back to plain CSS), so check `/` after such a change. On a deployed URL
   the dev helpers go after `/play/`; `/?at=150` forwards there.
+  A devlog episode: `python3 tools/devlog_add.py <youtube-url> "Title" "Text"`.
 - Dev helpers: `?at=150` starts at 150 m (and skips the ride down and the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest
