@@ -437,6 +437,28 @@ html:not(.art) .stage { display: none; }
   font: 400 11px/1 var(--pixel);
   color: var(--pink-dark);
 }
+/* the story is a letter: a bow before the dedication, the signature right */
+.letter p { margin-bottom: 0.8em; }
+.letter strong { font-weight: 800; }
+.letter__bow {
+  display: flex;
+  justify-content: center;
+  margin: calc(var(--art) * 8) 0 calc(var(--art) * 5);
+}
+.letter__close { text-align: center; }
+.letter__close em { font-style: italic; }
+.letter__sign {
+  margin-top: 1.2em !important;
+  text-align: right;
+  font-size: 1.1em;
+}
+.pixel-heart canvas {
+  display: inline-block;
+  width: 20px;                 /* two CSS px per art pixel, crisp at any size */
+  height: 20px;
+  vertical-align: -0.2em;
+}
+
 .ask {
   font: 400 calc(var(--art) * 4.5)/1.6 var(--pixel);
   color: var(--pink-dark);

@@ -166,6 +166,9 @@ async function main() {
     draw: (g, b) => sign.drawPlankTag(g, b.x, b.y, b.w, b.h),
   }));
   document.querySelectorAll('.card').forEach((el) => cast(el, ctx));
+  // the letter: a bow before the dedication, the game's heart after "Love, Dad."
+  document.querySelectorAll('.letter__bow').forEach((el) => el.append(sprite(art.sign.bow, 'bow')));
+  document.querySelectorAll('.pixel-heart').forEach((el) => { el.textContent = ''; el.append(sprite(art.creatures.heart, 'heart')); });
   lawn(document.querySelector('.lawn'), ctx);
   const signs = [...document.querySelectorAll('[data-sign]')];
   signs.forEach((el, i) => woodenSign(el, signs[i - 1] || null, ctx));
