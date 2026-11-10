@@ -136,8 +136,9 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   Three planes with parallax like in the game: sky and forest at 0.3 of
   the scroll, tower, braid, the prince and the creatures (witch, stork,
   crow, a spider) at 0.7, the signs at 1.0; none with reduced motion.
-  Footer on the lawn with the Impressum (`/impressum/`, the same scene and
-  a sign, kept out of search results); the site's address is bouncealot.de.
+  Footer on the lawn with the Impressum (`/impressum/`) and the privacy
+  policy (`/datenschutz/`), pages of the same kind kept out of search
+  results; the site's address is www.bouncealot.de (bouncealot.de forwards).
   Twinkling stars in the sky, and a secret above where the page opens: the
   top of the tower (pointed roof with a pennant, Rapunzel waiting at her
   window, her braid over the sill and down the tower, a speech bubble),

@@ -771,6 +771,9 @@ kbd {
   min-height: 100dvh;
 }
 .subpage main { padding-top: calc(env(safe-area-inset-top) + var(--art) * 6); }
+/* no summit on these pages: the tower and the braid run up out of the window */
+.subpage .scene__tower,
+.subpage .scene__braid { top: 0; }
 .subpage .lawn { margin-top: auto; }
 .legal h2 {
   margin: 1.4em 0 0.5em;
