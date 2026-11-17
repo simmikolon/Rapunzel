@@ -322,12 +322,14 @@ is a pool to draw from, not a promise.
   only. Storm: the lightning's carrier (see enemies). The handover from
   branches runs from 420 to 460 m.
 - ✅ sky lanterns from the sunset band on, the night's staple: a paper
-  lantern (136 px box, never fragile) hovering with a slow bob around its
-  row's height, glowing; landing crumples the paper. A cloud slot becomes
+  sky lantern lit by the flame at its open bottom, a crown or a tulip
+  painted on it (136 px box, never fragile), hovering with a slow bob
+  around its row's height, glowing; landing crumples the paper. A cloud slot becomes
   a lantern with chance 0.6 x `lanternAmount`. A field of small lanterns
   rises behind and in front of the tower at night, purely visual.
 - ✅ storks: once the clouds are fully in, every 400 to 700 px of climb a
-  stork enters from one edge 380 to 640 px above the prince and crosses
+  stork (a bundle in its beak) enters from one edge 380 to 640 px above
+  the prince and crosses
   at 150 to 210 px/s (every 1200 to 2000 px, so a stork stays an event);
   its back is a 150 px perch. Never part of a row, so
   never the only way up: a timing reward worth +3 suns and a squawk.
@@ -897,3 +899,16 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   corners, so 8 to 59 % of the 4 x 4 blocks in the bows, hearts, crows,
   stork, witch, branches and roots are off the art grid (the prince and the
   guard 4 %, every other sprite 0); left as it is until decided.
+- 2026-11-17: The stork and the sky lanterns redrawn to the sprite guide
+  (`element/sky-restyle`), same sizes and anchors, so play is unchanged.
+  The stork is plump with a big head, a big eye and a blush, a long red
+  beak, small wings (white coverts, black fingers) and the storybook
+  bundle hanging from its beak; its colours are named ramps (a creamy
+  white with a lilac shade, so it does not read as a cloud). The lantern
+  is a sky lantern instead of a ball: a paper bag, darker under the top,
+  bright in a dome above the flame at its open bottom, the right side
+  turned away, a crown (gold) or a tulip (pink) painted on it, the wires
+  and the fuel cake below; the game's halo moved down to the dome
+  (+108 px instead of +74). The far lanterns got the same shape. Both are
+  drawn from row spans without `poly`: 0 % of their 4 x 4 blocks off the
+  art grid (the old stork 16 %).

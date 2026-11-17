@@ -70,21 +70,73 @@ function drawSquirrel(t, frame) {
   }
 }
 
-// Stork: 42 x 22 art px, flying right, two flap frames. The anchor is the
-// top of its back (y = 8), the landing surface.
+// Stork: 42 x 22 art px, flying right, two flap frames (0 wings up, 1 wings
+// down). The anchor is the top of its back (x = 21, y = 8), the landing
+// surface; the back is flat from x = 10 to 26, the head and the long beak
+// fill the rest. A plump bird with a big head, small wings, short trailing
+// legs and the storybook stork's bundle hanging from its beak. Drawn from
+// row spans [y, x0, x1] so every edge stays on the grid.
 function drawStork(t, frame) {
-  const { p, ellipse, line, disc, poly } = t;
-  const white = '#f4f4f0', shade = '#d2d2cc', black = '#1b1b2a', red = '#d8402c';
-  // wings: up or down
-  if (frame === 0) { poly([[12, 8], [30, 8], [34, 1], [26, 0], [16, 2]], white); poly([[26, 0], [34, 1], [36, 0], [31, 0]], black); line(14, 4, 30, 2, shade); }
-  else { poly([[12, 10], [30, 10], [34, 18], [26, 20], [16, 18]], white); poly([[26, 20], [34, 18], [36, 21], [30, 21]], black); line(14, 15, 30, 17, shade); }
-  // body and tail
-  ellipse(22, 11, 11, 4, white); ellipse(22, 13, 9, 2, shade);
-  poly([[10, 9], [12, 13], [6, 14], [5, 11]], black);
-  // neck and head, forward
-  line(31, 9, 36, 5, white, 2); disc(37, 4, 2, white); p(39, 4, 3, 1, red); p(38, 3, 1, 1, black); p(37, 2, 2, 1, black);
-  // legs trailing
-  line(14, 14, 7, 17, red); line(16, 14, 9, 18, red);
+  const { p, disc } = t;
+  const rows = (spans, color) => { for (const [y, x0, x1] of spans) p(x0, y, x1 - x0 + 1, 1, color); };
+  const up = frame === 0, b = up ? 0 : 1;          // the bundle lags one pixel on the downstroke
+  // legs trailing behind, the far one darker
+  rows([[19, 4, 10], [20, 1, 4]], C.storkBeakDark);
+  rows([[17, 9, 10], [18, 2, 8], [19, 0, 1]], C.storkBeak);
+  // tail: a short white fan, shaded below
+  rows([[10, 2, 6], [11, 1, 6], [12, 0, 6], [13, 1, 6], [14, 3, 6]], C.stork);
+  rows([[10, 2, 5], [11, 1, 2]], C.storkHi);
+  rows([[13, 1, 5], [14, 3, 6]], C.storkShade);
+  p(0, 12, 1, 1, C.storkShade); p(2, 12, 1, 1, C.storkShade);        // feather notches
+  // body: plump, lit along the back, lilac shade and a deep underside
+  rows([[8, 10, 26], [9, 8, 28], [10, 6, 29], [11, 5, 30], [12, 4, 30], [13, 4, 30], [14, 4, 30],
+    [15, 5, 29], [16, 6, 28], [17, 8, 26], [18, 11, 23]], C.stork);
+  rows([[8, 10, 26], [9, 9, 27], [10, 11, 22]], C.storkHi);
+  rows([[15, 7, 23], [16, 6, 27], [17, 8, 26]], C.storkShade);
+  rows([[17, 11, 23], [18, 11, 23]], C.storkDeep);
+  p(25, 13, 1, 1, C.storkShade); p(22, 14, 1, 1, C.storkShade); p(27, 15, 1, 1, C.storkShade);   // breast feathers
+  // neck and the big round head
+  p(25, 7, 6, 5, C.stork);
+  disc(31, 5, 5, C.stork);
+  rows([[0, 30, 32], [1, 28, 33]], C.storkHi);
+  rows([[10, 26, 29], [11, 26, 28]], C.storkShade);
+  // face: a big eye, a blush, the long red beak
+  p(31, 2, 3, 3, C.eyeWhite); p(32, 3, 2, 2, C.black);
+  p(30, 6, 2, 1, C.cheek);
+  rows([[4, 36, 40]], C.storkBeakHi); rows([[5, 36, 41]], C.storkBeak); rows([[6, 36, 39]], C.storkBeakDark);
+  // the bundle, knotted, hanging from the beak tip
+  p(40, 6, 1, 2 + b, C.bowDark);
+  rows([[8 + b, 38, 41], [9 + b, 37, 41], [10 + b, 36, 41], [11 + b, 36, 41], [12 + b, 37, 40]], C.bow);
+  p(39, 8 + b, 1, 1, C.bowHi); p(38, 9 + b, 1, 1, C.bowHi); p(37, 10 + b, 1, 1, C.bowHi);
+  p(41, 10 + b, 1, 2, C.bowDark); p(37, 12 + b, 4, 1, C.bowDark);
+  // the near wing: white coverts along the leading edge, black flight
+  // feathers behind them, splitting into fingers at the tip. Raised, it
+  // sweeps up and back from the back; lowered, the same wing hangs from the
+  // shoulder, mirrored. Rows from the root: [black spans, white span].
+  const WING = [
+    [[], [13, 24]],
+    [[[12, 14]], [15, 23]],
+    [[[11, 15]], [16, 22]],
+    [[[10, 15]], [16, 21]],
+    [[[9, 14]], [15, 19]],
+    [[[8, 13]], [14, 17]],
+    [[[8, 10], [12, 14]], [15, 15]],
+    [[[8, 9], [12, 14]], null],
+  ];
+  const wy = (i) => (up ? 7 - i : 14 + i);
+  WING.forEach(([blacks, white], i) => {
+    const y = wy(i);
+    // lowered, the coverts lie on the shaded flank: lighter than it, with a dark front edge
+    if (white) p(white[0], y, white[1] - white[0] + 1, 1, up ? C.stork : C.storkHi);
+    for (const [x0, x1] of blacks) p(x0, y, x1 - x0 + 1, 1, C.crow);
+    if (i >= 2 && i <= 5) p(blacks[blacks.length - 1][1], y, 1, 1, C.crowHi);   // the feathers' edge under the coverts
+    if (white && i >= 1) {
+      if (up) p(white[1] - (i <= 4 ? 1 : 0), y, i <= 4 ? 2 : 1, 1, C.storkHi);   // the lit leading edge
+      else p(white[1], y, 1, 1, C.storkDeep);
+    }
+  });
+  if (up) rows([[7, 13, 15]], C.storkShade);                           // where it grows from the back
+  else rows([[14, 13, 24]], C.storkShade);                              // the crease along the body
 }
 
 // Guard: 34 x 48 art px, facing right, the body centred at x = 14 and the
