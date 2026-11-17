@@ -35,7 +35,7 @@ export function makeSprite(wA, hA, draw, anchor = { ax: 0.5, ay: 1 }, opts = {})
     disc: (cx, cy, r, color) => disc(p, cx, cy, r, color),
     ring: (cx, cy, r, color) => ring(p, cx, cy, r, color),
     ellipse: (cx, cy, rx, ry, color) => ellipse(p, cx, cy, rx, ry, color),
-    poly: (pts, color) => poly(ctx, pts, color),
+    poly: (pts, color) => poly(p, pts, color),
     rect: (x, y, w, h, color) => p(x, y, w, h, color),
     hatch: (x, y, w, h, color, every = 2, phase = 0) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if ((xx + yy + phase) % every === 0) p(xx, yy, 1, 1, color); },
   };
@@ -72,15 +72,24 @@ export function ring(p, cx, cy, r, color) {
 export function ellipse(p, cx, cy, rx, ry, color) {
   for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) if ((x * x) / (rx * rx + 0.3) + (y * y) / (ry * ry + 0.3) <= 1) p(cx + x, cy + y, 1, 1, color);
 }
-export function poly(ctx, pts, color) {
-  // Filled polygon snapped to the art grid (coordinates in art pixels).
-  ctx.save();
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * PX, y * PX) : ctx.moveTo(x * PX, y * PX)));
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
+export function poly(p, pts, color) {
+  // Filled polygon on the art grid (coordinates in art pixels): an art pixel
+  // is filled when its centre lies inside, row by row (scanline, even-odd).
+  if (color == null) return;
+  const ys = pts.map((q) => q[1]);
+  const y0 = Math.floor(Math.min(...ys)), y1 = Math.ceil(Math.max(...ys));
+  for (let y = y0; y < y1; y++) {
+    const cy = y + 0.5, xs = [];
+    for (let i = 0; i < pts.length; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length];
+      if ((ay <= cy) !== (by <= cy)) xs.push(ax + (cy - ay) * (bx - ax) / (by - ay));
+    }
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) {
+      const a = Math.ceil(xs[k] - 0.5), b = Math.floor(xs[k + 1] - 0.5);   // centres x + 0.5 within
+      if (b >= a) p(a, y, b - a + 1, 1, color);
+    }
+  }
 }
 
 export function flipH(sprite) {
