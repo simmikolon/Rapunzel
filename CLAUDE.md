@@ -13,9 +13,9 @@ which only copies the two folders together). The design document
 - One short branch per element (`element/<name>`), merged into `master`
   when it is fun. `master` deploys to Vercel; branches get preview URLs.
 - An element is a module: a spawn rule in `web/src/level.js` (tier chance
-  x pacing x zone multiplier in `ZONES`), its art in `web/src/art/`, its
-  sound in `web/src/audio.js`, and either bot support in `web/dev/sim.js`
-  or a note that it is purely visual.
+  x pacing x zone multiplier in `ZONES`), its art in `web/src/art/` (in
+  the sprite style below), its sound in `web/src/audio.js`, and either bot
+  support in `web/dev/sim.js` or a note that it is purely visual.
 - "Done" means: in the game, in its zone, in the simulator, one line in
   `docs/DESIGN.md` (status mark plus decision log).
 
@@ -82,3 +82,10 @@ which only copies the two folders together). The design document
 - Keep kids in mind: hazards telegraphed, no trap without a way out.
 - Commit messages describe the change and the measured effect; no model
   names in commits, code or docs.
+
+## Sprite style
+The procedural sprites follow `docs/ART.md`, imported here so every
+session starts with it (keep it to about a page, it costs context each
+time):
+
+@docs/ART.md

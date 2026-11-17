@@ -885,3 +885,15 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   preset the player picks is saved (`fxPick`); the old saves wrote 'full'
   with every best height whether chosen or not, so an old `fx: 'full'` is
   ignored and an old 'bloom' or 'off' is kept as a pick.
+- 2026-11-17: The sprite style written down in `docs/ART.md`: what is
+  fixed (grid, readability, the prince as the scale, one light), what is a
+  default (colour ramps, no outline, chibi faces, few frames) and what is
+  explicitly free (shape, a zone's palette, each element's own idea). It
+  describes the art as it is and changes when a sprite breaks a rule for
+  the better. `CLAUDE.md` imports it, so every session starts with it.
+  Reference: the prince, Rapunzel, the braid, the bows, the spider, the
+  squirrel, the cloud platforms; counterexample: the stork and the big sky
+  lanterns. Measured on the way: `poly` fills anti-aliased between its
+  corners, so 8 to 59 % of the 4 x 4 blocks in the bows, hearts, crows,
+  stork, witch, branches and roots are off the art grid (the prince and the
+  guard 4 %, every other sprite 0); left as it is until decided.
