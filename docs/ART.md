@@ -14,14 +14,14 @@ sprite fit the rule.
 ## Reference and counterexample
 - Reference: the prince, Rapunzel (the sign portrait), the braid, the bows
   and ribbons, the spider, the squirrel, the cloud platforms.
-- Counterexample: the stork and the big sky lanterns. The stork has
-  realistic proportions (long neck, long legs, thin wings), no face (a
-  one-pixel eye), a big white body with almost nothing on it, loose colours
-  outside the palette, and thin lines carrying the shape. The lantern is
-  pillow-shaded (bright core, darker rim all around), ruled with a grid of
-  thin ribs, exactly symmetric, and has no detail of its own. The clouds
-  are objects too and fit: irregular lobes, lit on top, shaded below,
-  varied by a seed.
+- Counterexample: the first stork and sky lanterns (redrawn on 2026-11-17,
+  see the decision log). The stork had realistic proportions (long neck,
+  long legs, thin wings), no face (a one-pixel eye), a big white body
+  with almost nothing on it, loose colours outside the palette, and thin
+  lines carrying the shape. The lantern was pillow-shaded (bright core,
+  darker rim all around), ruled with a grid of thin ribs, exactly
+  symmetric, and had no detail of its own. The clouds are objects too
+  and fit: irregular lobes, lit on top, shaded below, varied by a seed.
 
 ## Fixed
 - The grid: one art pixel is `PX` (4) logical pixels, sizes are given in

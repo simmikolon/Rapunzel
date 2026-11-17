@@ -33,9 +33,16 @@ export const PAL = {
   spider: '#3a2342', spiderHi: '#5d3a6e', thread: '#e8e8f0',
   fur: '#c97a3a', furHi: '#e8a65e', furDark: '#8a4f22', belly: '#f2dcb8', acorn: '#8d6336', acornCap: '#5a3d22',
   witchDress: '#2b1d3d', witchDressHi: '#46306b', witchSkin: '#c9e2b0', witchHair: '#111120', witchHat: '#1c1430', broom: '#8a6a3c', broomStraw: '#d9b35a',
+  // the stork: creamy white with a lilac shade (it must not read as a
+  // cloud), the crow's black for its flight feathers, a red-orange beak
+  storkHi: '#fffdf6', stork: '#f2ece0', storkShade: '#cdc3cc', storkDeep: '#968a9c',
+  storkBeakHi: '#ff9b6b', storkBeak: '#ec5b3a', storkBeakDark: '#a93a2b',
   // pickups
   sun1: '#fff3a0', sun2: '#ffd43a', sun3: '#ff9d1f',
   lanternPaper: '#ffd98a', lanternHi: '#fff4cf', lanternFrame: '#b8742a', lanternGlow: '#ffb347',
+  // sky lantern paper, lit from the flame below: hi near the flame, deep at the far side
+  lanternShade: '#f0b860', lanternDeep: '#c98a3c', lanternFrameHi: '#d9a062',
+  lanternPinkHi: '#ffe0ea', lanternPink: '#ffb0c8', lanternPinkShade: '#e07aa0', lanternPinkDeep: '#b04f78',
   heart: '#ff4d6d', heartHi: '#ff93a8', heartDark: '#b31b3b',
   // ui
   white: '#ffffff', black: '#000000', uiDark: '#102024', uiLine: '#8fd1c7',
