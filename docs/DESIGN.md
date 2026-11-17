@@ -912,3 +912,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   (+108 px instead of +74). The far lanterns got the same shape. Both are
   drawn from row spans without `poly`: 0 % of their 4 x 4 blocks off the
   art grid (the old stork 16 %).
+- 2026-11-17: `poly` fills on the art grid (`element/poly-grid`): a
+  scanline fill per art row, a pixel when its centre lies inside. Every
+  sprite now sits on the 4 px grid (only the logo's drop shadow keeps
+  partly transparent pixels, on purpose). The heart, the halberd and the
+  branches got clean stair edges; the crow's wings, the witch's cape and
+  the bows' tails turned ragged, accepted for now; they are the next to
+  redraw as row spans.
