@@ -26,10 +26,10 @@ sprite fit the rule.
 ## Fixed
 - The grid: one art pixel is `PX` (4) logical pixels, sizes are given in
   art pixels, no smoothing, nothing between pixels. Draw with `p`, `rect`,
-  `line`, `disc`, `ellipse`, `ring`, `hatch` (`sprite.js`). Known gap:
-  `poly` fills anti-aliased between its corners, so the cape, bows, crows,
-  stork, witch and branches have edges finer than the grid. Don't build new
-  large shapes from it until that is decided.
+  `line`, `disc`, `ellipse`, `ring`, `poly`, `hatch` (`sprite.js`), all
+  on the grid. `poly` fills an art pixel when its centre lies inside, so
+  thin tips break into single pixels: draw thin shapes as row spans, as
+  the stork is drawn.
 - Every sprite reads against the dark teal and night backgrounds by its
   brightness and colour alone. A dark sprite (crow, spider, witch) needs a
   lighter highlight plane. A hazard must read as a hazard at a glance.
