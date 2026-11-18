@@ -1,4 +1,4 @@
-import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY } from './config.js';
+import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY, MAGNET_RADIUS, MAGNET_SPEED, MAGNET_ACCEL } from './config.js';
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
@@ -12,6 +12,7 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
+import { POWERS, RAINBOW } from './powerups.js';
 
 // Before the round starts the prince hops on the lawn by himself.
 const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
@@ -35,14 +36,16 @@ export class World {
   reset(seed) {
     // Streams from one seed: the level geometry, the hearts (their timing
     // depends on the prince's state), the events (the witch), the
-    // background's gusts and what the tower itself does (window guards), so
-    // a seeded round lays out the same tower however it is played and the
-    // tower's hazards can be switched off without moving a branch.
+    // background's gusts, what the tower itself does (window guards) and
+    // the power-ups, so a seeded round lays out the same tower however it is
+    // played and the tower's hazards or the power-ups can be switched off
+    // without moving a branch.
     this.rng = new RNG(seed);
     this.rngEvents = new RNG(seed == null ? undefined : hash(seed + 1));
     this.level.rng = this.rng;
     this.level.rngHearts = new RNG(seed == null ? undefined : hash(seed + 2));
     this.level.rngTower = new RNG(seed == null ? undefined : hash(seed + 4));
+    this.level.rngPower = new RNG(seed == null ? undefined : hash(seed + 5));
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
@@ -98,7 +101,12 @@ export class World {
     this.audio.count(3);
   }
 
-  toast(text, color = '#fff2a8', life = 1.6) { this.toasts.push({ text, color, life, maxLife: life }); }
+  // A toast that is already up is not said twice (two lanterns the magnet brings in at once).
+  toast(text, color = '#fff2a8', life = 1.6) {
+    const same = this.toasts.find((t) => t.text === text && t.life > 0.4);
+    if (same) { same.life = Math.max(same.life, life * 0.75); return; }
+    this.toasts.push({ text, color, life, maxLife: life });
+  }
 
   // ------------------------------------------------------------------ update
   update(dt) {
@@ -122,6 +130,7 @@ export class World {
     for (const e of this.enemies) e.update(dt, this);
     for (const f of this.fields) f.update(dt, this);
     for (const k of this.pickups) k.update(dt);
+    this.magnet(dt);
     this.particles.update(dt);
     this.cam.follow(pl, dt);
 
@@ -171,7 +180,7 @@ export class World {
       if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
-      else if (e.hurtful) { pl.hit(e); if (e.onHit) e.onHit(this); }
+      else if (e.hurtful && !pl.hidden) { pl.hit(e); if (e.onHit) e.onHit(this); }   // under the cloak he passes through
     }
 
     // Pickups
@@ -205,6 +214,46 @@ export class World {
       pl.heal();
       this.audio.heart();
       this.particles.hearts(k.x, k.y);
+    } else if (k.kind === 'power') {
+      this.givePower(k.power, k.x, k.y);
+    }
+  }
+
+  // A power-up starts (a pickup, or the dev helper). One at a time: the one
+  // that ran is over without a word.
+  givePower(kind, x = this.player.x, y = this.player.y + PLAYER_H * 0.5) {
+    const P = POWERS[kind];
+    this.player.givePower(kind);
+    this.audio.power(kind);
+    this.particles.powerBurst(x, y, P.color);
+    if (kind === 'star') for (let i = 0; i < 12; i++) this.particles.rainbowSpark(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, RAINBOW[i * 2]);
+    this.toast(P.toast, P.color, 1.6);
+    this.onPowerStart(this.player, kind);
+  }
+  onPowerStart(pl, kind) {}                 // the simulator counts here
+  onPowerWarn(pl, kind) { this.audio.powerWarn(); }
+  onPowerEnd(pl, kind) { this.audio.powerEnd(); this.particles.powerBurst(pl.x, pl.y + PLAYER_H * 0.5, POWERS[kind].color, 10); }
+
+  // The sun magnet: suns, lanterns and hearts within its reach fly to the
+  // prince's middle and are collected there. Never another power-up (it
+  // would end the magnet). What is on its way keeps coming when the magnet
+  // runs out, so nothing stops in mid-air.
+  magnet(dt) {
+    const pl = this.player;
+    if (!pl.alive || !this.started) return;
+    const on = pl.power === 'magnet';
+    const tx = pl.x, ty = pl.y + PLAYER_H * 0.5;
+    for (const k of this.pickups) {
+      if (!k.alive || k.kind === 'power') continue;
+      const dx = tx - k.x, dy = ty - k.y, d = Math.hypot(dx, dy);
+      if (!k.pulled) {
+        if (!on || d > MAGNET_RADIUS) continue;
+        k.pulled = true; k.pullV = MAGNET_SPEED[0];
+      }
+      k.pullV = Math.min(MAGNET_SPEED[1], k.pullV + MAGNET_ACCEL * dt);
+      const step = Math.min(d, k.pullV * dt);
+      if (d > 0.01) k.shift((dx / d) * step, (dy / d) * step);
+      if (Math.random() < dt * 40) this.particles.pullSpark(k.x, k.y, k.kind === 'heart' ? C.heartHi : C.sun1);
     }
   }
 
@@ -222,7 +271,7 @@ export class World {
     // The witch: telegraphed dives from a fixed altitude on, never during a
     // breather stretch, and with a long cooldown so she is an event.
     const witchAbout = this.enemies.some((e) => e.kind === 'witch' || e.kind === 'scissors');
-    if (pl.maxY > this.nextWitchY && !witchAbout && !this.level.pacingAt(pl.maxY).breather) {
+    if (pl.maxY > this.nextWitchY && !witchAbout && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
       const side = this.rngEvents.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));

@@ -12,6 +12,11 @@ import { PAL as C } from './palette.js';
 // a squirrel's moods) comes from the RNG handed in, so a seeded round replays
 // exactly and the simulator is reproducible; Math.random is only used for
 // particles.
+//
+// What an enemy does about the prince hangs on `player.seen`: under the
+// cloak of invisibility nobody homes in, lunges, dashes or thrusts, and
+// those who would have stand puzzled with a "?" (PUZZLED) instead of a "!".
+const PUZZLED = '#b9c8ff';
 
 let nextId = 1;
 
@@ -48,7 +53,7 @@ export class Crow extends Enemy {
     }
     const p = world.player;
     let dx = p.x - this.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
-    const near = this.track > 0 && p.alive && Math.abs(dx) < 360 && Math.abs(p.y + 100 - this.y) < 700;
+    const near = this.track > 0 && p.seen && Math.abs(dx) < 360 && Math.abs(p.y + 100 - this.y) < 700;
     this.alert = near ? Math.min(1, this.alert + dt * 3) : Math.max(0, this.alert - dt);
     if (this.alert > 0) {
       // Home in on the prince's body height, faster with altitude.
@@ -101,7 +106,7 @@ export class Spider extends Enemy {
     }
     const p = world.player;
     if (this.cooldown > 0) this.cooldown -= dt;
-    if (this.lungeT < 0 && this.lunge > 0 && this.cooldown <= 0 && p.alive) {
+    if (this.lungeT < 0 && this.lunge > 0 && this.cooldown <= 0 && p.seen) {
       const below = this.y - this.h / 2 - p.headY;
       if (Math.abs(p.x - this.x) < 110 && below > 0 && below < 260 + this.lunge * 200) { this.lungeT = 0; this.frame = 0; }
     }
@@ -165,7 +170,9 @@ export class Squirrel extends Enemy {
     if (!pf.landable) { this.state = 'falling'; this.hurtful = false; this.vy = 120; return; }
     const p = world.player;
     const dx = p.x - this.x;
-    const reach = p.alive && Math.abs(dx) < 240 && p.y >= pf.y - 60 && p.y < pf.y + 420;
+    const within = Math.abs(dx) < 240 && p.y >= pf.y - 60 && p.y < pf.y + 420;
+    const reach = p.seen && within;
+    this.puzzled = p.hidden && within;
     if (reach && this.alertness > 0) {
       if (this.state !== 'dash') { this.state = 'dash'; this.stateT = 0; if (this.chirpCooldown <= 0) { world.audio.chirp(); this.chirpCooldown = 2.5; } }
       if (Math.abs(dx) > 6) this.dir = dx > 0 ? 1 : -1;
@@ -199,6 +206,7 @@ export class Squirrel extends Enemy {
     const sy = cam.sy(this.y - this.h / 2);
     g.blit(s, cam.sx(this.x), this.dead ? cam.sy(this.y) : sy, this.dead ? { rot: this.spin * this.dir } : undefined);
     if (this.state === 'dash') g.text('!', cam.sx(this.x), sy - 70, 22, '#ffe9a0', 'center', true);
+    else if (this.puzzled && !this.dead && this.state !== 'falling') g.text('?', cam.sx(this.x), sy - 70, 22, PUZZLED, 'center', true);
   }
 }
 
@@ -235,9 +243,10 @@ export class Witch extends Enemy {
     const p = world.player;
     this.frame = Math.floor(this.t * 7) % 2;
     if (this.phase === 'leave') {
-      this.x += this.vx * dt; this.y += this.vy * dt; this.vy -= 600 * dt; this.spin += dt * 8;
+      this.x += this.vx * dt; this.y += this.vy * dt;
+      if (!this.lost) { this.vy -= 600 * dt; this.spin += dt * 8; }   // thrown off her course; when she only lost him she flies on
       if (Math.random() < 0.6) world.particles.witchTrail(this.x, this.y);
-      if (this.x > W / 2 + 220 || this.x < -W / 2 - 220 || this.y < world.cam.y - 300) this.alive = false;
+      if (this.x > W / 2 + 220 || this.x < -W / 2 - 220 || this.y < world.cam.y - 300 || this.y > world.cam.top + 400) this.alive = false;
       return;
     }
     if (this.phase === 'warn') {
@@ -248,7 +257,11 @@ export class Witch extends Enemy {
       this.x += this.vx * dt;
       this.y += Math.sin(this.t * 5) * 30 * dt;
       if (world.particles.items.length < 400 && Math.random() < 0.5) world.particles.witchTrail(this.x - this.dir * 40, this.y - 10);
-      if ((this.dir > 0 && this.x > W / 2 - 110) || (this.dir < 0 && this.x < -W / 2 + 110)) {
+      if (((this.dir > 0 && this.x > W / 2 - 110) || (this.dir < 0 && this.x < -W / 2 + 110)) && !p.seen) {
+        // nobody there to dive at: she flies on, puzzled, and is gone
+        this.phase = 'leave'; this.phaseT = 0; this.lost = true; this.hurtful = false;
+        this.vx = this.dir * 430; this.vy = 140; this.spin = 0;
+      } else if ((this.dir > 0 && this.x > W / 2 - 110) || (this.dir < 0 && this.x < -W / 2 + 110)) {
         // turn around and dive at the player
         this.phase = 'dive'; this.phaseT = 0;
         this.dir = -this.dir;
@@ -286,7 +299,11 @@ export class Witch extends Enemy {
       return;
     }
     const set = this.dir > 0 ? art.creatures.witchR : art.creatures.witchL;
-    if (this.phase === 'leave') { g.blit(set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.spin * this.dir }); return; }
+    if (this.phase === 'leave') {
+      g.blit(set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.spin * this.dir });
+      if (this.lost) g.text('?', cam.sx(this.x), cam.sy(this.y) - 80, 26, PUZZLED, 'center', true);
+      return;
+    }
     const rot = this.phase === 'dive' ? Math.atan2(-this.vy, this.vx) * (this.dir > 0 ? 1 : -1) * 0.5 : 0;
     g.blit(set[this.frame], cam.sx(this.x), cam.sy(this.y), { rot: this.dir > 0 ? rot : -rot });
   }
@@ -402,7 +419,9 @@ export class Guard extends Enemy {
     if (this.cooldown > 0) this.cooldown -= dt;
     const p = world.player;
     const dx = p.x - this.x;
-    const near = p.alive && Math.abs(dx) < 230 && p.y >= pf.y - 100 && p.y < pf.y + 420;
+    const within = Math.abs(dx) < 230 && p.y >= pf.y - 100 && p.y < pf.y + 420;
+    const near = p.seen && within;
+    this.puzzled = p.hidden && within;
     if (this.state === 'windup') {
       if (this.stateT > 0.35) { this.state = 'thrust'; this.stateT = 0; }
     } else if (this.state === 'thrust') {
@@ -434,6 +453,7 @@ export class Guard extends Enemy {
     const sy = cam.sy(this.y - this.h / 2);
     g.blit(s, cam.sx(this.x), sy, this.dead ? { alpha: Math.max(0, 1 - this.sink / 0.9) } : undefined);
     if (this.state === 'windup') g.text('!', cam.sx(this.x), sy - this.h - 26, 22, '#ffe9a0', 'center', true);
+    else if (this.puzzled && !this.dead && this.state !== 'thrust') g.text('?', cam.sx(this.x), sy - this.h - 26, 22, PUZZLED, 'center', true);
   }
 }
 
@@ -462,7 +482,7 @@ export class Flowerpot extends Enemy {
       if (!pf.alive) { this.alive = false; return; }
       this.y = pf.y + 72 + this.h / 2;
       const dy = this.y - (p.y + 110);
-      if (p.alive && Math.abs(p.x - this.x) < 90 && dy > 120 && dy < 620) { this.state = 'wobble'; this.stateT = 0; world.audio.rattle(); }
+      if (p.seen && Math.abs(p.x - this.x) < 90 && dy > 120 && dy < 620) { this.state = 'wobble'; this.stateT = 0; world.audio.rattle(); }
     } else if (this.state === 'wobble') {
       this.rot = Math.sin(this.stateT * 38) * 0.22;
       if (this.stateT > 0.7) { this.state = 'fall'; this.stateT = 0; this.hurtful = true; this.vy = 0; }
@@ -560,7 +580,7 @@ export class Grabber extends Enemy {
     this.y = this.armY;
     if (this.cooldown > 0) this.cooldown -= dt;
     const inward = (p.x - this.win.x) * this.dir;
-    const near = p.alive && inward > -30 && inward < this.reach + 40 && Math.abs(p.y + 110 - this.armY) < 120;
+    const near = p.seen && inward > -30 && inward < this.reach + 40 && Math.abs(p.y + 110 - this.armY) < 120;
     if (this.state === 'hidden') {
       this.head = Math.max(0, this.head - dt * 3); this.ang = PIKE_UP; this.lean = 0;
       if (near && this.cooldown <= 0) { this.state = 'peek'; this.stateT = 0; world.audio.creak(); }

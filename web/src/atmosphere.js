@@ -192,7 +192,7 @@ export class Atmosphere {
     for (const [k, b] of this.birds) {
       b.t += dt;
       if (b.state === 'perched') {
-        if (p.alive && Math.abs(p.x - b.x) < 200 && Math.abs(p.y - b.y) < 170) {
+        if (p.seen && Math.abs(p.x - b.x) < 200 && Math.abs(p.y - b.y) < 170) {   // not from a prince under the cloak
           b.state = 'flying'; b.vx = (b.x < p.x ? -1 : 1) * (240 + Math.random() * 80); b.vy = 260; b.dir = Math.sign(b.vx); b.t = 0;
         }
       } else {
@@ -226,7 +226,7 @@ export class Atmosphere {
       } else {
         const tx = bf.home.x + Math.sin(bf.t * bf.a) * 44, ty = bf.home.y + Math.sin(bf.t * bf.b) * 26 + 10;
         bf.x = approach(bf.x, tx, 2.5, dt); bf.y = approach(bf.y, ty, 2.5, dt);
-        if (p.alive && Math.abs(p.x - bf.x) < 150 && Math.abs(p.y + 60 - bf.y) < 160) {
+        if (p.seen && Math.abs(p.x - bf.x) < 150 && Math.abs(p.y + 60 - bf.y) < 160) {
           bf.flee = 1.2; bf.vx = (bf.x < p.x ? -1 : 1) * 200; bf.vy = 140;
         }
       }

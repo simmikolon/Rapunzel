@@ -167,5 +167,10 @@ export function buildPrince() {
   const sprites = { standing, bounceDown, bounceUp, jumpUp, falling, boosting, hurt };
   const flipped = {};
   for (const k of Object.keys(sprites)) flipped[k] = flipH(sprites[k]);
-  return { right: sprites, left: flipped };
+  // Every pose once more as a flat white shape: tinted and drawn a pixel to
+  // each side behind him it is a coloured rim (the star's rainbow, the
+  // cloak's shimmer).
+  const sil = {}, silFlipped = {};
+  for (const k of Object.keys(sprites)) { sil[k] = tint(sprites[k], '#ffffff', 1); silFlipped[k] = flipH(sil[k]); }
+  return { right: sprites, left: flipped, rightSil: sil, leftSil: silFlipped };
 }

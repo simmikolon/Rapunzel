@@ -170,6 +170,29 @@ export class Particles {
       return { x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.5, size: 8, color: Math.random() < 0.5 ? C.tunicHi : C.white, g: 0.2, drag: 2.5 };
     });
   }
+  // Power-ups: the star's rainbow trail, a glint (the cloak's shimmer, the
+  // golden spring's sparks), a feather let go on the way down, and the spark a
+  // pickup leaves while the magnet pulls it.
+  rainbowSpark(x, y, color) {
+    const sq = Math.random() < 0.6;
+    this.spawn({ x, y, vx: (Math.random() - 0.5) * 90, vy: (Math.random() - 0.5) * 90 - 40, life: 0.5 + Math.random() * 0.35, size: sq ? 8 + Math.random() * 6 : 14 + Math.random() * 8, color, g: 0.05, drag: 2, shape: sq ? 'square' : 'spark', glow: 0.5 });
+  }
+  glint(x, y, color) {
+    this.spawn({ x, y, vx: (Math.random() - 0.5) * 40, vy: (Math.random() - 0.5) * 40, life: 0.3 + Math.random() * 0.25, size: 6 + Math.random() * 6, color: Math.random() < 0.35 ? C.white : color, g: 0, drag: 2, shape: 'spark', glow: 0.5 });
+  }
+  featherDrift(x, y) {
+    this.spawn({ x, y, vx: (Math.random() - 0.5) * 120, vy: 40 + Math.random() * 80, life: 1 + Math.random() * 0.6, size: 5, color: Math.random() < 0.7 ? C.storkHi : C.storkShade, g: 0.04, drag: 2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: 'feather', shrink: false });
+  }
+  pullSpark(x, y, color = C.sun1) {
+    this.spawn({ x: x + (Math.random() - 0.5) * 16, y: y + (Math.random() - 0.5) * 16, life: 0.25 + Math.random() * 0.15, size: 6, color, g: 0, drag: 1, shape: 'square', glow: 0.5 });
+  }
+  // a power-up starting or running out: a ring of sparks flying apart
+  powerBurst(x, y, color, n = 18) {
+    this.burst(x, y, n, (i) => {
+      const a = (i / n) * TAU, sp = 260 + Math.random() * 120;
+      return { x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.5 + Math.random() * 0.2, size: 9, color: i % 3 === 0 ? C.white : color, g: 0, drag: 2.5, shape: 'spark', glow: 0.6 };
+    });
+  }
   witchTrail(x, y) {
     this.spawn({ x: x + (Math.random() - 0.5) * 30, y: y + (Math.random() - 0.5) * 30, vx: (Math.random() - 0.5) * 60, vy: (Math.random() - 0.5) * 60, life: 0.5 + Math.random() * 0.4, size: 6 + Math.random() * 6, color: Math.random() < 0.5 ? '#8b5cf6' : '#4c1d95', g: -0.05, drag: 1.5, glow: 0.7 });
   }

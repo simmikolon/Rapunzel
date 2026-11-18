@@ -8,6 +8,7 @@
 //   ?spawn=updraft   put an updraft column under the next platform
 //   ?spawn=grabber   a guard in the nearest window above the prince
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
+//   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
@@ -16,6 +17,8 @@ import { zoneAt } from './level.js';
 import { TREELINE_Y } from './altitude.js';
 import { Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
 import { windowsBetween } from './windows.js';
+import { PowerUp } from './pickups.js';
+import { POWERS } from './powerups.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
@@ -36,6 +39,7 @@ export function startAt(world, metres, spawn = '') {
   world.level.modelCam = world.cam.y;
   world.nextWitchY = Math.max(world.nextWitchY, y + 3000);
   world.nextStorkY = Math.max(world.nextStorkY, y + 400);
+  world.level.nextPowerY = y + world.level.rngPower.range(600, 2500);   // one within the first 25 m of the start
   world.nextMilestone = Math.floor(metres / 100) * 100 + 100;   // no stacked milestone toasts
   world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
@@ -73,6 +77,7 @@ export function spawnNear(world, element) {
     if (w) world.enemies.push(new Grabber(w, world.level.child(world.level.rngTower), 150, world.cam.y));
   }
   if (element === 'stork') world.spawnStork();
+  if (POWERS[element]) world.pickups.push(new PowerUp(element, p.x, p.y + 360));
   if (element === 'updraft') {
     const next = world.platforms.filter((q) => q.kind !== 'ground' && q.y > p.y + 380).sort((a, b) => a.y - b.y)[0];
     if (next) world.spawnUpdraft(next.x, p.y + 80, next.y - 90);
