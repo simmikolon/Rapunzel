@@ -48,6 +48,8 @@ export class Player {
     this.ghosts = [];              // the golden spring's after-images
     this.ghostT = 0;
     this.fxT = 0;                  // paces the power's particles
+    this.heldBy = null;            // the spider's web he hangs in (enemies.js Web)
+    this.wriggle = 0;              // 1 right after a tug, fading
   }
 
   get feetY() { return this.y; }
@@ -85,6 +87,7 @@ export class Player {
     if (this.boostCooldown > 0) this.boostCooldown -= dt;
     if (this.power) this.updatePower(dt);
     this.prevY = this.y;
+    if (this.heldBy) { this.updateHeld(dt, input); return; }
 
     // --- Horizontal control -------------------------------------------------
     const axis = this.state === 'standing' || this.state === 'dead' ? 0 : input.axis;
@@ -178,6 +181,40 @@ export class Player {
       this.sway = true; this.flip = Math.sin(this.idleT * 4) * 0.09;
     } else if (this.sway) { this.sway = false; this.flip = 0; }
     this.updatePowerFx(dt);
+  }
+
+  // --- The spider's web ------------------------------------------------------------
+  // Caught: he hangs where the web holds him, nothing steers, nothing falls.
+  catchIn(web) {
+    this.heldBy = web;
+    this.vx = 0; this.vy = 0;
+    this.landedOn = null;
+    this.salto = null; this.sway = false; this.flip = 0;
+    this.wriggle = 1;
+    this.setState('held');
+    this.sx = 1.2; this.sy = 0.85;
+  }
+  // A tap is a tug at the threads (no boost is spent on it); the web says when it gives.
+  updateHeld(dt, input) {
+    const web = this.heldBy;
+    this.vx = 0; this.vy = 0;
+    this.x = approach(this.x, web.holdX, 12, dt);
+    this.y = approach(this.y, web.holdY, 12, dt);
+    this.wriggle = Math.max(0, this.wriggle - dt * 2.2);
+    this.flip = Math.sin(this.idleT * 34) * 0.13 * this.wriggle + Math.sin(this.idleT * 4.5) * 0.035;
+    this.sx = approach(this.sx, 1, 14, dt);
+    this.sy = approach(this.sy, 1, 14, dt);
+    this.updatePowerFx(dt);
+    if (input.consumeBoost()) { this.wriggle = 1; this.sx = 1.18; this.sy = 0.86; web.tug(this.world); }
+  }
+  // Out of the web: tossed straight up.
+  release(vy) {
+    this.heldBy = null;
+    this.wriggle = 0; this.flip = 0;
+    this.vx = 0; this.vy = vy;
+    if (this.state === 'dead') return;
+    this.setState('jumping');
+    this.sx = 0.78; this.sy = 1.28;
   }
 
   // --- Power-ups ----------------------------------------------------------------
@@ -297,6 +334,7 @@ export class Player {
   hit(source) {
     if (this.invuln > 0 || this.shielded || this.state === 'dead') return false;
     this.hearts -= 1;
+    this.heldBy = null; this.wriggle = 0;      // knocked out of a web, if he hung in one
     this.invuln = INVULNERABLE_TIME;
     this.vy = HURT_VY;
     this.vx = (this.x < source.x ? -1 : 1) * 380;
@@ -314,6 +352,7 @@ export class Player {
     this.deathCause = cause;
     this.state = 'dead';
     this.stateT = 0;
+    this.heldBy = null;
     this.salto = null; this.sway = false; this.flip = 0;
     this.deathPower = this.power;          // what ran when it ended (the simulator asks)
     this.power = null; this.powerT = 0;    // over without a sound
@@ -333,6 +372,7 @@ export class Player {
       case 'falling': return this.vy < -250 ? 'falling' : 'standing';
       case 'boosting': return 'boosting';
       case 'bonk': return this.gentle ? 'falling' : 'hurt';
+      case 'held': return 'falling';
       case 'hurt': case 'dead': return 'hurt';
       default: return 'standing';
     }
@@ -398,6 +438,7 @@ export class Player {
       if (fx === 'star') g.blit(sil, x, sy, { ...opts, alpha: 0.25, tint: rainbow(t * 1.2 + 0.5), blend: 'add' });   // and a wash of colour over him
     };
     body(0);
+    if (this.heldBy) this.heldBy.drawFront(g, cam, this);     // the threads that hold him
     // Draw the wrap-around twin when near the screen edge.
     if (this.x < -W / 2 + PLAYER_W) body(W);
     else if (this.x > W / 2 - PLAYER_W) body(-W);

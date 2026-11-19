@@ -1,6 +1,6 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
 import { Platform, CLOUD_SIZE, GALLERY_X } from './platforms.js';
-import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat } from './enemies.js';
+import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat, Web } from './enemies.js';
 import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
@@ -41,13 +41,14 @@ export const ZONES = [
 // 1, so the outside's creatures are switched off by name. Three things live
 // in here so far, so each counts for more than it does outside: bats under
 // the ledges, guards on the galleries, pike guards in the pillars' hatches.
+// A fourth holds instead of biting: the spider's web under a ledge.
 // The first 120 m are the gentle part, as the forest floor is outside: no
 // stubs, no pikes yet, more long ledges (inside nothing rides up with the
 // camera as the ribbons do, so a miss falls further), and the power-ups lean
 // toward the feather.
 export const ZONES_INSIDE = [
   { name: 'the hall',         from: 0,     mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
-  { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5 } },
+  { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5, web: 1.6 } },
 ];
 export function zoneAt(y, zones = ZONES) {
   let z = zones[0];
@@ -206,12 +207,24 @@ export class Level {
     const rf = this.rngFauna;
     const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len !== 'stub');
     // one thing per branch: not where a spider hangs or a squirrel lives
-    if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat') && e.platform === branch))) return null;
+    if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat' || e.kind === 'web') && e.platform === branch))) return null;
     const T = tierAt(branch.y);
     const half = branch.w / 2 - 30;
     const bat = new Bat(branch, rf.range(-half, half), clamp((T.index - 2) / 2.5, 0, 1), this.child(rf));
     this.world.enemies.push(bat);
     return bat;
+  }
+
+  // A spider's web in the corner under a healthy ledge of this row that is
+  // long enough to leave room beside it (inside the tower). One thing per
+  // ledge: not where a bat hangs.
+  spawnWeb(platforms) {
+    const ledge = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && (p.len === 'normal' || p.len === 'long')
+      && !this.world.enemies.some((e) => (e.kind === 'bat' || e.kind === 'web') && e.platform === p));
+    if (!ledge) return null;
+    const web = new Web(ledge, this.child(this.rngFauna));
+    this.world.enemies.push(web);
+    return web;
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -489,6 +502,8 @@ export class Level {
     if (r.chance(T.squirrel * P.enemy * this.zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
     // Bats roll on their own stream, so the rows are the same with and without them.
     if (this.rngFauna.chance(T.bat * P.enemy * this.zoneMul(y, 'bat'))) this.spawnBat(platforms);
+    // Webs (inside only, from 65 m as the spiders outside): the spider's tier chance.
+    if (this.place.inside && y > 6500 && this.rngFauna.chance(T.spider * P.enemy * this.zoneMul(y, 'web'))) this.spawnWeb(platforms);
     if (this.rngTower.chance(T.grabber * P.enemy * this.zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony (inside: per gallery), never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {

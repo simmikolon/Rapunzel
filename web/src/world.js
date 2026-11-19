@@ -72,6 +72,7 @@ export class World {
     this.nextStorkY = 47000;      // storks cross the sky every 1200 to 2000 px of climb
     this.nextMilestone = 100;
     this.hintShown = false;
+    this.webHints = 0;            // how often this round has said how to get out of a web
     this.toasts = [];
     this.over = false;
     this.overT = 0;
@@ -167,7 +168,7 @@ export class World {
     const xOverlap = (p) => right > p.left && left < p.right;
 
     // Platforms: one-way surfaces, plus plank swings that are solid from below.
-    if (pl.vy <= 0 && pl.state !== 'bouncing') {
+    if (pl.vy <= 0 && pl.state !== 'bouncing' && !pl.heldBy) {
       let best = null;
       for (const p of this.platforms) {
         if (!p.landable) continue;
@@ -189,6 +190,7 @@ export class World {
       if (!e.alive || e.dead || !overlaps(r, e.rect) || (e.hits && !e.hits(r))) continue;
       if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
       if (e.kind === 'flock') { this.meetFlock(e); continue; }
+      if (e.kind === 'web') { this.meetWeb(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
       else if (e.hurtful && !pl.hidden) { pl.hit(e); if (e.onHit) e.onHit(this); }   // under the cloak he passes through
@@ -227,6 +229,30 @@ export class World {
   }
   onFlockPass(pl, e) { this.audio.flockWings(); this.particles.feathers(pl.x, pl.y + 120, false, 6); }
   onFlockTurn(pl, e) { this.audio.flockTurn(); this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
+
+  // The spider's web holds whoever flies into it (enemies.js Web says how
+  // he gets out); the boost shield or the star tear through it and knock
+  // the spider out, for the usual three suns.
+  meetWeb(e) {
+    const pl = this.player;
+    if (e.torn || pl.heldBy) return;
+    if (pl.shielded) {
+      e.tear(this, true);
+      this.suns += PUNCH_SUNS;
+      this.onBoostPunch(pl, e);
+      return;
+    }
+    pl.catchIn(e);
+    e.caught(this);
+  }
+  onWebCatch(pl, e) {
+    this.audio.webCatch();
+    this.particles.silk(pl.x, pl.y + 170, 5);
+    if (this.webHints < 2) { this.webHints++; this.toast('Tap to tear free!', '#f6f3ff', 1.8); }
+  }
+  onWebTug(pl, e) { this.audio.webTug(e.tugs); this.particles.silk(pl.x, pl.y + 170, 6); this.cam.shake(2, 0.1); }
+  onWebTear(pl, e, punched) { this.audio.webTear(); this.particles.silk(e.x, e.y, 14); }
+  onWebBite(pl, e) {}
 
   // Boosting through an enemy knocks it away instead of hurting the prince.
   boostPunch(e) {

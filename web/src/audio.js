@@ -324,6 +324,25 @@ class Synth {
     this.tone({ type: 'triangle', freq: 2100, dur: 0.08, vol: 0.04 });
     this.tone({ type: 'triangle', freq: 2640, dur: 0.1, vol: 0.03, delay: 0.05 });
   }
+  // The spider's web: flown into (a soft stretch), a tug at it (a pluck, a
+  // step higher each time), torn (a rip), and the spider setting out (ticks).
+  webCatch() {
+    platform.haptic('soft');
+    this.tone({ type: 'sine', freq: 520, to: 260, dur: 0.22, vol: 0.14 });
+    this.noise({ dur: 0.12, vol: 0.06, filter: 'highpass', freq: 3000 });
+  }
+  webTug(n = 1) {
+    platform.haptic('bounce', 0.7);
+    const f = 440 * Math.pow(1.26, n);
+    this.tone({ type: 'triangle', freq: f, to: f * 1.5, dur: 0.09, vol: 0.14 });
+    this.noise({ dur: 0.07, vol: 0.07, filter: 'highpass', freq: 2500 });
+  }
+  webTear() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.22, vol: 0.16, filter: 'bandpass', freq: 3200, to: 900, q: 0.8 });
+    this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
+  }
+  skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
   // A power-up starts: each has its own short motif.
   power(kind) {
     platform.haptic('spring');

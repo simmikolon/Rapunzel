@@ -81,14 +81,15 @@ logic with the doors as its windows).
 
 New (step 3):
 
-- **Spider web and its spider.** A big web in a corner between a pillar
-  and a ledge. Touching it holds the prince: he hangs there wriggling.
-  Every tap tears strands, three taps or one boost free him. The web's
-  spider walks toward him from the hub and bites after about two seconds
-  if he has done nothing (a heart, and he drops free). So a web is never
-  a fall and never for ever: it costs time, or a heart if ignored. The
-  boost shield and the star go through and tear it. Never across the only
-  way up, never in a breather.
+- ✅ **Spider web and its spider** (`element/interior-web`). A quarter
+  web in the corner under a ledge at its pillar. Flying into it holds
+  the prince: he hangs there wriggling. Every tap tears strands, three
+  free him (no boost spent) and toss him up through the ledge, onto it.
+  The web's spider comes for him from the hub and bites after 2.2 s (a
+  heart, and he is let go all the same). So a web is never a fall and
+  never for ever: it costs time, or a heart if ignored. The boost shield
+  and the star go through and tear it. Never in a breather; the way
+  round is beside the ledge's tip.
 - **Ghost.** The inside's patroller in the crow's place: drifts across,
   fading in and out, solid (and biting, and to be pogoed) only while it
   shows. The fade is its telegraph.
@@ -166,5 +167,6 @@ One branch each, merged when it is fun.
   glint of a helmet).
 - The stairs' bookkeeping in the generator (a row that is 300 px tall)
   needs the reachability stress test extended.
-- The web's rule (three taps, the spider after two seconds) is a first
-  guess for kids; to be played.
+- The web's rule (three taps, the spider after 2.2 s) is a first guess
+  for kids; to be played. The bots are never bitten, so the simulator
+  cannot say.

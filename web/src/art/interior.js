@@ -1,4 +1,4 @@
-import { makeSprite, flipH } from './sprite.js';
+import { makeSprite, flipH, pixelLine } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { RNG } from '../util.js';
 import { BRANCH_LEN } from '../platforms.js';
@@ -283,6 +283,58 @@ function drawGallery(t, variant) {
   line(16, 70, 34, 60, C.plankDark, 2); line(16, 69, 33, 60, C.plank); p(16, 60, 2, 11, C.plankDark);
 }
 
+// --- the spider's web ----------------------------------------------------------
+// A quarter of an orb web for the corner under a ledge at the RIGHT pillar,
+// 30 x 34 art px: the pillar's face is the right edge, the ledge's underside
+// the top edge, the anchor that corner. Spokes run from a hub just clear of
+// the ledge's corbel out to a scalloped rim; two rings; dew on the crossings
+// and something wrapped up for later. Four states: whole, and torn further
+// with each tug until only tatters hang from the stone (`tear` 0 to 3). A
+// web is thin threads by nature, so it is the brightest thing on the wall:
+// silk runs from near white on the rim to lilac on the rings.
+const SILK = { hi: '#f6f3ff', base: '#cdc9e4', shade: '#9792b6' };
+const WEB_HUB = [23, 8];
+const WEB_RIM = [[1, 0], [3, 10], [8, 19], [15, 27], [23, 32], [29, 33]];
+function drawWeb(t, tear) {
+  const O = WEB_HUB, R = WEB_RIM;
+  const angle = (x, y) => Math.atan2(y - O[1], O[0] - x);
+  const spokeA = R.map((q) => angle(q[0], q[1])), spokeD = R.map((q) => Math.hypot(q[0] - O[0], q[1] - O[1]));
+  // where a pixel lies: between which two spokes, and how far out (0 hub, 1 rim)
+  const where = (x, y) => {
+    const a = angle(x, y);
+    let s = 0; while (s < R.length - 2 && a > spokeA[s + 1]) s++;
+    const u = Math.max(0, Math.min(1, (a - spokeA[s]) / (spokeA[s + 1] - spokeA[s])));
+    return [s, Math.hypot(x - O[0], y - O[1]) / (spokeD[s] + (spokeD[s + 1] - spokeD[s]) * u)];
+  };
+  const near = (x, y, q, r) => Math.hypot(x - q[0], y - q[1]) <= r;
+  const keep = (x, y) => {
+    if (tear === 0) return true;
+    const [s, f] = where(x, y);
+    if (tear === 3) return near(x, y, R[0], 5) || near(x, y, R[5], 5) || (f < 0.3 && s >= 3) || near(x, y, [17, 0], 3);
+    if (s === 2 && f > 0.36) return false;
+    if (tear === 2 && ((s === 0 && f > 0.42) || (s === 3 && f > 0.3) || (s === 4 && f > 0.7))) return false;
+    return true;
+  };
+  const px = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (keep(x, y)) t.p(x, y, 1, 1, c); };
+  const seg = (a, b, c) => pixelLine((x, y, w, h, col) => px(x, y, col), a[0], a[1], b[0], b[1], c);
+  const at = (i, f) => [O[0] + (R[i][0] - O[0]) * f, O[1] + (R[i][1] - O[1]) * f];
+  const sag = (a, b, k) => [(a[0] + b[0]) / 2 + (O[0] - (a[0] + b[0]) / 2) * k, (a[1] + b[1]) / 2 + (O[1] - (a[1] + b[1]) / 2) * k];
+  // rings first, spokes over them, the rim last
+  for (const [f, c] of [[0.36, SILK.shade], [0.68, SILK.shade]]) {
+    for (let i = 0; i < R.length - 1; i++) { const a = at(i, f), b = at(i + 1, f), m = sag(a, b, 0.14); seg(a, m, c); seg(m, b, c); }
+  }
+  for (let i = 0; i < R.length; i++) seg(O, R[i], SILK.base);
+  seg(O, [17, 0], SILK.base); seg(O, [29, 13], SILK.base);                 // two short ones to the stone
+  for (let i = 0; i < R.length - 1; i++) { const m = sag(R[i], R[i + 1], 0.1); seg(R[i], m, SILK.hi); seg(m, R[i + 1], SILK.hi); }
+  // dew where threads cross, and a wrapped-up fly
+  for (const [i, f] of [[1, 0.68], [2, 0.36], [3, 0.68], [4, 0.36], [0, 0.36]]) { const q = at(i, f); px(q[0], q[1], SILK.hi); }
+  const fly = at(3, 0.52); px(fly[0], fly[1], SILK.hi); px(fly[0] + 1, fly[1], SILK.hi); px(fly[0], fly[1] + 1, SILK.hi); px(fly[0] + 1, fly[1] + 1, SILK.shade);
+  px(O[0], O[1], SILK.hi);
+  // loose ends where it has been torn
+  const loose = [[], [[11, 15, 4], [16, 19, 3]], [[11, 15, 5], [16, 19, 3], [5, 6, 5], [20, 22, 4], [26, 26, 3]], [[2, 1, 7], [5, 2, 4], [8, 1, 2], [28, 29, 4], [26, 31, 2], [19, 12, 4], [17, 2, 3]]][tear];
+  for (const [x, y, n] of loose) { t.p(x, y, 1, n, SILK.shade); t.p(x, y + n, 1, 1, SILK.base); }
+}
+
 export function buildInterior() {
   const wall = [0, 1, 2, 3, 4, 5].map((v) => makeSprite(WALL_W, 48, (t) => drawWall(t, v, new RNG(300 + v)), { ax: 0.5, ay: 1 }));
   const pillarL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawPillar(t, v, new RNG(400 + v)), { ax: 0, ay: 1 }));
@@ -303,6 +355,7 @@ export function buildInterior() {
     wall, pillarL, pillarR: pillarL.map(flipH), torch, floor, stone,
     chandelier: [0, 1].map((f) => makeSprite(30, 15, (t) => drawChandelier(t, f), undefined, { axPx: 15 * 4, ayPx: 9 * 4 })),
     bell: makeSprite(26, 26, drawBell, undefined, { axPx: 13 * 4, ayPx: 1 * 4 }),
+    web: (() => { const R = [0, 1, 2, 3].map((k) => makeSprite(30, 36, (t) => drawWeb(t, k), undefined, { axPx: 30 * 4, ayPx: 0 })); return { R, L: R.map(flipH) }; })(),
     chain: makeSprite(5, 10, drawChain, { ax: 0.5, ay: 0 }),
     chainEnd: makeSprite(9, 12, drawChainEnd, { ax: 0.5, ay: 0 }),
     gallery: { L: galleryL, R: galleryL.map(flipH) },

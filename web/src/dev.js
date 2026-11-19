@@ -10,6 +10,7 @@
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
+//   ?spawn=web       (inside) a spider's web under the next healthy ledge above the prince (a ledge is made if none is in view)
 //   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
 //   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
 //   ?dev=1           show altitude and zone in the corner
@@ -70,6 +71,12 @@ export function spawnNear(world, element) {
   if (element === 'bat') {
     // the first branch above that has room for one (no stub, no spider on it)
     for (const b of branches) { const bat = world.level.spawnBat([b]); if (bat) { bat.rest = 0; break; } }
+  }
+  if (element === 'web') {
+    // under the first ledge above that can carry one; a ledge is made if none is in view
+    let web = null;
+    for (const b of branches) { web = world.level.spawnWeb([b]); if (web) break; }
+    if (!web) { const b = new Platform('branchR', p.y + 430, { style: STONE_STYLE }); world.platforms.push(b); world.level.spawnWeb([b]); }
   }
   if (element === 'guard' || element === 'pot') {
     // on the next healthy balcony above; make one if there is none in view

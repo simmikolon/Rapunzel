@@ -952,3 +952,135 @@ export class Flock extends Enemy {
     for (const f of this.fallen) g.blit(set[0], cam.sx(f.x), cam.sy(f.y), { rot: f.rot });
   }
 }
+
+// The spider's web (inside the tower): a quarter web in the corner under a
+// ledge at its pillar, with its spider in the hub. It is a thing, not a
+// creature: it does not hurt, it holds. A prince who flies into it hangs
+// there by the shoulders with the pogo dangling; every tap is a tug that
+// tears it further (WEB_TUGS free him, no boost is spent), and the spider
+// comes down from the hub for him, slowly at first: after WEB_BITE seconds
+// in the web it bites (a heart) and the web lets go of him all the same.
+// Freed either way he is tossed up through the ledge the web hangs under
+// and comes down on it, so a web is never a fall and never for ever. The
+// boost shield and the star tear straight through and knock the spider out
+// (the usual three suns). Under the cloak the web still holds (it has no
+// eyes) but the spider does not come. The world handles the meeting
+// (World.meetWeb); nothing here is stompable.
+export const WEB_W = 120, WEB_H = 136, WEB_TUGS = 3, WEB_BITE = 2.2;
+const LEDGE_THICK = 28;
+export class Web extends Enemy {
+  constructor(platform, rng = new RNG()) {
+    const dir = platform.def.dir, face = platform.def.root;
+    super(face + dir * WEB_W / 2, platform.y - LEDGE_THICK - WEB_H / 2);
+    this.kind = 'web';
+    this.platform = platform;
+    this.dir = dir;                          // inward, away from the pillar
+    this.face = face;                        // the pillar's face
+    this.topY = platform.y - LEDGE_THICK;    // the ledge's underside
+    this.w = WEB_W; this.h = WEB_H;
+    this.hurtful = false;
+    this.tugs = 0;
+    this.torn = false;
+    this.prey = null;                        // the prince while he hangs in it
+    this.comeT = 0;                          // how long the spider has been on its way
+    this.shake = 0;
+    this.puzzled = false;
+    this.spider = 'wait';                    // wait | come | back | sulk | out | gone
+    this.spX = this.hubX; this.spY = this.hubY; this.spVy = 0; this.spSpin = 0;
+    this.phase = rng.range(0, TAU);
+  }
+  get stompable() { return false; }
+  get hubX() { return this.face + this.dir * 28; }
+  get hubY() { return this.topY - 32; }
+  // Where the prince hangs: his head just under the ledge, the web about his shoulders.
+  get holdX() { return this.face + this.dir * 62; }
+  get holdY() { return this.topY - 236; }
+  // The toss that frees him: up through the ledge with room to spare.
+  get tossVy() { return Math.sqrt(2 * GRAVITY * (this.platform.y - this.holdY + 60)); }
+  inside(x, y) {
+    const dx = (x - this.face) * this.dir, dy = this.topY - y;
+    return dx > -12 && dy > 0 && (dx / WEB_W) ** 2 + (dy / WEB_H) ** 2 < 1;
+  }
+  // His head or his chest in the threads; the pogo below him does not catch.
+  hits(r) { const x = r.x + r.w / 2; return !this.torn && (this.inside(x, r.y + r.h - 24) || this.inside(x, r.y + r.h * 0.62)); }
+  update(dt, world) {
+    this.t += dt;
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 3);
+    const p = world.player;
+    if (!this.platform.alive) { if (p.heldBy === this) p.release(this.tossVy); this.alive = false; return; }
+    const held = this.prey && p.heldBy === this;
+    if (this.prey && !held) { this.prey = null; if (this.spider === 'come') this.spider = 'back'; }   // something else knocked him out of it
+    this.puzzled = !!held && !p.seen;
+    if (held && p.seen) {
+      if (this.spider === 'wait' || this.spider === 'back') { this.spider = 'come'; world.audio.skitter(); }
+      if (this.spider === 'come') {
+        this.comeT += dt;
+        const k = clamp(this.comeT / WEB_BITE, 0, 1), e = k * k;      // slow at first: time to see it coming
+        this.spX = this.hubX + (p.x - this.dir * 8 - this.hubX) * e;
+        this.spY = this.hubY + (p.y + 176 - this.hubY) * e;
+        if (this.comeT >= WEB_BITE) this.bite(world);
+      }
+    } else if (this.spider === 'back' || this.spider === 'come') {
+      // home to the hub, where it sulks if the web is in tatters
+      const dx = this.hubX - this.spX, dy = this.hubY - this.spY, d = Math.hypot(dx, dy), step = 170 * dt;
+      if (d <= step) { this.spX = this.hubX; this.spY = this.hubY; this.spider = this.torn ? 'sulk' : 'wait'; this.comeT = 0; }
+      else { this.spX += dx / d * step; this.spY += dy / d * step; this.spider = 'back'; }
+    } else if (this.spider === 'out') {
+      this.spVy -= GRAVITY * 0.8 * dt; this.spY += this.spVy * dt; this.spX += this.dir * 80 * dt; this.spSpin += dt * 10;
+      if (this.spY < world.cam.y - 120) this.spider = 'gone';
+    }
+  }
+  caught(world) { this.prey = world.player; this.comeT = 0; this.shake = 1; world.onWebCatch(world.player, this); }
+  // A tap while he hangs in it.
+  tug(world) {
+    if (this.torn) return;
+    this.tugs++; this.shake = 1;
+    world.onWebTug(world.player, this);
+    if (this.tugs >= WEB_TUGS) this.tear(world, false);
+  }
+  // Torn for good: by his tugs, or `punched` through with the shield.
+  tear(world, punched) {
+    const p = world.player, held = p.heldBy === this;
+    this.torn = true; this.tugs = WEB_TUGS; this.prey = null;
+    if (punched && this.spider !== 'gone') { this.spider = 'out'; this.spVy = 300; }
+    else if (this.spider === 'wait' || this.spider === 'come') this.spider = 'back';
+    if (held) p.release(this.tossVy);
+    world.onWebTear(p, this, punched);
+  }
+  bite(world) {
+    const p = world.player;
+    p.heldBy = null;
+    p.hit(this);
+    this.torn = true; this.tugs = WEB_TUGS; this.prey = null; this.spider = 'back';
+    if (p.state === 'held') p.release(this.tossVy);           // he could not be hurt just now: let go all the same
+    else if (p.alive) { p.vx = 0; p.vy = this.tossVy; }        // the hurt hop, but straight up, onto the ledge
+    world.onWebBite(p, this);
+  }
+  // A few threads across him while he hangs in it (the player draws himself, then this).
+  drawFront(g, cam, p) {
+    const hx = cam.sx(p.x), hy = cam.sy(p.y + 176), j = Math.sin(this.t * 40) * 4 * this.shake;
+    const c = 'rgba(246,243,255,0.85)';
+    g.line(cam.sx(this.hubX), cam.sy(this.hubY), hx - this.dir * 26 + j, hy + 40, c, 2);
+    g.line(cam.sx(this.face + this.dir * 110), cam.sy(this.topY - 6), hx + this.dir * 22 - j, hy + 66, c, 2);
+    g.line(hx - this.dir * 30, hy + 8 + j, hx + this.dir * 30, hy + 26 - j, c, 2);
+  }
+  draw(g, cam, art) {
+    const A = art.interior.web[this.dir > 0 ? 'L' : 'R'];
+    const cx = cam.sx(this.face), cy = cam.sy(this.topY);
+    g.blit(A[this.torn ? 3 : this.tugs], cx, cy, this.shake > 0 ? { rot: Math.sin(this.t * 55) * 0.06 * this.shake * -this.dir } : undefined);
+    if (!this.torn) {
+      // dew catching the light now and then
+      for (const [ax, ay, ph] of [[88, 76, 0], [58, 108, 2.1], [40, 44, 4.2]]) {
+        const tw = Math.sin(this.t * 1.7 + this.phase + ph);
+        if (tw > 0.86) g.rect(cx + this.dir * ax - 4, cy + ay - 4, 8, 8, '#ffffff', (tw - 0.86) * 6, { glow: 0.5 });
+      }
+    }
+    if (this.spider === 'gone') return;
+    const S = art.creatures.spider, sx = cam.sx(this.spX), sy = cam.sy(this.spY);
+    if (this.spider === 'out') { g.blit(S[0], sx, sy - 24, { rot: this.spSpin }); return; }
+    const walking = this.spider === 'come' || this.spider === 'back';
+    g.blit(S[walking ? Math.floor(this.t * 12) % 2 : Math.floor(this.t * 1.5 + this.phase) % 2], sx, sy - 24, this.spider === 'sulk' ? { sy: 0.85 } : undefined);
+    if (this.spider === 'come') g.text('!', sx + this.dir * 34, sy - 40, 22, '#ffe9a0', 'center', true);
+    else if (this.puzzled) g.text('?', sx + this.dir * 34, sy - 40, 22, PUZZLED, 'center', true);
+  }
+}

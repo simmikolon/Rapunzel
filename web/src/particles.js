@@ -132,6 +132,15 @@ export class Particles {
       g: 0.15, drag: 2.2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: 'feather', shrink: false, glow: 0.3,
     }));
   }
+  // torn threads of a spider's web
+  silk(x, y, n = 8) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * 70, y: y + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 200, vy: 40 + Math.random() * 160,
+      life: 0.7 + Math.random() * 0.5, size: 4 + Math.random() * 3, color: Math.random() < 0.6 ? '#f6f3ff' : '#cdc9e4',
+      g: 0.08, drag: 3, spin: (Math.random() - 0.5) * 8, angle: Math.random() * TAU, shape: 'feather', shrink: false,
+    }));
+  }
   boostTrail(x, y) {
     this.burst(x, y, 3, () => ({
       x: x + (Math.random() - 0.5) * 24, y: y + Math.random() * 10,

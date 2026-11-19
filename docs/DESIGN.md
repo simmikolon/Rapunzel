@@ -332,9 +332,19 @@ is a pool to draw from, not a promise.
 - 💡 cross branches spanning the width, broken only by a boost. ⚠️ Only
   spawn with a guaranteed charge (a lantern just below or a generator
   check); the flock's floors and lanterns are the pattern.
-- 🔜 spider webs that hold: inside the tower, with their spider (three
-  taps or a boost tear him free, the spider bites if he does nothing;
-  see the tower's inside). ⚠️ Never a fall, never for ever.
+- ✅ the spider's web (inside the tower; `Web` in `src/enemies.js`): a
+  quarter web in the corner under a healthy ledge at its pillar, with
+  its spider in the hub. It holds whoever flies into it with his head or
+  chest: he hangs there by the shoulders, the pogo dangling. Every tap
+  is a tug that tears it further, three free him (no boost is spent),
+  and he is tossed up through the ledge the web hangs under and lands
+  on it. The spider comes down from the hub for him, slowly at first,
+  and bites after 2.2 s in the web (a heart); the web lets go all the
+  same. So a web is never a fall and never for ever: it costs time, or
+  a heart if ignored. The boost shield and the star tear straight
+  through and knock the spider out (three suns); under the cloak the
+  web still holds but the spider does not come. The way round is to
+  rise beside the ledge's tip and land from above.
 - 💡 vines / green zones that slow or stick (deep forest, jungle); prefer
   slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
@@ -493,9 +503,10 @@ is a pool to draw from, not a promise.
     the windows, with a bloom on the wall and a stepped shaft with dust
     in it, in the colour of the sky outside, so the forest's dusk, the
     day, the sunset and the night show inside.
-  - 🔜 its own things (stairs, the spider web with its spider, a ghost, a
-    bat swarm, wall decor, more sounds), floors of the tower as zones,
-    gates. ⚠️ A system, not an element: built in steps, each a branch.
+  - ✅ the spider's web under the ledges (see enemies).
+  - 🔜 its own things (stairs, a ghost, a bat swarm, wall decor, more
+    sounds), floors of the tower as zones, gates. ⚠️ A system, not an
+    element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
 
@@ -713,6 +724,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Feather | 40 % gravity and at most 600 px/s while falling |
 | String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
 | Inside the tower | bands: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes), from 120 m bats × 1.5, pikes × 1.5, gallery guards × 0.8, galleries 0.4 × the balcony's chance; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
+| Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1277,3 +1289,23 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   stairs, web and ghost on purpose. The outside is unchanged: its
   simulator report is identical on the same seeds before and after. The
   atlas is 4096 x 2502 now.
+- 2026-11-19: The spider's web (`element/interior-web`), the first of
+  the inside's own things. It hangs in the corner under a ledge, not on
+  top of it and not free on a pillar: under the ledge it takes nothing
+  away from the landing, asks for the way round the tip instead of
+  straight up through the stone, and whoever is freed from it is
+  tossed up through that very ledge and lands on it, which is what
+  makes "never a fall" true without a rule in the generator. A tap in
+  the web is a tug and spends no boost (three free him); "one boost"
+  is flying into it with the shield on, which tears it and knocks the
+  spider out for the usual three suns. The spider's walk is slow at
+  first (the square of the time), so the 2.2 s are seen coming. Nothing
+  else is drawn for it: the spider is the one the forest has. Measured
+  on 120 seeded runs inside: a good bold run meets 2.4 webs (a third
+  caught and torn free, the rest boosted through), nobody was bitten
+  (the bots tap at once; a child who does not will lose a heart and
+  still land on the ledge); good bold median 518 m, mean 617 m, 1.18
+  hits per 100 m, falls 7 % of the deaths; kid bold median 72 m, mean
+  84 m, as before. So the web costs time and a boost charge, not
+  hearts; the room a good run has inside is left for the ghost and the
+  stairs. The outside's report is identical on the same seeds.
