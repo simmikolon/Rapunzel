@@ -563,6 +563,18 @@ is a pool to draw from, not a promise.
     warm stone, shelves of books and Rapunzel's portraits, webs and
     ghosts); the belfry (400 m: weathered stone, cog wheels turning in
     pairs, bells to bounce on, scaffold boards, the bats' home).
+  - ✅ the library's books (250 to 400 m): its walls are nearly full
+    and have a second place a side per storey. Tall bookcases in three
+    fillings (a potion, an hourglass, a candle end or a scroll between
+    the books), a third of them with a ladder leant against them; a
+    rack of scrolls with one hung open; hung parchments and piles of
+    books with inkwell and quill as the small things; the spell book
+    open on a wall lectern, glowing, runes rising from it, a page
+    going over by itself now and then; and books that have taken wing
+    and drift about behind everything, the room's life as the
+    butterflies are the forest's (paper-pale, so they are not bats).
+    Its spring is not the bell but a great chained book on the chain
+    (`tome`, the bell's slot and bounce): pages fly when he lands on it.
   - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
@@ -781,7 +793,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
 | Feather | 40 % gravity and at most 600 px/s while falling |
 | String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
-| Inside the tower | floors: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes, no ghost), the guard rooms 120 m (galleries × 0.8, guards × 1.2, pikes × 2.4, bats × 1.2, ghost × 0.6, stairs × 1.5), the library 250 m (webs × 2.4, ghost × 1.9, bats × 1.5, pikes × 1.2, guards × 0.7), the belfry 400 m (bells × 3, boards × 2, bats × 1.9, pikes × 1.2, stairs × 0.5); a floor's stone tint, dusk and wall decor fade over 30 m; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
+| Inside the tower | floors: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes, no ghost), the guard rooms 120 m (galleries × 0.8, guards × 1.2, pikes × 2.4, bats × 1.2, ghost × 0.6, stairs × 1.5), the library 250 m (webs × 2.4, ghost × 1.9, bats × 1.5, pikes × 1.2, guards × 0.7, the chained book × 1.6 of the bow's chance), the belfry 400 m (bells × 3, boards × 2, bats × 1.9, pikes × 1.2, stairs × 0.5); a floor's stone tint, dusk and wall decor fade over 30 m; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
 | Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
 | Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
@@ -1507,3 +1519,23 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   The ivy stops where the trees stop outside (400 m): it is the forest
   coming in, so the belfry has none. Purely visual; the simulator does
   not draw, the atlas is 4096 x 2910.
+- 2026-11-19: The library's books (`element/interior-library`). Simon:
+  the floor is called the library, so do much more with books there:
+  cases, old scrolls, a spell book. Decided: the library is the one
+  floor whose walls are nearly full (92 % of the places instead of
+  66 %, and a second place a side per storey), because a library is
+  the room where the wall is the furniture. The bookcase is the staple
+  there, the scroll rack and the lectern with the spell book the
+  showpieces. Two ideas of its own: some books fly (five of them drift
+  behind everything while the camera is in the library, beating their
+  boards; first drawn violet, they read as small bats, so they are
+  brown and cream), and the floor's spring is a great chained book
+  instead of the bell, after the chained libraries of the time. At 2.5
+  times the bow's chance the book made the library a lift (a good run's
+  median went from 486 m to 558 m); at 1.6 it is about one a visit.
+  Measured on 120 seeded runs inside without gates: good bold median
+  460 m, mean 556 m, 1.01 hits per 100 m (1.03 to 1.54 per band from
+  100 to 1000 m), falls 38 % of the deaths; kid bold median 73 m, mean
+  83 m. With gates, starting inside: median 415 m, mean 533 m. The
+  outside without gates is identical to the baseline. The atlas is
+  4096 x 2954: about 1100 px are left before the 4096 limit.

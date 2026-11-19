@@ -277,7 +277,7 @@ export class World {
       case 'ribbon': return inside ? new Platform('chandelier', p.y) : null;
       case 'bow': return inside ? new Platform('bell', p.y) : null;
       case 'chandelier': return inside ? null : onBraid('ribbon');
-      case 'bell': return inside ? null : onBraid('bow');
+      case 'bell': case 'tome': return inside ? null : onBraid('bow');
       case 'gallery': return inside ? null : new Platform(p.side === 'L' ? 'branchL' : 'branchR', p.y, { style });
       default: return null;
     }
@@ -517,6 +517,7 @@ export class World {
     if (p.kind === 'gate' && !p.used && this.started && !this.passage) this.enterGate(p);
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
     else if (p.kind === 'bell') { this.audio.bell(); p.rungAt = this.time; this.particles.sparkles(pl.x, pl.y, 8, '#ffe9a0'); return; }
+    else if (p.kind === 'tome') { this.audio.tome(); this.particles.pages(pl.x, pl.y + 10, 8); this.particles.sparkles(pl.x, pl.y, 8, '#d9c8ff'); return; }
     else if (p.kind === 'chandelier') { this.audio.bounce(pl.combo); this.audio.clink(); this.particles.sparkles(pl.x, pl.y + 8, 5, INSIDE.candleLight); return; }
     else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.kind === 'skyLantern') { this.audio.paper(); this.particles.sparkles(pl.x, pl.y + 10, 7, '#ffd04a'); return; }
@@ -598,6 +599,7 @@ export class World {
       case 'branchR': { const dry = stone ? I.stone.dryR : T.branchRDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchR[p.len][p.variant]; break; }
       case 'chandelier': s = I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
       case 'bell': s = I.bell; break;
+      case 'tome': s = I.tome[p.squash > 0.4 ? 1 : 0]; break;
       case 'gallery': s = I.gallery[p.side][p.variant % 2]; break;
       case 'gate': s = I.gate[this.place.inside ? 'out' : 'in'][this.passage && this.passage.gate === p ? 1 : 0]; break;   // it shows where it leads
       case 'step': if (!p.flight) return; s = I.stairs[p.side]; break;      // the flight is one piece, drawn for its lowest tread
@@ -656,6 +658,13 @@ export class World {
       opts.rot = this.chainLean(p.y) * 0.5;              // it leans a little the way the chain hangs there
       opts.glow = 0.25;
     }
+    if (p.kind === 'tome') {
+      // it hangs the way the chain hangs, and there is magic in it
+      const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
+      g.halo(sx, sy + 20, 80, '#b9a0ff', 0.2 + 0.08 * Math.sin(this.time * 2.4 + p.id), { glow: 0.35 });
+      this.bg.interior.glow(sx, sy + 10, 180, '#b9a0ff', 0.1);
+      opts.rot = this.chainLean(p.y) * 0.5;
+    }
     if (p.kind === 'bell') {
       // rung by a landing: it rocks under its headstock and comes to rest
       const dt = this.time - p.rungAt;
@@ -671,7 +680,7 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
-    const order = { swing: 0, step: 0, gate: 1, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
+    const order = { swing: 0, step: 0, gate: 1, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, tome: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - (p.flight ? 360 : 120) && p.y < cam.top + (p.flight ? 220 : 120));   // a flight of stairs reaches well above and below its lowest tread
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);

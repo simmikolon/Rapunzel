@@ -351,6 +351,13 @@ class Synth {
     this.tone({ type: 'triangle', freq: 523, dur: 0.16, vol: 0.12, delay: 0.3 });
     this.tone({ type: 'triangle', freq: 784, dur: 0.3, vol: 0.12, delay: 0.46 });
   }
+  // The great chained book: a thump of boards, then the spell in it.
+  tome() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.1, vol: 0.2, filter: 'lowpass', freq: 380 });
+    for (let i = 0; i < 4; i++) this.tone({ type: 'triangle', freq: 392 * Math.pow(1.26, i), dur: 0.16, vol: 0.09, delay: 0.04 + i * 0.05 });
+    this.tone({ type: 'sine', freq: 1568, dur: 0.4, vol: 0.05, delay: 0.24 });
+  }
   // The bat swarm is coming: a flurry of squeaks.
   swarmWarn() { for (let i = 0; i < 6; i++) this.tone({ type: 'square', freq: 2300 + (i % 3) * 420, to: 3100 + (i % 2) * 500, dur: 0.05, vol: 0.04, delay: i * 0.09 }); }
   // The ghost: fading in (a soft rising "ooh"), popped by a pogo (a falling whoop).

@@ -41,6 +41,8 @@ export const KIND = {
   // of a door in a pillar (x = -204 / +204), also in his plane.
   chandelier: { w: 112, cx: 0, surface: 0, bounce: JUMP_VY, onChain: true },
   bell:    { w: 104, cx: 0, surface: 0, bounce: SPRING_VY, onChain: true },
+  // In the library the spring is a great chained book instead of the bell.
+  tome:    { w: 104, cx: 0, surface: 0, bounce: SPRING_VY, onChain: true },
   gallery: { w: 160, cx: 0, surface: 0, bounce: JUMP_VY, gallery: true },
   // A gate between the outside and the inside of the tower: a stone landing
   // under a door in the tower's wall (x = -134 / +134), on the tower layer in

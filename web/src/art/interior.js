@@ -658,6 +658,128 @@ function drawMirror(t, witch) {
   for (let y = 0; y < 34; y++) { const [x0, x1] = y < 4 || y > 30 ? [1, 0] : row(y); t.ctx.clearRect(0, y * 4, x0 * 4, 4); t.ctx.clearRect((x1 + 1) * 4, y * 4, (24 - x1 - 1) * 4, 4); }   // only what is in the glass
 }
 
+// --- the library -------------------------------------------------------------------
+// A tall bookcase, 38 x 62 art px, hanging from its top middle: five
+// shelves of books in many colours (none red), some leaning, some lying,
+// and between them what a witch keeps: a potion, an hourglass, a candle
+// end, a scroll. Three fillings.
+const CASE_BACK = '#2a2233';
+function drawBookcase(t, look) {
+  const { p } = t;
+  const r = new RNG(900 + look * 7);
+  p(0, 3, 38, 59, C.plankDark); p(0, 3, 1, 59, C.plank); p(2, 5, 34, 55, CASE_BACK);
+  p(0, 0, 38, 3, C.plank); p(0, 0, 38, 1, C.plankHi); p(1, 3, 36, 1, C.plankHi); p(16, 1, 6, 1, C.gold);          // the cornice
+  for (let s = 0; s < 5; s++) {
+    const base = 14 + s * 11;                                                // the board's row
+    let x = 2;
+    const gap = (s + look) % 3 === 1 ? r.int(8, 22) : -1;                    // where something other than a book stands
+    while (x < 35) {
+      if (gap >= 0 && x >= gap && x < gap + 6) {
+        const what = (s + look) % 4;
+        if (what === 0) { p(x + 1, base - 5, 3, 5, C.grass); p(x + 1, base - 5, 1, 5, C.grassLight); p(x + 2, base - 7, 1, 2, K.candle); }          // a potion
+        else if (what === 1) { p(x, base - 6, 5, 1, C.goldDark); p(x, base - 1, 5, 1, C.goldDark); p(x + 1, base - 5, 3, 1, K.candle); p(x + 2, base - 4, 1, 2, K.candle); p(x + 1, base - 2, 3, 1, C.braid); }   // an hourglass
+        else if (what === 2) { p(x + 2, base - 4, 1, 4, K.candle); p(x + 1, base - 1, 3, 1, K.bell); p(x + 2, base - 5, 1, 1, K.iron); }              // a candle end
+        else { p(x, base - 3, 6, 3, K.candle); p(x, base - 3, 1, 3, C.plank); p(x + 5, base - 3, 1, 3, C.plank); p(x + 2, base - 2, 2, 1, C.tights); }   // a scroll
+        x = gap + 7; continue;
+      }
+      const c = r.pick(BOOKS), w = r.int(2, 3), h = r.int(6, 9);
+      if (r.chance(0.1) && x < 30) { for (let i = 0; i < 2; i++) { const cc = r.pick(BOOKS); p(x, base - 2 - i * 2, 6, 2, cc); p(x, base - 2 - i * 2, 6, 1, K.candle); } x += 7; continue; }   // two lying
+      if (r.chance(0.1) && x < 31) { for (let i = 0; i < h; i++) p(x + Math.floor(i / 3), base - 1 - i, w, 1, c); x += w + 3; continue; }                 // one leaning
+      p(x, base - h, w, h, c); p(x, base - h, 1, h, K.frameHi); p(x, base - h + 2, w, 1, C.gold); if (h > 7) p(x, base - 2, w, 1, C.goldDark);
+      x += w + (r.chance(0.15) ? 1 : 0);
+    }
+    p(1, base, 36, 2, C.plank); p(1, base, 36, 1, C.plankHi);
+  }
+  p(0, 60, 38, 2, C.plankDark); p(36, 4, 2, 56, C.plankDark);
+}
+// A library ladder, 9 x 60 art px, the anchor its foot (it leans against a case).
+function drawLadder(t) {
+  const { p } = t;
+  p(0, 0, 2, 60, C.plank); p(7, 0, 2, 60, C.plankDark); p(0, 0, 1, 60, C.plankHi);
+  for (let y = 5; y < 58; y += 7) { p(1, y, 7, 2, C.plank); p(1, y, 7, 1, C.plankHi); }
+}
+// A rack of scrolls with one unrolled below it, 30 x 40 art px, from its top middle.
+function drawScrolls(t) {
+  const { p, disc } = t;
+  p(0, 0, 30, 20, C.plankDark); p(0, 0, 30, 1, C.plankHi); p(0, 0, 1, 20, C.plank); p(1, 1, 28, 18, CASE_BACK);
+  for (const x of [10, 20]) p(x - 1, 1, 2, 18, C.plank); p(1, 9, 28, 2, C.plank); p(1, 9, 28, 1, C.plankHi);
+  // the rolls, end on: cream rounds with a darker heart, some with a ribbon
+  [[4, 5], [7, 6], [14, 4], [16, 7], [24, 5], [26, 7], [3, 15], [6, 16], [13, 15], [17, 16], [23, 14], [26, 16], [15, 13]].forEach(([x, y], i) => {
+    disc(x, y, 1, K.candle); p(x, y, 1, 1, C.plank); p(x - 1, y - 1, 1, 1, C.white); if (i % 4 === 0) p(x + 1, y, 1, 1, i % 8 ? C.tights : C.tunic);
+  });
+  // one hung up open: a rod, the sheet with its lines, a curl and a seal
+  p(8, 21, 14, 2, C.plank); p(8, 21, 14, 1, C.plankHi); p(9, 23, 12, 14, K.candle); p(9, 23, 1, 14, C.white); p(20, 24, 1, 13, '#d8c9a0');
+  for (let y = 25; y < 35; y += 2) p(11, y, y % 4 === 1 ? 8 : 6, 1, '#8a7a5a');
+  p(9, 37, 12, 2, '#d8c9a0'); p(9, 37, 12, 1, K.candle); p(18, 34, 2, 2, C.gold); p(18, 34, 1, 1, C.goldDark);
+}
+// The spell book on a lectern on the wall, 26 x 34 art px, from its top
+// middle: a carved bracket, a slanted desk, the great book open on it.
+// Frame 1: a page on its way over. The painter adds its glow and the runes
+// that rise from it (`rune`, three of them, 5 x 5).
+function drawLectern(t, frame) {
+  const { p, line } = t;
+  p(11, 20, 4, 12, C.plankDark); p(11, 20, 1, 12, C.plank); p(8, 31, 10, 3, C.plankDark); p(8, 31, 10, 1, C.plank);     // the post and its foot on the wall
+  line(4, 20, 21, 17, C.plankDark, 2); p(3, 18, 20, 2, C.plank); p(3, 18, 20, 1, C.plankHi);                          // the desk
+  // the book: violet boards with gold corners, two blocks of pages, a blue ribbon
+  p(1, 9, 24, 9, C.tights); p(1, 9, 24, 1, '#a57fc4'); p(1, 9, 2, 2, C.gold); p(23, 9, 2, 2, C.gold); p(1, 16, 2, 2, C.goldDark); p(23, 16, 2, 2, C.goldDark);
+  p(3, 7, 9, 10, K.candle); p(14, 7, 9, 10, K.candle); p(3, 7, 9, 1, C.white); p(14, 7, 9, 1, C.white); p(12, 8, 2, 9, '#d8c9a0');
+  for (let y = 9; y < 16; y += 2) { p(4, y, 7, 1, '#8a7a5a'); p(15, y, y === 11 ? 5 : 7, 1, '#8a7a5a'); }
+  p(5, 9, 2, 2, C.tunic); p(12, 15, 2, 5, C.tunicHi);                                                               // an initial, the ribbon
+  if (frame) { p(10, 2, 3, 6, K.candle); p(10, 2, 1, 6, C.white); p(12, 3, 1, 5, '#d8c9a0'); }                        // a page standing up, turning
+}
+function drawRune(t, k) {
+  const { p } = t;
+  const c = '#e3d6ff';
+  if (k === 0) { p(2, 0, 1, 5, c); p(0, 1, 5, 1, c); p(1, 3, 3, 1, c); }
+  else if (k === 1) { p(0, 0, 1, 5, c); p(1, 1, 1, 1, c); p(2, 2, 1, 1, c); p(3, 1, 1, 1, c); p(4, 0, 1, 5, c); }
+  else { p(1, 0, 3, 1, c); p(0, 1, 1, 3, c); p(4, 1, 1, 3, c); p(1, 4, 3, 1, c); p(2, 2, 1, 1, c); }
+}
+// A parchment hung on the wall, 9 x 20 art px, from its top middle.
+function drawScroll(t) {
+  const { p } = t;
+  p(0, 0, 9, 2, C.plank); p(0, 0, 9, 1, C.plankHi); p(1, 2, 7, 15, K.candle); p(1, 2, 1, 15, C.white); p(7, 3, 1, 14, '#d8c9a0');
+  for (let y = 4; y < 15; y += 2) p(2, y, y % 4 === 0 ? 5 : 4, 1, '#8a7a5a');
+  p(1, 17, 7, 2, '#d8c9a0'); p(1, 17, 7, 1, K.candle); p(5, 14, 2, 2, C.tights);
+}
+// A few books on a bracket with an inkwell and a quill, 14 x 14 art px, from its top middle.
+function drawPile(t) {
+  const { p, line } = t;
+  p(0, 11, 14, 2, C.plank); p(0, 11, 14, 1, C.plankHi); p(2, 13, 2, 1, C.plankDark); p(10, 13, 2, 1, C.plankDark);
+  [[1, 9, 9, C.tunic], [2, 7, 8, C.leaf], [1, 5, 7, C.tights]].forEach(([x, y, w, c]) => { p(x, y, w, 2, c); p(x, y, w, 1, K.candle); p(x, y, 1, 2, C.gold); });
+  p(10, 8, 3, 3, K.iron); p(10, 8, 3, 1, K.ironHi); line(11, 7, 13, 1, C.white); p(12, 2, 2, 2, C.white); p(13, 1, 1, 1, K.candle);
+}
+// A book that flies, 11 x 7 art px, the anchor its middle: its boards beat
+// like wings (up, down). Small, pale and made of paper: it is the room's
+// life, not a creature to mind (the bats are violet, so these are not).
+function drawFlyingBook(t, frame) {
+  const { p } = t;
+  const up = frame === 0;
+  // brown boards, a broad cream of pages under them: paper, not a bat
+  for (let i = 0; i < 5; i++) {
+    const y = up ? (i === 0 ? 0 : i < 3 ? 1 : 2) : (i === 0 ? 5 : i < 3 ? 4 : 3);
+    p(i, y, 1, 1, C.plank); p(10 - i, y, 1, 1, C.plank);
+    p(i, y + (up ? 1 : -2), 1, 2, K.candle); p(10 - i, y + (up ? 1 : -2), 1, 2, K.candle); p(i, y + (up ? 1 : -2), 1, 1, C.white);
+  }
+  p(5, 2, 1, 4, C.goldDark);
+}
+// The great chained book (the library's spring, on the chain where the bell
+// hangs elsewhere), 28 x 22 art px: a tome lying shut, iron corners and a
+// clasp, a ring where the chain holds it. He lands on its upper board (row
+// 4, the anchor its middle). Frame 1: thrown open a hand's breadth by the bounce.
+function drawTome(t, frame) {
+  const { p } = t;
+  const o = frame ? 2 : 0;                                                    // how far the upper board has lifted
+  p(12, 0, 4, 4 - o, K.chain); p(13, 0, 2, 1, K.chainHi);                      // the ring it hangs by
+  p(2, 6, 25, 12, K.candle); for (let y = 7; y < 18; y += 2) p(3, y, 24, 1, '#d8c9a0'); p(26, 6, 1, 12, '#b9a982');   // the pages, a hand thick
+  if (frame) { p(4, 4, 22, 2, C.white); p(6, 3, 17, 1, K.candle); }                                                // a breath of pages
+  p(0, 4 - o, 28, 2, C.tights); p(0, 4 - o, 28, 1, '#a57fc4'); p(0, 18, 28, 2, C.tightsDark); p(0, 18, 28, 1, C.tights);   // the boards
+  p(0, 4 - o, 3, 16 + o, C.tights); p(0, 4 - o, 1, 16 + o, '#a57fc4'); p(2, 6, 1, 12, C.tightsDark);              // the spine
+  for (const y of [8, 12, 16]) p(0, y, 3, 1, C.gold);                                                             // its bands
+  for (const x of [3, 24]) { p(x, 4 - o, 3, 2, K.chain); p(x, 18, 3, 2, K.chainDark); p(x, 4 - o, 3, 1, K.chainHi); }  // iron corners
+  p(13, 4 - o, 3, 2, C.gold); p(25, 9, 3, 6, K.chain); p(25, 9, 1, 6, K.chainHi); p(26, 11, 1, 2, C.gold);          // a boss, the clasp
+  p(9, 20, 2, 2, C.tunicHi); p(9, 20, 1, 2, C.tunic);                                                              // the ribbon, hanging out
+}
+
 // --- the gate ----------------------------------------------------------------------
 // A door between the outside and the inside of the tower, on a stone landing
 // he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
@@ -785,6 +907,15 @@ export function buildInterior() {
     hook: makeSprite(26, 42, drawHook, { ax: 0.5, ay: 0 }),
     mirror: makeSprite(24, 34, (t) => drawMirror(t, false), { ax: 0.5, ay: 0 }),
     mirrorWitch: makeSprite(24, 34, (t) => drawMirror(t, true), { ax: 0.5, ay: 0 }),
+    bookcase: [0, 1, 2].map((k) => makeSprite(38, 62, (t) => drawBookcase(t, k), { ax: 0.5, ay: 0 })),
+    ladder: makeSprite(9, 60, drawLadder, { ax: 0.5, ay: 1 }),
+    scrolls: makeSprite(30, 40, drawScrolls, { ax: 0.5, ay: 0 }),
+    lectern: [0, 1].map((f) => makeSprite(26, 34, (t) => drawLectern(t, f), { ax: 0.5, ay: 0 })),
+    rune: [0, 1, 2].map((k) => makeSprite(5, 5, (t) => drawRune(t, k), { ax: 0.5, ay: 0.5 })),
+    scroll: makeSprite(9, 20, drawScroll, { ax: 0.5, ay: 0 }),
+    pile: makeSprite(14, 14, drawPile, { ax: 0.5, ay: 0 }),
+    flyingBook: [0, 1].map((f) => makeSprite(11, 7, (t) => drawFlyingBook(t, f), { ax: 0.5, ay: 0.5 })),
+    tome: [0, 1].map((f) => makeSprite(28, 22, (t) => drawTome(t, f), undefined, { axPx: 14 * 4, ayPx: 4 * 4 })),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

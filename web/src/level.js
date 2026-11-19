@@ -52,8 +52,9 @@ export const ZONES_INSIDE = [
   { name: 'the hall',        from: 0,     mul: { ...OUTSIDERS, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
   // The guard rooms: galleries, guards on them, pikes from the hatches, stairs.
   { name: 'the guard rooms', from: 12000, mul: { ...OUTSIDERS, gallery: 0.8, guard: 1.2, grabber: 2.4, bat: 1.2, web: 1.0, ghost: 0.6, stairs: 1.5 } },
-  // The library: dusty and haunted. Webs and ghosts, few guards; the cloak helps here.
-  { name: 'the library',     from: 25000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.5, web: 2.4, ghost: 1.9, cloak: 1.4 } },
+  // The library: dusty and haunted. Webs and ghosts, few guards; the cloak
+  // helps here. Its spring is the great chained book (the bell's slot).
+  { name: 'the library',     from: 25000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.5, web: 2.4, ghost: 1.9, bell: 1.6, cloak: 1.4 } },
   // The belfry: bells to bounce on, scaffold boards, and the bats' home.
   { name: 'the belfry',      from: 40000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.9, web: 1.2, ghost: 1.0, bell: 3.0, board: 2.0, stairs: 0.5, feather: 1.5 } },
 ];
@@ -470,6 +471,7 @@ export class Level {
         opts.variant = r.weighted([[0, 3], [1, 3], [2, 2], [3, 2]]);
         if (canBeDry && r.chance(T.dry * P.dry)) { opts.dry = true; opts.variant = 4; }
       }
+      if (slot === 'bell' && zoneAt(y, this.zones).name === 'the library') kind = 'tome';      // the library's spring is a chained book
       if (slot === 'gateL' || slot === 'gateR') {
         kind = 'gate';
         opts.side = slot[4];

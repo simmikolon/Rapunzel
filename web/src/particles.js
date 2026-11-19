@@ -132,6 +132,15 @@ export class Particles {
       g: 0.15, drag: 2.2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: 'feather', shrink: false, glow: 0.3,
     }));
   }
+  // loose pages thrown up by the great chained book
+  pages(x, y, n = 8) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * 80, y: y + Math.random() * 20,
+      vx: (Math.random() - 0.5) * 260, vy: 160 + Math.random() * 260,
+      life: 0.9 + Math.random() * 0.5, size: 6 + Math.random() * 3, color: Math.random() < 0.7 ? '#fff1c4' : '#d8c9a0',
+      g: 0.12, drag: 2.4, spin: (Math.random() - 0.5) * 12, angle: Math.random() * TAU, shape: 'leaf', shrink: false,
+    }));
+  }
   // torn threads of a spider's web
   silk(x, y, n = 8) {
     this.burst(x, y, n, () => ({

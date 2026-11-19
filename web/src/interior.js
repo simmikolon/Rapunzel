@@ -32,11 +32,14 @@ const CHAIN_END = 280;             // the chain's loose end hangs this high abov
 const FLOORS = [
   { from: 0,     tint: '#ffffff', ambient: '#8f88c4', dim: 0.34, decor: [['banner', 3], ['pictures', 3], ['shield', 1], ['tapestry', 1], ['mirror', 1]], small: ['sconce'] },                     // the hall
   { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['shield', 4], ['banner', 3], ['pictures', 1], ['tapestry', 1]], small: ['sconce', 'sconce', 'keys', 'sconce', 'sconce'] },   // the guard rooms: cool stone, arms on the walls
-  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['shelf', 4], ['pictures', 5], ['niche', 2], ['mirror', 2], ['tapestry', 1]], small: ['sconce', 'herbs', 'sconce'] },    // the library: warm stone, books, the gallery
+  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['bookcase', 7], ['pictures', 3], ['scrolls', 2], ['lectern', 2], ['shelf', 1], ['niche', 1], ['mirror', 1], ['tapestry', 1]], small: ['sconce', 'scroll', 'pile', 'sconce', 'scroll', 'herbs'], dense: true },    // the library: warm stone, walls of books, scrolls, the spell book
   { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 5], ['clock', 2], ['banner', 1]], small: ['sconce', 'herbs'] },                  // the belfry: weathered stone, clockwork
 ];
 const FLOOR_FADE = 1500;
-const IVY_TO = 40000;               // ivy comes in at the windows up to where the trees end
+const IVY_TO = 40000;
+const LIBRARY = 2;                 // the library's row in FLOORS: its books fly
+const libraryAmount = (y) => { const f = floorsAt(y); return (f.a === LIBRARY ? 1 - f.t : 0) + (f.b === LIBRARY ? f.t : 0); };
+const BOOK_TINTS = ['#ffffff', '#cfe6ff', '#fff0c8'];               // ivy comes in at the windows up to where the trees end
 // Which floors meet at height y (the prince's plane): { a, b, t }.
 function floorsAt(y) {
   for (let i = 1; i < FLOORS.length; i++) {
@@ -67,14 +70,18 @@ function wallTile(k) {
 function decorAt(k, side) {
   if (k === 1) return { kind: 'banner', look: side < 0 ? 0 : 1, x: side * 196, ly: 352 };
   if (k === 2) return side < 0 ? { kind: 'pictures', only: 'witch', x: -196, ly: 556, h: 0 } : { kind: 'hook', x: 196, ly: 560, h: 0 };   // her portrait, and her spare hat and a broom by the door
-  if (k < WINDOW_FIRST || k % WINDOW_EVERY !== (side < 0 ? 2 : 1)) return null;
-  const h = hash(k * 19 + (side < 0 ? 7 : 11));
-  if (h % 100 < 34) return null;
+  if (k < WINDOW_FIRST) return null;
   // what this floor hangs on its walls (the nearer floor's, where two meet)
-  const f = floorsAt(k * TILE_H / PARALLAX_TOWER), table = FLOORS[f.t < 0.5 ? f.a : f.b].decor;
+  const f = floorsAt(k * TILE_H / PARALLAX_TOWER), floor = FLOORS[f.t < 0.5 ? f.a : f.b], table = floor.decor;
+  // one place a side per storey; a `dense` floor (the library) fills nearly
+  // all of them and has a second place lower down on each side
+  const slot = k % WINDOW_EVERY, main = slot === (side < 0 ? 2 : 1), extra = !!floor.dense && slot === (side < 0 ? 1 : 0);
+  if (!main && !extra) return null;
+  const h = hash(k * 19 + (side < 0 ? 7 : 11));
+  if (h % 100 < (floor.dense ? (main ? 8 : 40) : 34)) return null;
   let pick = (h >>> 8) % table.reduce((n, d) => n + d[1], 0), kind = table[0][0];
   for (const [name, w] of table) { if (pick < w) { kind = name; break; } pick -= w; }
-  return { kind, look: (h >>> 5) % 2, x: side * (168 + (h >>> 12) % 34), ly: k * TILE_H + 150 + (h >>> 16) % 30, h };
+  return { kind, look: (h >>> 5) % 2, x: side * (168 + (h >>> 12) % 34), ly: k * TILE_H + (main ? 150 + (h >>> 16) % 30 : 86 + (h >>> 16) % 8), h };
 }
 
 // The pictures of one hanging: one to three of different sizes, the way a
@@ -100,7 +107,8 @@ function smallAt(k, side) {
   if (k < WINDOW_FIRST || k % WINDOW_EVERY !== (side < 0 ? 0 : 2)) return null;
   const h = hash(k * 23 + (side < 0 ? 3 : 5));
   if (h % 100 < 38) return null;
-  const f = floorsAt(k * TILE_H / PARALLAX_TOWER), table = FLOORS[f.t < 0.5 ? f.a : f.b].small;
+  const f = floorsAt(k * TILE_H / PARALLAX_TOWER), floor = FLOORS[f.t < 0.5 ? f.a : f.b], table = floor.small;
+  if (floor.dense && decorAt(k + 1, side)) return null;          // a second big piece hangs down to here
   return { kind: table[(h >>> 8) % table.length], lit: (h >>> 4) % 100 < 65, x: side * 108, ly: k * TILE_H + 118, h };
 }
 
@@ -155,6 +163,20 @@ export class Interior {
         } else if (d.kind === 'niche') {
           g.blit(A.niche[d.look], dx, dy);
           if (d.look === 1) g.halo(dx - 2, dy + 56, 34, '#9fd0ff', 0.3 + 0.15 * Math.sin(time * 1.6 + k), { glow: 0.4 });   // the crystal ball
+        } else if (d.kind === 'bookcase') {
+          g.blit(A.bookcase[(d.h >>> 5) % 3], dx, dy);
+          if ((d.h >>> 18) % 100 < 35) { const s = (d.h >>> 3) % 2 ? 1 : -1; g.blit(A.ladder, dx + s * 66, dy + 250, { rot: -s * 0.13 }); }   // a ladder leant against it
+        } else if (d.kind === 'scrolls') g.blit(A.scrolls, dx, dy);
+        else if (d.kind === 'lectern') {
+          // the spell book: it glows, runes rise from it, now and then a page goes over by itself
+          const turning = (time * 0.23 + k * 0.37) % 1 < 0.09;
+          g.halo(dx, dy + 44, 64, '#b9a0ff', 0.32 + 0.1 * Math.sin(time * 2.2 + k), { glow: 0.4 });
+          g.blit(A.lectern[turning ? 1 : 0], dx, dy);
+          for (let i = 0; i < 3; i++) {
+            const u = (time * 0.21 + i / 3 + k * 0.13) % 1;
+            g.blit(A.rune[i], dx + (i - 1) * 16 + Math.sin(u * 6 + i * 2) * 12, dy + 26 - u * 120, { alpha: Math.sin(u * Math.PI) * 0.9, glow: 0.5 });
+          }
+          this.glow(dx, dy + 40, 180, '#b9a0ff', 0.13);
         } else if (d.kind === 'tapestry') g.blit(A.tapestry, W / 2 + side * 178 + cam.ox, dy, { rot: Math.sin(time * 0.6 + k) * 0.012 });
         else if (d.kind === 'hook') g.blit(A.hook, dx, dy);
         else if (d.kind === 'mirror') {
@@ -185,6 +207,8 @@ export class Interior {
         if (!d || behindGate(side, d.ly)) continue;
         const dx = W / 2 + d.x + cam.ox, dy = H - (d.ly - camF) + cam.oy;
         if (d.kind === 'keys') g.blit(A.keys, dx, dy);
+        else if (d.kind === 'scroll') g.blit(A.scroll, dx, dy, { rot: Math.sin(time * 0.8 + k) * 0.03 });
+        else if (d.kind === 'pile') g.blit(A.pile, dx, dy);
         else if (d.kind === 'herbs') g.blit(A.herbs, dx, dy, { rot: Math.sin(time * 0.7 + k) * 0.03 });
         else if (!d.lit) g.blit(A.sconce[2], dx, dy);
         else {
@@ -193,6 +217,18 @@ export class Interior {
           g.blit(A.sconce[Math.floor(time * 8 + k) % 2], dx, dy, { glow: 0.3 });
           this.glow(dx, dy - 30, 150, INSIDE.candleLight, 0.12 * fl);
         }
+      }
+    }
+    // In the library some of the books have taken wing: a few drift about
+    // behind everything, their boards beating. The room's life, as the
+    // butterflies are the forest's.
+    const lib = libraryAmount(cam.y + H / 2);
+    if (lib > 0.02) {
+      for (let i = 0; i < 5; i++) {
+        const sp = 0.33 + i * 0.07, ph = i * 1.9, span = H + 200;
+        const bx = W / 2 + Math.sin(time * sp + ph) * (140 + i * 24) + cam.ox;
+        const by = H + 100 - (((i * 331 + time * (14 + i * 3) + camF * 0.6) % span) + span) % span + Math.sin(time * 2 + i) * 6 + cam.oy;
+        g.blit(A.flyingBook[Math.floor(time * (5 + i) + i) % 2], bx, by, { alpha: 0.85 * lib, tint: BOOK_TINTS[i % 3] });
       }
     }
     // the pillars' shadow on the wall behind them
