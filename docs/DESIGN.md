@@ -581,8 +581,14 @@ is a pool to draw from, not a promise.
     butterflies are the forest's (paper-pale, so they are not bats).
     Its spring is not the bell but a great chained book on the chain
     (`tome`, the bell's slot and bounce): pages fly when he lands on it.
-  - ✅ the guard rooms' and the belfry's things (purely visual; four in
-    five of their places are filled). Guard rooms: racks of pole arms
+  - ✅ walkways on every floor above the hall, as in the library
+    (`storeyOn` in `src/interior.js`): the guard rooms have a wall-walk
+    of heavy planks on stone corbels with the racks, the watch's table,
+    the helmets and the notice on it; the belfry a staging of rough
+    boards with a rope for a rail, the bell ropes coming down to it
+    and the clockwork beside it. In the hall the pegs with the hat and
+    the broom hang by the door within reach from the floor.
+  - ✅ the guard rooms' and the belfry's things (purely visual). Guard rooms: racks of pole arms
     (put away, so without the red collar of the one that thrusts),
     shelves of helmets (the captain's with a blue plume), the watch's
     table with a tankard, dice and a hand of cards, a notice with the
@@ -1584,3 +1590,18 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   behind him), and it has no pale lit top, which every platform has.
   To be watched when played. Purely visual; the simulator does not
   draw. The atlas is 4096 x 2990.
+- 2026-11-19: Walkways on the other floors (`element/floor-walkways`,
+  a branch of its own so it can be judged apart from the library's).
+  The library's layout by storey became the layout of every floor
+  above the hall, each with a walkway of its own make and its own
+  split between what is used (on the walkway, or hung at a hand's
+  height: racks, the table, helmets, the notice; bell ropes, wheels, a
+  clock) and what is looked at (above, where a ladder reaches: shields,
+  banners, pictures; timbers, the dial, the row of bells). The hall
+  keeps its open wall: nothing there is used but the pegs by the door,
+  which came down to where a hand reaches from the floor. What this
+  costs is quiet: from 120 m up there is a walkway across the back wall
+  every 6.4 m, three in view at a time. If that is too much structure
+  behind the play, the guard rooms and the belfry can go back to the
+  open wall by taking `galleried` off their rows in FLOORS. Purely
+  visual; the simulator does not draw. The atlas is 4096 x 3014.

@@ -906,6 +906,27 @@ function drawWalkway(t) {
   p(0, 0, 142, 2, SHADE.base); p(0, 0, 142, 1, SHADE.hi); p(0, 8, 142, 1, SHADE.dark);
 }
 
+// The guard rooms' wall-walk, the same size and anchor as the library's
+// walkway: heavy planks on stone corbels (the pillars' stone, in shade),
+// stout posts and two plain rails. And the belfry's staging: rough boards
+// of uneven length on crossed braces, a rope slung between posts for a
+// rail. Both in shade and without a lit top, as the library's.
+function drawWalkwayGuard(t) {
+  const { p } = t;
+  for (let x = 4; x < 142; x += 22) { p(x, 17, 8, 4, K.pilDark); p(x, 17, 8, 1, K.pil); p(x + 2, 21, 6, 4, K.pilDeep); p(x + 4, 25, 4, 3, K.pilDeep); }   // corbels
+  p(0, 14, 142, 3, SHADE.base); p(0, 14, 142, 1, SHADE.hi); p(0, 16, 142, 1, SHADE.deep);
+  for (let x = 11; x < 142; x += 13) p(x, 15, 1, 2, SHADE.dark);
+  for (let x = 3; x < 142; x += 17) { p(x, 0, 3, 14, SHADE.base); p(x, 0, 1, 14, SHADE.hi); p(x + 2, 1, 1, 13, SHADE.dark); p(x - 1, 0, 5, 1, SHADE.hi); }
+  p(0, 3, 142, 2, SHADE.base); p(0, 3, 142, 1, SHADE.hi); p(0, 9, 142, 2, SHADE.dark); p(0, 9, 142, 1, SHADE.base);
+}
+function drawWalkwayBelfry(t) {
+  const { p, line } = t;
+  for (let x = 8; x < 142; x += 32) { line(x, 17, x + 14, 28, SHADE.dark, 2); line(x + 14, 17, x, 28, SHADE.deep, 2); p(x + 6, 21, 3, 3, K.iron); }      // crossed braces
+  for (let x = 0; x < 142; x += 10) { const d = (x * 7) % 3; p(x, 14, 9, 3 + (d === 0 ? 1 : 0), SHADE.base); p(x, 14, 9, 1, SHADE.hi); p(x, 16 + (d === 0 ? 1 : 0), 9, 1, SHADE.deep); }   // rough boards
+  for (let x = 5; x < 142; x += 26) { p(x, 2, 2, 12, SHADE.base); p(x, 2, 1, 12, SHADE.hi); p(x - 1, 1, 4, 1, SHADE.dark); }
+  for (let x = 6; x < 136; x++) { const u = ((x - 6) % 26) / 26, y = 4 + Math.round(Math.sin(u * Math.PI) * 3); p(x, y, 1, 1, C.ropeDark); }   // the rope rail, slack between the posts
+}
+
 // --- the gate ----------------------------------------------------------------------
 // A door between the outside and the inside of the tower, on a stone landing
 // he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
@@ -1055,6 +1076,8 @@ export function buildInterior() {
     smallBell: makeSprite(9, 11, drawSmallBell, { ax: 0.5, ay: 0 }),
     coil: makeSprite(10, 13, drawCoil, { ax: 0.5, ay: 0 }),
     walkway: makeSprite(142, 30, drawWalkway, undefined, { axPx: 71 * 4, ayPx: 14 * 4 }),
+    walkwayGuard: makeSprite(142, 30, drawWalkwayGuard, undefined, { axPx: 71 * 4, ayPx: 14 * 4 }),
+    walkwayBelfry: makeSprite(142, 30, drawWalkwayBelfry, undefined, { axPx: 71 * 4, ayPx: 14 * 4 }),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

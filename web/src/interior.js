@@ -31,10 +31,13 @@ const CHAIN_END = 280;             // the chain's loose end hangs this high abov
 // over 30 m, like the trees outside.
 const FLOORS = [
   { from: 0,     tint: '#ffffff', ambient: '#8f88c4', dim: 0.34, decor: [['banner', 3], ['pictures', 3], ['shield', 1], ['tapestry', 1], ['mirror', 1]], small: ['sconce'] },                     // the hall
-  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['rack', 3], ['shield', 3], ['banner', 2], ['helmets', 2], ['table', 2], ['poster', 2], ['pictures', 1], ['tapestry', 1]], small: ['sconce', 'sconce', 'keys', 'horn', 'sconce'], fill: 82 },   // the guard rooms: cool stone, arms on the walls
-  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['pictures', 1]], small: ['sconce', 'scroll', 'pile', 'sconce', 'scroll', 'herbs'], galleried: true },    // the library: warm stone; furnished by storey, on walkways (libraryStorey)
-  { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 4], ['ropes', 3], ['truss', 3], ['dial', 2], ['bells', 2], ['clock', 1], ['banner', 1]], small: ['sconce', 'coil', 'gear', 'herbs'], fill: 82 },                  // the belfry: weathered stone, clockwork
+  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['rack', 3], ['shield', 3], ['banner', 2], ['helmets', 2], ['table', 2], ['poster', 2], ['pictures', 1], ['tapestry', 1]], fill: 82, small: ['sconce', 'keys', 'horn', 'sconce'], galleried: 'guard' },      // the guard rooms: cool stone; a wall-walk with arms and the watch's things   // the guard rooms: cool stone, arms on the walls
+  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['pictures', 1]], small: ['sconce', 'scroll', 'pile', 'sconce', 'scroll', 'herbs'], galleried: 'library' },    // the library: warm stone; furnished by storey, on walkways (storeyOn)
+  { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 4], ['ropes', 3], ['truss', 3], ['dial', 2], ['bells', 2], ['clock', 1], ['banner', 1]], fill: 82, small: ['sconce', 'coil', 'gear', 'herbs'], galleried: 'belfry' },         // the belfry: weathered stone; staging, ropes, clockwork                  // the belfry: weathered stone, clockwork
 ];
+// (`decor` and `fill` are a floor's open wall, the hall's way; a floor with
+// `galleried` is laid out by storey instead and keeps them only so that
+// taking `galleried` off brings the open wall back.)
 const FLOOR_FADE = 1500;
 const IVY_TO = 40000;
 const LIBRARY = 2;                 // the library's row in FLOORS: its books fly
@@ -67,49 +70,63 @@ const storeyOf = (k) => k - (k % WINDOW_EVERY);
 const floorOfStorey = (k) => { const f = floorsAt(storeyOf(k) * TILE_H / PARALLAX_TOWER); return FLOORS[f.t < 0.5 ? f.a : f.b]; };
 const pickFrom = (table, n) => { let pick = n % table.reduce((sum, d) => sum + d[1], 0); for (const [name, w] of table) { if (pick < w) return name; pick -= w; } return table[0][0]; };
 
-// A storey of the library. Nobody nails a bookcase to a wall he cannot get
-// to, so every storey there has a wooden walkway across the whole back wall,
-// just under the window's sill, with a railing toward the room. On it, left
-// and right of the window, stands the furniture (a bookcase, the lectern
-// with the spell book, the rack of scrolls); above, within reach of a
-// ladder, hang the pictures and the rest; and a ladder at one end, left
-// and right in turn, leads up to the next walkway.
-// Returns { L, sides: [{ side, furniture, hung, small }], ladder } with L
-// the walkway's height (layer px) and each piece as decorAt returns them.
-const CASE_H = 248;
-const LIBRARY_FURNITURE = [['bookcase', 7], ['lectern', 2], ['scrolls', 2], ['none', 1]];
-const LIBRARY_HUNG = [['pictures', 4], ['shelf', 1], ['niche', 1], ['mirror', 1], ['tapestry', 1], ['none', 3]];
-function libraryStorey(kb) {
-  const L = kb * TILE_H, sides = [], smalls = FLOORS[LIBRARY].small;
+// A storey of a floor above the hall. Nobody nails a bookcase (or a rack
+// of pikes, or a table) to a wall he cannot get to, so every storey there
+// has a walkway across the whole back wall, just under the window's sill,
+// its railing toward the room. On it, left and right of the window, stands
+// or hangs within reach what is used (`furniture`); above, where a ladder
+// reaches, hangs what is only looked at (`hung`); and a ladder at one end,
+// left and right in turn, leads up to the next walkway. Each floor has its
+// own walkway and its own things (GALLERIES); `top` is how high a piece's
+// top is over the walkway's boards, so that it stands on them or hangs at
+// a hand's height.
+// Returns { L, walk, sides: [{ side, furniture, hung, small }], ladder }
+// with L the walkway's height (layer px) and each piece as decorAt returns them.
+const GALLERIES = {
+  // the guards' wall-walk: arms, helmets, the watch's table, the notice
+  guard: { walk: 'walkwayGuard', smallAt: 196,
+    furniture: [['rack', 4], ['table', 3], ['helmets', 2], ['poster', 2], ['none', 2]], top: { rack: 184, table: 108, helmets: 244, poster: 206 },
+    hung: [['shield', 3], ['banner', 3], ['pictures', 1], ['tapestry', 1], ['none', 3]] },
+  // the library's galleries: cases, the spell book, scrolls
+  library: { walk: 'walkway', smallAt: 336,
+    furniture: [['bookcase', 7], ['lectern', 2], ['scrolls', 2], ['none', 1]], top: { bookcase: 248, lectern: 136, scrolls: 216 },
+    hung: [['pictures', 4], ['shelf', 1], ['niche', 1], ['mirror', 1], ['tapestry', 1], ['none', 3]] },
+  // the belfry's staging: the ropes come down to it, the clockwork is beside it
+  belfry: { walk: 'walkwayBelfry', smallAt: 196,
+    furniture: [['ropes', 4], ['cog', 3], ['clock', 2], ['none', 2]], top: { ropes: 262, cog: 224, clock: 236 },
+    hung: [['truss', 3], ['dial', 2], ['bells', 2], ['cog', 2], ['banner', 1], ['none', 2]] },
+};
+function storeyOn(kb, floor) {
+  const G = GALLERIES[floor.galleried], L = kb * TILE_H, sides = [];
   for (const side of [-1, 1]) {
     const h = hash(kb * 31 + (side < 0 ? 17 : 19)), h2 = hash(h + 5);
-    const fk = pickFrom(LIBRARY_FURNITURE, h >>> 8), hk = pickFrom(LIBRARY_HUNG, h2 >>> 8);
-    const tall = fk === 'bookcase' ? CASE_H : fk === 'lectern' ? 136 : 216;       // how high the piece's top is over the walkway
+    const fk = pickFrom(G.furniture, h >>> 8), hk = pickFrom(G.hung, h2 >>> 8);
     sides.push({
       side,
-      furniture: fk === 'none' ? null : { kind: fk, look: (h >>> 5) % 2, x: side * 186, ly: L + tall, h, onWalk: true },
+      furniture: fk === 'none' ? null : { kind: fk, look: (h >>> 5) % 2, x: side * 186, ly: L + G.top[fk], h, onWalk: true },
       hung: hk === 'none' ? null : { kind: hk, look: (h2 >>> 5) % 2, x: side * (172 + (h2 >>> 12) % 26), ly: L + 500 - (h2 >>> 16) % 12, h: h2 },
-      small: (h2 >>> 3) % 100 < 55 ? { kind: smalls[(h2 >>> 20) % smalls.length], lit: (h2 >>> 4) % 100 < 65, x: side * 104, ly: L + 336, h: h2 } : null,
+      small: (h2 >>> 3) % 100 < 55 ? { kind: floor.small[(h2 >>> 20) % floor.small.length], lit: (h2 >>> 4) % 100 < 65, x: side * 104, ly: L + G.smallAt, h: h2 } : null,
     });
   }
-  return { L, sides, ladder: (kb / WINDOW_EVERY) % 2 ? 1 : -1 };
+  return { L, walk: G.walk, sides, ladder: (kb / WINDOW_EVERY) % 2 ? 1 : -1 };
 }
 
 // What hangs on the back wall, by hash, left and right of the window column
 // (never in it): at most one piece a side per storey, at different heights
-// on the two sides; which things, the floor says (FLOORS). (The library
-// is laid out differently: libraryStorey.) In the hall a
-// banner hangs on each side of the door, and above them the witch's
-// portrait and the pegs with her spare hat and a broom: it is her house.
+// on the two sides; which things, the floor says (FLOORS). That is the
+// hall's way; the floors above it are laid out by storey (storeyOn). By
+// the hall's door hang a banner and, within reach from the floor, the
+// pegs with the witch's spare hat and a broom; above them her portrait
+// and a second banner: it is her house.
 // Returns { kind, look, x, ly, h } with `ly` the height it hangs from
 // (layer px) and `h` the hash the piece may vary by.
 function decorAt(k, side) {
-  if (k === 1) return { kind: 'banner', look: side < 0 ? 0 : 1, x: side * 196, ly: 352 };
-  if (k === 2) return side < 0 ? { kind: 'pictures', only: 'witch', x: -196, ly: 556, h: 0 } : { kind: 'hook', x: 196, ly: 560, h: 0 };   // her portrait, and her spare hat and a broom by the door
+  if (k === 1) return side < 0 ? { kind: 'banner', look: 0, x: -196, ly: 352 } : { kind: 'hook', x: 196, ly: 262, h: 0 };
+  if (k === 2) return side < 0 ? { kind: 'pictures', only: 'witch', x: -196, ly: 556, h: 0 } : { kind: 'banner', look: 1, x: 196, ly: 556 };
   if (k < WINDOW_FIRST) return null;
   // what this floor hangs on its walls (the nearer floor's, where two meet)
   const floor = floorOfStorey(k), table = floor.decor;
-  if (floor.galleried || k % WINDOW_EVERY !== (side < 0 ? 2 : 1)) return null;      // a galleried floor (the library) is furnished by storey, below
+  if (floor.galleried || k % WINDOW_EVERY !== (side < 0 ? 2 : 1)) return null;      // a floor with walkways is furnished by storey (storeyOn)
   const h = hash(k * 19 + (side < 0 ? 7 : 11));
   if (h % 100 < 100 - (floor.fill || 66)) return null;
   let pick = (h >>> 8) % table.reduce((n, d) => n + d[1], 0), kind = table[0][0];
@@ -188,12 +205,13 @@ export class Interior {
         this.drawPiece(g, cam, d, dx, dy, side, k, time, world, princeX);
       }
     }
-    // The library, storey by storey from below: what hangs high, what
-    // stands on the walkway, the ladder up to the next one, then the walkway
-    // itself with its railing in front of it all.
+    // The floors above the hall, storey by storey from below: what hangs
+    // high, what stands on the walkway, the ladder up to the next one, then
+    // the walkway itself with its railing in front of it all.
     for (let kb = Math.max(WINDOW_FIRST, storeyOf(first) - WINDOW_EVERY); kb <= last + 1; kb += WINDOW_EVERY) {
-      if (!floorOfStorey(kb).galleried) continue;
-      const st = libraryStorey(kb), wy = H - (st.L - camF) + cam.oy, cx = W / 2 + cam.ox;
+      const floor = floorOfStorey(kb);
+      if (!floor.galleried) continue;
+      const st = storeyOn(kb, floor), wy = H - (st.L - camF) + cam.oy, cx = W / 2 + cam.ox;
       for (const sd of st.sides) {
         for (const d of [sd.hung, sd.furniture]) {
           if (!d || behindGate(sd.side, d.ly)) continue;
@@ -202,7 +220,7 @@ export class Interior {
         if (sd.small && !behindGate(sd.side, sd.small.ly)) this.drawSmall(g, sd.small, W / 2 + sd.small.x + cam.ox, H - (sd.small.ly - camF) + cam.oy, kb, time);
       }
       for (let i = 0; i < 3; i++) g.blit(A.ladder, cx + st.ladder * 268, wy - i * 200, { tint: WALK_TINT });      // up to the next walkway
-      g.blit(A.walkway, cx, wy, { tint: WALK_TINT });
+      g.blit(A[st.walk], cx, wy, { tint: WALK_TINT });
       g.rect(TRUNK_W + cam.ox, wy + 64, W - 2 * TRUNK_W, 16, 'rgba(0,0,0,0.16)');                                  // its shadow on the wall
     }
     // Ivy has come in at some of the windows, as long as there are trees
