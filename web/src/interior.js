@@ -75,12 +75,13 @@ const pickFrom = (table, n) => { let pick = n % table.reduce((sum, d) => sum + d
 // has a walkway across the whole back wall, just under the window's sill,
 // its railing toward the room. On it, left and right of the window, stands
 // or hangs within reach what is used (`furniture`); above, where a ladder
-// reaches, hangs what is only looked at (`hung`); and a ladder at one end,
-// left and right in turn, leads up to the next walkway. Each floor has its
+// reaches, hangs what is only looked at (`hung`). (Ladders from one walkway
+// up to the next were tried and taken out: long uprights across the whole
+// picture drew the eye away from the play.) Each floor has its
 // own walkway and its own things (GALLERIES); `top` is how high a piece's
 // top is over the walkway's boards, so that it stands on them or hangs at
 // a hand's height.
-// Returns { L, walk, sides: [{ side, furniture, hung, small }], ladder }
+// Returns { L, walk, sides: [{ side, furniture, hung, small }] }
 // with L the walkway's height (layer px) and each piece as decorAt returns them.
 const GALLERIES = {
   // the guards' wall-walk: arms, helmets, the watch's table, the notice
@@ -108,7 +109,7 @@ function storeyOn(kb, floor) {
       small: (h2 >>> 3) % 100 < 55 ? { kind: floor.small[(h2 >>> 20) % floor.small.length], lit: (h2 >>> 4) % 100 < 65, x: side * 104, ly: L + G.smallAt, h: h2 } : null,
     });
   }
-  return { L, walk: G.walk, sides, ladder: (kb / WINDOW_EVERY) % 2 ? 1 : -1 };
+  return { L, walk: G.walk, sides };
 }
 
 // What hangs on the back wall, by hash, left and right of the window column
@@ -206,8 +207,8 @@ export class Interior {
       }
     }
     // The floors above the hall, storey by storey from below: what hangs
-    // high, what stands on the walkway, the ladder up to the next one, then
-    // the walkway itself with its railing in front of it all.
+    // high, what stands on the walkway, then the walkway itself with its
+    // railing in front of it all.
     for (let kb = Math.max(WINDOW_FIRST, storeyOf(first) - WINDOW_EVERY); kb <= last + 1; kb += WINDOW_EVERY) {
       const floor = floorOfStorey(kb);
       if (!floor.galleried) continue;
@@ -219,7 +220,6 @@ export class Interior {
         }
         if (sd.small && !behindGate(sd.side, sd.small.ly)) this.drawSmall(g, sd.small, W / 2 + sd.small.x + cam.ox, H - (sd.small.ly - camF) + cam.oy, kb, time);
       }
-      for (let i = 0; i < 3; i++) g.blit(A.ladder, cx + st.ladder * 268, wy - i * 200, { tint: WALK_TINT });      // up to the next walkway
       g.blit(A[st.walk], cx, wy, { tint: WALK_TINT });
       g.rect(TRUNK_W + cam.ox, wy + 64, W - 2 * TRUNK_W, 16, 'rgba(0,0,0,0.16)');                                  // its shadow on the wall
     }

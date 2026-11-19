@@ -567,8 +567,7 @@ is a pool to draw from, not a promise.
     wooden walkway across the whole back wall, just under the window's
     sill, its railing toward the room; the furniture stands on it left
     and right of the window, pictures and the rest hang above within
-    reach of a ladder, and a ladder at one end (left and right in
-    turn) leads up to the next walkway. The walkway is wood in shade
+    reach of a ladder. The walkway is wood in shade
     with no lit top: it stands at the back wall and is nothing to land
     on. Tall bookcases in three
     fillings (a potion, an hourglass, a candle end or a scroll between
@@ -1605,3 +1604,12 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   behind the play, the guard rooms and the belfry can go back to the
   open wall by taking `galleried` off their rows in FLOORS. Purely
   visual; the simulator does not draw. The atlas is 4096 x 3014.
+- 2026-11-19: The ladders between the walkways are gone, here as on
+  the library's branch. Simon, having
+  played the library: a great deal goes on behind the play now, enough
+  to lose sight of the prince, and the ladders from one walkway up to
+  the next are the worst of it. They were the only thing on the wall
+  that ran the whole height of the picture, right beside the pillars
+  where the ledges are. The walkways, the furniture on them and the
+  ladders leant against the bookcases stay; whether that is calm enough
+  is to be played next.
