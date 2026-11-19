@@ -72,9 +72,10 @@ const pickFrom = (table, n) => { let pick = n % table.reduce((sum, d) => sum + d
 // just under the window's sill, with a railing toward the room. On it, left
 // and right of the window, stands the furniture (a bookcase, the lectern
 // with the spell book, the rack of scrolls); above, within reach of a
-// ladder, hang the pictures and the rest; and a ladder at one end, left
-// and right in turn, leads up to the next walkway.
-// Returns { L, sides: [{ side, furniture, hung, small }], ladder } with L
+// ladder, hang the pictures and the rest. (Ladders from one walkway up to
+// the next were tried and taken out: long uprights across the whole picture
+// drew the eye away from the play.)
+// Returns { L, sides: [{ side, furniture, hung, small }] } with L
 // the walkway's height (layer px) and each piece as decorAt returns them.
 const CASE_H = 248;
 const LIBRARY_FURNITURE = [['bookcase', 7], ['lectern', 2], ['scrolls', 2], ['none', 1]];
@@ -92,7 +93,7 @@ function libraryStorey(kb) {
       small: (h2 >>> 3) % 100 < 55 ? { kind: smalls[(h2 >>> 20) % smalls.length], lit: (h2 >>> 4) % 100 < 65, x: side * 104, ly: L + 336, h: h2 } : null,
     });
   }
-  return { L, sides, ladder: (kb / WINDOW_EVERY) % 2 ? 1 : -1 };
+  return { L, sides };
 }
 
 // What hangs on the back wall, by hash, left and right of the window column
@@ -189,7 +190,7 @@ export class Interior {
       }
     }
     // The library, storey by storey from below: what hangs high, what
-    // stands on the walkway, the ladder up to the next one, then the walkway
+    // stands on the walkway, then the walkway
     // itself with its railing in front of it all.
     for (let kb = Math.max(WINDOW_FIRST, storeyOf(first) - WINDOW_EVERY); kb <= last + 1; kb += WINDOW_EVERY) {
       if (!floorOfStorey(kb).galleried) continue;
@@ -201,7 +202,6 @@ export class Interior {
         }
         if (sd.small && !behindGate(sd.side, sd.small.ly)) this.drawSmall(g, sd.small, W / 2 + sd.small.x + cam.ox, H - (sd.small.ly - camF) + cam.oy, kb, time);
       }
-      for (let i = 0; i < 3; i++) g.blit(A.ladder, cx + st.ladder * 268, wy - i * 200, { tint: WALK_TINT });      // up to the next walkway
       g.blit(A.walkway, cx, wy, { tint: WALK_TINT });
       g.rect(TRUNK_W + cam.ox, wy + 64, W - 2 * TRUNK_W, 16, 'rgba(0,0,0,0.16)');                                  // its shadow on the wall
     }
