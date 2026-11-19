@@ -39,14 +39,16 @@ which only copies the two folders together). The design document
   `?spawn=bat` hangs a bat under the next branch, `?at=170&spawn=flock` builds a
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
-  altitude and zone, `?fx=off|bloom|full`.
+  altitude and zone, `?fx=off|bloom|full`, `?place=inside|outside` picks
+  where the round is climbed whatever the title's selector says.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
   in `web/src/art/logo.js` for now.
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
-  (also `kid`, `cautious`; then `<cap> <seedBase> <startM>`, e.g.
-  `... 40 good bold 1100 100 450` measures the sky from 450 m). Target for
+  (also `kid`, `cautious`; then `<cap> <seedBase> <startM> <place>`, e.g.
+  `... 40 good bold 1100 100 450` measures the sky from 450 m and
+  `... 40 good bold 1500 1 0 inside` the inside of the tower). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.
 - Headless browser checks need Playwright (on this machine:

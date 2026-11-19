@@ -73,7 +73,11 @@ export class Background {
     for (const f of this.fireflies) { f.vx = 0; f.vy = 0; }
     this.atmo = new Atmosphere(art, r);
     this.lights = new StringLights(art);
+    this.place = null;
   }
+
+  // Where the round is climbed (places.js): the world says so before every reset.
+  setPlace(place) { this.place = place; }
 
   // A new round reseeds what can touch gameplay (the gusts that swing the braid).
   reset(rng) { this.atmo.reset(rng); this.lights.reset(); }

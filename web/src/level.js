@@ -5,6 +5,7 @@ import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 import { windowsBetween } from './windows.js';
+import { placeOf } from './places.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -33,12 +34,17 @@ export const ZONES = [
   { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0, bat: 0.5, cloak: 1.4, feather: 0.8 } },
   { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0, bat: 0.5, star: 1.2, cloak: 0.6, feather: 1.5 } },
 ];
-export function zoneAt(y) {
-  let z = ZONES[0];
-  for (const c of ZONES) if (y >= c.from) z = c;
+// Inside the tower (places.js): one band for now, with its own roster. What
+// is not named counts as 1, so the outside's creatures are switched off by
+// name. Until the room is built (the next step) its rows are the forest's.
+export const ZONES_INSIDE = [
+  { name: 'inside the tower', from: 0, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, bat: 1.0 } },
+];
+export function zoneAt(y, zones = ZONES) {
+  let z = zones[0];
+  for (const c of zones) if (y >= c.from) z = c;
   return z;
 }
-const zoneMul = (y, element) => { const m = zoneAt(y).mul[element]; return m == null ? 1 : m; };
 
 // Pacing waves: every PACE_CYCLE px the climb builds up to a peak and then
 // gets a breather (no enemies, no crumbling branches, closer platforms,
@@ -80,7 +86,7 @@ const POWER_CALM = 3000;        // below this height no star and no cloak
 // birds ask for is always there (a lantern precedes a barrier that needs a
 // boost).
 export const FLOCK_FROM = 16000, FLOCK_EVERY = [30000, 45000], FLOCK_GAP = 500, FLOCK_BAND = 345, FLOCK_LEAD = 1600;
-const floorLayout = (y) => (cloudAmount(y) >= 0.5 ? 'cloudL+cloudC+cloudR' : 'branchL+branchR');
+const floorLayout = (y, place) => (place.sky && cloudAmount(y) >= 0.5 ? 'cloudL+cloudC+cloudR' : 'branchL+branchR');
 
 // The braid cut. From CUT_FROM on, every CUT_EVERY of climb the generator
 // plans a cut stretch from the row it is at (`from`) to CUT_AHEAD above it
@@ -119,6 +125,8 @@ export class Level {
     this.rngTower = rng;         // what the tower does (window guards): rolled apart so the geometry stays comparable
     this.rngPower = rng;         // the power-ups: their own stream, so the tower is the same with and without them
     this.rngFauna = rng;         // bats and the flock's timing: apart again, so only the flock's two floors change the tower
+    this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
+    this.zones = ZONES;
     this.forceLen = null;        // dev: every branch gets this length class
   }
 
@@ -126,7 +134,11 @@ export class Level {
   // squirrel's moods), seeded from the geometry stream so it replays too.
   child(r = this.rng) { return new RNG(r.int(0, 0x7fffffff)); }
 
+  // An element's zone multiplier at height y in this place (1 when the zone does not name it).
+  zoneMul(y, element) { const m = zoneAt(y, this.zones).mul[element]; return m == null ? 1 : m; }
+
   reset() {
+    this.zones = this.place.inside ? ZONES_INSIDE : ZONES;
     this.nextY = 300;
     this.lastSafeY = 0;        // the ground
     this.pendingGapCap = null; // cap the next gap after an all-dry row
@@ -155,7 +167,7 @@ export class Level {
   pickPower(y, P) {
     const items = [];
     for (const kind of Object.keys(POWER_WEIGHT)) {
-      let w = kind === this.lastPower ? 0 : POWER_WEIGHT[kind] * zoneMul(y, kind);
+      let w = kind === this.lastPower ? 0 : POWER_WEIGHT[kind] * this.zoneMul(y, kind);
       if (kind === 'star' || kind === 'cloak') w *= y < POWER_CALM ? 0 : P.enemy;
       if (kind === 'magnet') w *= P.sun;
       if (w > 0) items.push([kind, w]);
@@ -207,9 +219,9 @@ export class Level {
     // gradual through cloudAmount. Swings need trees. Balconies belong to
     // the tower where it stands alone, above the treeline: in the sky
     // table only, at most one balcony row in two.
-    const ca = cloudAmount(y);
+    const ca = this.place.sky ? cloudAmount(y) : 0;     // no sky rows inside
     const sky = ca > 0 && r.chance(ca);
-    const b = ca >= 1 ? T.balcony * zoneMul(y, 'balcony') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
+    const b = ca >= 1 ? T.balcony * this.zoneMul(y, 'balcony') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
     let items = sky ? [
       ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
       ['cloudL+ribbon', T.double * 0.7], ['cloudR+ribbon', T.double * 0.7], ['cloudL+cloudR', T.double * 0.6],
@@ -245,9 +257,9 @@ export class Level {
     if (this.forceLen) return this.forceLen;
     const single = kinds.length === 1;
     const stubOk = this.rowIndex - this.lastStubRow > 1 && (!single || (T.index >= 2.5 && y - this.lastSafeY <= 1.2 * BEAT));
-    if (stubOk && r.chance(T.stub * P.short * zoneMul(y, 'stub'))) { this.lastStubRow = this.rowIndex; return 'stub'; }
-    if (r.chance(T.short * P.short * zoneMul(y, 'short'))) return 'short';
-    if (single && r.chance(T.long * P.long * zoneMul(y, 'long'))) return 'long';
+    if (stubOk && r.chance(T.stub * P.short * this.zoneMul(y, 'stub'))) { this.lastStubRow = this.rowIndex; return 'stub'; }
+    if (r.chance(T.short * P.short * this.zoneMul(y, 'short'))) return 'short';
+    if (single && r.chance(T.long * P.long * this.zoneMul(y, 'long'))) return 'long';
     return 'normal';
   }
 
@@ -287,19 +299,19 @@ export class Level {
     const T = tierAt(this.nextY);
     const y = this.nextY;
     // Plan a braid cut: never in a stretch that starts or ends in a breather.
-    if (!this.cutPlan && !this.flockPlan && !this.flockNext && y >= this.nextCutY && zoneMul(y, 'scissors') > 0 && !pacingAt(y).breather && !pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
+    if (!this.cutPlan && !this.flockPlan && !this.flockNext && y >= this.nextCutY && this.zoneMul(y, 'scissors') > 0 && !pacingAt(y).breather && !pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
       this.cutPlan = { from: y, yc: y + CUT_AHEAD, until: y + CUT_AHEAD + CUT_MARGIN, fired: false };
     }
     const P0 = pacingAt(y);
     // A flock: this row is the floor under it ('below'), or the one over it ('above').
     let flockRow = null;
     if (this.flockNext) { flockRow = 'above'; this.flockNext = false; }
-    else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather) flockRow = 'below';
+    else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather) flockRow = 'below';
     const P = flockRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors: nothing crumbles, nothing small, nobody on them
       : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
     let layout = this.nextLayout || this.pickLayout(T, y);
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
-    if (flockRow) layout = floorLayout(y);
+    if (flockRow) layout = floorLayout(y, this.place);
     this.nextLayout = null;
     const kinds = layout.split('+');
     this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC');
@@ -352,7 +364,7 @@ export class Level {
           const half = CLOUD_SIZE[opts.size || 'normal'].box / 2;
           opts.drift = { amp: Math.min(r.range(90, 140), 370 - Math.abs(opts.x) - half), omega: r.range(0.5, 0.75) * (P.breather ? 0.7 : 1), phase: r.range(0, 6.28) };
         }
-        else if (kinds.length > 1 && opts.size !== 'small' && lane !== this.updraftLane && r.chance(T.storm * P.enemy * zoneMul(y, 'storm'))) opts.cloud = 'storm';
+        else if (kinds.length > 1 && opts.size !== 'small' && lane !== this.updraftLane && r.chance(T.storm * P.enemy * this.zoneMul(y, 'storm'))) opts.cloud = 'storm';
       }
       if (slot === 'balconyL' || slot === 'balconyR') {
         kind = 'balcony';
@@ -403,7 +415,7 @@ export class Level {
     this.nextLayout = nextLayout;
     if (flockRow === 'below') {
       gap = FLOCK_GAP;
-      this.nextLayout = floorLayout(y + gap);
+      this.nextLayout = floorLayout(y + gap, this.place);
       this.flockNext = true;
       this.flockPlan = { from: y, to: y + gap, y: y + FLOCK_BAND, fired: false, span: Math.min(-Math.min(...platforms.map((p) => p.left)), Math.max(...platforms.map((p) => p.right))) };   // how far the floor reaches: its shorter side
       // the boost it takes, for certain: two lanterns that do not drift away
@@ -413,7 +425,7 @@ export class Level {
     // just above this row to just below the next; more in breathers.
     this.updraftLane = null;
     const nextSlot = nextLayout.split('+')[0];
-    if (cloudAmount(y) >= 1 && !flockRow && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
+    if (this.place.sky && cloudAmount(y) >= 1 && !flockRow && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
       const lane = nextSlot[5];
       const ux = lane === 'L' ? -190 : lane === 'R' ? 190 : 0;
       this.world.spawnUpdraft(ux, y + 60, y + gap - 90);
@@ -422,14 +434,14 @@ export class Level {
     const bounceVy = kinds.includes('bow') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
     this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);
 
-    if (y > 2200 && r.chance(T.crow * P.enemy * zoneMul(y, 'crow'))) {
+    if (y > 2200 && r.chance(T.crow * P.enemy * this.zoneMul(y, 'crow'))) {
       const dir = r.sign();
       const cy = y + gap * r.range(0.4, 0.7);
       const cx = r.range(-W / 2, W / 2);
       const track = clamp((T.index - 1.5) / 2.5, 0, 1);
       this.world.enemies.push(new Crow(cx, cy, dir, r.range(T.crowSpeed[0], T.crowSpeed[1]), track, this.child()));
     }
-    if (y > 6500 && r.chance(T.spider * P.enemy * zoneMul(y, 'spider'))) {
+    if (y > 6500 && r.chance(T.spider * P.enemy * this.zoneMul(y, 'spider'))) {
       const branch = platforms.find((p) => p.kind === 'branchL' || p.kind === 'branchR');
       if (branch) {
         const sx = branch.x + r.range(-50, 50);
@@ -438,15 +450,15 @@ export class Level {
       }
     }
 
-    if (r.chance(T.squirrel * P.enemy * zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
+    if (r.chance(T.squirrel * P.enemy * this.zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
     // Bats roll on their own stream, so the rows are the same with and without them.
-    if (this.rngFauna.chance(T.bat * P.enemy * zoneMul(y, 'bat'))) this.spawnBat(platforms);
-    if (this.rngTower.chance(T.grabber * P.enemy * zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
+    if (this.rngFauna.chance(T.bat * P.enemy * this.zoneMul(y, 'bat'))) this.spawnBat(platforms);
+    if (this.rngTower.chance(T.grabber * P.enemy * this.zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony, never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {
       if (p.kind !== 'balcony' || p.dry) continue;
-      if (r.chance(T.guard * P.enemy * zoneMul(y, 'guard'))) this.world.enemies.push(new Guard(p, this.child()));
-      else if (r.chance(T.pot * P.enemy * zoneMul(y, 'pot'))) this.world.enemies.push(new Flowerpot(p, this.child()));
+      if (r.chance(T.guard * P.enemy * this.zoneMul(y, 'guard'))) this.world.enemies.push(new Guard(p, this.child()));
+      else if (r.chance(T.pot * P.enemy * this.zoneMul(y, 'pot'))) this.world.enemies.push(new Flowerpot(p, this.child()));
     }
 
     // --- pickups -----------------------------------------------------------

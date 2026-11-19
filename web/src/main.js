@@ -9,6 +9,7 @@ import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
 import { createRenderer, PRESETS, DEFAULT_PRESET } from './gfx/renderer.js';
 import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
 import { platform } from './platform.js';
+import { PLACES } from './places.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -30,8 +31,8 @@ class Game {
     this.mode = 'title';
     this.intro = null;      // { from, dur, t, ease } while the camera rides down to the lawn
     this.modeT = 0;
-    this.round = { mode: 'endless' };   // what startRound() plays; a tower with its seed later
-    this.best = 0;
+    this.round = { mode: 'endless', place: 'outside' };   // what startRound() plays: the mode, and where (places.js); a tower with its seed later
+    this.bests = { outside: 0, inside: 0 };                // a best height per place; `best` is the one of the place chosen
     this.isNewBest = false;
     this.noticeText = '';
     this.noticeT = 0;
@@ -41,6 +42,8 @@ class Game {
     this.dev = devParams();
     if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
     this.loadSave();
+    if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit
+    if (this.round.place !== this.world.placeName) this.world.reset(undefined, this.round.place);
     // ?fx=full|bloom|off forces a preset for this visit.
     const param = new URLSearchParams(location.search).get('fx');
     this.fxPreset = this.gfx.setPreset(PRESETS.includes(param) ? param : this.fxPreset);
@@ -69,6 +72,19 @@ class Game {
   }
 
   get muted() { return audio.muted; }
+  get best() { return this.bests[this.round.place] || 0; }
+  set best(v) { this.bests[this.round.place] = v; }
+
+  // The title's selector: climb outside or inside. The world behind the sign
+  // changes at once; the choice is kept.
+  setPlace(name) {
+    if (!PLACES[name] || name === this.round.place) return;
+    this.round = { ...this.round, place: name };
+    this.world.reset(undefined, name);
+    this.world.hop();
+    this.save();
+    audio.click();
+  }
   get fxLabel() { return FX_LABELS[this.fxPreset] || this.fxPreset; }
 
   notice(text, seconds = 3.5) { this.noticeText = text; this.noticeT = seconds; }
@@ -83,16 +99,17 @@ class Game {
   loadSave() {
     try {
       const s = JSON.parse(platform.storage.get(STORAGE_KEY) || platform.storage.get(LEGACY_STORAGE_KEY) || '{}');
-      this.best = s.best || 0;
+      this.bests = { outside: s.best || 0, inside: s.bestInside || 0 };
+      if (PLACES[s.place]) this.round.place = s.place;
       // Only a preset the player picked is kept. Saves from before the
       // default became 'off' wrote 'full' with every best height whether or
       // not anyone chose it, so an old `fx` counts only when it is not 'full'.
       const pick = PRESETS.includes(s.fxPick) ? s.fxPick : (s.fx === 'bloom' || s.fx === 'off') ? s.fx : null;
       if (pick) { this.fxPick = pick; this.fxPreset = pick; }
-    } catch (_) { this.best = 0; }
+    } catch (_) { this.bests = { outside: 0, inside: 0 }; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.best, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best;
@@ -144,7 +161,7 @@ class Game {
   // the lawn, hopping; the countdown runs on his next landings.
   startRound(config = this.round) {
     this.round = config;
-    if (this.world.started) this.world.reset(config.seed);
+    if (this.world.started || this.world.placeName !== config.place) this.world.reset(config.seed, config.place);
     if (this.dev.at) {
       // the dev teleport skips the countdown; it needs the fresh lawn state first
       startAt(this.world, this.dev.at, this.dev.spawn);
@@ -166,7 +183,7 @@ class Game {
 
   toTitle() {
     if (this.mode === 'paused') this.recordBest();
-    this.world.reset();
+    this.world.reset(undefined, this.round.place);
     this.setMode('title');
   }
 
@@ -242,7 +259,9 @@ class Game {
         input.consumeBoost();            // clicks, space and tilt-taps queue boosts; none belongs to the title
         input.consumePause();
         const play = input.consumeButton('play');
-        if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();
+        const pick = input.consumeButton('placeOut') ? 'outside' : input.consumeButton('placeIn') ? 'inside' : input.consumePlace();
+        if (pick) this.setPlace(pick);
+        else if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();
         break;
       }
       case 'countdown': {

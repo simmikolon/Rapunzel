@@ -11,6 +11,7 @@
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
 //   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
+//   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
@@ -24,7 +25,7 @@ import { POWERS } from './powerups.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
-  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '' };
+  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '' };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
@@ -48,7 +49,7 @@ export function startAt(world, metres, spawn = '') {
   world.nextMilestone = Math.floor(metres / 100) * 100 + 100;   // no stacked milestone toasts
   world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
-  world.platforms.push(y > TREELINE_Y ? new Platform('cloud', y - 10, { x: -190, cloud: 'thick' }) : new Platform('branchL', y - 10)); // something to land on at the start
+  world.platforms.push(y > TREELINE_Y && world.place.sky ? new Platform('cloud', y - 10, { x: -190, cloud: 'thick' }) : new Platform('branchL', y - 10)); // something to land on at the start
   world.enemies.length = 0; world.pickups.length = 0;
   world.level.generateUpTo(world.cam.top + 900);
 }
@@ -98,5 +99,5 @@ export function spawnNear(world, element) {
 }
 
 export function devLabel(world) {
-  return `${world.heightM} m  ${zoneAt(world.player.maxY).name}  e${world.enemies.length}`;
+  return `${world.heightM} m  ${zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}`;
 }

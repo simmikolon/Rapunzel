@@ -13,6 +13,7 @@ import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
 import { POWERS, RAINBOW } from './powerups.js';
+import { placeOf } from './places.js';
 
 // Before the round starts the prince hops on the lawn by himself.
 const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
@@ -30,10 +31,16 @@ export class World {
     this.player = new Player(this);
     this.rng = new RNG();
     this.level = new Level(this, this.rng);
+    this.placeName = (game.round && game.round.place) || 'outside';
     this.reset();
   }
 
-  reset(seed) {
+  // A fresh round from `seed`, in `place` (places.js; the one it was in when none is named).
+  reset(seed, place = this.placeName) {
+    this.placeName = place;
+    this.place = placeOf(place);
+    this.level.place = this.place;
+    this.bg.setPlace(this.place);
     // Streams from one seed: the level geometry, the hearts (their timing
     // depends on the prince's state), the events (the witch), the
     // background's gusts, what the tower itself does (window guards) and
@@ -316,7 +323,7 @@ export class World {
         this.toast('A flock! Boost through!', '#ffd98a', 2.2);
       }
     }
-    if (pl.maxY > this.nextWitchY && !witchAbout && !flockNear && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
+    if (this.place.witch && pl.maxY > this.nextWitchY && !witchAbout && !flockNear && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
       const side = this.rngEvents.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));
@@ -342,7 +349,7 @@ export class World {
     }
     // Storks: once the clouds are fully in, a stork crosses the screen a few
     // bounces above the prince, from one edge to the other.
-    if (pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
+    if (this.place.storks && pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
       this.spawnStork();
       this.nextStorkY = pl.maxY + this.rngEvents.range(1200, 2000);
     }

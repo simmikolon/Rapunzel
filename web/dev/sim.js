@@ -172,10 +172,10 @@ function makeWorld(input) {
   return new World({ art, input, best: 0 });
 }
 
-export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0 } = {}) {
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside' } = {}) {
   const input = new BotInput();
   const world = makeWorld(input);
-  world.reset(seed);
+  world.reset(seed, place);
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
@@ -229,10 +229,11 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   return stats;
 }
 
-export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0 } = {}) {
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside' } = {}) {
   const all = [];
-  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM }));
-  return summarize(all, { runs, skill, policy, cap, startM });
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place }));
+  // the place is named in the report only when it is not the outside, so the outside's reports read as they always did
+  return summarize(all, place === 'outside' ? { runs, skill, policy, cap, startM } : { runs, skill, policy, cap, startM, place });
 }
 
 function summarize(all, cfg) {

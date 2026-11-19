@@ -1197,3 +1197,17 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   outside's; it is a mode chosen on the title sign first, gates between
   outside and inside come last. Weather stays an effects branch for
   whenever, vines an idea for the deep forest.
+- 2026-11-19: The inside, step 1: the switch (`element/interior-switch`).
+  A round has a place (`places.js`: outside or inside); the world, the
+  level and the background ask it instead of deciding themselves (sky
+  rows, the witch and the storks are the outside's; zone multipliers
+  come from the place's table). The title sign has two boards under
+  PLAY, a tree and a door, the chosen one with the gold rim (O / I or
+  left / right on a keyboard); the choice and a best height per place
+  are saved; `?place=` and a simulator argument pick it too. The sprite
+  atlas is 4096 wide now (4096 x 1958 instead of 2048 x 3810, which was
+  close to the 4096 limit of older phones). Inside is a stub until the
+  room is built: the forest's rows with only bats. The outside is
+  unchanged: the simulator's report is identical on the same seeds
+  before and after (40 good bold, 40 kid cautious, 40 good bold from
+  450 m).
