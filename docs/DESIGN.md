@@ -123,6 +123,10 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
 - Pickups: sun drops, lanterns (boost refill), hearts; five timed
   power-ups floating in soap bubbles (star, cloak, golden spring, sun
   magnet, feather; section 7), one at a time.
+- Two places to climb, chosen on the title sign: outside (all of the
+  above) and inside the tower (stone ledges, chandeliers and a bell on a
+  chain, scaffold boards, galleries; bats and guards; section 7). A best
+  height for each.
 - Three hearts; game over on zero hearts or falling off the bottom.
 - Procedural level in rows (the original's beats) with difficulty by
   altitude and a stress-tested reachability guarantee.
@@ -453,17 +457,45 @@ is a pool to draw from, not a promise.
   as the negative one (see enemies).
 
 **Tunnels and the inside of the tower**
-- 🔜 the inside of the tower as a second place (plan in
-  `docs/plans/tower-interior.md`): chosen on the title sign at first,
-  reached through gates in the endless tower later. Stone pillars where
-  the trunks stand, a back wall with a tall window every storey through
-  which the outside goes by in parallax (sky, forest, the braid, which
-  hangs outside and is only seen); stone ledges, chandeliers, a bell,
-  scaffold boards, galleries and stairs to stand on; torches, chandeliers
-  and window shafts for light; a roster of its own (bats, guards, pike
-  guards in the doors, then the spider web, a ghost, a bat swarm). ⚠️ A
-  system, not an element: built in steps (the switch, the room, its own
-  things, floors, gates), each a branch.
+- ✅ the inside of the tower as a second place (plan in
+  `docs/plans/tower-interior.md`), chosen on the title sign; 🔜 reached
+  through gates in the endless tower later. The room (`src/interior.js`,
+  `src/art/interior.js`, `src/pillars.js`): stone pillars where the
+  trunks stand, a violet-grey back wall on the tower layer with a tall
+  arched window every third tile. The windows are holes in the wall
+  tiles: the sky of that height, the stars and the moon, the far clouds,
+  the distant forest and the braid (which hangs outside, on a layer of
+  its own at 0.8) are drawn first and slide past the frames as he
+  climbs. The round starts in the entrance hall: flagstones, the shut
+  door, a torch on each pillar.
+  - ✅ stone ledge: the branch in stone (the same four lengths, rules and
+    bot), a pale slab on a stepped corbel; a cracked one (loose stones,
+    one sagging) crumbles like a dry branch.
+  - ✅ the chain: one long chain down the middle of the shaft, the
+    inside's braid. It sways in a slow heavy wave, wider as the climb
+    gets harder, and what hangs in the centre lane rides on it.
+  - ✅ chandelier (the ribbon's place): a pewter ring with four candles
+    on the chain, 112 px; it lights the room around it.
+  - ✅ bell (the bow's place): a brass bell under a wooden headstock; a
+    landing on the headstock rings it and throws him up like a bow.
+  - ✅ scaffold board: the plank swing on chains.
+  - ✅ gallery (the balcony's place, from 35 m): a wooden landing with a
+    railing in front of a door in a pillar, 160 px, in the prince's
+    plane. Never two rows running. A guard may stand on it.
+  - ✅ who lives there: bats under the ledges, guards on the galleries,
+    pike guards in the pillars' hatches (the window guard, thrusting from
+    the pillar over the ledges; a ledge's tip is out of his reach). The
+    hatches are a fixed map like the windows outside, so an empty one
+    looks like a manned one until he peeks.
+  - ✅ light: the room is dim (a violet multiply, a little deeper at
+    night), and every lamp adds a pool of its colour after it: torches
+    every third pillar tile, left and right in turn; the chandeliers;
+    the windows, with a bloom on the wall and a stepped shaft with dust
+    in it, in the colour of the sky outside, so the forest's dusk, the
+    day, the sunset and the night show inside.
+  - 🔜 its own things (stairs, the spider web with its spider, a ghost, a
+    bat swarm, wall decor, more sounds), floors of the tower as zones,
+    gates. ⚠️ A system, not an element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
 
@@ -632,7 +664,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots, the flock of starlings to boost through; 🔜 Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
-| next | Inside the tower | A second place, chosen on the title sign: the switch, the room, its own things (stairs, web, ghost, bat swarm), floors, gates. Plan in `docs/plans/tower-interior.md` | 🔜 |
+| next | Inside the tower | A second place, chosen on the title sign. ✅ the switch, the room (pillars, windows with the outside behind them, the hall, ledges, chandeliers and the bell on the chain, scaffold boards, galleries, bats and guards, its light); 🔜 its own things (stairs, web, ghost, bat swarm), floors, gates. Plan in `docs/plans/tower-interior.md` | in progress |
 | later | Weather and seasons as effects (rain, snow), vines in the deep forest, selectable worlds, Christmas, FX preset auto-fallback | 💡 |
 
 Mode-independent polish (super jump portal, god rays, hit-stop) slots in
@@ -680,6 +712,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
 | Feather | 40 % gravity and at most 600 px/s while falling |
 | String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
+| Inside the tower | bands: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes), from 120 m bats × 1.5, pikes × 1.5, gallery guards × 0.8, galleries 0.4 × the balcony's chance; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1211,3 +1244,36 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   unchanged: the simulator's report is identical on the same seeds
   before and after (40 good bold, 40 kid cautious, 40 good bold from
   450 m).
+- 2026-11-19: The inside, step 2: the room (`element/interior-room`).
+  The tower's inside is a place to play now. Decided while building:
+  (1) The centre lane hangs on one chain down the shaft instead of a
+  chain per chandelier: single chains to the top of the screen crossed
+  each other and every platform above, and one swaying chain is the
+  braid's mechanic in the room's own material, in the prince's plane,
+  so nothing inside needs layer heights. (2) The chandelier is pewter,
+  not brass: in gold it vanished in front of the braid, which hangs
+  right behind the centre windows. The bell stays brass. (3) Nothing
+  that only decorates is red in here (a red pennant under a ledge read
+  as something that bites; it is the prince's blue now, the gallery's
+  cloth too). (4) The balcony's drawing was not reused: a gallery is
+  drawn new, a wooden landing at a pillar's door. (5) The window guard
+  is the same class with a layer factor from his window, so a hatch in
+  a pillar (the prince's plane) works like a window on the tower layer;
+  his pike is 35 px longer inside because he thrusts from the edge.
+  (6) What is outside goes into no bloom layer when seen from inside
+  (the moon and the sky lanterns shone through the wall), and the moon
+  stands where a window passes over it. (7) The first 120 m are a band
+  of their own, the hall: without it the kid bot fell earlier than
+  outside (median 66 m against 71 m) although nothing had bitten it,
+  because inside nothing rides up with the camera as the ribbons do and
+  a miss falls further; more long ledges and no stubs there made up for
+  it. Measured on 120 seeded runs inside: good bold median 551 m, mean
+  576 m, 1.17 hits per 100 m (0.16 in the hall, 1.08 to 1.47 per 100 m
+  band from 100 to 600 m, just under 2 from 600 to 800 m), falls 6 % of
+  the deaths; good cautious median 311 m; kid bold median 72 m, mean
+  85 m (outside 71 m and 81 m); kid cautious 71 m. A good run gets
+  further inside than outside (median 424 m there) because hardly
+  anyone falls in here: there is no sky. That room is left for step 3's
+  stairs, web and ghost on purpose. The outside is unchanged: its
+  simulator report is identical on the same seeds before and after. The
+  atlas is 4096 x 2502 now.

@@ -3,10 +3,10 @@
 //   ?spawn=squirrel  put that element on the next branch above the prince
 //   ?spawn=storm     turn the next cloud above the prince into a storm cloud
 //   ?spawn=stork     send a stork across the screen now
-//   ?spawn=guard     a guard on the next balcony above (a balcony is made if none is in view)
+//   ?spawn=guard     a guard on the next balcony above (a balcony is made if none is in view; inside: a gallery)
 //   ?spawn=pot       a flowerpot on the next balcony above
 //   ?spawn=updraft   put an updraft column under the next platform
-//   ?spawn=grabber   a guard in the nearest window above the prince
+//   ?spawn=grabber   a guard in the nearest window above the prince (inside: the nearest hatch in a pillar)
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
@@ -15,11 +15,13 @@
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
-import { Platform, BRANCH_LEN } from './platforms.js';
+import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
 import { zoneAt } from './level.js';
 import { TREELINE_Y } from './altitude.js';
 import { Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
 import { windowsBetween } from './windows.js';
+import { hatchesBetween } from './pillars.js';
+import { STONE_STYLE } from './art/interior.js';
 import { PowerUp } from './pickups.js';
 import { POWERS } from './powerups.js';
 
@@ -49,7 +51,7 @@ export function startAt(world, metres, spawn = '') {
   world.nextMilestone = Math.floor(metres / 100) * 100 + 100;   // no stacked milestone toasts
   world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
-  world.platforms.push(y > TREELINE_Y && world.place.sky ? new Platform('cloud', y - 10, { x: -190, cloud: 'thick' }) : new Platform('branchL', y - 10)); // something to land on at the start
+  world.platforms.push(y > TREELINE_Y && world.place.sky ? new Platform('cloud', y - 10, { x: -190, cloud: 'thick' }) : new Platform('branchL', y - 10, { style: world.place.inside ? STONE_STYLE : 0 })); // something to land on at the start
   world.enemies.length = 0; world.pickups.length = 0;
   world.level.generateUpTo(world.cam.top + 900);
 }
@@ -71,15 +73,22 @@ export function spawnNear(world, element) {
   }
   if (element === 'guard' || element === 'pot') {
     // on the next healthy balcony above; make one if there is none in view
-    let b = world.platforms.filter((q) => q.kind === 'balcony' && !q.dry && q.y > p.y + 50).sort((a, c) => a.y - c.y)[0];
+    // (inside the tower: on a gallery)
+    const kind = world.place.inside ? 'gallery' : 'balcony';
+    let b = world.platforms.filter((q) => q.kind === kind && !q.dry && q.y > p.y + 50).sort((a, c) => a.y - c.y)[0];
     if (!b) {
       const y = p.y + 420, side = 'R';
-      b = new Platform('balcony', y, { side, x: 210, variant: 0, ly: Platform.worldToLayer(y, Platform.layerFactor('balcony'), world.cam.y) });
+      b = kind === 'gallery' ? new Platform('gallery', y, { side, x: GALLERY_X })
+        : new Platform('balcony', y, { side, x: 210, variant: 0, ly: Platform.worldToLayer(y, Platform.layerFactor('balcony'), world.cam.y) });
       world.platforms.push(b);
     }
     world.enemies.push(element === 'guard' ? new Guard(b, world.level.child()) : new Flowerpot(b, world.level.child()));
   }
-  if (element === 'grabber') {
+  if (element === 'grabber' && world.place.inside) {
+    // the nearest hatch in a pillar above the prince
+    const h = hatchesBetween(p.y + 100, p.y + 3000, world.platforms.filter((q) => q.kind === 'gallery'))[0];
+    if (h) world.enemies.push(new Grabber(h, world.level.child(world.level.rngTower), 180, world.cam.y));
+  } else if (element === 'grabber') {
     // the nearest window above the prince, in layer coordinates
     const ly = Platform.worldToLayer(p.y, PARALLAX_TOWER, world.cam.y);
     const balconies = world.platforms.filter((q) => q.kind === 'balcony');

@@ -40,7 +40,9 @@ which only copies the two folders together). The design document
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`, `?place=inside|outside` picks
-  where the round is climbed whatever the title's selector says.
+  where the round is climbed whatever the title's selector says (inside,
+  `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
+  nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge).
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark

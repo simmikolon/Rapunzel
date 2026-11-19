@@ -48,10 +48,10 @@ when INSIDE is chosen.
 | Outside | Inside | How |
 |---|---|---|
 | branch, four lengths, dry ones crumble | **stone ledge** (corbelled slab), four lengths, cracked ones crumble | the same kinds (`branchL` / `branchR`) with a stone look: a fifth "tree style" and its own cracked drawing. Lengths, rules and the bot stay as they are |
-| ribbon on the braid | **chandelier** on a chain: an iron ring with candles, swinging slowly like a pendulum (wider with altitude, as the braid sways), dipping on a landing | new kind, centre lane, the staple there |
-| bow (spring) | **bell** hanging in the shaft: a pogo on its crown rings it and throws him up | new kind with the bow's bounce |
+| ribbon on the braid | **chandelier**: a pewter ring with candles on the one long chain that hangs down the middle of the shaft. The chain sways in a slow wave (wider with altitude, as the braid does) and the chandeliers with it | new kind, centre lane, the staple there. One chain for all, not one each: chains of their own crossed each other and everything above |
+| bow (spring) | **bell** on the same chain: a pogo on its headstock rings it and throws him up | new kind with the bow's bounce |
 | plank swing | **scaffold board** on chains, solid from below | the same kind, chains for ropes |
-| balcony | **gallery**: a wooden landing with a railing in front of a door in the pillar | new kind in the prince's plane (the balcony lives on the tower layer). The wooden balcony's drawing is tried first; redrawn if it does not sit on a pillar |
+| balcony | **gallery**: a wooden landing with a railing in front of a door in the pillar | new kind in the prince's plane (the balcony lives on the tower layer), drawn new |
 | (none) | **stairs**: a flight of five or six stone steps from a pillar up toward the middle, each a small landing | a group of small platforms the generator treats as one row: reached at its lowest step, left from its highest. Step 3 |
 | clouds, sky lanterns, storks, updrafts | none | off inside |
 
@@ -132,19 +132,22 @@ Two things to keep in mind from the start:
 
 One branch each, merged when it is fun.
 
-1. **The switch** (`element/interior-switch`). The place through round,
+1. ✅ **The switch** (`element/interior-switch`). The place through round,
    level, background, altitude and events; the selector on the sign; the
    saves; `?place=`; the simulator's argument; the wider atlas. Inside is
    a bare wall for now. Done when the outside's simulator report is
    identical on the same seeds before and after, and the selector
    switches worlds.
-2. **The room** (`element/interior-room`). Pillars, back wall, windows
+2. ✅ **The room** (`element/interior-room`). Pillars, back wall, windows
    with the outside behind them, the hall, torches, shafts, the ambient
    light. Ledges, chandeliers, scaffold boards, galleries, the bell.
    Bats, gallery guards, pike guards. Pickups and power-ups as outside.
    Done when it plays from the menu, reads in the screenshots, and a
    good bold run sits at 0.8 to 1.5 hits per 100 m with falls not above
-   half the deaths; the kid bot not worse off than outside.
+   half the deaths; the kid bot not worse off than outside. Measured
+   (120 runs): good bold 1.17 hits per 100 m, falls 6 % of the deaths,
+   median 551 m; kid bold median 72 m (outside 71 m). The first 120 m
+   became a band of their own, the hall, to get the kid bot there.
 3. **Its own things** (a branch each): stairs; the web; the ghost; the
    bat swarm; wall decor (banners, shields, a suit of armour); sounds
    (stone, the bell, chains, the web).
@@ -155,8 +158,12 @@ One branch each, merged when it is fun.
 
 ## Open
 
-- Whether the wooden balcony's drawing works as a gallery, and how dark
-  the room can be before platforms stop reading: both are tried in step 2.
+- A good run gets further inside than outside (median 551 m against
+  424 m) because hardly anyone falls in here. Step 3's stairs, web and
+  ghost should use that room; measure after each.
+- The pillars' hatches all look alike, manned or not. To be played:
+  whether that is a fair tell or whether a manned one needs a sign (a
+  glint of a helmet).
 - The stairs' bookkeeping in the generator (a row that is 300 px tall)
   needs the reachability stress test extended.
 - The web's rule (three taps, the spider after two seconds) is a first

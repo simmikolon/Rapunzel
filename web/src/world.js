@@ -14,6 +14,7 @@ import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf } from './places.js';
+import { STONE_STYLE, INSIDE } from './art/interior.js';
 
 // Before the round starts the prince hops on the lawn by himself.
 const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
@@ -127,7 +128,8 @@ export class World {
     for (const t of this.toasts) t.life -= dt;
     this.toasts = this.toasts.filter((t) => t.life > 0);
 
-    const braidX = (ly) => this.bg.braidX(ly, this.time);
+    // (inside the tower it is the chain down the shaft that sways, with the chandeliers on it)
+    const braidX = this.place.inside ? (y) => this.bg.interior.chainX(y, this.time) : (ly) => this.bg.braidX(ly, this.time);
     for (const p of this.platforms) p.update(dt, this.time, braidX, this.cam);
 
     const pl = this.player;
@@ -404,6 +406,8 @@ export class World {
   onPlayerLand(pl, p) {
     if (p.kind === 'ground' && !this.started) return this.groundLanding(pl);
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
+    else if (p.kind === 'bell') { this.audio.bell(); p.rungAt = this.time; this.particles.sparkles(pl.x, pl.y, 8, '#ffe9a0'); return; }
+    else if (p.kind === 'chandelier') { this.audio.bounce(pl.combo); this.audio.clink(); this.particles.sparkles(pl.x, pl.y + 8, 5, INSIDE.candleLight); return; }
     else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.kind === 'skyLantern') { this.audio.paper(); this.particles.sparkles(pl.x, pl.y + 10, 7, '#ffd04a'); return; }
     else if (p.kind === 'stork') {
@@ -412,9 +416,10 @@ export class World {
       this.suns += 3; this.toast('+3', '#ffe9a0', 0.9);
       return;
     }
-    else if (p.dry) { this.audio.weakBounce(); this.particles.crumble(pl.x, pl.y, 60, true); }
+    else if (p.dry) { this.audio.weakBounce(); this.particles.crumble(pl.x, pl.y, 60, true, p.style === STONE_STYLE ? INSIDE.rubble : null); }
     else { this.audio.bounce(pl.combo); }
-    if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
+    if (p.style === STONE_STYLE) this.particles.landingDust(pl.x, pl.y, 0.9);      // a stone ledge: dust, no leaves
+    else if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
     else if (p.kind === 'ribbon') this.particles.petals(pl.x, pl.y, 4);
     else if (p.kind === 'swing') this.particles.landingDust(pl.x, pl.y, 0.6);
     else this.particles.landingDust(pl.x, pl.y, 1.4);
@@ -453,7 +458,7 @@ export class World {
     }
     if (p && p.dry && p.used) {
       if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
-      else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
+      else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true, p.style === STONE_STYLE ? INSIDE.rubble : null); }
     }
   }
   onPlayerBoost(pl) { this.audio.boost(); this.particles.sparkles(pl.x, pl.y, 8, '#ffd04a'); }
@@ -469,13 +474,21 @@ export class World {
   onPlayerDie(pl, cause) { this.audio.gameOver(); this.cam.shake(14, 0.5); }
 
   // ------------------------------------------------------------------- draw
+  // The slope of the shaft's chain at height y, as a rotation for what hangs on it.
+  chainLean(y) { const c = this.bg.interior; return (c.chainX(y + 30, this.time) - c.chainX(y - 30, this.time)) / 60; }
+
   drawPlatform(g, p) {
     const A = this.art.platforms;
     let s;
-    const T = this.art.trees;
+    const T = this.art.trees, I = this.art.interior;
+    // a ledge inside the tower is a branch in stone: the same lengths and variants
+    const stone = p.style === STONE_STYLE;
     switch (p.kind) {
-      case 'branchL': s = p.dry ? (T.branchLDry[p.len] || T.branchLDry.normal) : T.styles[p.style].branchL[p.len][p.variant]; break;
-      case 'branchR': s = p.dry ? (T.branchRDry[p.len] || T.branchRDry.normal) : T.styles[p.style].branchR[p.len][p.variant]; break;
+      case 'branchL': { const dry = stone ? I.stone.dryL : T.branchLDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchL[p.len][p.variant]; break; }
+      case 'branchR': { const dry = stone ? I.stone.dryR : T.branchRDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchR[p.len][p.variant]; break; }
+      case 'chandelier': s = I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
+      case 'bell': s = I.bell; break;
+      case 'gallery': s = I.gallery[p.side][p.variant % 2]; break;
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
@@ -486,7 +499,7 @@ export class World {
       default: return;
     }
     const cam = this.cam;
-    const dip = p.kind === 'balcony' ? 0 : p.squash * 10;   // stone does not give
+    const dip = p.kind === 'balcony' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
     const opts = {};
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {
@@ -513,10 +526,28 @@ export class World {
     else if (p.wobble) opts.rot = p.wobble * 0.004;
     if (p.def.root != null) { opts.sx = p.lenScale; if (p.tint && !p.dry) opts.tint = p.tint; }
     if (p.kind === 'swing') {
-      // ropes up into the canopy
+      // ropes up into the canopy; inside the tower the board hangs on chains
       const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
       const lean = (opts.rot || 0) * 60;
-      for (const dx of [-94, 94]) g.line(sx + dx, sy + 4, sx + dx + lean, -40, C.rope, 4);
+      for (const dx of [-94, 94]) {
+        if (!this.place.inside) { g.line(sx + dx, sy + 4, sx + dx + lean, -40, C.rope, 4); continue; }
+        g.line(sx + dx, sy + 4, sx + dx + lean, -40, INSIDE.chainDark, 6);
+        g.line(sx + dx, sy + 4, sx + dx + lean, -40, INSIDE.chain, 2);
+      }
+    }
+    if (p.kind === 'chandelier') {
+      // its candles: a halo on the ring and a pool of light in the room
+      const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
+      const fl = 0.88 + 0.12 * Math.sin(this.time * 9 + p.id) * Math.sin(this.time * 2.7 + p.id * 2);
+      g.halo(sx, sy - 14, 96, INSIDE.candleLight, 0.42 * fl, { glow: 0.45 });
+      this.bg.interior.glow(sx, sy - 10, 300, INSIDE.candleLight, 0.2 * fl);
+      opts.rot = this.chainLean(p.y) * 0.5;              // it leans a little the way the chain hangs there
+      opts.glow = 0.25;
+    }
+    if (p.kind === 'bell') {
+      // rung by a landing: it rocks under its headstock and comes to rest
+      const dt = this.time - p.rungAt;
+      opts.rot = this.chainLean(p.y) * 0.5 + (dt < 3 ? Math.sin(dt * 13) * 0.2 * Math.exp(-dt * 1.8) : 0);
     }
     g.blit(s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
   }
@@ -528,7 +559,7 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
-    const order = { swing: 0, balcony: 1, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
+    const order = { swing: 0, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);

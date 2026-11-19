@@ -1,16 +1,19 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
-import { Platform, CLOUD_SIZE } from './platforms.js';
+import { Platform, CLOUD_SIZE, GALLERY_X } from './platforms.js';
 import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat } from './enemies.js';
 import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 import { windowsBetween } from './windows.js';
+import { hatchesBetween, pillarTile, HATCH } from './pillars.js';
+import { STONE_STYLE } from './art/interior.js';
 import { placeOf } from './places.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
 // a branch on the right tree, a ribbon on the braid, or a plank swing hung
-// between the trees. Difficulty is a smooth function of altitude.
+// between the trees. Difficulty is a smooth function of altitude. Inside
+// the tower (places.js) the slots are the same and hold the room's things.
 
 // Difficulty keyframes by altitude (px; 100 px = 1 m). The ramp used to
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
@@ -34,11 +37,17 @@ export const ZONES = [
   { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0, bat: 0.5, cloak: 1.4, feather: 0.8 } },
   { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0, bat: 0.5, star: 1.2, cloak: 0.6, feather: 1.5 } },
 ];
-// Inside the tower (places.js): one band for now, with its own roster. What
-// is not named counts as 1, so the outside's creatures are switched off by
-// name. Until the room is built (the next step) its rows are the forest's.
+// Inside the tower (places.js): its own roster. What is not named counts as
+// 1, so the outside's creatures are switched off by name. Three things live
+// in here so far, so each counts for more than it does outside: bats under
+// the ledges, guards on the galleries, pike guards in the pillars' hatches.
+// The first 120 m are the gentle part, as the forest floor is outside: no
+// stubs, no pikes yet, more long ledges (inside nothing rides up with the
+// camera as the ribbons do, so a miss falls further), and the power-ups lean
+// toward the feather.
 export const ZONES_INSIDE = [
-  { name: 'inside the tower', from: 0, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, bat: 1.0 } },
+  { name: 'the hall',         from: 0,     mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
+  { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5 } },
 ];
 export function zoneAt(y, zones = ZONES) {
   let z = zones[0];
@@ -222,7 +231,18 @@ export class Level {
     const ca = this.place.sky ? cloudAmount(y) : 0;     // no sky rows inside
     const sky = ca > 0 && r.chance(ca);
     const b = ca >= 1 ? T.balcony * this.zoneMul(y, 'balcony') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
-    let items = sky ? [
+    // Inside the tower the same slots hold the room's things: a stone ledge
+    // on a pillar, a chandelier on the chain where a ribbon would be, the
+    // bell for the bow, a scaffold board for the swing, and from 35 m on a
+    // gallery at a pillar's door (never two rows running).
+    const gl = this.place.inside ? T.balcony * this.zoneMul(y, 'gallery') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
+    let items = this.place.inside ? [
+      ['branchL', 1.0], ['branchR', 1.0], ['chandelier', 1.1],
+      ['branchL+chandelier', T.double * 0.7], ['branchR+chandelier', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
+      ['swing', T.swing], ['bell', T.bow],
+      ['galleryL', gl], ['galleryR', gl], ['galleryL+chandelier', gl * T.double * 0.6], ['galleryR+chandelier', gl * T.double * 0.6],
+      ['galleryL+branchR', gl * T.double * 0.5], ['branchL+galleryR', gl * T.double * 0.5],
+    ] : sky ? [
       ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
       ['cloudL+ribbon', T.double * 0.7], ['cloudR+ribbon', T.double * 0.7], ['cloudL+cloudR', T.double * 0.6],
       ['bow', T.bow],
@@ -281,15 +301,19 @@ export class Level {
   // it runs on the tower stream so the geometry is the same with or
   // without him. A window a balcony covers or that already has a guard is
   // out.
+  // Inside the tower his windows are the hatches in the pillars (pillars.js):
+  // he thrusts from the pillar over the ledges, so his pike is a little
+  // longer there (a ledge's tip stays out of reach).
   spawnGrabber(y, arrivalCam) {
     const rt = this.rngTower;
-    const lyRow = Platform.worldToLayer(y, PARALLAX_TOWER, arrivalCam);
+    const inside = this.place.inside;
+    const lyRow = inside ? y : Platform.worldToLayer(y, PARALLAX_TOWER, arrivalCam);
     const taken = this.world.enemies.filter((e) => e.kind === 'grabber');
-    const balconies = this.world.platforms.filter((p) => p.kind === 'balcony');
-    const free = windowsBetween(lyRow - 60, lyRow + 420, balconies).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
+    const cover = this.world.platforms.filter((p) => p.kind === (inside ? 'gallery' : 'balcony'));
+    const free = (inside ? hatchesBetween(lyRow - 60, lyRow + 420, cover) : windowsBetween(lyRow - 60, lyRow + 420, cover)).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
     if (!free.length) return null;
     const T = tierAt(y);
-    const gr = new Grabber(rt.pick(free), this.child(rt), 130 + 30 * clamp((T.index - 2.5) / 2.5, 0, 1), this.world.cam.y);
+    const gr = new Grabber(rt.pick(free), this.child(rt), (inside ? 165 : 130) + 30 * clamp((T.index - 2.5) / 2.5, 0, 1), this.world.cam.y);
     this.world.enemies.push(gr);
     return gr;
   }
@@ -314,10 +338,10 @@ export class Level {
     if (flockRow) layout = floorLayout(y, this.place);
     this.nextLayout = null;
     const kinds = layout.split('+');
-    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC');
-    if (kinds.includes('bow')) this.lastBowY = y;
+    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell');
+    if (kinds.includes('bow') || kinds.includes('bell')) this.lastBowY = y;
     const front = kinds.some((k) => k !== 'ribbon' && k !== 'bow' && !k.startsWith('balcony'));
-    if (kinds.some((k) => k.startsWith('balcony'))) this.lastBalconyRow = this.rowIndex;
+    if (kinds.some((k) => k.startsWith('balcony') || k.startsWith('gallery'))) this.lastBalconyRow = this.rowIndex;
     // Ribbons live on the slower tower layer. Their layer height is chosen so
     // that they are exactly at `y` in the prince's plane at the moment he
     // arrives, i.e. with the camera where it will be after bouncing off the
@@ -374,6 +398,12 @@ export class Level {
         opts.variant = r.weighted([[0, 3], [1, 3], [2, 2], [3, 2]]);
         if (canBeDry && r.chance(T.dry * P.dry)) { opts.dry = true; opts.variant = 4; }
       }
+      if (slot === 'galleryL' || slot === 'galleryR') {
+        kind = 'gallery';
+        opts.side = slot[7];
+        opts.x = opts.side === 'L' ? -GALLERY_X : GALLERY_X;
+        opts.variant = r.int(0, 1);
+      }
       if (kind === 'branchL' || kind === 'branchR') {
         const len = flockRow ? 'long' : this.pickLen(T, P, y, kinds);   // a flock's floor: two long branches that meet
         opts.len = len;
@@ -382,7 +412,7 @@ export class Level {
           opts.lenScale = flockRow ? 1.08 : r.range(0.88, 1.12);
         }
         opts.variant = len === 'stub' ? r.int(0, 1) : r.int(0, 5);
-        opts.style = treeStyleIndexAt(y);
+        opts.style = this.place.inside ? STONE_STYLE : treeStyleIndexAt(y);   // inside they are stone ledges
         opts.tint = r.pick([null, null, '#f2ece4', '#e4ddd2', '#d8d4cc', '#e8e0d0']);
       }
       const py = y + (kinds.length > 1 ? r.int(-16, 16) : 0);
@@ -397,6 +427,12 @@ export class Level {
       platforms[0].dry = false; safe = true;
     }
     for (const p of platforms) this.world.platforms.push(p);
+    // A gallery's door covers the pillar where it stands: a pike guard who
+    // was given a hatch there (from a row below) has no hatch any more.
+    if (platforms.some((p) => p.kind === 'gallery')) {
+      const galleries = this.world.platforms.filter((p) => p.kind === 'gallery');
+      for (const e of this.world.enemies) if (e.kind === 'grabber' && e.win.f === 1 && pillarTile(e.win.i, e.win.side, galleries) !== HATCH) e.alive = false;
+    }
     if (safe) this.lastSafeY = y;
     // a long branch reaches the centre lane too: no swing right above it (he would bounce into its underside)
     if (platforms.some((p) => (p.kind === 'branchL' || p.kind === 'branchR') && p.len === 'long')) this.lastHadCenter = true;
@@ -431,7 +467,7 @@ export class Level {
       this.world.spawnUpdraft(ux, y + 60, y + gap - 90);
       this.updraftLane = lane;
     }
-    const bounceVy = kinds.includes('bow') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
+    const bounceVy = kinds.includes('bow') || kinds.includes('bell') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
     this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);
 
     if (y > 2200 && r.chance(T.crow * P.enemy * this.zoneMul(y, 'crow'))) {
@@ -454,9 +490,9 @@ export class Level {
     // Bats roll on their own stream, so the rows are the same with and without them.
     if (this.rngFauna.chance(T.bat * P.enemy * this.zoneMul(y, 'bat'))) this.spawnBat(platforms);
     if (this.rngTower.chance(T.grabber * P.enemy * this.zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
-    // One thing per balcony, never on a dilapidated one: a guard, or a flowerpot.
+    // One thing per balcony (inside: per gallery), never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {
-      if (p.kind !== 'balcony' || p.dry) continue;
+      if ((p.kind !== 'balcony' && p.kind !== 'gallery') || p.dry) continue;
       if (r.chance(T.guard * P.enemy * this.zoneMul(y, 'guard'))) this.world.enemies.push(new Guard(p, this.child()));
       else if (r.chance(T.pot * P.enemy * this.zoneMul(y, 'pot'))) this.world.enemies.push(new Flowerpot(p, this.child()));
     }

@@ -34,8 +34,17 @@ export const KIND = {
   // A stork crossing the screen once: its back is a 150 px perch. Never part
   // of the row structure, so never the only way up; gone past the far edge.
   stork: { w: 150, cx: 0, surface: 0, bounce: JUMP_VY, stork: true },
+  // Inside the tower (places.js). A chandelier and the bell ride on the
+  // chain down the middle of the shaft as ribbons and bows ride on the
+  // braid, but in the prince's plane: the chain sways, they sway with it.
+  // The bell is the inside's spring. A gallery is a wooden landing in front
+  // of a door in a pillar (x = -204 / +204), also in his plane.
+  chandelier: { w: 112, cx: 0, surface: 0, bounce: JUMP_VY, onChain: true },
+  bell:    { w: 104, cx: 0, surface: 0, bounce: SPRING_VY, onChain: true },
+  gallery: { w: 160, cx: 0, surface: 0, bounce: JUMP_VY, gallery: true },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
+export const GALLERY_X = 204;
 
 // Branch length classes: the box width (the sprite is 22 px longer: 11 px
 // of root inside the trunk, 11 px of leaves past the tip) and the sprite
@@ -74,7 +83,7 @@ export class Platform {
     this.variant = opts.variant || 0;     // branches: which drawing of the class
     this.style = opts.style || 0;         // branches: tree style (zone look)
     this.tint = opts.tint || null;        // branches: slight bark tint
-    this.side = opts.side || 'L';         // balconies: which edge of the wall
+    this.side = opts.side || 'L';         // balconies: which edge of the wall; galleries: which pillar
     this.size = opts.size || 'normal';    // clouds: size class (CLOUD_SIZE)
     this.cloud = opts.cloud || null;      // clouds: behaviour (thick | wispy | drift | storm)
     this.drift = opts.drift || null;      // drifting clouds: { amp, omega, phase } patrol around baseX
@@ -96,6 +105,7 @@ export class Platform {
     this.used = false;                // dry branches: bounced on once
     this.squash = 0;                  // visual squash 0..1
     this.wobble = 0;
+    this.rungAt = -10;                // the bell: when it was last landed on (world time)
     this.prevX = this.x;
   }
 
@@ -112,11 +122,12 @@ export class Platform {
   get solidBelow() { return !!this.def.solidBelow; }
   get bottom() { return this.y - (this.def.thickness || 0); }
 
-  // Called by the world each frame. `braidX(ly)` gives the hair's sway offset.
+  // Called by the world each frame. `braidX(ly)` gives the hair's sway offset
+  // (inside the tower: the chain's, at a plain height).
   update(dt, time, braidX, cam) {
     this.t += dt;
     if (this.layer < 1) this.y = Platform.layerToWorld(this.ly, this.layer, cam.y);
-    if (this.def.onBraid) this.x = this.baseX + braidX(this.ly) + this.sway * Math.sin(time * 1.3 + this.swayPhase);
+    if (this.def.onBraid || this.def.onChain) this.x = this.baseX + braidX(this.ly) + this.sway * Math.sin(time * 1.3 + this.swayPhase);
     if (this.state === 'falling') {
       // on a cut piece of the braid: rides it down (background.js draws the piece the same way)
       this.y -= fallDist(this.t); this.x += fallSwing(this.t);

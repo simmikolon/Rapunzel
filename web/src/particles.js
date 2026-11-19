@@ -87,11 +87,12 @@ export class Particles {
       g: 0.1, drag: 2.5, spin: (Math.random() - 0.5) * 10, shape: 'leaf', shrink: false,
     }));
   }
-  crumble(x, y, w, dry = true) {
+  // `colors`: [light, dark] of the material when it is not wood (a stone ledge).
+  crumble(x, y, w, dry = true, colors = null) {
     this.burst(x, y, 14, () => ({
       x: x + (Math.random() - 0.5) * w, y: y - Math.random() * 30,
       vx: (Math.random() - 0.5) * 160, vy: -40 + Math.random() * 160,
-      life: 0.8 + Math.random() * 0.6, size: 6 + Math.random() * 8, color: Math.random() < 0.5 ? (dry ? C.dry : C.barkMid) : (dry ? C.dryDark : C.barkDark),
+      life: 0.8 + Math.random() * 0.6, size: 6 + Math.random() * 8, color: colors ? colors[Math.random() < 0.5 ? 0 : 1] : Math.random() < 0.5 ? (dry ? C.dry : C.barkMid) : (dry ? C.dryDark : C.barkDark),
       g: 0.9, drag: 0.4, spin: (Math.random() - 0.5) * 8, shape: 'leaf', shrink: false,
     }));
   }

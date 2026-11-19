@@ -145,6 +145,12 @@ custom engine instead of SpriteKit physics and GameplayKit:
   eyes), a golden spring (stronger bounces and boosts, with somersaults),
   a sun magnet (suns, lanterns and hearts fly to him) and a stork's
   feather (he comes down slowly).
+* **Inside the tower**: a second place to climb, chosen on the title
+  sign. Stone pillars instead of trees, windows through which the forest,
+  the sky and Rapunzel's braid go by, stone ledges, chandeliers and a bell
+  on a long chain, scaffold boards, galleries; bats and guards; torches,
+  candles and the windows' light in a dim room. `web/src/interior.js`
+  paints it, `web/src/places.js` says what differs between the places.
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
   debris, boost flames, feathers, screen shake, a swaying braid that moves
   the ribbons (harder with altitude), sky and lighting keyed to the zones

@@ -311,6 +311,19 @@ class Synth {
     this.tone({ type: 'sine', freq: f, dur: 0.5, vol: 0.07 });
     this.tone({ type: 'triangle', freq: f * 2, dur: 0.22, vol: 0.025 });
   }
+  // The bell inside the tower, rung by a landing: a strike and its long hum.
+  bell() {
+    platform.haptic('spring');
+    this.tone({ type: 'sine', freq: 392, dur: 1.4, vol: 0.2 });
+    this.tone({ type: 'sine', freq: 784, dur: 0.9, vol: 0.09 });
+    this.tone({ type: 'triangle', freq: 1176, dur: 0.5, vol: 0.05 });
+    this.tone({ type: 'square', freq: 1960, dur: 0.05, vol: 0.04 });
+  }
+  // A landing on a chandelier: its chains and candle cups clink.
+  clink() {
+    this.tone({ type: 'triangle', freq: 2100, dur: 0.08, vol: 0.04 });
+    this.tone({ type: 'triangle', freq: 2640, dur: 0.1, vol: 0.03, delay: 0.05 });
+  }
   // A power-up starts: each has its own short motif.
   power(kind) {
     platform.haptic('spring');

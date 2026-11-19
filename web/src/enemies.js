@@ -531,9 +531,10 @@ export class Grabber extends Enemy {
   // `camY` is the view bottom at spawn time: the height starts in the
   // prince's plane (the cull runs before the first update would convert it).
   constructor(win, rng = new RNG(), reach = 130, camY = 0) {
-    super(win.x, Platform.layerToWorld(win.ly, PARALLAX_TOWER, camY) + ARM_ABOVE_SILL);
+    super(win.x, Platform.layerToWorld(win.ly, win.f || PARALLAX_TOWER, camY) + ARM_ABOVE_SILL);
     this.kind = 'grabber';
-    this.win = win;                 // { i, side, ly, x } from windows.js
+    this.win = win;                 // { i, side, ly, x } from windows.js, or a pillar's hatch inside the tower (pillars.js, with its layer `f`)
+    this.f = win.f || PARALLAX_TOWER;
     this.ly = win.ly;               // the sill, in layer coordinates
     this.dir = win.side === 'L' ? 1 : -1;   // the thrust goes inward
     this.rng = rng;
@@ -575,7 +576,7 @@ export class Grabber extends Enemy {
   update(dt, world) {
     this.t += dt; this.stateT += dt;
     const p = world.player;
-    this.sillY = Platform.layerToWorld(this.ly, PARALLAX_TOWER, world.cam.y);
+    this.sillY = Platform.layerToWorld(this.ly, this.f, world.cam.y);
     this.armY = this.sillY + ARM_ABOVE_SILL;
     this.y = this.armY;
     if (this.cooldown > 0) this.cooldown -= dt;
