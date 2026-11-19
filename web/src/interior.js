@@ -3,7 +3,7 @@ import { TILE_H, TRUNK_W } from './art/tiles.js';
 import { hash, nightAlpha } from './altitude.js';
 import { mixHex } from './util.js';
 import { INSIDE } from './art/interior.js';
-import { pillarTile, PILLAR_X, TORCH_Y, TORCH } from './pillars.js';
+import { pillarTile, hasDoor, PILLAR_X, TORCH_Y, TORCH } from './pillars.js';
 
 // The painter for the inside of the tower (places.js); the background hands
 // over to it when the round is climbed in there. Back to front:
@@ -141,7 +141,7 @@ export class Interior {
 
   drawPillars(g, cam, time, world) {
     const A = this.art.interior;
-    const galleries = world ? world.platforms.filter((p) => p.kind === 'gallery') : [];
+    const galleries = world ? world.platforms.filter(hasDoor) : [];
     const first = Math.max(0, Math.floor(cam.y / TILE_H)), last = Math.ceil(cam.top / TILE_H);
     for (let k = first; k <= last; k++) {
       const sy = cam.sy(k * TILE_H);

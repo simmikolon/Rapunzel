@@ -336,26 +336,39 @@ function drawWeb(t, tear) {
 }
 
 // --- stairs ----------------------------------------------------------------------
-// A flight of three stone steps rising to the RIGHT, toward a gallery, 49 x
-// 44 art px: each step 16 wide and 14 higher than the one before, the
-// anchor the middle of the lowest tread. One piece of masonry: lit treads,
-// risers facing the room, a body in shade under them down to a straight
-// stringer. The world draws it once for the three platforms it carries.
-export const STAIR = { steps: 3, run: 64, rise: 56 };
+// A flight of four stone treads built out from the RIGHT pillar, 80 x 118
+// art px: the lowest tread is the one furthest into the room, each next one
+// 16 nearer the pillar and 12 higher, the top one at the pillar under a
+// door in it (the 16 columns on the right lie over the pillar). The flight
+// is one piece of the pillar's masonry on a half arch that springs from the
+// pillar far below, so it is plainly carried; only the treads are the pale
+// stone he stands on. The anchor is the middle of the lowest tread. The
+// world draws it once for the four platforms it carries.
+export const STAIR = { steps: 4, run: 64, rise: 48 };
 function drawStairs(t) {
-  const { p } = t;
-  const top = (x) => 28 - 14 * Math.min(2, Math.floor(x / 16));          // the tread's row at column x
-  const under = (x) => Math.round(38 - x * 0.5);                         // the stringer's lower edge
-  for (let x = 0; x < 48; x++) {
-    const y0 = top(x), y1 = under(x);
-    p(x, y0, 1, y1 - y0 + 1, K.ledgeShade);
-    p(x, y0, 1, 1, K.ledgeHi); p(x, y0 + 1, 1, 3, K.ledge);
-    p(x, y1 - 1, 1, 2, K.ledgeDark);
+  const { p, disc } = t;
+  const TOP = 40, RISE = 12, FACE = 64;                                   // the top tread's row; the pillar's face
+  const tread = (x) => TOP + RISE * (3 - Math.min(3, Math.floor(x / 16)));
+  // the half arch under it: shallow at the tip, steep into the pillar
+  const under = (x) => Math.round(TOP + RISE * 3 + 8 + 30 * (1 - Math.sqrt(Math.max(0, 1 - (x / 63) ** 2))));
+  for (let x = 0; x < FACE; x++) {
+    const y0 = tread(x), y1 = under(x);
+    p(x, y0, 1, y1 - y0 + 1, K.pil);
+    p(x, y1 - 2, 1, 3, K.pilDark); p(x, y1, 1, 1, K.pilDeep);            // the arch's ring, in shade
+    p(x, y0, 1, 4, K.ledge); p(x, y0, 1, 1, K.ledgeHi); p(x, y0 + 3, 1, 1, K.ledgeShade);   // the tread
   }
-  for (const x of [16, 32]) { p(x, top(x) + 1, 1, 14, K.ledge); p(x, top(x) + 1, 1, 1, K.ledgeHi); p(x + 1, top(x) + 4, 1, 11, K.ledgeDark); }   // risers and their shadow
-  p(0, 29, 1, 9, K.ledge); p(47, 1, 1, 13, K.ledgeDark);
-  for (const [x, y, n] of [[7, 32, 3], [22, 18, 4], [27, 26, 2], [38, 5, 4], [42, 14, 2], [12, 30, 1]]) p(x, y, 1, n, K.ledgeDark);      // joints
-  p(40, 0, 3, 1, C.mossDark); p(4, 28, 2, 1, K.ledge);
+  for (const x of [16, 32, 48]) { p(x, tread(x) + 4, 1, RISE - 4, K.pilHi); p(x + 1, tread(x) + 5, 1, RISE - 4, K.pilDark); }   // risers, lit from the room
+  p(0, tread(0) + 4, 1, 4, K.pilHi);
+  // courses of the masonry and the arch stones
+  for (let y = TOP + 9; y < 116; y += 9) for (let x = 0; x < FACE; x++) if (y > tread(x) + 5 && y < under(x) - 3) p(x, y, 1, 1, K.pilMortar);
+  for (const [x, y, n] of [[40, 58, 8], [52, 49, 8], [56, 67, 8], [44, 76, 8], [28, 68, 8], [58, 85, 8], [50, 94, 7], [60, 103, 8]]) if (y > tread(x) + 5 && y + n < under(x) - 2) p(x, y, 1, n, K.pilMortar);
+  for (const x of [8, 20, 32, 42, 50, 56, 60]) { const y = under(x); p(x, y - 5, 1, 4, K.pilMortar); }
+  p(36, TOP + 12, 3, 1, C.mossDark); p(6, tread(6), 2, 1, K.ledge);
+  // the door at the top, in the pillar: a dressed arch, a room with a light behind
+  p(66, 12, 13, 28, K.frame); disc(72, 12, 6, K.frame); p(66, 12, 1, 28, K.frameHi);
+  p(68, 14, 9, 26, K.hole); disc(72, 14, 4, K.hole);
+  p(71, 28, 3, 7, C.dusk); p(72, 24, 1, 5, C.lanternGlow); p(72, 23, 1, 1, C.sun1);
+  p(64, TOP, 16, 2, K.ledge); p(64, TOP, 16, 1, K.ledgeHi);              // the threshold
 }
 
 // --- on the walls --------------------------------------------------------------
@@ -465,7 +478,7 @@ export function buildInterior() {
     web: (() => { const R = [0, 1, 2, 3].map((k) => makeSprite(30, 36, (t) => drawWeb(t, k), undefined, { axPx: 30 * 4, ayPx: 0 })); return { R, L: R.map(flipH) }; })(),
     ghost: (() => { const R = [0, 1, 2, 3].map((f) => makeSprite(16, 20, (t) => drawGhost(t, f), { ax: 0.5, ay: 0.5 })); return { R, L: R.map(flipH) }; })(),
     ghostCandle: [0, 1].map((f) => makeSprite(5, 9, (t) => drawGhostCandle(t, f), undefined, { axPx: 2.5 * 4, ayPx: 7 * 4 })),
-    stairs: (() => { const R = makeSprite(49, 44, drawStairs, undefined, { axPx: 8 * 4, ayPx: 28 * 4 }); return { R, L: flipH(R) }; })(),
+    stairs: (() => { const R = makeSprite(80, 118, drawStairs, undefined, { axPx: 8 * 4, ayPx: 76 * 4 }); return { R, L: flipH(R) }; })(),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

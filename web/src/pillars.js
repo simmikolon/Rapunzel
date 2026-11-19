@@ -19,7 +19,10 @@ const HATCH_CHANCE = 50;              // percent of the tiles that may have one
 // PLAIN (two drawings), HATCH and TORCH are the pillar sprites' variants (art/interior.js).
 export const PLAIN = 0, HATCH = 2, TORCH = 3;
 
-// Does a gallery's drawing (its door 150 px up, its strut 60 px down) cover tile k on this side?
+// What puts a door into a pillar: a gallery, or the top tread of a flight of stairs.
+export const hasDoor = (p) => p.kind === 'gallery' || p.door === true;
+
+// Does a door's drawing (150 px up from where one stands, a strut 60 px down) cover tile k on this side?
 function covered(k, side, galleries) {
   for (const p of galleries) if (p.side === side && p.y - 60 < (k + 1) * TILE_H && p.y + 160 > k * TILE_H) return true;
   return false;

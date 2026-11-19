@@ -52,7 +52,7 @@ when INSIDE is chosen.
 | bow (spring) | **bell** on the same chain: a pogo on its headstock rings it and throws him up | new kind with the bow's bounce |
 | plank swing | **scaffold board** on chains, solid from below | the same kind, chains for ropes |
 | balcony | **gallery**: a wooden landing with a railing in front of a door in the pillar | new kind in the prince's plane (the balcony lives on the tower layer), drawn new |
-| (none) | **stairs**: a flight of three stone treads from just across the middle up to a gallery, each a small landing | a group of small platforms the generator treats as one row: reached at its lowest tread, the next row measured from the gallery |
+| (none) | **stairs**: a flight of four stone treads built out from a pillar on a half arch, up to a door in the pillar, each a small landing | a group of small platforms the generator treats as one row: reached at its lowest tread, the next row measured from the top one |
 | clouds, sky lanterns, storks, updrafts | none | off inside |
 
 ## Light

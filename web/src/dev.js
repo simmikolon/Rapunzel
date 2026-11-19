@@ -23,7 +23,7 @@ import { zoneAt } from './level.js';
 import { TREELINE_Y } from './altitude.js';
 import { Lightning, Guard, Flowerpot, Grabber, Ghost } from './enemies.js';
 import { windowsBetween } from './windows.js';
-import { hatchesBetween } from './pillars.js';
+import { hatchesBetween, hasDoor } from './pillars.js';
 import { STONE_STYLE } from './art/interior.js';
 import { PowerUp } from './pickups.js';
 import { POWERS } from './powerups.js';
@@ -96,7 +96,7 @@ export function spawnNear(world, element) {
   }
   if (element === 'grabber' && world.place.inside) {
     // the nearest hatch in a pillar above the prince
-    const h = hatchesBetween(p.y + 100, p.y + 3000, world.platforms.filter((q) => q.kind === 'gallery'))[0];
+    const h = hatchesBetween(p.y + 100, p.y + 3000, world.platforms.filter(hasDoor))[0];
     if (h) world.enemies.push(new Grabber(h, world.level.child(world.level.rngTower), 180, world.cam.y));
   } else if (element === 'grabber') {
     // the nearest window above the prince, in layer coordinates

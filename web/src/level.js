@@ -5,7 +5,7 @@ import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 import { windowsBetween } from './windows.js';
-import { hatchesBetween, pillarTile, HATCH } from './pillars.js';
+import { hatchesBetween, pillarTile, hasDoor, HATCH } from './pillars.js';
 import { STONE_STYLE, STAIR } from './art/interior.js';
 import { placeOf } from './places.js';
 
@@ -260,7 +260,7 @@ export class Level {
       ['swing', T.swing], ['bell', T.bow],
       ['galleryL', gl], ['galleryR', gl], ['galleryL+chandelier', gl * T.double * 0.6], ['galleryR+chandelier', gl * T.double * 0.6],
       ['galleryL+branchR', gl * T.double * 0.5], ['branchL+galleryR', gl * T.double * 0.5],
-      // a flight of stairs up to a gallery: wide and safe, a relief like the long ledge
+      // a flight of stairs built out from a pillar: wide and safe, a relief like the long ledge
       ['stairsL', st], ['stairsR', st],
     ] : sky ? [
       ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
@@ -329,7 +329,7 @@ export class Level {
     const inside = this.place.inside;
     const lyRow = inside ? y : Platform.worldToLayer(y, PARALLAX_TOWER, arrivalCam);
     const taken = this.world.enemies.filter((e) => e.kind === 'grabber');
-    const cover = this.world.platforms.filter((p) => p.kind === (inside ? 'gallery' : 'balcony'));
+    const cover = this.world.platforms.filter((p) => (inside ? hasDoor(p) : p.kind === 'balcony'));
     const free = (inside ? hatchesBetween(lyRow - 60, lyRow + 420, cover) : windowsBetween(lyRow - 60, lyRow + 420, cover)).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
     if (!free.length) return null;
     const T = tierAt(y);
@@ -376,16 +376,17 @@ export class Level {
     let safe = false;
     for (const slot of kinds) {
       if (stairs) {
-        // Three treads rising from just across the middle up to a gallery
-        // at this side's pillar. The row's height is the lowest tread's;
-        // the next row is measured from the gallery (below).
+        // Four treads rising toward this side's pillar, the top one at its
+        // face under a door. The row's height is the lowest tread's (the
+        // one furthest into the room); the next row is measured from the
+        // top one (below).
         const side = slot[6], sd = side === 'L' ? -1 : 1;
         for (let j = 0; j < STAIR.steps; j++) {
-          const tread = new Platform('step', y + j * STAIR.rise, { side, x: sd * (GALLERY_X - 80 - STAIR.run / 2 - STAIR.run * (STAIR.steps - 1 - j)) });
+          const tread = new Platform('step', y + j * STAIR.rise, { side, x: sd * (284 - STAIR.run / 2 - STAIR.run * (STAIR.steps - 1 - j)) });
           tread.flight = j === 0;
+          tread.door = j === STAIR.steps - 1;
           platforms.push(tread);
         }
-        platforms.push(new Platform('gallery', y + STAIR.steps * STAIR.rise, { side, x: sd * GALLERY_X, variant: r.int(0, 1) }));
         safe = true;
         continue;
       }
@@ -464,8 +465,8 @@ export class Level {
     for (const p of platforms) this.world.platforms.push(p);
     // A gallery's door covers the pillar where it stands: a pike guard who
     // was given a hatch there (from a row below) has no hatch any more.
-    if (platforms.some((p) => p.kind === 'gallery')) {
-      const galleries = this.world.platforms.filter((p) => p.kind === 'gallery');
+    if (platforms.some(hasDoor)) {
+      const galleries = this.world.platforms.filter(hasDoor);
       for (const e of this.world.enemies) if (e.kind === 'grabber' && e.win.f === 1 && pillarTile(e.win.i, e.win.side, galleries) !== HATCH) e.alive = false;
     }
     if (safe) this.lastSafeY = y;
@@ -485,8 +486,8 @@ export class Level {
     let gap = r.range(gapMin, gapMax);
     this.nextLayout = nextLayout;
     if (stairs) {
-      // from the lowest tread the next row is still within one bounce; from the gallery it is close
-      gap = STAIR.steps * STAIR.rise + r.range(170, 300);
+      // from the lowest tread the next row is still within one bounce; from the top one it is close
+      gap = (STAIR.steps - 1) * STAIR.rise + r.range(170, 300);
       // a sun over each tread shows the way up
       if (r.chance(0.7)) for (const p of platforms) if (p.kind === 'step') this.world.pickups.push(new Sun(p.x, p.y + 96, r));
     }
@@ -540,7 +541,7 @@ export class Level {
     if (this.rngTower.chance(T.grabber * P.enemy * this.zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony (inside: per gallery), never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {
-      if ((p.kind !== 'balcony' && p.kind !== 'gallery') || p.dry || stairs) continue;   // the stairs are a relief: nobody waits at their top
+      if ((p.kind !== 'balcony' && p.kind !== 'gallery') || p.dry) continue;
       if (r.chance(T.guard * P.enemy * this.zoneMul(y, 'guard'))) this.world.enemies.push(new Guard(p, this.child()));
       else if (r.chance(T.pot * P.enemy * this.zoneMul(y, 'pot'))) this.world.enemies.push(new Flowerpot(p, this.child()));
     }
