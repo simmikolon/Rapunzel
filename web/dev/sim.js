@@ -150,10 +150,13 @@ class Bot {
         if (!threat) threat = { e, dx: wx || -e.dir, dy, noPunch: !e.hurtful };
         continue;
       }
-      if (!e.hurtful || e.phase === 'warn') continue;
+      // a ghost fading in will be there in a moment: a player sees that and
+      // keeps clear (and does not waste a boost on what is not there yet)
+      const coming = e.kind === 'ghost' && e.state === 'in';
+      if ((!e.hurtful && !coming) || e.phase === 'warn') continue;
       const dy = e.y - (p.y + 110);
       const ahead = p.vy > 0 ? (dy > -80 && dy < 360) : (dy < 80 && dy > -360);
-      if (Math.abs(dx) < this.s.dodgeRange && ahead) { if (!threat || Math.abs(dy) < Math.abs(threat.dy)) threat = { e, dx, dy }; }
+      if (Math.abs(dx) < this.s.dodgeRange && ahead) { if (!threat || Math.abs(dy) < Math.abs(threat.dy)) threat = { e, dx, dy, noPunch: coming }; }
     }
     if (threat) {
       const e = threat.e;

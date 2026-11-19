@@ -10,6 +10,7 @@
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
+//   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince
 //   ?spawn=web       (inside) a spider's web under the next healthy ledge above the prince (a ledge is made if none is in view)
 //   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
 //   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
@@ -19,7 +20,7 @@ import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
 import { zoneAt } from './level.js';
 import { TREELINE_Y } from './altitude.js';
-import { Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
+import { Lightning, Guard, Flowerpot, Grabber, Ghost } from './enemies.js';
 import { windowsBetween } from './windows.js';
 import { hatchesBetween } from './pillars.js';
 import { STONE_STYLE } from './art/interior.js';
@@ -102,6 +103,7 @@ export function spawnNear(world, element) {
     const w = windowsBetween(ly + 100, ly + 3000, balconies)[0];
     if (w) world.enemies.push(new Grabber(w, world.level.child(world.level.rngTower), 150, world.cam.y));
   }
+  if (element === 'ghost') world.enemies.push(new Ghost(-120, p.y + 460, 1, 90, 0.5, world.level.child(world.level.rngFauna)));
   if (element === 'stork') world.spawnStork();
   if (POWERS[element]) world.pickups.push(new PowerUp(element, p.x, p.y + 360));
   if (element === 'updraft') {

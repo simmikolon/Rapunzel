@@ -1,6 +1,6 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
 import { Platform, CLOUD_SIZE, GALLERY_X } from './platforms.js';
-import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat, Web } from './enemies.js';
+import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat, Web, Ghost } from './enemies.js';
 import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
@@ -41,13 +41,14 @@ export const ZONES = [
 // 1, so the outside's creatures are switched off by name. Three things live
 // in here so far, so each counts for more than it does outside: bats under
 // the ledges, guards on the galleries, pike guards in the pillars' hatches.
-// A fourth holds instead of biting: the spider's web under a ledge.
+// A fourth holds instead of biting: the spider's web under a ledge. The
+// ghost drifts through the room in the crow's place.
 // The first 120 m are the gentle part, as the forest floor is outside: no
 // stubs, no pikes yet, more long ledges (inside nothing rides up with the
 // camera as the ribbons do, so a miss falls further), and the power-ups lean
 // toward the feather.
 export const ZONES_INSIDE = [
-  { name: 'the hall',         from: 0,     mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
+  { name: 'the hall',         from: 0,     mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
   { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5, web: 1.6 } },
 ];
 export function zoneAt(y, zones = ZONES) {
@@ -489,6 +490,11 @@ export class Level {
       const cx = r.range(-W / 2, W / 2);
       const track = clamp((T.index - 1.5) / 2.5, 0, 1);
       this.world.enemies.push(new Crow(cx, cy, dir, r.range(T.crowSpeed[0], T.crowSpeed[1]), track, this.child()));
+    }
+    // The ghost is the inside's crow: the same tier chance, half the pace.
+    if (this.place.inside && y > 2200 && this.rngFauna.chance(T.crow * P.enemy * this.zoneMul(y, 'ghost'))) {
+      const rf = this.rngFauna;
+      this.world.enemies.push(new Ghost(rf.range(-220, 220), y + gap * rf.range(0.4, 0.7), rf.sign(), rf.range(T.crowSpeed[0], T.crowSpeed[1]) * 0.45, clamp((T.index - 2) / 2.5, 0, 1), this.child(rf)));
     }
     if (y > 6500 && r.chance(T.spider * P.enemy * this.zoneMul(y, 'spider'))) {
       const branch = platforms.find((p) => p.kind === 'branchL' || p.kind === 'branchR');

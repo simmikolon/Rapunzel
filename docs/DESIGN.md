@@ -345,6 +345,15 @@ is a pool to draw from, not a promise.
   through and knock the spider out (three suns); under the cloak the
   web still holds but the spider does not come. The way round is to
   rise beside the ledge's tip and land from above.
+- ✅ ghost (inside the tower, from 120 m, in the crow's place; `Ghost` in
+  `src/enemies.js`): a small round ghost with a candle drifts to and
+  fro between the pillars. It comes and goes: there for two to three
+  seconds (it bites; a pogo on its head sends it off), fading out, gone
+  for about two, fading in over 0.8 s with a "!" and a flaring candle,
+  harmless until it is all there. The candle never fades, with its
+  pool of light, so one always knows where the ghost is. Close to the
+  prince it says boo (arms up, mouth wide). Higher up it drifts toward
+  his height while it is there. Under the cloak it notices nothing.
 - 💡 vines / green zones that slow or stick (deep forest, jungle); prefer
   slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
@@ -503,9 +512,9 @@ is a pool to draw from, not a promise.
     the windows, with a bloom on the wall and a stepped shaft with dust
     in it, in the colour of the sky outside, so the forest's dusk, the
     day, the sunset and the night show inside.
-  - ✅ the spider's web under the ledges (see enemies).
-  - 🔜 its own things (stairs, a ghost, a bat swarm, wall decor, more
-    sounds), floors of the tower as zones, gates. ⚠️ A system, not an
+  - ✅ the spider's web under the ledges, ✅ the ghost with its candle
+    (see enemies).
+  - 🔜 its own things (stairs, a bat swarm, wall decor, more sounds), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
@@ -725,6 +734,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
 | Inside the tower | bands: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes), from 120 m bats × 1.5, pikes × 1.5, gallery guards × 0.8, galleries 0.4 × the balcony's chance; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
 | Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
+| Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1309,3 +1319,19 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   84 m, as before. So the web costs time and a boost charge, not
   hearts; the room a good run has inside is left for the ghost and the
   stairs. The outside's report is identical on the same seeds.
+- 2026-11-19: The ghost (`element/interior-ghost`): the inside's
+  patroller. Its idea is the candle: it is drawn apart from the ghost
+  and never fades, so the ghost that is "gone" is a candle floating by
+  itself with its light on the wall, and the fade-in (0.8 s, a "!", the
+  candle flaring) is a telegraph one can read from across the room.
+  Solid is the only state that bites or can be pogoed. It keeps out of
+  the hall: with ghosts below 120 m the kid bot lost five metres of
+  median to dodging them. Measured on 120 seeded runs inside (webs and
+  ghosts in): good bold median 476 m, mean 513 m, 1.13 hits per 100 m
+  (1.05 to 1.66 per band from 100 to 1000 m), falls 19 % of the deaths
+  (the ghost is what a good run steps aside for, and stepping aside is
+  where falls come from); kid bold median 72 m, mean 79 m (outside 71 m
+  and 81 m). The inside is now about as far a climb as the outside
+  (median 424 m, mean 477 m there), without touching the other
+  creatures' numbers. The outside's report is identical on the same
+  seeds.

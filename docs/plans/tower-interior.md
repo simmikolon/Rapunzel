@@ -90,9 +90,11 @@ New (step 3):
   never for ever: it costs time, or a heart if ignored. The boost shield
   and the star go through and tear it. Never in a breather; the way
   round is beside the ledge's tip.
-- **Ghost.** The inside's patroller in the crow's place: drifts across,
-  fading in and out, solid (and biting, and to be pogoed) only while it
-  shows. The fade is its telegraph.
+- ✅ **Ghost** (`element/interior-ghost`). The inside's patroller in the
+  crow's place, from 120 m: drifts across with a candle, fading in and
+  out, solid (and biting, and to be pogoed) only while it shows. The
+  fade-in is its telegraph, and the candle never fades, so one always
+  knows where it is.
 - **Bat swarm.** The flock's gate with bats: two long ledges as floors,
   two lanterns, the stream between.
 - The witch is only seen flying past outside the windows for now.
@@ -159,9 +161,10 @@ One branch each, merged when it is fun.
 
 ## Open
 
-- A good run gets further inside than outside (median 551 m against
-  424 m) because hardly anyone falls in here. Step 3's stairs, web and
-  ghost should use that room; measure after each.
+- With the web and the ghost in, a good run inside is about as long as
+  outside (median 476 m against 424 m, mean 513 m against 477 m). The
+  stairs and the bat swarm should not add difficulty on top; measure
+  after each.
 - The pillars' hatches all look alike, manned or not. To be played:
   whether that is a fair tell or whether a manned one needs a sign (a
   glint of a helmet).

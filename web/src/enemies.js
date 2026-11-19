@@ -1084,3 +1084,82 @@ export class Web extends Enemy {
     else if (this.puzzled) g.text('?', sx + this.dir * 34, sy - 40, 22, PUZZLED, 'center', true);
   }
 }
+
+// The ghost (inside the tower, in the crow's place): drifts to and fro
+// between the pillars with a candle. It comes and goes: fading in (GHOST_IN,
+// harmless, its candle flaring: the telegraph), there for a while (it
+// bites, and a pogo on its head sends it off), fading out, gone but for the
+// candle, which never fades, so one always knows where it is. With `track`
+// > 0 it drifts toward the prince's height while it is there and sees him.
+// Under the cloak it notices nothing and he passes through it, like through
+// anything with eyes.
+const GHOST_IN = 0.8, GHOST_OUT = 0.5, GHOST_FAINT = 0.13;
+export class Ghost extends Enemy {
+  constructor(x, y, dir, speed, track = 0, rng = new RNG()) {
+    super(x, y);
+    this.kind = 'ghost';
+    this.baseY = y; this.dir = dir; this.speed = speed; this.track = track; this.rng = rng;
+    this.w = 56; this.h = 64;
+    this.phase = rng.range(0, TAU);
+    this.state = rng.chance(0.5) ? 'gone' : 'solid';   // gone | in | solid | out
+    this.stateT = 0;
+    this.stateFor = this.state === 'gone' ? rng.range(0.4, 2) : rng.range(1.2, 2.8);
+    this.hurtful = this.state === 'solid';
+    this.vis = this.hurtful ? 1 : GHOST_FAINT;   // how much of it shows
+    this.boo = 0;
+    this.sink = 0;
+    this.room = null;                             // the room's painter, for the candle's light
+  }
+  get stompable() { return this.state === 'solid'; }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    this.room = world.bg.interior;
+    if (this.dead) { this.sink += dt; this.y += 90 * dt; this.vis = Math.max(0, 1 - this.sink / 0.6); if (this.sink > 0.6) this.alive = false; return; }
+    const p = world.player;
+    if (this.state === 'gone') {
+      this.vis = GHOST_FAINT;
+      if (this.stateT > this.stateFor) { this.state = 'in'; this.stateT = 0; if (Math.abs(this.y - world.cam.y - H / 2) < H / 2 + 60) world.audio.ghostIn(); }
+    } else if (this.state === 'in') {
+      this.vis = GHOST_FAINT + (1 - GHOST_FAINT) * (this.stateT / GHOST_IN) ** 2;
+      if (this.stateT > GHOST_IN) { this.state = 'solid'; this.stateT = 0; this.stateFor = this.rng.range(2, 3.2); }
+    } else if (this.state === 'solid') {
+      this.vis = 1;
+      if (this.stateT > this.stateFor) { this.state = 'out'; this.stateT = 0; }
+    } else {
+      this.vis = 1 - (1 - GHOST_FAINT) * (this.stateT / GHOST_OUT);
+      if (this.stateT > GHOST_OUT) { this.state = 'gone'; this.stateT = 0; this.stateFor = this.rng.range(1.4, 2.4); }
+    }
+    this.hurtful = this.state === 'solid';
+    this.x += this.dir * this.speed * dt;
+    if (this.x > 236) { this.x = 236; this.dir = -1; } else if (this.x < -236) { this.x = -236; this.dir = 1; }
+    const near = p.seen && this.state === 'solid' && Math.hypot(p.x - this.x, p.y + 110 - this.y) < 230;
+    if (this.track > 0 && this.state === 'solid' && p.seen) {
+      const want = clamp(p.y + 110, this.baseY - 260, this.baseY + 260);
+      this.baseY += clamp(want - this.baseY, -1, 1) * 46 * this.track * dt;
+    }
+    this.boo = near ? Math.min(1, this.boo + dt * 6) : Math.max(0, this.boo - dt * 3);
+    this.y = this.baseY + Math.sin(this.t * 1.9 + this.phase) * 14;
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false;
+    world.audio.ghostPop();
+    world.particles.cloudPuff(this.x, this.y, 60, 8);
+  }
+  draw(g, cam, art) {
+    const A = art.interior, set = this.dir > 0 ? A.ghost.R : A.ghost.L;
+    const sx = cam.sx(this.x), sy = cam.sy(this.y);
+    const frame = this.dead ? 3 : this.boo > 0.5 ? 2 : Math.floor(this.t * 3 + this.phase) % 2;
+    // fading in it shimmers
+    const a = this.state === 'in' ? this.vis * (0.75 + 0.25 * Math.sin(this.t * 38)) : this.vis;
+    g.blit(set[frame], sx, sy, { alpha: a, glow: 0.2 * this.vis });
+    if (this.dead) return;
+    // the candle in its hand (above its head for a boo): always there
+    const hx = sx + this.dir * 34, hy = sy + (frame === 2 ? -22 : 14);
+    const flare = this.state === 'in' ? 1 + 0.8 * Math.sin(Math.min(1, this.stateT / GHOST_IN) * Math.PI) : 1;
+    const fl = (0.85 + 0.15 * Math.sin(this.t * 10 + this.phase)) * flare;
+    g.halo(hx, hy - 22, 46 * flare, '#ffd596', 0.5 * fl, { glow: 0.5 });
+    g.blit(A.ghostCandle[Math.floor(this.t * 8) % 2], hx, hy, { glow: 0.5 });
+    if (this.room) this.room.glow(hx, hy - 20, 170 * flare, '#ffd596', 0.16 * fl);
+    if (this.state === 'in') g.text('!', sx, sy - 58, 22, '#ffe9a0', 'center', true, { alpha: Math.min(1, this.stateT / 0.25) });
+  }
+}

@@ -335,6 +335,46 @@ function drawWeb(t, tear) {
   for (const [x, y, n] of loose) { t.p(x, y, 1, n, SILK.shade); t.p(x, y + n, 1, 1, SILK.base); }
 }
 
+// --- the ghost -------------------------------------------------------------------
+// 16 x 20 art px, facing RIGHT, the anchor its middle: a small round ghost
+// with a scalloped hem, rosy cheeks and a round mouth. It carries a candle
+// (drawn apart, so the flame stays when the ghost fades: that is how one
+// knows where it is). Lit from above like everything: the crown white, the
+// side away from the light and the hem lilac. Frames: 0 and 1 drifting (the
+// hem waves), 2 "boo" (arms up, mouth wide), 3 knocked out (X eyes).
+const GHOST = { hi: '#ffffff', base: '#e9e6f7', shade: '#bdb8da', dark: '#8f89b6', mouth: '#4a4470' };
+function drawGhost(t, frame) {
+  const { p } = t;
+  const boo = frame === 2, out = frame === 3;
+  // the body: a dome, then straight sides
+  const rows = [[5, 10], [3, 12], [2, 13], [2, 13], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14], [1, 14]];
+  rows.forEach(([x0, x1], i) => { const y = 1 + i; p(x0, y, x1 - x0 + 1, 1, GHOST.base); p(x1 - 1, y, 2, 1, GHOST.shade); });
+  p(5, 1, 5, 1, GHOST.hi); p(3, 2, 6, 1, GHOST.hi); p(2, 3, 4, 2, GHOST.hi); p(1, 5, 2, 3, GHOST.hi);
+  // the hem: three scallops, shifting by a pixel between the two drifting frames
+  const o = frame === 1 ? 1 : 0;
+  for (const x of [1, 6, 11]) { p(x + o, 16, 4 - (x === 11 ? o : 0), 2, GHOST.base); p(x + o, 18, 3 - (x === 11 ? o : 0), 1, GHOST.shade); p(x + 1 + o, 19, 1, 1, GHOST.shade); }
+  p(13, 16, 2 - o, 2, GHOST.shade);
+  // the face, toward the right
+  if (out) {
+    for (const x of [6, 11]) { p(x, 6, 1, 1, C.black); p(x + 2, 6, 1, 1, C.black); p(x + 1, 7, 1, 1, C.black); p(x, 8, 1, 1, C.black); p(x + 2, 8, 1, 1, C.black); }
+    p(9, 11, 3, 1, GHOST.mouth);
+  } else {
+    p(6, 6, 2, boo ? 3 : 2, C.black); p(11, 6, 2, boo ? 3 : 2, C.black); p(6, 6, 1, 1, GHOST.dark); p(11, 6, 1, 1, GHOST.dark);
+    p(9, boo ? 10 : 11, boo ? 3 : 2, boo ? 4 : 2, GHOST.mouth);
+    p(4, 10, 2, 1, C.cheek); p(13, 10, 1, 1, C.cheek);
+  }
+  // stubby arms: the right one holds the candle (its hand at 15, 11), both up for a boo
+  if (boo) { p(0, 6, 2, 2, GHOST.base); p(0, 5, 1, 1, GHOST.hi); p(14, 6, 2, 2, GHOST.shade); }
+  else { p(14, 11, 2, 2, GHOST.base); p(15, 12, 1, 1, GHOST.shade); p(0, 11, 2, 2, GHOST.base); }
+}
+// Its candle on a brass dish, 5 x 9 art px, the anchor the dish's middle; two flames.
+function drawGhostCandle(t, frame) {
+  const { p } = t;
+  p(0, 7, 5, 1, K.bell); p(0, 7, 2, 1, K.bellHi); p(1, 8, 3, 1, K.bellShade);
+  p(2, 3, 1, 4, K.candle); p(2, 3, 1, 1, C.white);
+  p(2, frame ? 0 : 1, 1, frame ? 3 : 2, C.flame2); p(2, 2, 1, 1, C.flame1); if (frame) p(1, 1, 1, 1, C.flame3); else p(3, 1, 1, 1, C.flame3);
+}
+
 export function buildInterior() {
   const wall = [0, 1, 2, 3, 4, 5].map((v) => makeSprite(WALL_W, 48, (t) => drawWall(t, v, new RNG(300 + v)), { ax: 0.5, ay: 1 }));
   const pillarL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawPillar(t, v, new RNG(400 + v)), { ax: 0, ay: 1 }));
@@ -356,6 +396,8 @@ export function buildInterior() {
     chandelier: [0, 1].map((f) => makeSprite(30, 15, (t) => drawChandelier(t, f), undefined, { axPx: 15 * 4, ayPx: 9 * 4 })),
     bell: makeSprite(26, 26, drawBell, undefined, { axPx: 13 * 4, ayPx: 1 * 4 }),
     web: (() => { const R = [0, 1, 2, 3].map((k) => makeSprite(30, 36, (t) => drawWeb(t, k), undefined, { axPx: 30 * 4, ayPx: 0 })); return { R, L: R.map(flipH) }; })(),
+    ghost: (() => { const R = [0, 1, 2, 3].map((f) => makeSprite(16, 20, (t) => drawGhost(t, f), { ax: 0.5, ay: 0.5 })); return { R, L: R.map(flipH) }; })(),
+    ghostCandle: [0, 1].map((f) => makeSprite(5, 9, (t) => drawGhostCandle(t, f), undefined, { axPx: 2.5 * 4, ayPx: 7 * 4 })),
     chain: makeSprite(5, 10, drawChain, { ax: 0.5, ay: 0 }),
     chainEnd: makeSprite(9, 12, drawChainEnd, { ax: 0.5, ay: 0 }),
     gallery: { L: galleryL, R: galleryL.map(flipH) },

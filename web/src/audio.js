@@ -343,6 +343,15 @@ class Synth {
     this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
   }
   skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
+  // The ghost: fading in (a soft rising "ooh"), popped by a pogo (a falling whoop).
+  ghostIn() {
+    this.tone({ type: 'sine', freq: 330, to: 520, dur: 0.5, vol: 0.07, attack: 0.15, slide: 'lin' });
+    this.tone({ type: 'sine', freq: 495, to: 780, dur: 0.5, vol: 0.03, attack: 0.2, slide: 'lin' });
+  }
+  ghostPop() {
+    this.tone({ type: 'sine', freq: 700, to: 180, dur: 0.3, vol: 0.14 });
+    this.noise({ dur: 0.18, vol: 0.06, filter: 'lowpass', freq: 900 });
+  }
   // A power-up starts: each has its own short motif.
   power(kind) {
     platform.haptic('spring');
