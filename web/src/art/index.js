@@ -11,6 +11,7 @@ import { buildWindows } from './windows.js';
 import { buildLogo } from './logo.js';
 import { buildSign } from './sign.js';
 import { buildPowerups } from './powerups.js';
+import { buildLights } from './lights.js';
 
 export function buildAllArt() {
   return {
@@ -27,5 +28,6 @@ export function buildAllArt() {
     logo: buildLogo(),
     sign: buildSign(),
     powerups: buildPowerups(),
+    lights: buildLights(),
   };
 }

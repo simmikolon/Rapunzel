@@ -145,9 +145,9 @@ custom engine instead of SpriteKit physics and GameplayKit:
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
   debris, boost flames, feathers, screen shake, a swaying braid that moves
   the ribbons (harder with altitude), sky and lighting keyed to the zones
-  (forest floor → deep forest with mist, falling leaves and light shafts →
-  dawn at the windows → open sky → sunset → starry night), toasts for
-  milestones.
+  (forest floor → deep forest with mist, falling leaves, light shafts and
+  string lights between the trunks → dawn at the windows → open sky →
+  sunset → starry night), toasts for milestones.
 * **Audio**: every sound is synthesized with WebAudio, so there are no
   audio files; mute is remembered.
 * **Shaders**: a real bloom on everything that glows (lanterns, sun drops,

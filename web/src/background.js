@@ -5,6 +5,7 @@ import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
+import { StringLights } from './lights.js';
 import { windowsBetween } from './windows.js';
 import { fallDist, fallSwing } from './platforms.js';
 
@@ -12,8 +13,10 @@ import { fallDist, fallSwing } from './platforms.js';
 //   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
 //   -> distant forest (PARALLAX_FOREST, fades out above the canopy)
 //   -> tower bricks with Rapunzel's braid and its ribbons (PARALLAX_TOWER)
-//   -> tree trunks, branches, swings, prince (1.0, the gameplay plane)
-//   -> fireflies (drawn after the actors) -> lighting and vignette.
+//   -> tree trunks with the deep forest's string lights between them,
+//      branches, swings, prince (1.0, the gameplay plane)
+//   -> fireflies (drawn after the actors) -> lighting, the string lights'
+//      glow over it, and the vignette.
 // Stars, the moon and the fireflies also go into the bloom layer (`glow`).
 
 // Keyed to the zone bands (100 px = 1 m): forest floor, deep forest from
@@ -69,10 +72,11 @@ export class Background {
     this.swayAmp = 12;
     for (const f of this.fireflies) { f.vx = 0; f.vy = 0; }
     this.atmo = new Atmosphere(art, r);
+    this.lights = new StringLights(art);
   }
 
   // A new round reseeds what can touch gameplay (the gusts that swing the braid).
-  reset(rng) { this.atmo.reset(rng); }
+  reset(rng) { this.atmo.reset(rng); this.lights.reset(); }
 
   // Horizontal offset of the braid at world height y (a slow travelling wave).
   braidX(y, time) {
@@ -362,6 +366,7 @@ export class Background {
     this.atmo.drawLawnMist(g, cam, time);
     this.drawTrees(g, cam, time);
     this.drawOwls(g, cam, time);
+    this.lights.draw(g, cam, time, this.atmo.gustEnv());
     this.atmo.drawLife(g, cam, time);
     this.atmo.drawShafts(g, cam, time);
   }
@@ -369,7 +374,10 @@ export class Background {
   // Closest layer: big leaves and mist drifting in front of everything.
   drawFrontAtmosphere(g, cam, time, world) { this.atmo.drawFront(g, cam, time, world); }
 
-  updateAtmosphere(dt, cam, time, world) { this.atmo.update(dt, cam, time, world); }
+  updateAtmosphere(dt, cam, time, world) {
+    this.atmo.update(dt, cam, time, world);
+    this.lights.update(dt, cam, time, world, this.atmo.gustEnv());
+  }
 
   // Fireflies wander, gather in a loose orbit around lanterns and scatter
   // when the prince comes close.
@@ -442,8 +450,8 @@ export class Background {
 
   drawLighting(g, cam) {
     const l = lightAt(cam.y);
-    if (l.alpha <= 0.001) return;
-    g.lighting(l.color, l.alpha);
+    if (l.alpha > 0.001) g.lighting(l.color, l.alpha);
+    this.lights.drawGlow(g);      // lamps shine through the time of day
   }
 
   drawVignette(g) { g.vignette(); }
