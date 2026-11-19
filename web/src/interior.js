@@ -31,9 +31,9 @@ const CHAIN_END = 280;             // the chain's loose end hangs this high abov
 // over 30 m, like the trees outside.
 const FLOORS = [
   { from: 0,     tint: '#ffffff', ambient: '#8f88c4', dim: 0.34, decor: [['banner', 3], ['pictures', 3], ['shield', 1], ['tapestry', 1], ['mirror', 1]], small: ['sconce'] },                     // the hall
-  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['shield', 4], ['banner', 3], ['pictures', 1], ['tapestry', 1]], small: ['sconce', 'sconce', 'keys', 'sconce', 'sconce'] },   // the guard rooms: cool stone, arms on the walls
+  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['rack', 3], ['shield', 3], ['banner', 2], ['helmets', 2], ['table', 2], ['poster', 2], ['pictures', 1], ['tapestry', 1]], small: ['sconce', 'sconce', 'keys', 'horn', 'sconce'], fill: 82 },   // the guard rooms: cool stone, arms on the walls
   { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['bookcase', 7], ['pictures', 3], ['scrolls', 2], ['lectern', 2], ['shelf', 1], ['niche', 1], ['mirror', 1], ['tapestry', 1]], small: ['sconce', 'scroll', 'pile', 'sconce', 'scroll', 'herbs'], dense: true },    // the library: warm stone, walls of books, scrolls, the spell book
-  { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 5], ['clock', 2], ['banner', 1]], small: ['sconce', 'herbs'] },                  // the belfry: weathered stone, clockwork
+  { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 4], ['ropes', 3], ['truss', 3], ['dial', 2], ['bells', 2], ['clock', 1], ['banner', 1]], small: ['sconce', 'coil', 'gear', 'herbs'], fill: 82 },                  // the belfry: weathered stone, clockwork
 ];
 const FLOOR_FADE = 1500;
 const IVY_TO = 40000;
@@ -78,7 +78,7 @@ function decorAt(k, side) {
   const slot = k % WINDOW_EVERY, main = slot === (side < 0 ? 2 : 1), extra = !!floor.dense && slot === (side < 0 ? 1 : 0);
   if (!main && !extra) return null;
   const h = hash(k * 19 + (side < 0 ? 7 : 11));
-  if (h % 100 < (floor.dense ? (main ? 8 : 40) : 34)) return null;
+  if (h % 100 < (floor.dense ? (main ? 8 : 40) : 100 - (floor.fill || 66))) return null;
   let pick = (h >>> 8) % table.reduce((n, d) => n + d[1], 0), kind = table[0][0];
   for (const [name, w] of table) { if (pick < w) { kind = name; break; } pick -= w; }
   return { kind, look: (h >>> 5) % 2, x: side * (168 + (h >>> 12) % 34), ly: k * TILE_H + (main ? 150 + (h >>> 16) % 30 : 86 + (h >>> 16) % 8), h };
@@ -163,6 +163,25 @@ export class Interior {
         } else if (d.kind === 'niche') {
           g.blit(A.niche[d.look], dx, dy);
           if (d.look === 1) g.halo(dx - 2, dy + 56, 34, '#9fd0ff', 0.3 + 0.15 * Math.sin(time * 1.6 + k), { glow: 0.4 });   // the crystal ball
+        } else if (d.kind === 'rack') g.blit(A.rack, dx, dy);
+        else if (d.kind === 'helmets') g.blit(A.helmets, dx, dy + 30);
+        else if (d.kind === 'table') g.blit(A.table, dx, dy + 20);
+        else if (d.kind === 'poster') g.blit(A.poster, dx, dy, { rot: (d.look ? 1 : -1) * 0.04 });
+        else if (d.kind === 'dial') {
+          // the great clock: its hands go round (an hour in a quarter of a minute)
+          g.blit(A.dial, dx, dy + 70);
+          g.blit(A.hand[1], dx, dy + 70, { rot: time * 0.035 + k });
+          g.blit(A.hand[0], dx, dy + 70, { rot: time * 0.42 + k * 3 });
+        } else if (d.kind === 'ropes') {
+          // bell ropes down from the bells above, each swaying in its own time
+          for (let i = 0; i < 3; i++) g.blit(A.bellRope, dx + (i - 1) * 30, dy - 20 - ((d.h >>> (i * 3)) % 4) * 14, { rot: Math.sin(time * (0.7 + i * 0.13) + k + i * 2) * 0.035 });
+        } else if (d.kind === 'truss') {
+          g.blit(A.truss, W / 2 + side * 180 + cam.ox, dy);
+          if ((d.h >>> 18) % 100 < 45) g.blit(A.owl[(time * 0.27 + k * 0.41) % 1 < 0.05 ? 1 : 0], W / 2 + side * 180 + cam.ox + (d.look ? 44 : -44), dy + 8);   // an owl on the beam, blinking
+        } else if (d.kind === 'bells') {
+          // a row of small bells on a beam, each swinging a little
+          g.rect(dx - 70, dy + 4, 140, 12, '#7a5235'); g.rect(dx - 70, dy + 4, 140, 4, '#b9875a');
+          for (let i = 0; i < 3; i++) { const sc = 1.15 - i * 0.2; g.blit(A.smallBell, dx - 44 + i * 44, dy + 16, { rot: Math.sin(time * (1.6 + i * 0.4) + k + i) * 0.16, sx: sc, sy: sc }); }
         } else if (d.kind === 'bookcase') {
           g.blit(A.bookcase[(d.h >>> 5) % 3], dx, dy);
           if ((d.h >>> 18) % 100 < 35) { const s = (d.h >>> 3) % 2 ? 1 : -1; g.blit(A.ladder, dx + s * 66, dy + 250, { rot: -s * 0.13 }); }   // a ladder leant against it
@@ -209,6 +228,9 @@ export class Interior {
         if (d.kind === 'keys') g.blit(A.keys, dx, dy);
         else if (d.kind === 'scroll') g.blit(A.scroll, dx, dy, { rot: Math.sin(time * 0.8 + k) * 0.03 });
         else if (d.kind === 'pile') g.blit(A.pile, dx, dy);
+        else if (d.kind === 'horn') g.blit(A.horn, dx, dy);
+        else if (d.kind === 'coil') g.blit(A.coil, dx, dy);
+        else if (d.kind === 'gear') g.blit(A.cog, dx, dy + 20, { rot: time * 0.6 * (d.lit ? 1 : -1), sx: 0.5, sy: 0.5 });
         else if (d.kind === 'herbs') g.blit(A.herbs, dx, dy, { rot: Math.sin(time * 0.7 + k) * 0.03 });
         else if (!d.lit) g.blit(A.sconce[2], dx, dy);
         else {

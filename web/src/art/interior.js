@@ -780,6 +780,113 @@ function drawTome(t, frame) {
   p(9, 20, 2, 2, C.tunicHi); p(9, 20, 1, 2, C.tunic);                                                              // the ribbon, hanging out
 }
 
+// --- the guard rooms ---------------------------------------------------------------
+// A rack of pole arms, 26 x 46 art px, from its top middle: two rails on the
+// wall, a halberd, a pike and a bill stood in them. No red collars: these
+// are put away (the one that thrusts from a hatch has one).
+function drawRack(t) {
+  const { p } = t;
+  const shaft = (x, top) => { p(x, top, 2, 44 - top, C.plank); p(x, top, 1, 44 - top, C.plankHi); };
+  shaft(5, 8); shaft(12, 3); shaft(19, 10);
+  // the halberd: a spike, an axe blade to the left, a hook to the right
+  p(5, 3, 2, 5, K.chain); p(5, 2, 1, 2, K.chainHi); p(2, 6, 3, 5, K.chain); p(1, 7, 1, 3, K.chainHi); p(7, 7, 2, 2, K.chainDark);
+  // the pike: a long leaf
+  p(12, 0, 2, 4, K.chain); p(12, 0, 1, 3, K.chainHi); p(11, 2, 1, 2, K.chain); p(14, 2, 1, 2, K.chainDark);
+  // the bill: a hooked blade
+  p(19, 5, 2, 5, K.chain); p(21, 6, 2, 3, K.chain); p(22, 5, 1, 2, K.chainHi); p(19, 4, 1, 2, K.chainHi); p(17, 8, 2, 2, K.chainDark);
+  for (const y of [16, 38]) { p(0, y, 26, 3, C.plankDark); p(0, y, 26, 1, C.plank); for (const x of [4, 11, 18]) p(x, y, 4, 3, K.iron); }
+  p(0, 44, 26, 2, C.plankDark); p(0, 44, 26, 1, C.plank);
+}
+// A shelf of helmets, 30 x 16 art px, from its top middle: three kettle
+// hats, the captain's with a blue plume, one with a dent.
+function drawHelmets(t) {
+  const { p } = t;
+  const hat = (x, plume) => {
+    p(x + 2, 4, 5, 5, K.chain); p(x + 3, 3, 3, 1, K.chain); p(x + 2, 4, 2, 3, K.chainHi); p(x + 6, 5, 1, 4, K.chainDark);
+    p(x, 9, 9, 2, K.chain); p(x, 9, 9, 1, K.chainHi); p(x + 8, 10, 1, 1, K.chainDark);
+    if (plume) { p(x + 4, 0, 2, 3, C.tunic); p(x + 5, 0, 2, 2, C.tunicHi); }
+  };
+  hat(1, false); hat(11, true); hat(21, false); p(25, 6, 2, 1, K.chainDark);
+  p(0, 11, 30, 2, C.plank); p(0, 11, 30, 1, C.plankHi); p(3, 13, 2, 3, C.plankDark); p(25, 13, 2, 3, C.plankDark);
+}
+// The guards' table, 30 x 22 art px, from its top middle: a board on two
+// brackets with what an idle watch leaves on it: a tankard, dice, a hand of cards.
+function drawTable(t) {
+  const { p, line } = t;
+  p(0, 12, 30, 3, C.plank); p(0, 12, 30, 1, C.plankHi); p(0, 14, 30, 1, C.plankDark);
+  line(3, 15, 8, 21, C.plankDark, 2); line(26, 15, 21, 21, C.plankDark, 2); p(3, 15, 2, 7, C.plankDark); p(25, 15, 2, 7, C.plankDark);
+  p(3, 5, 5, 7, K.chain); p(3, 5, 1, 7, K.chainHi); p(7, 6, 1, 6, K.chainDark); p(8, 7, 2, 1, K.chain); p(9, 8, 1, 3, K.chain); p(8, 10, 2, 1, K.chain); p(3, 4, 5, 2, K.candle); p(4, 3, 3, 1, C.white);   // the tankard and its foam
+  p(12, 9, 3, 3, C.white); p(13, 10, 1, 1, K.iron); p(16, 10, 3, 2, K.candle); p(16, 10, 1, 1, K.iron); p(18, 11, 1, 1, K.iron);                                                         // dice
+  for (const [x, c] of [[21, C.tunic], [23, C.goldDark], [25, C.tights]]) { p(x, 6, 3, 6, K.candle); p(x, 6, 1, 6, C.white); p(x + 1, 8, 1, 2, c); }                                    // cards, fanned
+}
+// A notice nailed to the wall, 16 x 24 art px, from its top middle: the
+// prince's face, a line of heavy letters over it, a purse under it.
+function drawPoster(t) {
+  const { p } = t;
+  p(1, 1, 14, 22, K.candle); p(1, 1, 1, 22, C.white); p(14, 2, 1, 21, '#d8c9a0'); p(12, 21, 3, 2, '#d8c9a0'); p(13, 22, 2, 1, K.wallDark);
+  p(7, 0, 2, 2, K.iron);
+  for (const x of [3, 6, 9, 12]) p(x, 3, 2, 2, K.iron);                                                // W A N T E D, as it were
+  p(5, 9, 6, 6, C.skin); p(5, 8, 6, 2, C.hair); p(5, 6, 6, 2, C.gold); p(5, 6, 1, 1, C.goldDark); p(7, 6, 1, 1, C.tunic); p(10, 6, 1, 1, C.goldDark);
+  p(6, 11, 1, 1, C.black); p(9, 11, 1, 1, C.black); p(7, 13, 2, 1, C.hair); p(4, 15, 8, 2, C.tunic); p(7, 15, 2, 2, C.gold);
+  p(6, 19, 4, 3, C.goldDark); p(7, 18, 2, 1, C.plank); p(6, 19, 1, 1, C.gold); for (const x of [3, 11]) p(x, 20, 2, 1, '#8a7a5a');
+}
+// A signal horn on a strap, 14 x 12 art px, from its top middle.
+function drawHorn(t) {
+  const { p } = t;
+  p(6, 0, 2, 1, K.iron); p(2, 1, 1, 4, C.plankDark); p(11, 1, 1, 3, C.plankDark); p(3, 0, 8, 1, C.plankDark);
+  [[1, 5, 4], [2, 6, 5], [4, 7, 5], [6, 8, 5], [9, 8, 4], [11, 7, 3]].forEach(([x, y, w]) => p(x, y, w, 2, K.candle));
+  p(1, 5, 3, 1, C.white); p(0, 4, 2, 3, K.chain); p(7, 8, 1, 2, K.chain); p(12, 6, 2, 3, K.chain); p(12, 6, 2, 1, K.chainHi);
+}
+
+// --- the belfry ----------------------------------------------------------------------
+// The great clock's dial, 34 x 34 art px, the anchor its middle; its two
+// hands (`hand`, 3 x 14 and 3 x 10, from their foot) turn at runtime.
+function drawDial(t) {
+  const { p, disc, ring } = t;
+  disc(17, 17, 16, C.plankDark); disc(17, 17, 15, C.goldDark); disc(17, 17, 13, K.candle); ring(17, 17, 13, '#d8c9a0');
+  p(8, 5, 10, 1, C.gold); p(4, 9, 1, 8, C.gold);
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, x = 17 + Math.sin(a) * 11, y = 17 - Math.cos(a) * 11; p(Math.round(x), Math.round(y), i % 3 === 0 ? 2 : 1, i % 3 === 0 ? 2 : 1, K.iron); }
+}
+function drawHand(t, len) { const { p } = t; p(1, 0, 1, len, K.iron); p(0, 1, 3, 2, K.iron); p(1, 0, 1, 2, K.ironHi); }
+// A bell rope, 5 x 60 art px, from its top middle: the rope, the woolly
+// grip in three colours, the tail with its knot.
+function drawBellRope(t) {
+  const { p } = t;
+  p(2, 0, 1, 36, C.rope); for (let y = 2; y < 36; y += 4) p(2, y, 1, 1, C.ropeDark);
+  [C.tunic, K.candle, C.goldDark, K.candle, C.tunic, K.candle, C.goldDark].forEach((c, i) => { p(1, 36 + i * 2, 3, 2, c); p(1, 36 + i * 2, 1, 2, i % 2 ? C.white : C.tunicHi); });
+  p(2, 50, 1, 7, C.rope); p(1, 57, 3, 2, C.ropeDark); p(1, 57, 1, 1, C.rope);
+}
+// Roof timbers, 46 x 42 art px, from the top middle: a tie beam and two
+// braces crossing under it, bolted. An owl may sit on the beam (`owl`, 12 x
+// 13, standing on its feet; frame 1 with its eyes shut).
+function drawTruss(t) {
+  const { p, line } = t;
+  line(2, 40, 42, 6, C.plankDark, 3); line(2, 40, 41, 6, C.plank, 2);
+  line(43, 40, 3, 6, C.plankDark, 3); line(43, 39, 4, 5, C.plank, 2);
+  p(0, 2, 46, 5, C.plank); p(0, 2, 46, 1, C.plankHi); p(0, 6, 46, 1, C.plankDark); for (let x = 6; x < 46; x += 11) p(x, 3, 1, 3, C.plankDark);
+  p(21, 21, 4, 4, K.iron); p(21, 21, 2, 1, K.ironHi); p(2, 3, 2, 2, K.iron); p(42, 3, 2, 2, K.iron);
+}
+function drawOwl(t, shut) {
+  const { p } = t;
+  const B = { hi: C.barkLight, base: C.barkMid, dark: C.barkDeep };
+  p(2, 3, 8, 9, B.base); p(1, 5, 1, 5, B.base); p(10, 5, 1, 5, B.dark); p(2, 2, 2, 2, B.base); p(8, 2, 2, 2, B.dark); p(3, 3, 6, 1, B.hi);
+  p(3, 4, 6, 4, K.candle); p(5, 7, 2, 4, K.candle); p(4, 9, 1, 2, B.hi); p(7, 9, 1, 2, B.hi);
+  if (shut) { p(3, 6, 2, 1, B.dark); p(7, 6, 2, 1, B.dark); } else { p(3, 5, 2, 2, C.sun2); p(7, 5, 2, 2, C.sun2); p(4, 5, 1, 2, C.black); p(7, 5, 1, 2, C.black); }
+  p(5, 7, 2, 1, C.beak); p(3, 12, 2, 1, C.beak); p(7, 12, 2, 1, C.beak);
+}
+// A small bell for a row of them, 9 x 11 art px, hanging from its top middle (it swings).
+function drawSmallBell(t) {
+  const { p } = t;
+  p(4, 0, 1, 2, K.iron);
+  [[3, 5], [2, 6], [2, 6], [1, 7], [1, 7], [0, 8]].forEach(([x0, x1], i) => { p(x0, 2 + i, x1 - x0 + 1, 1, K.bell); p(x0, 2 + i, 1, 1, K.bellHi); p(x1, 2 + i, 1, 1, K.bellShade); });
+  p(0, 8, 9, 1, K.bellShade); p(4, 9, 1, 2, K.iron);
+}
+// A coil of rope on a hook, 10 x 13 art px, from its top middle.
+function drawCoil(t) {
+  const { p, ring } = t;
+  p(4, 0, 2, 2, K.iron); ring(5, 6, 4, C.rope); ring(5, 6, 3, C.ropeDark); ring(5, 7, 4, C.rope); p(8, 9, 1, 4, C.rope); p(2, 3, 2, 1, C.white);
+}
+
 // --- the gate ----------------------------------------------------------------------
 // A door between the outside and the inside of the tower, on a stone landing
 // he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
@@ -916,6 +1023,18 @@ export function buildInterior() {
     pile: makeSprite(14, 14, drawPile, { ax: 0.5, ay: 0 }),
     flyingBook: [0, 1].map((f) => makeSprite(11, 7, (t) => drawFlyingBook(t, f), { ax: 0.5, ay: 0.5 })),
     tome: [0, 1].map((f) => makeSprite(28, 22, (t) => drawTome(t, f), undefined, { axPx: 14 * 4, ayPx: 4 * 4 })),
+    rack: makeSprite(26, 46, drawRack, { ax: 0.5, ay: 0 }),
+    helmets: makeSprite(30, 16, drawHelmets, { ax: 0.5, ay: 0 }),
+    table: makeSprite(30, 22, drawTable, { ax: 0.5, ay: 0 }),
+    poster: makeSprite(16, 24, drawPoster, { ax: 0.5, ay: 0 }),
+    horn: makeSprite(14, 12, drawHorn, { ax: 0.5, ay: 0 }),
+    dial: makeSprite(34, 34, drawDial, { ax: 0.5, ay: 0.5 }),
+    hand: [14, 10].map((n) => makeSprite(3, n, (t) => drawHand(t, n), { ax: 0.5, ay: 1 })),
+    bellRope: makeSprite(5, 60, drawBellRope, { ax: 0.5, ay: 0 }),
+    truss: makeSprite(46, 42, drawTruss, { ax: 0.5, ay: 0 }),
+    owl: [false, true].map((s) => makeSprite(12, 13, (t) => drawOwl(t, s), { ax: 0.5, ay: 1 })),
+    smallBell: makeSprite(9, 11, drawSmallBell, { ax: 0.5, ay: 0 }),
+    coil: makeSprite(10, 13, drawCoil, { ax: 0.5, ay: 0 }),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

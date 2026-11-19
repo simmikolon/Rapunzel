@@ -575,6 +575,16 @@ is a pool to draw from, not a promise.
     butterflies are the forest's (paper-pale, so they are not bats).
     Its spring is not the bell but a great chained book on the chain
     (`tome`, the bell's slot and bounce): pages fly when he lands on it.
+  - ✅ the guard rooms' and the belfry's things (purely visual; four in
+    five of their places are filled). Guard rooms: racks of pole arms
+    (put away, so without the red collar of the one that thrusts),
+    shelves of helmets (the captain's with a blue plume), the watch's
+    table with a tankard, dice and a hand of cards, a notice with the
+    prince's face and a purse under it, a signal horn. Belfry: roof
+    timbers, on some an owl that blinks; bell ropes with striped grips,
+    each swaying in its own time; the great clock's dial, its hands
+    going round; a row of small bells on a beam; coils of rope and
+    small wheels between.
   - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
@@ -1539,3 +1549,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   83 m. With gates, starting inside: median 415 m, mean 533 m. The
   outside without gates is identical to the baseline. The atlas is
   4096 x 2954: about 1100 px are left before the 4096 limit.
+- 2026-11-19: The guard rooms and the belfry furnished
+  (`element/interior-guardrooms-belfry`), as the library was. Each
+  floor now tells who uses it: the guard rooms are where the watch
+  waits (arms in racks, helmets on a shelf, a game left on the table)
+  and where the prince is looked for (the notice with his face); the
+  belfry is the tower's machinery and roof (timbers, ropes, the dial,
+  wheels) with one inhabitant who minds nobody, an owl. What moves does
+  so slowly and in place (hands, ropes, small bells, a blink), so
+  nothing on the wall is taken for something to dodge. Purely visual:
+  the simulator does not draw. The atlas is 4096 x 2974, about 1100 px
+  short of the limit.
