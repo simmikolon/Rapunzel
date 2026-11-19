@@ -563,8 +563,14 @@ is a pool to draw from, not a promise.
     warm stone, shelves of books and Rapunzel's portraits, webs and
     ghosts); the belfry (400 m: weathered stone, cog wheels turning in
     pairs, bells to bounce on, scaffold boards, the bats' home).
-  - ✅ the library's books (250 to 400 m): its walls are nearly full
-    and have a second place a side per storey. Tall bookcases in three
+  - ✅ the library's books (250 to 400 m). Every storey there has a
+    wooden walkway across the whole back wall, just under the window's
+    sill, its railing toward the room; the furniture stands on it left
+    and right of the window, pictures and the rest hang above within
+    reach of a ladder, and a ladder at one end (left and right in
+    turn) leads up to the next walkway. The walkway is wood in shade
+    with no lit top: it stands at the back wall and is nothing to land
+    on. Tall bookcases in three
     fillings (a potion, an hourglass, a candle end or a scroll between
     the books), a third of them with a ladder leant against them; a
     rack of scrolls with one hung open; hung parchments and piles of
@@ -1560,3 +1566,21 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   nothing on the wall is taken for something to dodge. Purely visual:
   the simulator does not draw. The atlas is 4096 x 2974, about 1100 px
   short of the limit.
+- 2026-11-19: Walkways in the library (`element/library-walkways`).
+  Simon, playing it: the bookcases look fine but are nailed to the back
+  wall at random, and nobody could get to them; give them a wooden
+  balcony across the wall to stand on. So the library is no longer
+  furnished by the wall's places but by storey: a walkway across the
+  whole back wall just under the window's sill (one can stand at the
+  window), the bookcase, the lectern or the scroll rack on it either
+  side of the window, what hangs (pictures, a mirror, a tapestry) above
+  them where a ladder reaches, and a long ladder at one end up to the
+  next walkway, left and right in turn. The rule the stairs brought
+  ("it must be seen to be carried") gets its twin: furniture must be
+  seen to be reachable. The risk is that a wooden floor across the
+  whole picture looks like something to land on. Against that: it is
+  the back wall's layer, wood in shade under a cool tint, its railing
+  is on our side of it (a gallery he can stand on has its railing
+  behind him), and it has no pale lit top, which every platform has.
+  To be watched when played. Purely visual; the simulator does not
+  draw. The atlas is 4096 x 2990.

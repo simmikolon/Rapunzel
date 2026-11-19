@@ -887,6 +887,25 @@ function drawCoil(t) {
   p(4, 0, 2, 2, K.iron); ring(5, 6, 4, C.rope); ring(5, 6, 3, C.ropeDark); ring(5, 7, 4, C.rope); p(8, 9, 1, 4, C.rope); p(2, 3, 2, 1, C.white);
 }
 
+// The library's walkway, 142 x 30 art px (the whole width between the
+// pillars), the anchor the middle of its floor line (row 14): a railing
+// toward the room above it, the boards' ends, brackets back to the wall
+// below. Wood in shade, and no lit top to it: it stands at the back wall
+// and is nothing to land on (what he stands on has a pale, lit top).
+const SHADE = { hi: '#a07a5c', base: '#7d5c49', dark: '#583f37', deep: '#3b2a2a' };
+function drawWalkway(t) {
+  const { p, line } = t;
+  // brackets and beam ends under the floor
+  for (let x = 6; x < 142; x += 26) { p(x, 17, 2, 12, SHADE.dark); line(x + 9, 17, x + 1, 27, SHADE.dark, 2); p(x + 10, 17, 3, 3, SHADE.deep); }
+  // the floor: boards end on
+  p(0, 14, 142, 3, SHADE.base); p(0, 14, 142, 1, SHADE.hi); p(0, 16, 142, 1, SHADE.deep);
+  for (let x = 7; x < 142; x += 9) p(x, 15, 1, 2, SHADE.dark);
+  // the railing: posts, a hand rail, a rail half way, slim bars between
+  for (let x = 2; x < 142; x += 3) if (x % 12 !== 2) p(x, 3, 1, 11, SHADE.dark);
+  for (let x = 2; x < 142; x += 12) { p(x, 1, 2, 13, SHADE.base); p(x, 1, 1, 13, SHADE.hi); }
+  p(0, 0, 142, 2, SHADE.base); p(0, 0, 142, 1, SHADE.hi); p(0, 8, 142, 1, SHADE.dark);
+}
+
 // --- the gate ----------------------------------------------------------------------
 // A door between the outside and the inside of the tower, on a stone landing
 // he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
@@ -1035,6 +1054,7 @@ export function buildInterior() {
     owl: [false, true].map((s) => makeSprite(12, 13, (t) => drawOwl(t, s), { ax: 0.5, ay: 1 })),
     smallBell: makeSprite(9, 11, drawSmallBell, { ax: 0.5, ay: 0 }),
     coil: makeSprite(10, 13, drawCoil, { ax: 0.5, ay: 0 }),
+    walkway: makeSprite(142, 30, drawWalkway, undefined, { axPx: 71 * 4, ayPx: 14 * 4 }),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),
