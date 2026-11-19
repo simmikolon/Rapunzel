@@ -10,6 +10,7 @@
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
+//   ?spawn=dark      (inside) with ?at: a dark stretch begins five metres above the start
 //   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
 //   ?spawn=stairs    (inside) with ?at: a flight of stairs right above the start
 //   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince
@@ -41,6 +42,7 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
   const y = Math.max(0, metres) * PX_PER_METER;
   if (!y) return;
   if (spawn === 'scissors') world.level.nextCutY = y - 400;
+  if (spawn === 'dark' && world.place.inside) world.level.nextDarkY = y + 500;          // the lights go out five metres above the start
   if (spawn === 'gate') world.level.nextGateY = y + 100;                               // the first row above the start is a gate's
   else world.level.nextGateY = Math.max(world.level.nextGateY, y + 2500);              // not on top of the start
   if (spawn === 'stairs' && world.place.inside) world.level.forceLayout = 'stairsR';   // the row above the start is a flight of stairs

@@ -45,7 +45,8 @@ which only copies the two folders together). The design document
   nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,
   `?spawn=web` spins a spider's web under it, `?spawn=ghost` sends a ghost, `?at=150&spawn=stairs` builds a flight
   of stairs above the start). `?at=150&spawn=gate` puts a gate to the
-  other place above the start, in either place.
+  other place above the start, in either place;
+  `?place=inside&at=200&spawn=dark` puts the lights out above the start.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
@@ -90,6 +91,7 @@ which only copies the two folders together). The design document
   `beat` = 300 px.
 - Drawing goes through the renderer facade `g` (`web/src/gfx/renderer.js`);
   gameplay code never touches PixiJS. Pass `glow` on draw calls for bloom.
+  `g.dark(amount)` makes a frame dark and `g.lamp(x, y, r)` lights it.
 - Keep kids in mind: hazards telegraphed, no trap without a way out.
 - Commit messages describe the change and the measured effect; no model
   names in commits, code or docs.

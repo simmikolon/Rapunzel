@@ -18,6 +18,10 @@ import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf } from './places.js';
 import { STONE_STYLE, INSIDE } from './art/interior.js';
 
+// Where the lights are out: how far the picture goes down (1 would be
+// black: a ledge must still be a shape in it), and toward which colour.
+const DARK_DEPTH = 0.86, DARK_COLOR = '#07061a';
+
 // Through a gate: the door takes GATE_OPEN to open, then the picture closes
 // in on the prince and opens again, GATE_IRIS each way.
 const GATE_OPEN = 0.28, GATE_IRIS = 0.3;
@@ -62,6 +66,7 @@ export class World {
     this.level.rngPower = new RNG(seed == null ? undefined : hash(seed + 5));
     this.level.rngFauna = new RNG(seed == null ? undefined : hash(seed + 6));
     this.level.rngGates = new RNG(seed == null ? undefined : hash(seed + 7));
+    this.level.rngDark = new RNG(seed == null ? undefined : hash(seed + 8));
     this.passage = null;          // { gate, t, switched }: going through a gate (enterGate)
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
@@ -306,6 +311,7 @@ export class World {
     this.onGatePass(pl, gate);
   }
   onGatePass(pl, gate) {}                   // the simulator counts here
+  onDark(pl, d) {}                          // and here
 
   // The spider's web holds whoever flies into it (enemies.js Web says how
   // he gets out); the boost shield or the star tear through it and knock
@@ -464,6 +470,14 @@ export class World {
       this.hintShown = true;
       this.toast('Boost to punch through enemies!', '#ffd98a', 2.6);
     }
+    // Where the lights are out, it is said as he comes up to it.
+    if (this.place.inside) {
+      for (const d of this.level.darks) {
+        if (d.said || pl.maxY < d.from - 800) continue;
+        d.said = true;
+        if (pl.maxY < d.to) { this.toast('The lights are out!', '#cfc8ff', 2.4); this.audio.lightsOut(); this.onDark(pl, d); }
+      }
+    }
     // Inside the tower a new floor says its name.
     if (this.place.inside) {
       const floor = zoneAt(pl.maxY, this.level.zones).name;
@@ -518,7 +532,13 @@ export class World {
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
     else if (p.kind === 'bell') { this.audio.bell(); p.rungAt = this.time; this.particles.sparkles(pl.x, pl.y, 8, '#ffe9a0'); return; }
     else if (p.kind === 'tome') { this.audio.tome(); this.particles.pages(pl.x, pl.y + 10, 8); this.particles.sparkles(pl.x, pl.y, 8, '#d9c8ff'); return; }
-    else if (p.kind === 'chandelier') { this.audio.bounce(pl.combo); this.audio.clink(); this.particles.sparkles(pl.x, pl.y + 8, 5, INSIDE.candleLight); return; }
+    else if (p.kind === 'chandelier') {
+      this.audio.bounce(pl.combo); this.audio.clink();
+      // where the lights are out, a landing lights its candles: he brings the light back as he climbs
+      if (p.unlit) { p.unlit = false; this.audio.candleLit(); this.particles.sparkles(pl.x, pl.y + 20, 14, INSIDE.candleLight); }
+      else this.particles.sparkles(pl.x, pl.y + 8, 5, INSIDE.candleLight);
+      return;
+    }
     else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.kind === 'skyLantern') { this.audio.paper(); this.particles.sparkles(pl.x, pl.y + 10, 7, '#ffd04a'); return; }
     else if (p.kind === 'stork') {
@@ -597,7 +617,7 @@ export class World {
     switch (p.kind) {
       case 'branchL': { const dry = stone ? I.stone.dryL : T.branchLDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchL[p.len][p.variant]; break; }
       case 'branchR': { const dry = stone ? I.stone.dryR : T.branchRDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchR[p.len][p.variant]; break; }
-      case 'chandelier': s = I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
+      case 'chandelier': s = p.unlit ? I.chandelierOut : I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
       case 'bell': s = I.bell; break;
       case 'tome': s = I.tome[p.squash > 0.4 ? 1 : 0]; break;
       case 'gallery': s = I.gallery[p.side][p.variant % 2]; break;
@@ -653,10 +673,12 @@ export class World {
       // its candles: a halo on the ring and a pool of light in the room
       const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
       const fl = 0.88 + 0.12 * Math.sin(this.time * 9 + p.id) * Math.sin(this.time * 2.7 + p.id * 2);
-      g.halo(sx, sy - 14, 96, INSIDE.candleLight, 0.42 * fl, { glow: 0.45 });
-      this.bg.interior.glow(sx, sy - 10, 300, INSIDE.candleLight, 0.2 * fl);
+      if (!p.unlit) {
+        g.halo(sx, sy - 14, 96, INSIDE.candleLight, 0.42 * fl, { glow: 0.45 });
+        this.bg.interior.glow(sx, sy - 10, 300, INSIDE.candleLight, 0.2 * fl);
+        opts.glow = 0.25;
+      }
       opts.rot = this.chainLean(p.y) * 0.5;              // it leans a little the way the chain hangs there
-      opts.glow = 0.25;
     }
     if (p.kind === 'tome') {
       // it hangs the way the chain hangs, and there is magic in it
@@ -671,6 +693,43 @@ export class World {
       opts.rot = this.chainLean(p.y) * 0.5 + (dt < 3 ? Math.sin(dt * 13) * 0.2 * Math.exp(-dt * 1.8) : 0);
     }
     g.blit(s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
+  }
+
+  // Where the lights are out (level.js, the dark stretches): the picture is
+  // multiplied down to nearly nothing and brought back around every light.
+  // His own light goes with the prince; the room's lamps are the pools the
+  // painter and the platforms already registered this frame (the lit
+  // chandeliers, a ghost's candle, the spell book; the torches and windows
+  // of a dark stretch are out and register none); what one picks up
+  // glimmers; and every creature has a light of its own, so nothing that
+  // bites comes out of the black.
+  get darkness() { return this.place.inside ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }
+  drawDarkness(g) {
+    const dk = this.darkness;
+    if (dk <= 0.01) return;
+    const cam = this.cam, pl = this.player;
+    g.dark(dk * DARK_DEPTH, DARK_COLOR);
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 560, '#ffe6c4', 0.4);
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 340, '#fff0da', 0.9);
+    for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);
+    for (const p of this.platforms) {
+      if (p.y < cam.y - 200 || p.y > cam.top + 200) continue;
+      if (p.kind === 'gate') g.lamp(cam.sx(p.x), cam.sy(p.y + 90), 230, '#ffe2b0', 0.8);
+      else if (p.kind === 'gallery') g.lamp(cam.sx(p.x + (p.side === 'L' ? -70 : 70)), cam.sy(p.y + 70), 190, '#ffd596', 0.6);   // the light in its door
+    }
+    for (const k of this.pickups) {
+      if (!k.alive || k.y < cam.y - 100 || k.y > cam.top + 100) continue;
+      const r = k.kind === 'sun' ? 62 : k.kind === 'lantern' ? 170 : k.kind === 'power' ? 150 : 90;
+      g.lamp(cam.sx(k.x), cam.sy(k.y), r, k.kind === 'sun' ? '#fff3a0' : k.kind === 'heart' ? '#ffb0c0' : '#ffd98a', k.kind === 'sun' ? 0.75 : 0.9);
+    }
+    for (const e of this.enemies) {
+      if (!e.alive || e.dead || e.y < cam.y - 200 || e.y > cam.top + 200) continue;
+      if (e.kind === 'bat') g.lamp(cam.sx(e.x), cam.sy(e.y), e.state === 'hang' ? 70 : 120, '#d9c8ff', e.state === 'hang' ? 0.45 : 0.8);        // its eyes
+      else if (e.kind === 'ghost') g.lamp(cam.sx(e.x), cam.sy(e.y), 150, '#e9e6f7', 0.75 * e.vis);
+      else if (e.kind === 'guard') g.lamp(cam.sx(e.x), cam.sy(e.y), 190, '#ffd596', 0.7);                                                    // he has a lantern by him
+      else if (e.kind === 'grabber') { if (e.head > 0) g.lamp(cam.sx(e.win.x), cam.sy(e.armY), 170, '#ffd596', 0.8 * e.head); }              // light from behind him as he looks out
+      else if (e.kind === 'web') { if (!e.torn) g.lamp(cam.sx(e.x), cam.sy(e.y), 130, '#f6f3ff', 0.4); g.lamp(cam.sx(e.spX), cam.sy(e.spY), 60, '#ffb0b0', 0.5); }   // dew on the threads, the spider's eyes
+    }
   }
 
   // `g` is the renderer facade (gfx/renderer.js); everything is drawn in
@@ -694,6 +753,7 @@ export class World {
     g.layer('light');
     this.bg.drawLighting(g, cam);
     this.bg.drawVignette(g);
+    this.drawDarkness(g);
     // going through a gate: the picture closes in on the prince and opens again
     const k = this.iris;
     if (k > 0) {

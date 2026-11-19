@@ -128,6 +128,16 @@ const floorLayout = (y, place) => (place.sky && cloudAmount(y) >= 0.5 ? 'cloudL+
 // baseline) nothing of it is rolled and the tower is the one it was.
 export const GATE_FROM = 12000, GATE_TO = 40000, GATE_EVERY = [10000, 16000];
 
+// Where the lights are out (inside the tower only): from DARK_FROM on,
+// every DARK_EVERY of climb, a stretch DARK_LEN long is dark. The torches
+// there are out, the windows walled up, the chandeliers unlit until he
+// lands on them (world.js), and what he sees he sees by his own light and
+// by whatever shines. So that the dark is tense but never unfair, its rows
+// have nothing that crumbles and nothing small, fewer creatures, and more
+// lanterns; no gate and no swarm is built in it. `darkAt(y)` is how dark it
+// is at a height (0 to 1, fading in and out over DARK_FADE).
+export const DARK_FROM = 15000, DARK_EVERY = [14000, 22000], DARK_LEN = [3200, 4200], DARK_FADE = 520;
+
 export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 1600, CUT_MARGIN = 240, CUT_ROOM = 1000;
 const braidOnly = (layout) => layout.split('+').every((k) => k === 'ribbon' || k === 'bow');
 
@@ -155,6 +165,8 @@ export class Level {
     this.rngPower = rng;         // the power-ups: their own stream, so the tower is the same with and without them
     this.rngFauna = rng;         // bats and the flock's timing: apart again, so only the flock's two floors change the tower
     this.rngGates = rng;         // where the gates are
+    this.rngDark = rng;          // where the lights are out
+    this.darks = [];             // the dark stretches built so far: { from, to, said }
     this.gates = true;           // false: a tower without gates (the simulator's baseline)
     this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
     this.zones = ZONES;
@@ -191,6 +203,8 @@ export class Level {
     this.flockPlan = null;       // { from, to, y, fired }: the two floors and the height the birds fly at
     this.flockNext = false;      // the next row is a flock's upper floor
     this.nextFlockY = FLOCK_FROM + this.rngFauna.range(0, 8000);   // the first between 160 and 240 m
+    this.darks = [];
+    this.nextDarkY = this.place.inside ? DARK_FROM + this.rngDark.range(0, 6000) : Infinity;   // the first dark stretch between 150 and 210 m
     this.nextGateY = this.gates ? GATE_FROM + this.rngGates.range(0, 5000) : Infinity;   // the first gate between 120 and 170 m
     this.lastPower = null;       // the kind of the last power-up (never twice in a row)
     this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
@@ -208,6 +222,15 @@ export class Level {
     this.cutPlan = null; this.nextCutY = Math.max(this.nextCutY, y + 4000);
     this.flockPlan = null; this.flockNext = false; this.nextFlockY = Math.max(this.nextFlockY, y + 4000);
     this.nextPowerY = Math.max(this.nextPowerY, y + 600);
+    if (this.place.inside && this.nextDarkY === Infinity) this.nextDarkY = y + this.rngDark.range(3000, 9000);   // he came in at a gate: the dark has its turn too
+  }
+
+  // Is row height y in a dark stretch? And how dark is it at a height (0 to 1)?
+  inDark(y) { return this.darks.some((d) => y >= d.from && y <= d.to); }
+  darkAt(y) {
+    let a = 0;
+    for (const d of this.darks) a = Math.max(a, clamp(Math.min((y - d.from + DARK_FADE) / DARK_FADE, (d.to + DARK_FADE - y) / DARK_FADE), 0, 1));
+    return a * a * (3 - 2 * a);
   }
 
   // Which power-up for a row at height y with pacing P; null when none fits.
@@ -381,13 +404,22 @@ export class Level {
       this.cutPlan = { from: y, yc: y + CUT_AHEAD, until: y + CUT_AHEAD + CUT_MARGIN, fired: false };
     }
     const P0 = pacingAt(y);
+    // Plan a dark stretch from this row up (inside), never around a swarm's floors.
+    if (this.place.inside && y >= this.nextDarkY && !this.flockPlan && !this.flockNext) {
+      const len = this.rngDark.range(DARK_LEN[0], DARK_LEN[1]);
+      this.darks = this.darks.filter((d) => d.to > y - 6000);
+      this.darks.push({ from: y, to: y + len, said: false });
+      this.nextDarkY = y + len + this.rngDark.range(DARK_EVERY[0], DARK_EVERY[1]);
+    }
+    const dark = this.place.inside && this.inDark(y);
     // A flock: this row is the floor under it ('below'), or the one over it ('above').
     let flockRow = null;
     if (this.flockNext) { flockRow = 'above'; this.flockNext = false; }
-    else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather) flockRow = 'below';
+    else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather && !dark && !this.inDark(y + FLOCK_GAP)) flockRow = 'below';
     // A gate: its landing on one side, a healthy branch on the other.
-    const gateRow = !flockRow && !this.flockPlan && !this.cutPlan && y >= this.nextGateY && y < GATE_TO;
+    const gateRow = !flockRow && !this.flockPlan && !this.cutPlan && !dark && y >= this.nextGateY && y < GATE_TO;
     const P = flockRow || gateRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row: nothing crumbles, nothing small, nobody on them
+      : dark ? { ...P0, dry: 0, short: 0, enemy: P0.enemy * 0.7, lantern: P0.lantern * 2.2 }   // in the dark: nothing crumbles, nothing small, fewer creatures, more lanterns
       : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
     let layout = this.nextLayout || this.pickLayout(T, y);
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
@@ -471,6 +503,7 @@ export class Level {
         opts.variant = r.weighted([[0, 3], [1, 3], [2, 2], [3, 2]]);
         if (canBeDry && r.chance(T.dry * P.dry)) { opts.dry = true; opts.variant = 4; }
       }
+      if (slot === 'chandelier' && dark) opts.unlit = true;                                    // its candles are out until he lands on it
       if (slot === 'bell' && zoneAt(y, this.zones).name === 'the library') kind = 'tome';      // the library's spring is a chained book
       if (slot === 'gateL' || slot === 'gateR') {
         kind = 'gate';

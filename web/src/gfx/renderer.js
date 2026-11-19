@@ -1,4 +1,4 @@
-import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, Color } from '../../vendor/pixi.min.mjs';
+import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, Color, RenderTexture } from '../../vendor/pixi.min.mjs';
 import { W, H, PX } from '../config.js';
 import { makeCanvas } from '../art/sprite.js';
 import { buildAtlas, makeGlowTexture, makeBeamTexture, makeFogTexture, canvasTexture } from './atlas.js';
@@ -15,6 +15,8 @@ import { BloomFilter, CRTFilter } from './filters.js';
 //   bg      sky, far layer, forest, tower, braid, ground, trunks
 //   world   platforms, pickups, enemies, prince, particles, fireflies
 //   light   altitude lighting (multiply) and the vignette
+//   (dark)  only where the lights are out: a light map multiplied over
+//           everything below it (see dark() and lamp())
 //   glow    emissive copies of glowing things -> BloomFilter, added over
 //   hud     score, hearts, boost meter, buttons, toasts, title
 //   overlay pause / game over / notices
@@ -85,6 +87,23 @@ export class Renderer {
       this.layers[name] = L;
       this.all.push(L);
     }
+    // Darkness: a light map, drawn each frame into a texture of its own (at
+    // half resolution: it is all soft gradients) and multiplied over the
+    // picture between the light layer and the glow. Its ground is the dark's
+    // colour; every lamp() adds light to it. Not part of the stage: `lamps`
+    // is rendered apart, only in frames that called dark().
+    this.lamps = { name: 'lamps', c: new Container({ label: 'lamps' }), sprites: [], ns: 0, gfx: [], ng: 0, texts: new Map(), z: 0, cur: null };
+    this.lamps.c.sortableChildren = true;
+    this.lampGround = new Sprite(this.white);
+    this.lampGround.zIndex = -1;
+    this.lamps.c.addChild(this.lampGround);
+    this.lightMap = RenderTexture.create({ width: W, height: H, resolution: 0.5 });
+    this.darkSprite = new Sprite(this.lightMap);
+    this.darkSprite.blendMode = 'multiply';
+    this.darkSprite.visible = false;
+    this.root.addChildAt(this.darkSprite, this.root.getChildIndex(this.layers.glow.c));
+    this.darkAmount = 0;
+    this.darkColor = 0x000000;
     this.layers.glow.c.filterArea = SCREEN();
     this.bloom = new BloomFilter(fx.bloom);
     this.crt = new CRTFilter(fx.crt);
@@ -112,6 +131,7 @@ export class Renderer {
     this.renderer.resize(W, H, scale);
     this.root.filterArea = SCREEN();
     this.layers.glow.c.filterArea = SCREEN();
+    this.lightMap.resize(W, H);
   }
 
   // ------------------------------------------------------------- frame
@@ -121,10 +141,13 @@ export class Renderer {
       for (const p of L.texts.values()) p.n = 0;
     }
     this.cur = this.layers.bg;
+    this.lamps.ns = 0; this.lamps.z = 0;
+    this.darkAmount = 0;
   }
 
   end(dt) {
     this.time += dt;
+    this._renderLightMap();
     for (const L of this.all) {
       for (let i = L.ns; i < L.sprites.length; i++) L.sprites[i].visible = false;
       for (let i = L.ng; i < L.gfx.length; i++) L.gfx[i].visible = false;
@@ -143,6 +166,41 @@ export class Renderer {
   }
 
   layer(name) { this.cur = this.layers[name]; }
+
+  // ------------------------------------------------------------- darkness
+  // This frame is dark: everything under the HUD is multiplied by `color`
+  // at `amount` (0 nothing, 1 all the way to the colour), except where a
+  // lamp shines. Call it before the frame's lamp() calls.
+  dark(amount, color = '#060510') {
+    this.darkAmount = Math.max(0, Math.min(1, amount));
+    this.darkColor = this._col(color).rgb;
+  }
+  // A light in the dark: a soft disc of radius r that brings the picture
+  // back, in its colour. Does nothing in a frame that is not dark.
+  lamp(cx, cy, r, color = '#ffffff', alpha = 1) {
+    if (this.darkAmount <= 0.01) return;
+    const sp = this._sprite(this.lamps);
+    const c = this._col(color);
+    sp.texture = this.glowTex;
+    sp.blendMode = 'add';
+    sp.pivot.set(64, 64);
+    sp.position.set(cx, cy);
+    sp.rotation = 0;
+    sp.scale.set(r / 64, r / 64);
+    sp.alpha = c.a * Math.min(1, alpha);
+    sp.tint = c.rgb;
+  }
+  _renderLightMap() {
+    const L = this.lamps;
+    for (let i = L.ns; i < L.sprites.length; i++) L.sprites[i].visible = false;
+    if (this.darkAmount <= 0.01) { this.darkSprite.visible = false; return; }
+    // the map's ground: white turned toward the dark's colour by the amount
+    const a = this.darkAmount, d = this.darkColor, mix = (sh) => Math.round(255 + (((d >> sh) & 255) - 255) * a);
+    this.lampGround.tint = (mix(16) << 16) | (mix(8) << 8) | mix(0);
+    this.lampGround.scale.set(W / this.white.width, H / this.white.height);
+    this.renderer.render({ container: L.c, target: this.lightMap, clear: true });
+    this.darkSprite.visible = true;
+  }
 
   // ------------------------------------------------------------- pools
   _col(css) {

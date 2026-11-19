@@ -343,6 +343,17 @@ class Synth {
     this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
   }
   skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
+  // The lights are out: a breath that takes the flames, a low note after it.
+  lightsOut() {
+    this.noise({ dur: 0.5, vol: 0.12, filter: 'bandpass', freq: 1400, to: 300, q: 0.8 });
+    this.tone({ type: 'sine', freq: 196, to: 131, dur: 0.7, vol: 0.12, delay: 0.15 });
+  }
+  // A chandelier's candles catch: a small rush and a warm chord.
+  candleLit() {
+    platform.haptic('soft');
+    this.noise({ dur: 0.16, vol: 0.08, filter: 'bandpass', freq: 900, to: 2600, q: 1 });
+    for (const [f, d] of [[523, 0], [659, 0.05], [784, 0.1]]) this.tone({ type: 'triangle', freq: f, dur: 0.3, vol: 0.07, delay: d });
+  }
   // Through a gate: the door's latch and creak, then a rising pair of notes.
   gate() {
     platform.haptic('spring');

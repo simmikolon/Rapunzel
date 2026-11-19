@@ -118,6 +118,7 @@ export class Platform {
     this.squash = 0;                  // visual squash 0..1
     this.wobble = 0;
     this.rungAt = -10;                // the bell: when it was last landed on (world time)
+    this.unlit = !!opts.unlit;        // a chandelier where the lights are out: dark until he lands on it
     this.prevX = this.x;
   }
 

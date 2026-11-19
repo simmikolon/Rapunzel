@@ -39,6 +39,7 @@ const FLOORS = [
 // `galleried` is laid out by storey instead and keeps them only so that
 // taking `galleried` off brings the open wall back.)
 const FLOOR_FADE = 1500;
+const NO_DARK = () => 0;
 const IVY_TO = 40000;
 const LIBRARY = 2;                 // the library's row in FLOORS: its books fly
 const WALK_TINT = '#cfc6dc';       // the walkways stand back in the room's shade: nothing to land on
@@ -56,11 +57,11 @@ function floorsAt(y) {
 const tintAt = (y) => { const f = floorsAt(y), c = f.t > 0 ? mixHex(FLOORS[f.a].tint, FLOORS[f.b].tint, f.t) : FLOORS[f.a].tint; return c === '#ffffff' ? undefined : { tint: c }; };
 
 // Wall tile k: which drawing (art/interior.js drawWall).
-function wallTile(k) {
+function wallTile(k, walled) {
   if (k === 0) return 4;
   if (k === 1) return 5;
-  if (k >= WINDOW_FIRST && k % WINDOW_EVERY === 0) return 2;
-  if (k > WINDOW_FIRST && k % WINDOW_EVERY === 1) return 3;
+  if (k >= WINDOW_FIRST && k % WINDOW_EVERY === 0) return walled ? 6 : 2;       // where the lights are out the windows are walled up
+  if (k > WINDOW_FIRST && k % WINDOW_EVERY === 1) return walled ? 7 : 3;
   return hash(k * 13 + 1) % 10 < 7 ? 0 : 1;
 }
 
@@ -168,6 +169,7 @@ export class Interior {
     this.art = art;
     this.bg = bg;                // the outside's painter: its sky, forest and braid are what the windows show
     this.glows = [];             // this frame's light pools: [sx, sy, radius, colour, alpha]
+    this.darkAt = NO_DARK;
   }
 
   // Where the chain hangs at height y: a slow heavy wave, wider as the
@@ -193,7 +195,7 @@ export class Interior {
     const A = this.art.interior;
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
-    for (let k = first; k <= last; k++) g.blit(A.wall[wallTile(k)], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy, tintAt(k * TILE_H / PARALLAX_TOWER));
+    for (let k = first; k <= last; k++) g.blit(A.wall[wallTile(k, this.walled(k))], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy, tintAt(k * TILE_H / PARALLAX_TOWER));
     // banners, shields, the gallery, books, clockwork
     const gates = world ? world.platforms.filter((p) => p.kind === 'gate') : [];
     const behindGate = (side, ly) => gates.some((q) => (q.x < 0 ? -1 : 1) === side && ly > q.ly - 30 && ly < q.ly + 350);   // nothing hangs where a gate's door is
@@ -228,7 +230,7 @@ export class Interior {
     for (let k = Math.max(WINDOW_FIRST, Math.floor((first - 2) / WINDOW_EVERY) * WINDOW_EVERY); k <= last; k += WINDOW_EVERY) {
       if (k * TILE_H / PARALLAX_TOWER > IVY_TO) break;
       const h = hash(k * 29 + 13), sill = H - ((k + 1) * TILE_H - 120 - camF) + cam.oy, cx = W / 2 + cam.ox;
-      if (h % 100 >= 55) continue;
+      if (h % 100 >= 55 || this.walled(k)) continue;
       const side = (h >>> 7) % 2 ? 1 : -1, what = (h >>> 9) % 3;                // over the sill, up the wall, or both
       if (what !== 1) g.blit(A.ivyHang, cx + side * 36, sill - 8, { rot: Math.sin(time * 0.8 + k) * 0.04 });
       if (what !== 0) g.blit(side < 0 ? A.ivyClimb.R : A.ivyClimb.L, cx - side * 62, sill + 6);
@@ -265,7 +267,7 @@ export class Interior {
     const k0 = Math.max(WINDOW_FIRST, Math.floor((first - 2) / WINDOW_EVERY) * WINDOW_EVERY);
     for (let k = k0; k <= last; k += WINDOW_EVERY) {
       const wx = W / 2 + cam.ox, wy = H - ((k + 1) * TILE_H + 24 - camF) + cam.oy;     // the opening's middle
-      if (wy < -500 || wy > H + 400) continue;
+      if (wy < -500 || wy > H + 400 || this.walled(k)) continue;
       g.puff(wx, wy, 220, 310, col, 0.24, { soft: true, blend: 'add' });
       // the shaft: three beams of falling length laid over each other, so it fades in steps
       const rot = 0.95, len = 620;
@@ -352,7 +354,7 @@ export class Interior {
     else if (d.kind === 'coil') g.blit(A.coil, dx, dy);
     else if (d.kind === 'gear') g.blit(A.cog, dx, dy + 20, { rot: time * 0.6 * (d.lit ? 1 : -1), sx: 0.5, sy: 0.5 });
     else if (d.kind === 'herbs') g.blit(A.herbs, dx, dy, { rot: Math.sin(time * 0.7 + k) * 0.03 });
-    else if (!d.lit) g.blit(A.sconce[2], dx, dy);
+    else if (!d.lit || this.darkAt(d.ly / PARALLAX_TOWER) > 0.5) g.blit(A.sconce[2], dx, dy);     // burnt down, or where the lights are out
     else {
       const fl = 0.85 + 0.15 * Math.sin(time * 10 + k * 2.3) * Math.sin(time * 2.9 + k);
       g.halo(dx, dy - 40, 40, INSIDE.candleLight, 0.45 * fl, { glow: 0.4 });
@@ -408,6 +410,7 @@ export class Interior {
         g.blit(side === 'L' ? A.pillarL[v] : A.pillarR[v], (side === 'L' ? 0 : W) + cam.ox, sy, tintAt(k * TILE_H));
         if (v !== TORCH) continue;
         const tx = cam.sx(side === 'L' ? -PILLAR_X : PILLAR_X), ty = cam.sy(k * TILE_H + TORCH_Y);
+        if (this.darkAt(k * TILE_H + TORCH_Y) > 0.5) { g.blit(A.torch[3], tx, ty); continue; }      // where the lights are out, it is out
         const fl = 0.85 + 0.15 * Math.sin(time * 11 + k * 1.7) * Math.sin(time * 3.1 + k);
         g.halo(tx, ty - 26, 84, INSIDE.torchLight, 0.5 * fl, { glow: 0.5 });
         g.blit(A.torch[Math.floor(time * 9 + k * 1.3) % 3], tx, ty, { glow: 0.5 });
@@ -416,7 +419,12 @@ export class Interior {
     }
   }
 
+  // Is the window that wall tile k belongs to walled up (a dark stretch at its height)?
+  walled(k) { const kb = k - (k % WINDOW_EVERY === 1 ? 1 : 0); return this.darkAt(((kb + 1) * TILE_H + 24) / PARALLAX_TOWER) > 0.5; }
+
   drawBack(g, cam, time, world) {
+    // how dark it is at a height (the level's dark stretches)
+    this.darkAt = world && world.level && world.place && world.place.inside ? (y) => world.level.darkAt(y) : NO_DARK;
     const bg = this.bg;
     this.glows.length = 0;
     bg.drawSky(g, cam);

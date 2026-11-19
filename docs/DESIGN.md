@@ -596,6 +596,20 @@ is a pool to draw from, not a promise.
     each swaying in its own time; the great clock's dial, its hands
     going round; a row of small bells on a beam; coils of rope and
     small wheels between.
+  - ✅ where the lights are out (from 150 m, a stretch of 32 to 42 m
+    every 140 to 220 m of climb, never in the hall): the torches are
+    out, the windows walled up, and the picture goes down to nearly
+    nothing, a ledge still a shape in it. What he sees he sees by his
+    own light, which goes with him, and by whatever shines: suns,
+    lanterns and power-ups glimmer, the spell book and a ghost's candle
+    keep their light, and every creature has one (a bat's eyes, the
+    lantern by a guard, the light behind a pike guard as he looks out,
+    dew on a web). The chandeliers there are unlit and catch when he
+    lands on them: he brings the light back as he climbs. To keep the
+    dark tense but fair its rows have nothing that crumbles, nothing
+    small, fewer creatures and more lanterns, and no gate or swarm.
+    Said as he comes up to it. The renderer has a light map for this
+    (`g.dark`, `g.lamp`).
   - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
@@ -819,6 +833,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
 | Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
+| The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1621,3 +1636,29 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   taken went with him). In the browser he now starts over that branch.
   The simulator keeps its start in the middle, so its reports from a
   start height are the ones they were (the sky's baseline is identical).
+- 2026-11-19: Where the lights are out (`element/interior-dark`).
+  Simon's idea: a section inside that is dark, or very dark. A good one
+  on one condition: the dark must never hide what bites. Decided:
+  (1) Not a floor of its own but stretches, announced and about 40 m
+  long, from the guard rooms up, so that the dark is an event one comes
+  out of again and every floor can have it. (2) Real darkness, not a
+  darker tint: the renderer got a light map (a texture at half
+  resolution, the dark's colour as its ground, every lamp added to it,
+  multiplied over the picture under the HUD). The lamps are for the
+  most part the light pools the room already registered for its
+  ordinary lighting, so whatever shone before lights the dark now
+  without knowing of it. (3) The prince carries his own light, big
+  enough to see the next row as he rises to it. (4) The mechanic of
+  its own: chandeliers are out and catch when he lands on them, so the
+  way he came is lit behind him. (5) Fair: every creature has a light,
+  the picture never goes to black (a pale ledge stays a shape), and
+  the rows there are the kind ones (nothing crumbles, nothing small,
+  fewer creatures, more lanterns); torches out and windows walled up
+  say where it begins before it is dark. Measured on 120 seeded runs
+  inside without gates: 306 dark stretches entered; good bold median
+  507 m, mean 641 m (460 m and 556 m before), 0.97 hits per 100 m,
+  falls 34 % of the deaths; kid bold median 73 m, mean 84 m. The bot
+  sees in the dark, so these numbers show only the kinder rows, not
+  what the dark asks of a player: that is to be played, and the rows'
+  kindness taken back if it is too easy. The outside without gates is
+  identical to the baseline. The atlas is 4096 x 3064.

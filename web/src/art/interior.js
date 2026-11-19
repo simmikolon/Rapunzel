@@ -55,7 +55,13 @@ function drawWall(t, variant, rng) {
   const { p, line, ctx } = t;
   const H = 48, rowH = 6, brickW = 14;
   const PXS = t.ctx.canvas.width / WALL_W;
-  const hole = (x, y, w, h) => ctx.clearRect(x * PXS, y * PXS, w * PXS, h * PXS);
+  // 6 and 7 are 2 and 3 walled up (where the lights are out): the frame
+  // stays, rough dark bricks fill the opening instead of a hole.
+  const walled = variant >= 6;
+  if (walled) variant -= 4;
+  const hole = walled
+    ? (x, y, w, h) => { p(x, y, w, h, K.wallDark); for (let yy = Math.ceil(y / 4) * 4; yy < y + h; yy += 4) p(x, yy, w, 1, K.wallMortar); for (let yy = Math.ceil(y / 8) * 8 + 1; yy < y + h - 2; yy += 8) for (let xx = x + 5; xx < x + w; xx += 9) p(xx, yy, 1, 3, K.wallMortar); }
+    : (x, y, w, h) => ctx.clearRect(x * PXS, y * PXS, w * PXS, h * PXS);
   p(0, 0, WALL_W, H, K.wall);
   for (let y = 0; y < H; y += rowH) {
     const off = (y / rowH) % 2 ? 7 : 0;
@@ -144,6 +150,7 @@ function drawPillar(t, variant, rng) {
 function drawTorch(t, frame) {
   const { p } = t;
   p(3, 10, 3, 6, K.iron); p(2, 8, 5, 2, K.iron); p(2, 8, 5, 1, K.ironHi); p(3, 10, 1, 6, K.ironHi);
+  if (frame === 3) { p(3, 6, 3, 2, K.pilDeep); p(4, 4, 1, 2, K.chainDark); p(5, 2, 1, 2, K.chainDark); return; }   // out: a charred head, a thread of smoke
   const lean = [0, -1, 1][frame], tall = frame === 2 ? 1 : 0;
   p(2, 4 - tall, 5, 4 + tall, C.flame3); p(3 + lean, 1 - tall, 3, 3, C.flame3); p(4 + lean, 0 - tall + 1, 1, 1, C.flame3);
   p(3, 4, 3, 4, C.flame2); p(4 + lean, 2, 1, 2, C.flame2);
@@ -238,6 +245,7 @@ function drawChandelier(t, frame) {
   p(13, 13, 4, 1, K.chainDark); p(14, 14, 2, 1, K.iron);                        // the boss underneath
   [3, 10, 18, 25].forEach((x, i) => {
     p(x, 6, 2, 3, K.candle); p(x, 6, 1, 3, C.white);
+    if (frame === 2) { p(x, 5, 1, 1, K.iron); return; }                          // out: only the wicks
     const up = (frame + i) % 2;
     p(x, 4 - up, 2, 2 + up, C.flame2); p(x + (up ? 1 : 0), 3 - up, 1, 1, C.flame3); p(x, 5, 1, 1, C.flame1);
   });
@@ -1015,9 +1023,9 @@ function drawGhostCandle(t, frame) {
 }
 
 export function buildInterior() {
-  const wall = [0, 1, 2, 3, 4, 5].map((v) => makeSprite(WALL_W, 48, (t) => drawWall(t, v, new RNG(300 + v)), { ax: 0.5, ay: 1 }));
+  const wall = [0, 1, 2, 3, 4, 5, 6, 7].map((v) => makeSprite(WALL_W, 48, (t) => drawWall(t, v, new RNG(300 + v)), { ax: 0.5, ay: 1 }));
   const pillarL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawPillar(t, v, new RNG(400 + v)), { ax: 0, ay: 1 }));
-  const torch = [0, 1, 2].map((f) => makeSprite(9, 16, (t) => drawTorch(t, f), undefined, { axPx: 4.5 * 4, ayPx: 10 * 4 }));
+  const torch = [0, 1, 2, 3].map((f) => makeSprite(9, 16, (t) => drawTorch(t, f), undefined, { axPx: 4.5 * 4, ayPx: 10 * 4 }));
   const floor = makeSprite(192, 24, drawFloor, { ax: 0.5, ay: 0 }, { ayPx: 4 * 4 });
   // the ledges as a tree style: the same canvases and anchors as the branches
   const ledge = (L, draw) => makeSprite(L, 28, draw, undefined, { axPx: L * 2, ayPx: 7 * 4 });
@@ -1033,6 +1041,7 @@ export function buildInterior() {
   return {
     wall, pillarL, pillarR: pillarL.map(flipH), torch, floor, stone,
     chandelier: [0, 1].map((f) => makeSprite(30, 15, (t) => drawChandelier(t, f), undefined, { axPx: 15 * 4, ayPx: 9 * 4 })),
+    chandelierOut: makeSprite(30, 15, (t) => drawChandelier(t, 2), undefined, { axPx: 15 * 4, ayPx: 9 * 4 }),
     bell: makeSprite(26, 26, drawBell, undefined, { axPx: 13 * 4, ayPx: 1 * 4 }),
     web: (() => { const R = [0, 1, 2, 3].map((k) => makeSprite(30, 36, (t) => drawWeb(t, k), undefined, { axPx: 30 * 4, ayPx: 0 })); return { R, L: R.map(flipH) }; })(),
     ghost: (() => { const R = [0, 1, 2, 3].map((f) => makeSprite(16, 20, (t) => drawGhost(t, f), { ax: 0.5, ay: 0.5 })); return { R, L: R.map(flipH) }; })(),
