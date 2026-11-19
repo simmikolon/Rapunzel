@@ -99,7 +99,7 @@ export const INVULNERABLE_TIME = 1.6;
 // One at a time: collecting one ends the one that runs. Each lasts a few
 // seconds; in the last POWER_WARN seconds its effect on the prince flickers
 // and three blips count it out.
-export const POWER_TIME = { star: 6, cloak: 8, spring: 7, magnet: 10, feather: 7 };
+export const POWER_TIME = { star: 7.5, cloak: 10, spring: 8.75, magnet: 12.5, feather: 8.75 };
 export const POWER_WARN = 1.5;
 export const POWER_GRACE = 0.8;        // after the star or the cloak ends: this long still safe (the hurt blink shows it)
 export const POWER_FIRST = [1500, 2500];  // the first one waits at 15 to 25 m, so every run meets one
@@ -110,7 +110,7 @@ export const SUPER_BOOST_VY = 1900;    // instead of BOOST_VY
 export const SUPER_MAX_VY = 3000;      // a bow spring under the golden spring stops here (apex ~21 m)
 export const SALTO_TIME = 0.6;         // one somersault per bounce, a quicker one per boost
 // Sun magnet: suns, lanterns and hearts this near the prince's body fly to him.
-export const MAGNET_RADIUS = 300;
+export const MAGNET_RADIUS = 380;
 export const MAGNET_SPEED = [500, 1800];  // a pulled pickup starts at the first and speeds up to the second
 export const MAGNET_ACCEL = 3600;
 // Feather: he comes down slowly, so there is twice the time to steer to a landing.

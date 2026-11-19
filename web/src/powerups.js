@@ -8,7 +8,8 @@
 //   cloak    invisible: nothing with eyes notices him and he passes through it
 //            (a pogo on a head still counts; lightning does not need to see him)
 //   spring   stronger bounces and boosts, a somersault with each
-//   magnet   suns, lanterns and hearts nearby fly to him
+//   magnet   suns, lanterns and hearts nearby fly to him (nothing is drawn
+//            around the prince for it: what flies to him is the sign)
 //   feather  he comes down slowly
 export const POWERS = {
   star:    { toast: 'Invincible!', color: '#ffe27a' },
@@ -32,6 +33,5 @@ export const rainbow = (t) => RAINBOW[((Math.floor(t * 24) % 24) + 24) % 24];
 export const POWER_FX = {
   cloakTint: '#cfe0ff',      // what is left of him
   cloakGlow: '#8fb0ff',      // the shimmer over it
-  ringA: '#ff6f8f', ringB: '#ffd43a',   // the magnet's rings: its red, and the suns' gold
   ghost: '#ffe27a',          // the spring's after-images
 };

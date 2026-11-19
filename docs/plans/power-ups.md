@@ -11,15 +11,16 @@ kids die by falling, and nothing so far helped with a fall.
 - **One at a time.** Collecting a power-up ends the one that runs. They
   are spaced so that this is the exception: one item every 65 to 105 m
   of climb, the first at 15 to 25 m so even a short run meets one.
-- **A few seconds each** (`POWER_TIME` in `config.js`): star 6, cloak 8,
-  spring 7, magnet 10, feather 7.
+- **A few seconds each** (`POWER_TIME` in `config.js`): star 7.5, cloak
+  10, spring 8.75, magnet 12.5, feather 8.75 (a quarter longer than first
+  built, after playing).
 - **The end is announced.** In the last 1.5 s the look on the prince
   flickers, the HUD bar blinks and three blips count it out. When the
   star or the cloak ends he is safe for another 0.8 s (the usual hurt
   blink), so losing it inside an enemy is not a trap.
 - **Every power-up shows on the prince**, not only in the HUD: a look
-  for each (below). The HUD carries the picture and a bar at the top
-  centre.
+  for each (below), except the magnet, whose sign is what flies to him.
+  The HUD carries the picture and a bar at the top centre.
 - Falling off the bottom ends the run under every power-up.
 
 ## The five
@@ -29,7 +30,7 @@ kids die by falling, and nothing so far helped with a fall.
 | **Star** | a smiling shooting star dragging a rainbow | invincible: what he touches is knocked away like under the boost shield (+3 suns each), lightning does nothing | a rainbow rim two pixels wide, each side its own hue, all running through the colours; a wash of colour; a rainbow trail |
 | **Cloak** | a hood with nobody in it but two eyes; it fades out and in | invisible: nothing with eyes notices him (no homing, lunge, dash, thrust, pike, wobbling pot), he passes through it, a pogo on a head still counts; the witch does not set out, and one who is crossing flies on with a "?"; birds and butterflies stay put. Lightning does not need to see him | a pale glassy prince with a shimmering rim; squirrels and guards show "?" instead of "!" |
 | **Golden spring** | a toy launcher with a red cushion that squashes | every bounce x 1.25 (apex 648 → 1012 px), a boost 1900 instead of 1500, a stomp too; a bow spring only up to 3000 px/s | a somersault with every bounce (0.6 s) and every boost (0.42 s), in the direction he faces; golden after-images and sparks on the way up |
-| **Sun magnet** | a red horseshoe with steel tips and sparks | suns, lanterns and hearts within 300 px of his middle fly to him (500 → 1800 px/s); never another power-up; what is on its way keeps coming when the magnet runs out | rings of dots closing in on him from the reach's edge; pulled pickups leave sparks |
+| **Sun magnet** | a red horseshoe with steel tips and sparks | suns, lanterns and hearts within 380 px of his middle fly to him (500 → 1800 px/s); never another power-up; what is on its way keeps coming when the magnet runs out | nothing around him (rings of dots closing in were built first and got in the way); the pickups flying to him leave sparks |
 | **Feather** | the stork's feather, swinging like a falling leaf | he comes down slowly: 40 % gravity and at most 600 px/s while falling, the way up untouched, so a landing has twice the time | two small wings on his back, beating on the way down; he rocks; feathers drift off |
 
 The items float in a **soap bubble** tinted in their colour: it explains

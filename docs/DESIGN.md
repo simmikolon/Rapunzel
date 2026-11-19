@@ -369,12 +369,12 @@ is a pool to draw from, not a promise.
   seconds, **one at a time** (a new one ends the one that runs). Each
   shows on the prince, flickers through its last 1.5 s with three blips,
   and has its picture and a bar at the top of the HUD.
-  - **Star** (6 s, a smiling shooting star with a rainbow tail):
+  - **Star** (7.5 s, a smiling shooting star with a rainbow tail):
     invincible. What he touches is knocked away like under the boost
     shield (+3 suns each, the witch is thrown off, a cut is fended off),
     lightning does nothing. A rainbow rim runs around him, a wash of
-    colour over him, a rainbow trail behind.
-  - **Cloak** (8 s, a hood with nobody in it but two eyes): invisible.
+    colour over him, a rainbow trail behind; no halo around it.
+  - **Cloak** (10 s, a hood with nobody in it but two eyes): invisible.
     Nothing with eyes notices him (crows do not home in, spiders do not
     lunge, squirrels do not dash, guards do not thrust, window guards
     stay down, pots do not wobble) and he passes through it; a pogo on
@@ -383,14 +383,15 @@ is a pool to draw from, not a promise.
     "?"; birds and butterflies stay put. Lightning does not need to see
     him: the one thing the cloak does not stop. He is a pale glassy
     figure with a shimmering rim, so the player still sees him.
-  - **Golden spring** (7 s, a toy launcher with a red cushion): every
+  - **Golden spring** (8.75 s, a toy launcher with a red cushion): every
     bounce 1.25 times as strong (648 → 1012 px), a boost 1900 instead of
     1500 px/s, a bow spring up to 3000 px/s; a somersault with each
     bounce and boost in the direction he faces, golden after-images.
-  - **Sun magnet** (10 s, a red horseshoe): suns, lanterns and hearts
-    within 300 px fly to him; rings of dots close in on him. Never pulls
+  - **Sun magnet** (12.5 s, a red horseshoe): suns, lanterns and hearts
+    within 380 px fly to him, leaving sparks; nothing is drawn around the
+    prince for it, what flies to him is the sign. Never pulls
     another power-up; what is on its way keeps coming when it runs out.
-  - **Feather** (7 s, the stork's): he comes down slowly (40 % gravity,
+  - **Feather** (8.75 s, the stork's): he comes down slowly (40 % gravity,
     at most 600 px/s while falling; the way up is untouched), with two
     small wings on his back. The one made for the youngest players:
     falls are how their runs end.
@@ -588,10 +589,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m, the witch with scissors 300 m |
 | Power-ups | one every 65–105 m of climb, the first at 15–25 m; x within ± 190 px between two rows; 88 px box (the bubble) |
-| Power-up durations | star 6 s, cloak 8 s, golden spring 7 s, sun magnet 10 s, feather 7 s; the last 1.5 s flicker with three blips; 0.8 s of grace after star and cloak |
+| Power-up durations | star 7.5 s, cloak 10 s, golden spring 8.75 s, sun magnet 12.5 s, feather 8.75 s; the last 1.5 s flicker with three blips; 0.8 s of grace after star and cloak |
 | Power-up weights | magnet 1.0, spring 1.0, star 1.0, cloak 0.9, feather 0.8 × zone (floor: star 0.5, cloak 0.3, spring 0.6, feather 1.3; windows: cloak 1.4, feather 0.8; sky: star 1.2, cloak 0.6, feather 1.5) × pacing (star, cloak: the enemies', 0 below 30 m; magnet: the suns') |
 | Golden spring | bounce × 1.25 (1650 → 2062 px/s, apex 648 → 1012 px), boost 1900 px/s, capped at 3000 px/s off a bow; somersault 0.6 s per bounce, 0.42 s per boost |
-| Sun magnet | reach 300 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
+| Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
 | Feather | 40 % gravity and at most 600 px/s while falling |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -1015,3 +1016,20 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   had a power-up running 35 % of the time; 65 to 105 m now. Also: a toast
   that is already up is not shown twice (two lanterns the magnet brings
   in at once).
+- 2026-11-19: Power-ups after playing them. The rings of dots closing in
+  on the prince under the magnet got in the way and are gone: the suns
+  flying to him are the sign, with the HUD's bar for the time left. The
+  magnet reaches 380 px instead of 300. Every power-up lasts a quarter
+  longer (star 6 → 7.5 s, cloak 8 → 10 s, spring and feather 7 → 8.75 s,
+  magnet 10 → 12.5 s). The star keeps its rainbow rim and loses the soft
+  halo behind it, which took away from the rim. Paired seeds, 120 runs
+  each, without power-ups → first build → now: good bold from 0 m median
+  376 → 434 → 422 m, mean 404 → 505 → 482 m, 0.98 → 0.95 → 0.89 hits per
+  100 m, falls 45 → 41 → 48 % of deaths, a power-up running 31 → 37 % of
+  the time; from 450 m mean climb 231 → 293 → 318 m, 1.78 → 1.44 → 1.43
+  hits per 100 m; kid bold mean 70 → 77 → 81 m, 100 m reached by 23 → 28
+  → 32 %. So the longer power-ups move the heights no further than the
+  noise between two builds, but the deep forest band (100 to 200 m) now
+  reads 0.62 hits per 100 m (0.84 in the first build, 0.90 without
+  power-ups), under the 0.8 target: if it plays too easy there, the
+  spacing (`POWER_EVERY`, 65 to 105 m) is the valve.

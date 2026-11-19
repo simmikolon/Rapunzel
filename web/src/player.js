@@ -4,7 +4,7 @@ import {
   PLAYER_W, PLAYER_H, PLAYER_BODY_W, BOOST_CHARGES, BOOST_REFILL_PER_LANDING, BOOST_COOLDOWN, BOOST_SHIELD_TIME,
   MAX_HEARTS, INVULNERABLE_TIME, STOMP_VY, PX,
   POWER_TIME, POWER_WARN, POWER_GRACE, SUPER_JUMP_MUL, SUPER_BOOST_VY, SUPER_MAX_VY, SALTO_TIME,
-  MAGNET_RADIUS, FEATHER_GRAVITY, FEATHER_MAX_FALL,
+  FEATHER_GRAVITY, FEATHER_MAX_FALL,
 } from './config.js';
 import { approach, clamp, moveToward, sign, easeInOutCubic, TAU } from './util.js';
 import { rainbow, POWER_FX } from './powerups.js';
@@ -348,8 +348,6 @@ export class Player {
       const k = this.shield / BOOST_SHIELD_TIME;
       g.halo(bx, by, 150, '#ffc864', 0.5 * k, { glow: 1 });
     }
-    if (fx === 'star') g.halo(bx, by, 200, rainbow(t * 1.2), 0.5, { glow: 0.3 });   // glows stay low: with bloom on they add up over six seconds
-    else if (fx === 'magnet') this.drawMagnetRings(g, bx, by, t);
 
     // his shape in flat white, for the rims below
     const sil = (this.facing < 0 ? art.prince.leftSil : art.prince.rightSil)[this.pose()];
@@ -371,7 +369,8 @@ export class Player {
       }
       if (fx === 'star') {
         // the rainbow: a rim two pixels wide around him, each side its own
-        // hue, all of them running through the colours
+        // hue, all of them running through the colours (no halo behind it:
+        // the soft glow took away from the rim)
         rim(x, PX * 2, 0.5, (i) => rainbow(t * 1.2 + i / 4 + 0.12));
         rim(x, PX, 1, (i) => rainbow(t * 1.2 + i / 4), 0.15);
       }
@@ -382,23 +381,6 @@ export class Player {
     // Draw the wrap-around twin when near the screen edge.
     if (this.x < -W / 2 + PLAYER_W) body(W);
     else if (this.x > W / 2 - PLAYER_W) body(-W);
-  }
-
-  // The magnet's pull, shown: rings of dots closing in on him from the reach's edge.
-  drawMagnetRings(g, cx, cy, t) {
-    for (let j = 0; j < 3; j++) {
-      const f = (t * 0.8 + j / 3) % 1;
-      const r = MAGNET_RADIUS - (MAGNET_RADIUS - 80) * f;
-      const a = Math.min(1, Math.sin(Math.PI * f) * 1.6);
-      // the dots keep their spacing as the ring closes, so it stays a ring
-      const n = Math.max(12, Math.round(r / 8)), turn = t * 0.4 * (j % 2 ? 1 : -1);
-      const color = j % 2 ? POWER_FX.ringB : POWER_FX.ringA;
-      for (let i = 0; i < n; i++) {
-        const ang = (i / n) * TAU + turn;
-        const x = Math.round((cx + Math.cos(ang) * r) / PX) * PX, y = Math.round((cy + Math.sin(ang) * r) / PX) * PX;
-        g.rect(x - 6, y - 6, 12, 12, color, a, { glow: 0.3 });
-      }
-    }
   }
 }
 
