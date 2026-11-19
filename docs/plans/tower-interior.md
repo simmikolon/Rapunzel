@@ -159,9 +159,10 @@ One branch each, merged when it is fun.
    the bell, the chandelier's clink, the web and the ghost have their
    sounds; the stairs. Step 3 is done but for more sounds (stone
    underfoot, chains).
-4. **Floors of the tower**: zones inside as outside has them (hall and
-   cellar, stairwell, gallery, belfry and roof timbers), each with its
-   two or three things.
+4. ✅ **Floors of the tower** (`element/interior-floors`): zones inside in
+   the outside's bands, each with its stone, dusk, wall decor and
+   roster: the hall (0 m), the guard rooms (120 m), the library
+   (250 m), the belfry (400 m). A floor says its name on arrival.
 5. **Gates** between outside and inside in the endless tower.
 
 ## Open

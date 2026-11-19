@@ -415,6 +415,37 @@ function drawFrame(t) {
   for (const [x, y] of [[0, 2], [22, 2], [0, 25], [22, 25]]) p(x, y, 2, 2, C.braidHi);
 }
 
+// Shelves of books for the library, 28 x 22 art px, hanging from the top
+// middle: two boards on brackets, books of many colours (none of them red),
+// one leaning, one lying. Two fillings.
+const BOOKS = [C.tunic, C.tights, C.leaf, C.braidShade, C.tunicHi, '#a57fc4', K.candle, C.grass, C.goldDark];
+function drawShelf(t, look) {
+  const { p } = t;
+  const r = new RNG(700 + look);
+  for (const y0 of [0, 11]) {
+    // books standing on the board at row y0 + 9
+    let x = 2;
+    while (x < 25) {
+      const w = r.int(2, 3), h = r.int(5, 8), c = r.pick(BOOKS);
+      if (r.chance(0.12) && x < 20) { p(x, y0 + 7, 5, 2, c); p(x, y0 + 7, 5, 1, K.candle); x += 6; continue; }   // one lying down
+      p(x, y0 + 9 - h, w, h, c); p(x, y0 + 9 - h, 1, h, K.frameHi); p(x, y0 + 9 - h + 2, w, 1, C.gold);
+      x += w + (r.chance(0.2) ? 1 : 0);
+    }
+    p(0, y0 + 9, 28, 2, C.plank); p(0, y0 + 9, 28, 1, C.plankHi); p(2, y0 + 11, 2, 1, C.plankDark); p(24, y0 + 11, 2, 1, C.plankDark);
+  }
+  p(0, 20, 28, 2, C.plankDark);
+}
+// A wooden cog wheel of the tower's clockwork, 24 x 24 art px, the anchor
+// its middle (it turns): eight teeth, four spokes, an iron hub.
+function drawCog(t) {
+  const { p, ring, disc, line } = t;
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, x = 11.5 + Math.cos(a) * 10.5, y = 11.5 + Math.sin(a) * 10.5; p(Math.round(x - 1), Math.round(y - 1), 3, 3, i < 4 ? C.plankDark : C.plank); }
+  disc(11.5, 11.5, 9, C.plank); disc(11.5, 11.5, 6, K.wallDark);
+  ring(12, 12, 9, C.plankDark); p(5, 3, 8, 1, C.plankHi); p(3, 5, 1, 6, C.plankHi);
+  line(12, 4, 12, 20, C.plank, 2); line(4, 12, 20, 12, C.plank, 2); p(12, 4, 1, 16, C.plankHi);
+  disc(12, 12, 2, K.iron); p(11, 11, 1, 1, K.ironHi);
+}
+
 // --- the ghost -------------------------------------------------------------------
 // 16 x 20 art px, facing RIGHT, the anchor its middle: a small round ghost
 // with a scalloped hem, rosy cheeks and a round mouth. It carries a candle
@@ -479,6 +510,8 @@ export function buildInterior() {
     ghost: (() => { const R = [0, 1, 2, 3].map((f) => makeSprite(16, 20, (t) => drawGhost(t, f), { ax: 0.5, ay: 0.5 })); return { R, L: R.map(flipH) }; })(),
     ghostCandle: [0, 1].map((f) => makeSprite(5, 9, (t) => drawGhostCandle(t, f), undefined, { axPx: 2.5 * 4, ayPx: 7 * 4 })),
     stairs: (() => { const R = makeSprite(80, 118, drawStairs, undefined, { axPx: 8 * 4, ayPx: 76 * 4 }); return { R, L: flipH(R) }; })(),
+    shelf: [0, 1].map((k) => makeSprite(28, 22, (t) => drawShelf(t, k), { ax: 0.5, ay: 0 })),
+    cog: makeSprite(24, 24, drawCog, { ax: 0.5, ay: 0.5 }),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

@@ -527,6 +527,14 @@ is a pool to draw from, not a promise.
     relief like the long ledge; most flights carry a sun over each
     tread. The next row is measured from the top tread, 170 to 300 px
     above it.
+  - ✅ floors: the inside has zones in the outside's bands, each with its
+    stone, its dusk, what hangs on its walls and who lives there, and it
+    says its name when he gets there. The hall (0 m: gentle, banners);
+    the guard rooms (120 m: cool stone, shields and banners, galleries
+    with guards, pikes from the hatches, stairs); the library (250 m:
+    warm stone, shelves of books and Rapunzel's portraits, webs and
+    ghosts); the belfry (400 m: weathered stone, cog wheels turning in
+    pairs, bells to bounce on, scaffold boards, the bats' home).
   - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
@@ -745,7 +753,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
 | Feather | 40 % gravity and at most 600 px/s while falling |
 | String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
-| Inside the tower | bands: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes), from 120 m bats × 1.5, pikes × 1.5, gallery guards × 0.8, galleries 0.4 × the balcony's chance; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
+| Inside the tower | floors: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes, no ghost), the guard rooms 120 m (galleries × 0.8, guards × 1.2, pikes × 2.4, bats × 1.2, ghost × 0.6, stairs × 1.5), the library 250 m (webs × 2.4, ghost × 1.9, bats × 1.5, pikes × 1.2, guards × 0.7), the belfry 400 m (bells × 3, boards × 2, bats × 1.9, pikes × 1.2, stairs × 0.5); a floor's stone tint, dusk and wall decor fade over 30 m; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
 | Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
 | Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
@@ -1394,3 +1402,22 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   120 seeded runs inside: good bold median 486 m, mean 570 m, 1.02 hits
   per 100 m, falls 25 % of the deaths; kid bold median 73 m, mean 85 m.
   The outside's report is identical.
+- 2026-11-19: The inside, step 4: floors (`element/interior-floors`).
+  One band of "inside the tower" became four floors in the outside's
+  bands (so a gate can lead across at a height later): the hall, the
+  guard rooms, the library, the belfry. A floor is three things at
+  once: a row in the painter's table (the stone's tint on wall and
+  pillars, the room's dusk, the wall decor: shields, books, clockwork),
+  a row in the level's zones (who lives there, what one stands on), and
+  a name that is said when he arrives. The pieces were all there; the
+  floors only lean on them differently, which is what makes 400 m in
+  here not the same room as 100 m. New drawings: two shelves of books
+  and a cog wheel (two turn in mesh). The first numbers were too easy
+  (0.95 hits per 100 m, median 570 m), the second too hard in two
+  places (23 of 52 falls in the library, where a bot stepping aside
+  for three ghosts at once steps off; 1.6 to 1.7 hits in the belfry).
+  Measured on 120 seeded runs as it is now: good bold median 486 m,
+  mean 536 m, 1.01 hits per 100 m, every band from 100 to 800 m between
+  1.06 and 1.47, falls 36 % of the deaths; good cautious median 305 m;
+  kid bold median 73 m, mean 83 m; kid cautious 73 m. The outside's
+  report is identical on the same seeds.

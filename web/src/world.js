@@ -5,7 +5,7 @@ import { Player } from './player.js';
 import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
-import { Level, CUT_ROOM, FLOCK_LEAD } from './level.js';
+import { Level, CUT_ROOM, FLOCK_LEAD, zoneAt } from './level.js';
 import { Background } from './background.js';
 import { Witch, Scissors, Flock } from './enemies.js';
 import { audio } from './audio.js';
@@ -72,6 +72,7 @@ export class World {
     this.nextStorkY = 47000;      // storks cross the sky every 1200 to 2000 px of climb
     this.nextMilestone = 100;
     this.hintShown = false;
+    this.floorName = 'the hall';    // the floor he is on inside the tower (events() says so when it changes)
     this.webHints = 0;            // how often this round has said how to get out of a web
     this.toasts = [];
     this.over = false;
@@ -386,6 +387,11 @@ export class World {
     if (!this.hintShown && this.enemies.some((e) => e.alive && !e.dead && e.kind !== 'witch' && e.y < this.cam.top && e.y > this.cam.y)) {
       this.hintShown = true;
       this.toast('Boost to punch through enemies!', '#ffd98a', 2.6);
+    }
+    // Inside the tower a new floor says its name.
+    if (this.place.inside) {
+      const floor = zoneAt(pl.maxY, this.level.zones).name;
+      if (floor !== this.floorName) { this.floorName = floor; this.toast(floor[0].toUpperCase() + floor.slice(1), '#e9e6f7', 2.2); }
     }
     // Height milestones
     if (this.heightM >= this.nextMilestone) {

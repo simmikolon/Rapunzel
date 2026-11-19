@@ -1,7 +1,7 @@
 import { W, H, PARALLAX_TOWER } from './config.js';
 import { TILE_H, TRUNK_W } from './art/tiles.js';
 import { hash, nightAlpha } from './altitude.js';
-import { mixHex } from './util.js';
+import { mixHex, lerp, invLerp, smoothstep } from './util.js';
 import { INSIDE } from './art/interior.js';
 import { pillarTile, hasDoor, PILLAR_X, TORCH_Y, TORCH } from './pillars.js';
 
@@ -24,7 +24,28 @@ const PARALLAX_BRAID = 0.8;
 const WINDOW_EVERY = 3;            // wall tiles from one window to the next
 const WINDOW_FIRST = 3;            // the first window's lower tile (the hall's door takes tiles 0 and 1)
 const CHAIN_END = 280;             // the chain's loose end hangs this high above the hall's floor
-const AMBIENT = '#8f88c4';
+
+// The floors of the tower as the painter sees them (level.js has the same
+// bands for who lives there and what one stands on): the stone's tint, the
+// room's dusk, and what hangs on the walls. A floor fades into the next
+// over 30 m, like the trees outside.
+const FLOORS = [
+  { from: 0,     tint: '#ffffff', ambient: '#8f88c4', dim: 0.34, decor: [['banner', 3], ['shield', 2], ['frame', 2]] },   // the hall
+  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['shield', 4], ['banner', 3]] },                // the guard rooms: cool stone, arms on the walls
+  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['shelf', 6], ['frame', 2]] },                  // the library: warm stone, books
+  { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 5], ['banner', 1]] },                   // the belfry: weathered stone, clockwork
+];
+const FLOOR_FADE = 1500;
+// Which floors meet at height y (the prince's plane): { a, b, t }.
+function floorsAt(y) {
+  for (let i = 1; i < FLOORS.length; i++) {
+    const b = FLOORS[i].from;
+    if (y < b - FLOOR_FADE) return { a: i - 1, b: i - 1, t: 0 };
+    if (y < b + FLOOR_FADE) return { a: i - 1, b: i, t: smoothstep(invLerp(b - FLOOR_FADE, b + FLOOR_FADE, y)) };
+  }
+  return { a: FLOORS.length - 1, b: FLOORS.length - 1, t: 0 };
+}
+const tintAt = (y) => { const f = floorsAt(y), c = f.t > 0 ? mixHex(FLOORS[f.a].tint, FLOORS[f.b].tint, f.t) : FLOORS[f.a].tint; return c === '#ffffff' ? undefined : { tint: c }; };
 
 // Wall tile k: which drawing (art/interior.js drawWall).
 function wallTile(k) {
@@ -37,15 +58,18 @@ function wallTile(k) {
 
 // What hangs on the back wall, by hash, left and right of the window column
 // (never in it): at most one piece a side per storey, at different heights
-// on the two sides. In the hall a banner hangs on each side of the door.
+// on the two sides; which things, the floor says (FLOORS). In the hall a
+// banner hangs on each side of the door.
 // Returns { kind, look, x, ly } with `ly` the height it hangs from (layer px).
 function decorAt(k, side) {
   if (k === 1) return { kind: 'banner', look: side < 0 ? 0 : 1, x: side * 196, ly: 352 };
   if (k < WINDOW_FIRST || k % WINDOW_EVERY !== (side < 0 ? 2 : 1)) return null;
   const h = hash(k * 19 + (side < 0 ? 7 : 11));
   if (h % 100 < 34) return null;
-  const pick = (h >>> 8) % 7;
-  const kind = pick < 3 ? 'banner' : pick < 5 ? 'shield' : 'frame';
+  // what this floor hangs on its walls (the nearer floor's, where two meet)
+  const f = floorsAt(k * TILE_H / PARALLAX_TOWER), table = FLOORS[f.t < 0.5 ? f.a : f.b].decor;
+  let pick = (h >>> 8) % table.reduce((n, d) => n + d[1], 0), kind = table[0][0];
+  for (const [name, w] of table) { if (pick < w) { kind = name; break; } pick -= w; }
   return { kind, look: (h >>> 5) % 2, x: side * (168 + (h >>> 12) % 34), ly: k * TILE_H + 150 + (h >>> 16) % 30 };
 }
 
@@ -79,8 +103,8 @@ export class Interior {
     const A = this.art.interior;
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
-    for (let k = first; k <= last; k++) g.blit(A.wall[wallTile(k)], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
-    // banners, shields and a painting or two
+    for (let k = first; k <= last; k++) g.blit(A.wall[wallTile(k)], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy, tintAt(k * TILE_H / PARALLAX_TOWER));
+    // banners, shields, a painting or two, books, clockwork
     for (let k = first - 1; k <= last + 1; k++) {
       for (const side of [-1, 1]) {
         const d = decorAt(k, side);
@@ -88,6 +112,13 @@ export class Interior {
         const dx = W / 2 + d.x + cam.ox, dy = H - (d.ly - camF) + cam.oy;
         if (d.kind === 'banner') g.blit(A.banner[d.look], dx, dy, { rot: Math.sin(time * 0.9 + k) * 0.025 });
         else if (d.kind === 'shield') g.blit(A.shield, dx, dy + 44);
+        else if (d.kind === 'shelf') g.blit(A.shelf[d.look], dx, dy);
+        else if (d.kind === 'cog') {
+          // two wheels in mesh, turning slowly against each other
+          const dir = d.look ? 1 : -1;
+          g.blit(A.cog, dx, dy + 40, { rot: time * 0.45 * dir });
+          g.blit(A.cog, dx - side * 62, dy + 104, { rot: -time * 0.45 * dir / 0.7 + 0.39, sx: 0.7, sy: 0.7 });
+        }
         else {
           g.blit(A.frame, dx, dy);
           const blink = (time * 0.31 + k * 0.37) % 1 < 0.035;        // she blinks now and then
@@ -147,7 +178,7 @@ export class Interior {
       const sy = cam.sy(k * TILE_H);
       for (const side of ['L', 'R']) {
         const v = pillarTile(k, side, galleries);
-        g.blit(side === 'L' ? A.pillarL[v] : A.pillarR[v], (side === 'L' ? 0 : W) + cam.ox, sy);
+        g.blit(side === 'L' ? A.pillarL[v] : A.pillarR[v], (side === 'L' ? 0 : W) + cam.ox, sy, tintAt(k * TILE_H));
         if (v !== TORCH) continue;
         const tx = cam.sx(side === 'L' ? -PILLAR_X : PILLAR_X), ty = cam.sy(k * TILE_H + TORCH_Y);
         const fl = 0.85 + 0.15 * Math.sin(time * 11 + k * 1.7) * Math.sin(time * 3.1 + k);
@@ -175,7 +206,8 @@ export class Interior {
 
   // The room's dusk (a little deeper once it is night outside), then its lamps.
   drawLighting(g, cam) {
-    g.lighting(AMBIENT, 0.34 + 0.12 * nightAlpha(cam.y));
+    const f = floorsAt(cam.y + H / 2), A = FLOORS[f.a], B = FLOORS[f.b];
+    g.lighting(f.t > 0 ? mixHex(A.ambient, B.ambient, f.t) : A.ambient, lerp(A.dim, B.dim, f.t) + 0.12 * nightAlpha(cam.y));
     for (const [x, y, r, color, a] of this.glows) g.puff(x, y, r, r, color, a, { soft: true, blend: 'add' });
   }
 }

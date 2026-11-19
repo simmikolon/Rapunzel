@@ -37,20 +37,25 @@ export const ZONES = [
   { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0, bat: 0.5, cloak: 1.4, feather: 0.8 } },
   { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0, bat: 0.5, star: 1.2, cloak: 0.6, feather: 1.5 } },
 ];
-// Inside the tower (places.js): its own roster. What is not named counts as
-// 1, so the outside's creatures are switched off by name. Three things live
-// in here so far, so each counts for more than it does outside: bats under
-// the ledges, guards on the galleries, pike guards in the pillars' hatches.
-// A fourth holds instead of biting: the spider's web under a ledge. The
-// ghost drifts through the room in the crow's place, and the flock's gate
-// is a swarm of bats between two long ledges (above the hall).
-// The first 120 m are the gentle part, as the forest floor is outside: no
-// stubs, no pikes yet, more long ledges (inside nothing rides up with the
-// camera as the ribbons do, so a miss falls further), and the power-ups lean
-// toward the feather.
+// Inside the tower (places.js): its own roster, floor by floor, in the same
+// bands as the outside's zones (a gate will lead from one to the other at a
+// height). What is not named counts as 1, so the outside's creatures are
+// switched off by name. Who lives in here: bats under the ledges, guards on
+// the galleries, pike guards in the pillars' hatches, the spider's web under
+// a ledge (it holds instead of biting), the ghost in the crow's place, and
+// the flock's gate as a swarm of bats (from 160 m). Each floor leans on two
+// or three of them and on its own things to stand on.
+const OUTSIDERS = { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, storm: 0.0 };
 export const ZONES_INSIDE = [
-  { name: 'the hall',         from: 0,     mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
-  { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5, web: 1.6 } },
+  // The hall: the gentle part, as the forest floor is outside. No stubs, no
+  // pikes, no ghost, more long ledges, the power-ups lean toward the feather.
+  { name: 'the hall',        from: 0,     mul: { ...OUTSIDERS, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
+  // The guard rooms: galleries, guards on them, pikes from the hatches, stairs.
+  { name: 'the guard rooms', from: 12000, mul: { ...OUTSIDERS, gallery: 0.8, guard: 1.2, grabber: 2.4, bat: 1.2, web: 1.0, ghost: 0.6, stairs: 1.5 } },
+  // The library: dusty and haunted. Webs and ghosts, few guards; the cloak helps here.
+  { name: 'the library',     from: 25000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.5, web: 2.4, ghost: 1.9, cloak: 1.4 } },
+  // The belfry: bells to bounce on, scaffold boards, and the bats' home.
+  { name: 'the belfry',      from: 40000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.9, web: 1.2, ghost: 1.0, bell: 3.0, board: 2.0, stairs: 0.5, feather: 1.5 } },
 ];
 export function zoneAt(y, zones = ZONES) {
   let z = zones[0];
@@ -257,7 +262,7 @@ export class Level {
     let items = this.place.inside ? [
       ['branchL', 1.0], ['branchR', 1.0], ['chandelier', 1.1],
       ['branchL+chandelier', T.double * 0.7], ['branchR+chandelier', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
-      ['swing', T.swing], ['bell', T.bow],
+      ['swing', T.swing * this.zoneMul(y, 'board')], ['bell', T.bow * this.zoneMul(y, 'bell')],
       ['galleryL', gl], ['galleryR', gl], ['galleryL+chandelier', gl * T.double * 0.6], ['galleryR+chandelier', gl * T.double * 0.6],
       ['galleryL+branchR', gl * T.double * 0.5], ['branchL+galleryR', gl * T.double * 0.5],
       // a flight of stairs built out from a pillar: wide and safe, a relief like the long ledge
