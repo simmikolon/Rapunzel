@@ -369,7 +369,7 @@ is a pool to draw from, not a promise.
   seconds, **one at a time** (a new one ends the one that runs). Each
   shows on the prince, flickers through its last 1.5 s with three blips,
   and has its picture and a bar at the top of the HUD.
-  - **Star** (7.5 s, a smiling shooting star with a rainbow tail):
+  - **Star** (12 s, a smiling shooting star with a rainbow tail):
     invincible. What he touches is knocked away like under the boost
     shield (+3 suns each, the witch is thrown off, a cut is fended off),
     lightning does nothing. A rainbow rim runs around him, a wash of
@@ -589,7 +589,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m, the witch with scissors 300 m |
 | Power-ups | one every 65–105 m of climb, the first at 15–25 m; x within ± 190 px between two rows; 88 px box (the bubble) |
-| Power-up durations | star 7.5 s, cloak 10 s, golden spring 8.75 s, sun magnet 12.5 s, feather 8.75 s; the last 1.5 s flicker with three blips; 0.8 s of grace after star and cloak |
+| Power-up durations | star 12 s, cloak 10 s, golden spring 8.75 s, sun magnet 12.5 s, feather 8.75 s; the last 1.5 s flicker with three blips; 0.8 s of grace after star and cloak |
 | Power-up weights | magnet 1.0, spring 1.0, star 1.0, cloak 0.9, feather 0.8 × zone (floor: star 0.5, cloak 0.3, spring 0.6, feather 1.3; windows: cloak 1.4, feather 0.8; sky: star 1.2, cloak 0.6, feather 1.5) × pacing (star, cloak: the enemies', 0 below 30 m; magnet: the suns') |
 | Golden spring | bounce × 1.25 (1650 → 2062 px/s, apex 648 → 1012 px), boost 1900 px/s, capped at 3000 px/s off a bow; somersault 0.6 s per bounce, 0.42 s per boost |
 | Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
@@ -1033,3 +1033,5 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   reads 0.62 hits per 100 m (0.84 in the first build, 0.90 without
   power-ups), under the 0.8 target: if it plays too easy there, the
   spacing (`POWER_EVERY`, 65 to 105 m) is the valve.
+- 2026-11-19: The star lasts 12 s (was 7.5 s), asked for after playing.
+  Not measured in the simulator.

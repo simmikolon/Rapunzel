@@ -99,7 +99,7 @@ export const INVULNERABLE_TIME = 1.6;
 // One at a time: collecting one ends the one that runs. Each lasts a few
 // seconds; in the last POWER_WARN seconds its effect on the prince flickers
 // and three blips count it out.
-export const POWER_TIME = { star: 7.5, cloak: 10, spring: 8.75, magnet: 12.5, feather: 8.75 };
+export const POWER_TIME = { star: 12, cloak: 10, spring: 8.75, magnet: 12.5, feather: 8.75 };
 export const POWER_WARN = 1.5;
 export const POWER_GRACE = 0.8;        // after the star or the cloak ends: this long still safe (the hurt blink shows it)
 export const POWER_FIRST = [1500, 2500];  // the first one waits at 15 to 25 m, so every run meets one

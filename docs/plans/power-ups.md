@@ -11,9 +11,9 @@ kids die by falling, and nothing so far helped with a fall.
 - **One at a time.** Collecting a power-up ends the one that runs. They
   are spaced so that this is the exception: one item every 65 to 105 m
   of climb, the first at 15 to 25 m so even a short run meets one.
-- **A few seconds each** (`POWER_TIME` in `config.js`): star 7.5, cloak
-  10, spring 8.75, magnet 12.5, feather 8.75 (a quarter longer than first
-  built, after playing).
+- **A few seconds each** (`POWER_TIME` in `config.js`): star 12, cloak
+  10, spring 8.75, magnet 12.5, feather 8.75 (longer than first built,
+  after playing).
 - **The end is announced.** In the last 1.5 s the look on the prince
   flickers, the HUD bar blinks and three blips count it out. When the
   star or the cloak ends he is safe for another 0.8 s (the usual hurt
