@@ -521,7 +521,12 @@ is a pool to draw from, not a promise.
     shields on crossed pikes, and gilt frames with Rapunzel's portrait,
     which blinks now and then. By hash, left and right of the window
     column, at most one a side per storey.
-  - 🔜 its own things (stairs, more sounds), floors of the tower as zones, gates. ⚠️ A system, not an
+  - ✅ stairs: a flight of three stone treads (64 px each, 56 px higher
+    each) rising from just across the middle up to a gallery. A row of
+    its own, wide and safe, a relief like the long ledge: nobody waits
+    at its top, and most flights carry a sun over each tread. The next
+    row is measured from the gallery, 170 to 300 px above it.
+  - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
@@ -742,6 +747,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Inside the tower | bands: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes), from 120 m bats × 1.5, pikes × 1.5, gallery guards × 0.8, galleries 0.4 × the balcony's chance; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
 | Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
 | Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
+| Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 3 treads of 64 px, 56 px rise, then a gallery; the next row 338–468 px above the lowest tread |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1359,3 +1365,20 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   standing armour reads as one more of them. No reds here either. The
   portrait is the sign's Rapunzel drawn into a frame, and she blinks.
   Purely visual: the simulator does not draw, its reports are unchanged.
+- 2026-11-19: Stairs (`element/interior-stairs`), the last of the
+  inside's own things for now. A pogo does not need stairs, so they are
+  not a way up but a place to come down on: three treads and a gallery
+  make a landing 350 px wide across the middle of the room, each tread
+  an ordinary platform. They lead up to a gallery because a flight that
+  ends at a blank pillar looks unfinished, and the gallery brings its
+  door with it. The generator keeps one row for the whole flight (the
+  lowest tread's height) and measures the next row from the gallery, so
+  the next row is within a bounce of every tread. No guard at the top:
+  with one the kid bot's hits in the hall doubled, and a relief should
+  not bite. Measured on 120 seeded runs inside, with everything of step
+  3 in: good bold median 523 m, mean 604 m, 1.01 hits per 100 m (0.81
+  to 1.54 per band from 100 to 1200 m), falls 21 % of the deaths; good
+  cautious median 347 m; kid bold median 74 m, mean 88 m (outside 71 m
+  and 81 m); kid cautious 76 m. 189 bat swarms, none fallen at. The
+  outside's report is identical on the same seeds. The atlas is 4096 x
+  2584.

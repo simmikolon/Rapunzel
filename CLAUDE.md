@@ -43,7 +43,8 @@ which only copies the two folders together). The design document
   where the round is climbed whatever the title's selector says (inside,
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
   nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,
-  `?spawn=web` spins a spider's web under it, `?spawn=ghost` sends a ghost).
+  `?spawn=web` spins a spider's web under it, `?spawn=ghost` sends a ghost, `?at=150&spawn=stairs` builds a flight
+  of stairs above the start).
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark

@@ -6,7 +6,7 @@ import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 import { windowsBetween } from './windows.js';
 import { hatchesBetween, pillarTile, HATCH } from './pillars.js';
-import { STONE_STYLE } from './art/interior.js';
+import { STONE_STYLE, STAIR } from './art/interior.js';
 import { placeOf } from './places.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
@@ -140,6 +140,7 @@ export class Level {
     this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
     this.zones = ZONES;
     this.forceLen = null;        // dev: every branch gets this length class
+    this.forceLayout = null;     // dev: the next row that is picked gets this layout
   }
 
   // A fresh stream for an entity that keeps rolling after it was spawned (a
@@ -238,6 +239,7 @@ export class Level {
 
   pickLayout(T, y, rowIndex = this.rowIndex) {
     const r = this.rng;
+    if (this.forceLayout) { const l = this.forceLayout; this.forceLayout = null; this.lastLayout = l; return l; }
     // Above the treeline the branch slots become cloud lanes (left, right and
     // a centre lane that never shares a row with a ribbon); the handover is
     // gradual through cloudAmount. Swings need trees. Balconies belong to
@@ -251,12 +253,15 @@ export class Level {
     // bell for the bow, a scaffold board for the swing, and from 35 m on a
     // gallery at a pillar's door (never two rows running).
     const gl = this.place.inside ? T.balcony * this.zoneMul(y, 'gallery') * (rowIndex - this.lastBalconyRow < 2 ? 0 : 1) : 0;
+    const st = this.place.inside ? 0.3 * this.zoneMul(y, 'stairs') * (rowIndex - this.lastBalconyRow < 3 ? 0 : 1) : 0;
     let items = this.place.inside ? [
       ['branchL', 1.0], ['branchR', 1.0], ['chandelier', 1.1],
       ['branchL+chandelier', T.double * 0.7], ['branchR+chandelier', T.double * 0.7], ['branchL+branchR', T.double * 0.6],
       ['swing', T.swing], ['bell', T.bow],
       ['galleryL', gl], ['galleryR', gl], ['galleryL+chandelier', gl * T.double * 0.6], ['galleryR+chandelier', gl * T.double * 0.6],
       ['galleryL+branchR', gl * T.double * 0.5], ['branchL+galleryR', gl * T.double * 0.5],
+      // a flight of stairs up to a gallery: wide and safe, a relief like the long ledge
+      ['stairsL', st], ['stairsR', st],
     ] : sky ? [
       ['cloudL', 1.0], ['cloudR', 1.0], ['cloudC', 0.6], ['ribbon', 1.1],
       ['cloudL+ribbon', T.double * 0.7], ['cloudR+ribbon', T.double * 0.7], ['cloudL+cloudR', T.double * 0.6],
@@ -353,10 +358,11 @@ export class Level {
     if (flockRow) layout = floorLayout(y, this.place);
     this.nextLayout = null;
     const kinds = layout.split('+');
-    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell');
+    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell' || k.startsWith('stairs'));
     if (kinds.includes('bow') || kinds.includes('bell')) this.lastBowY = y;
     const front = kinds.some((k) => k !== 'ribbon' && k !== 'bow' && !k.startsWith('balcony'));
-    if (kinds.some((k) => k.startsWith('balcony') || k.startsWith('gallery'))) this.lastBalconyRow = this.rowIndex;
+    if (kinds.some((k) => k.startsWith('balcony') || k.startsWith('gallery') || k.startsWith('stairs'))) this.lastBalconyRow = this.rowIndex;
+    const stairs = kinds[0].startsWith('stairs');
     // Ribbons live on the slower tower layer. Their layer height is chosen so
     // that they are exactly at `y` in the prince's plane at the moment he
     // arrives, i.e. with the camera where it will be after bouncing off the
@@ -369,6 +375,20 @@ export class Level {
     const canBeDry = kinds.length > 1 || (y - this.lastSafeY) + T.gap[1] * BEAT <= SAFE_GAP;
     let safe = false;
     for (const slot of kinds) {
+      if (stairs) {
+        // Three treads rising from just across the middle up to a gallery
+        // at this side's pillar. The row's height is the lowest tread's;
+        // the next row is measured from the gallery (below).
+        const side = slot[6], sd = side === 'L' ? -1 : 1;
+        for (let j = 0; j < STAIR.steps; j++) {
+          const tread = new Platform('step', y + j * STAIR.rise, { side, x: sd * (GALLERY_X - 80 - STAIR.run / 2 - STAIR.run * (STAIR.steps - 1 - j)) });
+          tread.flight = j === 0;
+          platforms.push(tread);
+        }
+        platforms.push(new Platform('gallery', y + STAIR.steps * STAIR.rise, { side, x: sd * GALLERY_X, variant: r.int(0, 1) }));
+        safe = true;
+        continue;
+      }
       const opts = {};
       let kind = slot;
       if (slot.startsWith('cloud') && !flockRow && r.chance(0.6 * lanternAmount(y))) {
@@ -464,6 +484,12 @@ export class Level {
     gapMax = Math.max(gapMax, gapMin);
     let gap = r.range(gapMin, gapMax);
     this.nextLayout = nextLayout;
+    if (stairs) {
+      // from the lowest tread the next row is still within one bounce; from the gallery it is close
+      gap = STAIR.steps * STAIR.rise + r.range(170, 300);
+      // a sun over each tread shows the way up
+      if (r.chance(0.7)) for (const p of platforms) if (p.kind === 'step') this.world.pickups.push(new Sun(p.x, p.y + 96, r));
+    }
     if (flockRow === 'below') {
       gap = FLOCK_GAP;
       this.nextLayout = floorLayout(y + gap, this.place);
@@ -514,7 +540,7 @@ export class Level {
     if (this.rngTower.chance(T.grabber * P.enemy * this.zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony (inside: per gallery), never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {
-      if ((p.kind !== 'balcony' && p.kind !== 'gallery') || p.dry) continue;
+      if ((p.kind !== 'balcony' && p.kind !== 'gallery') || p.dry || stairs) continue;   // the stairs are a relief: nobody waits at their top
       if (r.chance(T.guard * P.enemy * this.zoneMul(y, 'guard'))) this.world.enemies.push(new Guard(p, this.child()));
       else if (r.chance(T.pot * P.enemy * this.zoneMul(y, 'pot'))) this.world.enemies.push(new Flowerpot(p, this.child()));
     }

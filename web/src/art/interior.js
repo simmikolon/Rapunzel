@@ -335,6 +335,29 @@ function drawWeb(t, tear) {
   for (const [x, y, n] of loose) { t.p(x, y, 1, n, SILK.shade); t.p(x, y + n, 1, 1, SILK.base); }
 }
 
+// --- stairs ----------------------------------------------------------------------
+// A flight of three stone steps rising to the RIGHT, toward a gallery, 49 x
+// 44 art px: each step 16 wide and 14 higher than the one before, the
+// anchor the middle of the lowest tread. One piece of masonry: lit treads,
+// risers facing the room, a body in shade under them down to a straight
+// stringer. The world draws it once for the three platforms it carries.
+export const STAIR = { steps: 3, run: 64, rise: 56 };
+function drawStairs(t) {
+  const { p } = t;
+  const top = (x) => 28 - 14 * Math.min(2, Math.floor(x / 16));          // the tread's row at column x
+  const under = (x) => Math.round(38 - x * 0.5);                         // the stringer's lower edge
+  for (let x = 0; x < 48; x++) {
+    const y0 = top(x), y1 = under(x);
+    p(x, y0, 1, y1 - y0 + 1, K.ledgeShade);
+    p(x, y0, 1, 1, K.ledgeHi); p(x, y0 + 1, 1, 3, K.ledge);
+    p(x, y1 - 1, 1, 2, K.ledgeDark);
+  }
+  for (const x of [16, 32]) { p(x, top(x) + 1, 1, 14, K.ledge); p(x, top(x) + 1, 1, 1, K.ledgeHi); p(x + 1, top(x) + 4, 1, 11, K.ledgeDark); }   // risers and their shadow
+  p(0, 29, 1, 9, K.ledge); p(47, 1, 1, 13, K.ledgeDark);
+  for (const [x, y, n] of [[7, 32, 3], [22, 18, 4], [27, 26, 2], [38, 5, 4], [42, 14, 2], [12, 30, 1]]) p(x, y, 1, n, K.ledgeDark);      // joints
+  p(40, 0, 3, 1, C.mossDark); p(4, 28, 2, 1, K.ledge);
+}
+
 // --- on the walls --------------------------------------------------------------
 // What hangs on the back wall between the windows (interior.js places it by
 // hash). Nothing here is red or pink-red: red is what bites. Lit from above:
@@ -442,6 +465,7 @@ export function buildInterior() {
     web: (() => { const R = [0, 1, 2, 3].map((k) => makeSprite(30, 36, (t) => drawWeb(t, k), undefined, { axPx: 30 * 4, ayPx: 0 })); return { R, L: R.map(flipH) }; })(),
     ghost: (() => { const R = [0, 1, 2, 3].map((f) => makeSprite(16, 20, (t) => drawGhost(t, f), { ax: 0.5, ay: 0.5 })); return { R, L: R.map(flipH) }; })(),
     ghostCandle: [0, 1].map((f) => makeSprite(5, 9, (t) => drawGhostCandle(t, f), undefined, { axPx: 2.5 * 4, ayPx: 7 * 4 })),
+    stairs: (() => { const R = makeSprite(49, 44, drawStairs, undefined, { axPx: 8 * 4, ayPx: 28 * 4 }); return { R, L: flipH(R) }; })(),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

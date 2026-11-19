@@ -42,6 +42,10 @@ export const KIND = {
   chandelier: { w: 112, cx: 0, surface: 0, bounce: JUMP_VY, onChain: true },
   bell:    { w: 104, cx: 0, surface: 0, bounce: SPRING_VY, onChain: true },
   gallery: { w: 160, cx: 0, surface: 0, bounce: JUMP_VY, gallery: true },
+  // One tread of a flight of stone stairs that leads up to a gallery (the
+  // generator builds the flight; the first tread carries `flight` and is
+  // the one the masonry is drawn for).
+  step:    { w: 64, cx: 0, surface: 0, bounce: JUMP_VY, step: true },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 export const GALLERY_X = 204;

@@ -516,6 +516,7 @@ export class World {
       case 'chandelier': s = I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
       case 'bell': s = I.bell; break;
       case 'gallery': s = I.gallery[p.side][p.variant % 2]; break;
+      case 'step': if (!p.flight) return; s = I.stairs[p.side]; break;      // the flight is one piece, drawn for its lowest tread
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
@@ -526,7 +527,7 @@ export class World {
       default: return;
     }
     const cam = this.cam;
-    const dip = p.kind === 'balcony' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
+    const dip = p.kind === 'balcony' || p.kind === 'step' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
     const opts = {};
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {
@@ -586,8 +587,8 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
-    const order = { swing: 0, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
-    const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
+    const order = { swing: 0, step: 0, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
+    const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - (p.flight ? 360 : 120) && p.y < cam.top + 120);   // a flight of stairs reaches well above its lowest tread
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);

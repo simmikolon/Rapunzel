@@ -52,7 +52,7 @@ when INSIDE is chosen.
 | bow (spring) | **bell** on the same chain: a pogo on its headstock rings it and throws him up | new kind with the bow's bounce |
 | plank swing | **scaffold board** on chains, solid from below | the same kind, chains for ropes |
 | balcony | **gallery**: a wooden landing with a railing in front of a door in the pillar | new kind in the prince's plane (the balcony lives on the tower layer), drawn new |
-| (none) | **stairs**: a flight of five or six stone steps from a pillar up toward the middle, each a small landing | a group of small platforms the generator treats as one row: reached at its lowest step, left from its highest. Step 3 |
+| (none) | **stairs**: a flight of three stone treads from just across the middle up to a gallery, each a small landing | a group of small platforms the generator treats as one row: reached at its lowest tread, the next row measured from the gallery |
 | clouds, sky lanterns, storks, updrafts | none | off inside |
 
 ## Light
@@ -157,7 +157,8 @@ One branch each, merged when it is fun.
    armour, it reads as a guard); sounds (stone, the bell, chains, the
    web). Done so far: the web, the ghost, the bat swarm, the decor;
    the bell, the chandelier's clink, the web and the ghost have their
-   sounds. Left: the stairs.
+   sounds; the stairs. Step 3 is done but for more sounds (stone
+   underfoot, chains).
 4. **Floors of the tower**: zones inside as outside has them (hall and
    cellar, stairwell, gallery, belfry and roof timbers), each with its
    two or three things.
@@ -165,15 +166,13 @@ One branch each, merged when it is fun.
 
 ## Open
 
-- With the web and the ghost in, a good run inside is about as long as
-  outside (median 476 m against 424 m, mean 513 m against 477 m). The
-  stairs and the bat swarm should not add difficulty on top; measure
-  after each.
 - The pillars' hatches all look alike, manned or not. To be played:
   whether that is a fair tell or whether a manned one needs a sign (a
   glint of a helmet).
-- The stairs' bookkeeping in the generator (a row that is 300 px tall)
-  needs the reachability stress test extended.
+- With all of step 3 in, a good run inside is longer than outside
+  (median 523 m against 424 m) at the same hits per 100 m: the stairs
+  and the swarm's floors are wide landings. The floors of step 4 are
+  where the difficulty of the upper tower is to be shaped.
 - The web's rule (three taps, the spider after 2.2 s) is a first guess
   for kids; to be played. The bots are never bitten, so the simulator
   cannot say.
