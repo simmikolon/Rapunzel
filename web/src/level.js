@@ -1,6 +1,6 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
 import { Platform, CLOUD_SIZE } from './platforms.js';
-import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
+import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat } from './enemies.js';
 import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
@@ -15,12 +15,12 @@ import { windowsBetween } from './windows.js';
 // peak at 210 m and stay there, which capped good runs around 300 m; it now
 // stretches to 700 m with a final step beyond.
 const TIERS = [
-  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00, grabber: 0.00 },
-  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00, grabber: 0.00 },
-  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, updraft: 0.10, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24, balcony: 0.60, guard: 0.25, pot: 0.25, grabber: 0.09 },
-  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, updraft: 0.10, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30, balcony: 1.00, guard: 0.35, pot: 0.35, grabber: 0.13 },
-  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, updraft: 0.10, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32, balcony: 1.00, guard: 0.40, pot: 0.40, grabber: 0.17 },
-  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, updraft: 0.16, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34, balcony: 1.00, guard: 0.45, pot: 0.45, grabber: 0.20 },
+  { y: 0,     gap: [0.75, 1.0],  dry: 0.00, short: 0.00, stub: 0.00, long: 0.10, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.00, spider: 0.00, swing: 0.00, bow: 0.04, sway: 0,   crowSpeed: [130, 190], lantern: 0.10, sun: 0.40, double: 0.35, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00, grabber: 0.00, bat: 0.00 },
+  { y: 3500,  gap: [0.85, 1.2],  dry: 0.10, short: 0.08, stub: 0.00, long: 0.12, cloudSmall: 0.00, cloudWide: 0.30, drift: 0.00, storm: 0.00, updraft: 0.10, crow: 0.10, spider: 0.00, swing: 0.08, bow: 0.05, sway: 18,  crowSpeed: [160, 230], lantern: 0.10, sun: 0.40, double: 0.30, squirrel: 0.00, balcony: 0.00, guard: 0.00, pot: 0.00, grabber: 0.00, bat: 0.00 },
+  { y: 10000, gap: [1.0, 1.45],  dry: 0.18, short: 0.16, stub: 0.07, long: 0.12, cloudSmall: 0.05, cloudWide: 0.30, drift: 0.10, storm: 0.00, updraft: 0.10, crow: 0.17, spider: 0.10, swing: 0.12, bow: 0.06, sway: 42,  crowSpeed: [190, 270], lantern: 0.11, sun: 0.40, double: 0.26, squirrel: 0.24, balcony: 0.60, guard: 0.25, pot: 0.25, grabber: 0.09, bat: 0.14 },
+  { y: 22000, gap: [1.1, 1.65],  dry: 0.26, short: 0.22, stub: 0.12, long: 0.12, cloudSmall: 0.10, cloudWide: 0.28, drift: 0.18, storm: 0.00, updraft: 0.10, crow: 0.23, spider: 0.18, swing: 0.14, bow: 0.06, sway: 70,  crowSpeed: [230, 330], lantern: 0.12, sun: 0.40, double: 0.22, squirrel: 0.30, balcony: 1.00, guard: 0.35, pot: 0.35, grabber: 0.13, bat: 0.18 },
+  { y: 40000, gap: [1.25, 1.8],  dry: 0.33, short: 0.26, stub: 0.16, long: 0.12, cloudSmall: 0.16, cloudWide: 0.24, drift: 0.26, storm: 0.00, updraft: 0.10, crow: 0.28, spider: 0.24, swing: 0.15, bow: 0.07, sway: 100, crowSpeed: [270, 390], lantern: 0.12, sun: 0.40, double: 0.20, squirrel: 0.32, balcony: 1.00, guard: 0.40, pot: 0.40, grabber: 0.17, bat: 0.20 },
+  { y: 70000, gap: [1.3, 1.9],   dry: 0.36, short: 0.28, stub: 0.20, long: 0.12, cloudSmall: 0.26, cloudWide: 0.18, drift: 0.40, storm: 0.20, updraft: 0.16, crow: 0.32, spider: 0.28, swing: 0.15, bow: 0.07, sway: 115, crowSpeed: [300, 420], lantern: 0.12, sun: 0.40, double: 0.18, squirrel: 0.34, balcony: 1.00, guard: 0.45, pot: 0.45, grabber: 0.20, bat: 0.20 },
 ];
 
 // Zones: altitude bands that scale each element's spawn chance, so new
@@ -28,10 +28,10 @@ const TIERS = [
 // other. An element's rule is: tier chance x pacing x zone multiplier,
 // starting at the band where its multiplier first becomes positive.
 export const ZONES = [
-  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
-  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0 } },
-  { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0, cloak: 1.4, feather: 0.8 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0, star: 1.2, cloak: 0.6, feather: 1.5 } },
+  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0, bat: 0.0, flock: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
+  { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 0.5, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0, bat: 1.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0, bat: 0.5, cloak: 1.4, feather: 0.8 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0, bat: 0.5, star: 1.2, cloak: 0.6, feather: 1.5 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -64,6 +64,23 @@ export function pacingAt(y) {
 // (clouds are where falls happen; lightning does not care about the cloak).
 const POWER_WEIGHT = { magnet: 1.0, spring: 1.0, feather: 0.8, star: 1.0, cloak: 0.9 };
 const POWER_CALM = 3000;        // below this height no star and no cloak
+
+// The flock of starlings (enemies.js Flock): a set piece the generator
+// builds. From FLOCK_FROM on, every FLOCK_EVERY of climb, never in a
+// breather and never inside a braid cut's stretch, a row becomes a floor
+// across the whole width (two long branches that meet in the middle, or
+// three wide clouds above the trees), the next row FLOCK_GAP above it
+// another, and the birds stream through the gap between them, FLOCK_BAND
+// above the lower floor: high enough that a prince crouched on it is clear
+// of them, low enough that the upper floor is clear too. Both floors are
+// solid ground (nothing crumbles, drifts or strikes, no enemy on or between
+// them), so a prince turned back by the birds comes down on the lower one
+// wherever he is, and one who burst through lands on the upper one. Two
+// lanterns that stay where they are stand on the lower floor: the boost the
+// birds ask for is always there (a lantern precedes a barrier that needs a
+// boost).
+export const FLOCK_FROM = 16000, FLOCK_EVERY = [30000, 45000], FLOCK_GAP = 500, FLOCK_BAND = 345, FLOCK_LEAD = 1600;
+const floorLayout = (y) => (cloudAmount(y) >= 0.5 ? 'cloudL+cloudC+cloudR' : 'branchL+branchR');
 
 // The braid cut. From CUT_FROM on, every CUT_EVERY of climb the generator
 // plans a cut stretch from the row it is at (`from`) to CUT_AHEAD above it
@@ -101,6 +118,7 @@ export class Level {
     this.rngHearts = rng;        // hearts depend on the prince's state, so they get a stream of their own
     this.rngTower = rng;         // what the tower does (window guards): rolled apart so the geometry stays comparable
     this.rngPower = rng;         // the power-ups: their own stream, so the tower is the same with and without them
+    this.rngFauna = rng;         // bats and the flock's timing: apart again, so only the flock's two floors change the tower
     this.forceLen = null;        // dev: every branch gets this length class
   }
 
@@ -126,6 +144,9 @@ export class Level {
     this.lastBalconyRow = -9;    // row index of the last balcony row
     this.nextCutY = CUT_FROM;    // the next braid cut is planned at the first row from here
     this.cutPlan = null;         // { from, yc, until, fired }: the stretch kept free of braid-only rows
+    this.flockPlan = null;       // { from, to, y, fired }: the two floors and the height the birds fly at
+    this.flockNext = false;      // the next row is a flock's upper floor
+    this.nextFlockY = FLOCK_FROM + this.rngFauna.range(0, 8000);   // the first between 160 and 240 m
     this.lastPower = null;       // the kind of the last power-up (never twice in a row)
     this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
   }
@@ -150,6 +171,26 @@ export class Level {
     const base = this.cutPlan ? this.cutPlan.yc : this.world.player.maxY;
     this.cutPlan = null;
     this.nextCutY = base + this.rngTower.range(CUT_EVERY[0], CUT_EVERY[1]);
+  }
+
+  // The flock has gone (he passed it, or was past its height before it came): plan the next.
+  flockDone() {
+    const base = this.flockPlan ? this.flockPlan.to : this.world.player.maxY;
+    this.flockPlan = null;
+    this.nextFlockY = base + this.rngFauna.range(FLOCK_EVERY[0], FLOCK_EVERY[1]);
+  }
+
+  // A bat under a healthy branch of this row that is long enough to hang from.
+  spawnBat(platforms) {
+    const rf = this.rngFauna;
+    const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len !== 'stub');
+    // one thing per branch: not where a spider hangs or a squirrel lives
+    if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat') && e.platform === branch))) return null;
+    const T = tierAt(branch.y);
+    const half = branch.w / 2 - 30;
+    const bat = new Bat(branch, rf.range(-half, half), clamp((T.index - 2) / 2.5, 0, 1), this.child(rf));
+    this.world.enemies.push(bat);
+    return bat;
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -246,13 +287,19 @@ export class Level {
     const T = tierAt(this.nextY);
     const y = this.nextY;
     // Plan a braid cut: never in a stretch that starts or ends in a breather.
-    if (!this.cutPlan && y >= this.nextCutY && zoneMul(y, 'scissors') > 0 && !pacingAt(y).breather && !pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
+    if (!this.cutPlan && !this.flockPlan && !this.flockNext && y >= this.nextCutY && zoneMul(y, 'scissors') > 0 && !pacingAt(y).breather && !pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
       this.cutPlan = { from: y, yc: y + CUT_AHEAD, until: y + CUT_AHEAD + CUT_MARGIN, fired: false };
     }
     const P0 = pacingAt(y);
-    const P = this.inCut(y) ? { ...P0, dry: 0 } : P0;    // no crumbling branch where the ribbons will go
+    // A flock: this row is the floor under it ('below'), or the one over it ('above').
+    let flockRow = null;
+    if (this.flockNext) { flockRow = 'above'; this.flockNext = false; }
+    else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather) flockRow = 'below';
+    const P = flockRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors: nothing crumbles, nothing small, nobody on them
+      : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
     let layout = this.nextLayout || this.pickLayout(T, y);
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
+    if (flockRow) layout = floorLayout(y);
     this.nextLayout = null;
     const kinds = layout.split('+');
     this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC');
@@ -273,7 +320,7 @@ export class Level {
     for (const slot of kinds) {
       const opts = {};
       let kind = slot;
-      if (slot.startsWith('cloud') && r.chance(0.6 * lanternAmount(y))) {
+      if (slot.startsWith('cloud') && !flockRow && r.chance(0.6 * lanternAmount(y))) {
         // from sunset on, a cloud slot often holds a sky lantern instead
         kind = 'skyLantern';
         const lane = slot[5];
@@ -287,7 +334,8 @@ export class Level {
         opts.variant = r.int(0, 1);
         // sizes follow the branch logic: small ones are the aim test (never in
         // a breather), wide ones the relief
-        if (r.chance(T.cloudSmall * P.short)) opts.size = 'small';
+        if (flockRow) opts.size = 'wide';                 // three wide clouds make a floor
+        else if (r.chance(T.cloudSmall * P.short)) opts.size = 'small';
         else if (r.chance(T.cloudWide * P.long)) opts.size = 'wide';
         // lanes: a wide cloud sits a little further in so it stays on screen
         const laneX = opts.size === 'wide' ? 160 : 190, jitter = opts.size === 'wide' ? 20 : 40;
@@ -295,7 +343,8 @@ export class Level {
         opts.cloud = 'thick';
         // wispy follows the dry-branch rules; a cloud drifts or is wispy, not
         // both; a storm cloud is thick, not small and never alone in its row
-        if (canBeDry && opts.size !== 'small' && r.chance(T.dry * P.dry)) opts.dry = true;
+        if (flockRow) { /* a floor: thick, where it is */ }
+        else if (canBeDry && opts.size !== 'small' && r.chance(T.dry * P.dry)) opts.dry = true;
         else if (opts.size !== 'wide' && r.chance(T.drift * (P.breather ? 0.6 : 1))) {
           // patrol around the lane centre; the swing keeps the cloud fully on screen
           opts.cloud = 'drift';
@@ -314,11 +363,11 @@ export class Level {
         if (canBeDry && r.chance(T.dry * P.dry)) { opts.dry = true; opts.variant = 4; }
       }
       if (kind === 'branchL' || kind === 'branchR') {
-        const len = this.pickLen(T, P, y, kinds);
+        const len = flockRow ? 'long' : this.pickLen(T, P, y, kinds);   // a flock's floor: two long branches that meet
         opts.len = len;
         if (len === 'normal' || len === 'long') {          // stubs and short branches are never dry
           if (canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
-          opts.lenScale = r.range(0.88, 1.12);
+          opts.lenScale = flockRow ? 1.08 : r.range(0.88, 1.12);
         }
         opts.variant = len === 'stub' ? r.int(0, 1) : r.int(0, 5);
         opts.style = treeStyleIndexAt(y);
@@ -337,6 +386,8 @@ export class Level {
     }
     for (const p of platforms) this.world.platforms.push(p);
     if (safe) this.lastSafeY = y;
+    // a long branch reaches the centre lane too: no swing right above it (he would bounce into its underside)
+    if (platforms.some((p) => (p.kind === 'branchL' || p.kind === 'branchR') && p.len === 'long')) this.lastHadCenter = true;
 
     // --- enemies -----------------------------------------------------------
     let gapMin = T.gap[0] * BEAT * P.gap, gapMax = T.gap[1] * BEAT * P.gap;
@@ -348,13 +399,21 @@ export class Level {
     const nextTowerOnly = nextLayout.split('+').every((k) => k === 'ribbon' || k === 'bow' || k.startsWith('balcony'));
     if (front && nextTowerOnly) gapMax = Math.min(gapMax, platforms.some((p) => p.dry) ? LAYER_GAP_CAP_DRY : LAYER_GAP_CAP);
     gapMax = Math.max(gapMax, gapMin);
-    const gap = r.range(gapMin, gapMax);
+    let gap = r.range(gapMin, gapMax);
     this.nextLayout = nextLayout;
+    if (flockRow === 'below') {
+      gap = FLOCK_GAP;
+      this.nextLayout = floorLayout(y + gap);
+      this.flockNext = true;
+      this.flockPlan = { from: y, to: y + gap, y: y + FLOCK_BAND, fired: false, span: Math.min(-Math.min(...platforms.map((p) => p.left)), Math.max(...platforms.map((p) => p.right))) };   // how far the floor reaches: its shorter side
+      // the boost it takes, for certain: two lanterns that do not drift away
+      for (const lx of [-170, 170]) { const l = new Lantern(lx, y + 96, this.rngFauna); l.vy = 0; this.world.pickups.push(l); }
+    }
     // Updrafts (sky only): a column under the next row's first lane, from
     // just above this row to just below the next; more in breathers.
     this.updraftLane = null;
     const nextSlot = nextLayout.split('+')[0];
-    if (cloudAmount(y) >= 1 && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
+    if (cloudAmount(y) >= 1 && !flockRow && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
       const lane = nextSlot[5];
       const ux = lane === 'L' ? -190 : lane === 'R' ? 190 : 0;
       this.world.spawnUpdraft(ux, y + 60, y + gap - 90);
@@ -380,6 +439,8 @@ export class Level {
     }
 
     if (r.chance(T.squirrel * P.enemy * zoneMul(y, 'squirrel'))) this.spawnSquirrel(platforms);
+    // Bats roll on their own stream, so the rows are the same with and without them.
+    if (this.rngFauna.chance(T.bat * P.enemy * zoneMul(y, 'bat'))) this.spawnBat(platforms);
     if (this.rngTower.chance(T.grabber * P.enemy * zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony, never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {

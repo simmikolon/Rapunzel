@@ -732,3 +732,222 @@ export class Scissors extends Enemy {
     if (!this.deflected) g.blit(art.creatures.scissors[this.blade], sx + this.dir * 56, sy + 4 + this.frame * 2, { flip: this.dir < 0 });
   }
 }
+
+// A bat sleeps under a healthy branch, hanging by its feet, wrapped in its
+// wings. When the prince comes within its hearing it wakes (eyes open, a
+// squeak, a "!"), lets go and swoops: one U-shaped pass through where he
+// was, across to the other side, then back to its roost, where it needs a
+// rest before it can be woken again. Harmless while it hangs; in flight it
+// bites on contact, and a pogo from above or the boost shield knocks it
+// out. `keen` (0..1, by altitude) widens its hearing and quickens the pass.
+export class Bat extends Enemy {
+  constructor(platform, offset, keen = 0, rng = new RNG()) {
+    super(platform.x + offset, platform.y - 28 - 26);
+    this.kind = 'bat';
+    this.platform = platform; this.offset = offset; this.keen = keen; this.rng = rng;
+    this.w = 56; this.h = 36;
+    this.state = 'hang';           // hang | wake | swoop | back | away
+    this.stateT = 0;
+    this.rest = rng.range(0, 1.2);  // not to be woken while this runs
+    this.hurtful = false;
+    this.from = null; this.ctrl = null; this.to = null;   // the pass: start, control point, end
+    this.dur = 1;
+    this.vx = 0; this.vy = 0; this.spin = 0;
+  }
+  get stompable() { return this.state === 'swoop' || this.state === 'back'; }
+  get roostX() { return this.platform.x + this.offset; }
+  get roostY() { return this.platform.y - 28 - 26; }       // its middle, hanging from the branch's underside
+  get hearing() { return 215 + 60 * this.keen; }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    if (this.dead) {
+      this.vy -= GRAVITY * 0.8 * dt;
+      this.y += this.vy * dt; this.x += this.vx * dt; this.spin += dt * 9;
+      if (this.y < world.cam.y - 200) this.alive = false;
+      return;
+    }
+    const p = world.player, pf = this.platform;
+    if (this.state === 'away') {
+      this.x += this.vx * dt; this.y += this.vy * dt + Math.sin(this.t * 14) * 60 * dt;
+      if (Math.abs(this.x) > W / 2 + 120 || this.y > world.cam.top + 200) this.alive = false;
+      return;
+    }
+    if (!pf.landable) {
+      // its branch is gone: it flutters off for good
+      this.state = 'away'; this.hurtful = false;
+      this.vx = (this.x < 0 ? 1 : -1) * 220; this.vy = 260;
+      return;
+    }
+    if (this.state === 'hang') {
+      this.x = this.roostX; this.y = this.roostY;
+      if (this.rest > 0) this.rest -= dt;
+      else if (world.started && p.seen && Math.hypot(p.x - this.x, p.y + 110 - this.y) < this.hearing) {
+        this.state = 'wake'; this.stateT = 0; world.audio.squeak();
+      }
+    } else if (this.state === 'wake') {
+      this.x = this.roostX; this.y = this.roostY;
+      if (this.stateT > 0.45) this.dive(p);
+    } else if (this.state === 'swoop') {
+      const u = Math.min(1, this.stateT / this.dur), v = 1 - u;
+      const x = v * v * this.from[0] + 2 * u * v * this.ctrl[0] + u * u * this.to[0];
+      this.dirX = x >= this.x ? 1 : -1;
+      this.x = x;
+      this.y = v * v * this.from[1] + 2 * u * v * this.ctrl[1] + u * u * this.to[1];
+      if (u >= 1) { this.state = 'back'; this.stateT = 0; }
+    } else {
+      // back to the roost in a shallow arc
+      const u = Math.min(1, this.stateT / 0.9), e = u * u * (3 - 2 * u);
+      this.x = this.to[0] + (this.roostX - this.to[0]) * e;
+      this.y = this.to[1] + (this.roostY - this.to[1]) * e + Math.sin(Math.PI * e) * 40;
+      if (u >= 1) { this.state = 'hang'; this.stateT = 0; this.hurtful = false; this.rest = this.rng.range(2.5, 4); }
+    }
+  }
+  // Let go and swoop: a curve from the roost through where the prince is
+  // (a little ahead of him), ending as far on the other side.
+  dive(p) {
+    const x0 = this.roostX, y0 = this.roostY;
+    const tx = clamp(p.x + p.vx * 0.2, -300, 300);
+    const ty = clamp(p.y + 110 + p.vy * 0.12, y0 - 420, y0 + 160);
+    let side = tx >= x0 ? 1 : -1;
+    let x2 = x0 + side * Math.max(170, 2 * Math.abs(tx - x0));
+    if (Math.abs(x2) > 320) { x2 = clamp(x2, -320, 320); if (Math.abs(x2 - x0) < 120) { side = -side; x2 = clamp(x0 + side * 240, -320, 320); } }
+    this.from = [x0, y0]; this.to = [x2, y0 - 6];
+    this.ctrl = [2 * tx - (x0 + x2) / 2, 2 * ty - (y0 + this.to[1]) / 2];   // so the curve's middle is the target
+    this.dur = 1.2 - 0.25 * this.keen;
+    this.state = 'swoop'; this.stateT = 0; this.hurtful = true;
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false;
+    this.vy = -120; this.vx = (this.dirX || 1) * -90;
+    world.particles.sparkles(this.x, this.y, 8, '#a595cc');
+  }
+  draw(g, cam, art) {
+    const A = art.creatures;
+    if (this.dead) { g.blit(A.bat[2], cam.sx(this.x), cam.sy(this.y), { rot: this.spin }); return; }
+    if (this.state === 'hang' || this.state === 'wake') {
+      const sx = cam.sx(this.x), top = cam.sy(this.y + 26);
+      const awake = this.state === 'wake' || this.rest > 0;       // after a pass it hangs with its eyes open for a while
+      // asleep it breathes, waking it shakes itself
+      const o = this.state === 'wake' ? { rot: Math.sin(this.stateT * 40) * 0.12 } : { sx: 1 + Math.sin(this.t * 2.2) * 0.04 };
+      g.blit(A.batHang[awake ? 1 : 0], sx, top, o);
+      if (this.state === 'wake') g.text('!', sx + 34, top + 30, 22, '#ffe9a0', 'center', true);
+      else if (!awake && Math.floor(this.t * 0.7) % 2 === 0) g.text('z', sx + 26, top + 44 - ((this.t * 0.7) % 1) * 14, 12, '#cfe8e3', 'center', true, { alpha: 0.8 });
+      return;
+    }
+    g.blit(A.bat[Math.floor(this.t * 11) % 2], cam.sx(this.x), cam.sy(this.y), { rot: this.state === 'away' ? 0 : (this.dirX || 1) * 0.12 });
+  }
+}
+
+// A flock of starlings: a stream of birds from one edge of the screen to
+// the other, three lanes deep, in the gap between two rows the generator
+// built as floors (level.js, the flock plan). There is no way around it and
+// no way through it without a boost: a prince who flies into it is turned
+// back down, no heart lost; the boost shield (or the star) bursts through
+// and scatters the birds for a moment; coming down on it from above is a
+// pogo on a bird's back. Phases: warn (a marker with birds at the edge they
+// come from, their calls) -> stream (until he stands above it) -> leave (the
+// last birds fly out). It never hurts, so `hurtful` stays false and the
+// world handles the meeting (World.meetFlock).
+export const FLOCK_H = 130;
+const FLOCK_SPEED = 560, FLOCK_BIRDS = 26, BIRD_W = 56, BIRD_H = 36, LANE = 42;
+export class Flock extends Enemy {
+  constructor(y, dir, rng = new RNG(), span = 284) {
+    super(0, y);
+    this.kind = 'flock';
+    this.span = span;               // how far the floor below reaches to each side (see Player.shoo)
+    this.dir = dir;                 // 1: they fly to the right
+    this.w = W + 160; this.h = FLOCK_H;
+    this.hurtful = false;
+    this.phase = 'warn'; this.phaseT = 0;
+    this.warnTime = 1.3;
+    this.passT = 0;                 // while this runs he is in the hole he made: no second meeting
+    this.done = false;
+    this.L = W + 160;               // the track's length, edge to edge with room to come in and go out
+    // staggered behind one another, lane by lane, so that somewhere in the band's depth there is always a bird
+    // (`hole`: its place is empty until it comes round again, see scatter)
+    this.birds = Array.from({ length: FLOCK_BIRDS }, (_, i) => ({ s: -(i + rng.range(0, 0.5)) * (this.L / FLOCK_BIRDS), lane: (i % 3) - 1, ph: rng.range(0, TAU), flap: rng.range(0, 2), hole: false }));
+    this.fallen = [];               // birds knocked out of the stream, tumbling away (looks only)
+    this.hitBottom = y - FLOCK_H / 2;
+  }
+  get stompable() { return this.phase !== 'warn'; }
+  get blocking() { return this.phase === 'stream'; }
+  get top() { return this.y + this.h / 2; }
+  get bottom() { return this.y - this.h / 2; }
+  get rect() { return { x: -this.w / 2, y: this.bottom, w: this.w, h: this.h }; }
+  birdX(b) { return this.dir > 0 ? -this.L / 2 + b.s : this.L / 2 - b.s; }
+  birdY(b) { return this.y + b.lane * LANE + Math.sin(this.t * 5 + b.ph) * 7; }
+  // Is there a bird where the prince's body is? Notes the lowest one's underside.
+  hits(r) {
+    if (this.phase === 'warn' || this.passT > 0) return false;
+    let low = Infinity;
+    for (const b of this.birds) {
+      if (b.hole || b.s < 0) continue;
+      const x = this.birdX(b), y = this.birdY(b);
+      if (x + BIRD_W / 2 > r.x && x - BIRD_W / 2 < r.x + r.w && y + BIRD_H / 2 > r.y && y - BIRD_H / 2 < r.y + r.h) low = Math.min(low, y - BIRD_H / 2);
+    }
+    if (low === Infinity) return false;
+    this.hitBottom = low;
+    return true;
+  }
+  update(dt, world) {
+    this.t += dt; this.phaseT += dt;
+    if (this.passT > 0) this.passT -= dt;
+    const p = world.player;
+    if (this.y < world.cam.y - 300) return this.finish(world);          // left behind below the view
+    if (this.phase === 'warn') {
+      if (this.phaseT > this.warnTime) { this.phase = 'stream'; this.phaseT = 0; world.audio.flockWings(); }
+      return;
+    }
+    for (const f of this.fallen) { f.vy -= GRAVITY * 0.6 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += dt * 11; }
+    this.fallen = this.fallen.filter((f) => f.y > world.cam.y - 80);
+    for (const b of this.birds) {
+      b.s += FLOCK_SPEED * dt;
+      // round again: another bird takes an empty place, so the stream stays whole
+      if (b.s > this.L) { if (this.phase === 'leave') b.gone = true; else { b.s -= this.L; b.hole = false; } }
+    }
+    this.birds = this.birds.filter((b) => !b.gone);
+    // while he passes, the birds that reach him scatter: he ploughs a hole
+    if (this.passT > 0 && p.alive) this.scatter(world, 70, p);
+    if (this.phase === 'stream') {
+      // he stands above it: the rest fly out
+      if (p.alive && p.state === 'bouncing' && p.y > this.top) { this.phase = 'leave'; this.phaseT = 0; }
+    } else if (!this.birds.length && !this.fallen.length) this.finish(world);
+  }
+  finish(world) {
+    this.alive = false;
+    if (!this.done) { this.done = true; world.level.flockDone(); }
+  }
+  // Knock the birds within `reach` px of the prince out of the stream: they
+  // tumble away, and their places stay empty for the rest of the lap.
+  scatter(world, reach, p = world.player) {
+    for (const b of this.birds) {
+      if (b.hole || b.s < 0) continue;
+      const x = this.birdX(b), y = this.birdY(b);
+      if (Math.abs(x - p.x) > reach || Math.abs(y - (p.y + 110)) > 190) continue;
+      b.hole = true;
+      this.fallen.push({ x, y, vx: (x < p.x ? -1 : 1) * (120 + Math.random() * 200) + this.dir * 160, vy: 180 + Math.random() * 260, rot: 0 });
+      world.particles.feathers(x, y, false, 2);
+    }
+  }
+  burst(world) { this.scatter(world, 120); this.passT = 0.7; }          // the boost shield went through
+  stomped(world) { this.scatter(world, 90); this.passT = 0.3; }         // a pogo from above
+  turnedBack(world) { this.passT = 0.25; }                              // he flew into it without a boost
+  draw(g, cam, art) {
+    const A = art.creatures;
+    if (this.phase === 'warn') {
+      // the marker at the edge they will come from, two birds beside it
+      const side = -this.dir, sx = side < 0 ? 40 : W - 40, sy = clamp(cam.sy(this.y), 60, H - 60);
+      const blink = Math.floor(this.phaseT * 8) % 2 === 0;
+      g.text('!', sx, sy, 56, blink ? '#ffd04a' : '#fff2c0', 'center', true, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
+      const set = this.dir > 0 ? A.starlingR : A.starlingL;
+      for (let i = 0; i < 2; i++) g.blit(set[(Math.floor(this.phaseT * 10) + i) % 2], sx - side * (52 + i * 44), sy - 14 + i * 26);
+      return;
+    }
+    const set = this.dir > 0 ? A.starlingR : A.starlingL;
+    for (const b of this.birds) {
+      if (b.hole || b.s < 0) continue;
+      g.blit(set[Math.floor(this.t * 11 + b.flap) % 2], cam.sx(this.birdX(b)), cam.sy(this.birdY(b)));
+    }
+    for (const f of this.fallen) g.blit(set[0], cam.sx(f.x), cam.sy(f.y), { rot: f.rot });
+  }
+}

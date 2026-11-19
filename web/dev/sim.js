@@ -16,6 +16,8 @@ const SKILLS = {
   good: { reaction: 0.10, hesitate: 0.05, dodgeRange: 150 },
 };
 
+const unseenBy = (p) => p.hidden;     // under the cloak he slips through the flock anyway
+
 class BotInput {
   constructor() { this.axis = 0; this.usingTilt = false; this.boostQueued = 0; }
   consumeBoost() { const v = this.boostQueued > 0; this.boostQueued = 0; return v; }
@@ -26,7 +28,9 @@ class BotInput {
 // through an enemy above. Power-ups: it goes for one it can reach on the
 // way up; under the star it dodges nothing (and spends no boost on a
 // punch), under the cloak nothing but lightning; the spring, the magnet and
-// the feather change what its steering already does.
+// the feather change what its steering already does. A flock of starlings
+// above: it boosts into it on the way up (the only way through), and with
+// no charge it keeps bouncing on the floor below until it has one.
 class Bot {
   constructor(world, input, skill, policy, rng) {
     this.world = world; this.input = input; this.s = SKILLS[skill]; this.policy = policy; this.rng = rng;
@@ -74,6 +78,16 @@ class Bot {
       let dx = aimX - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
       if (Math.abs(dx) > 16) axis = dx > 0 ? 1 : -1;
     }
+    // Under a plank swing (solid from below) on the way down or crouched:
+    // step out from under it, as far as the platform below reaches. Without
+    // this the bot could bounce into a plank's edge for ever.
+    if (p.vy <= 0 && below) {
+      const lid = plats.find((q) => q.kind === 'swing' && q.y > p.y + 150 && q.y - p.y < 700 && p.x + 34 > q.left && p.x - 34 < q.right);
+      if (lid) {
+        const dir = p.x < lid.x ? -1 : 1, out = dir < 0 ? lid.left - 40 : lid.right + 40;
+        if (out > below.left + 14 && out < below.right - 14) axis = dir;
+      }
+    }
     // A power-up within reach on the way up: worth leaving the line for, as
     // long as there is time to get under it before its height is passed.
     if (p.vy > 200) {
@@ -87,6 +101,12 @@ class Bot {
         if (Math.abs(dx) > 16) axis = dx > 0 ? 1 : -1;
         break;
       }
+    }
+    // A flock streaming above: boost when the birds are just overhead.
+    const flock = w.enemies.find((e) => e.kind === 'flock' && e.alive && e.blocking);
+    if (flock && p.y + 216 < flock.top && p.vy > 250 && p.boost >= 1 && p.boostCooldown <= 0 && !p.shielded && !unseenBy(p)) {
+      const toBirds = flock.bottom - (p.y + 216);
+      if (toBirds < 200 && toBirds > -40) this.input.boostQueued++;
     }
     // Enemies in the way: within dodgeRange horizontally and in the body's vertical path.
     let threat = null;
@@ -161,7 +181,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0 };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
@@ -173,10 +193,13 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   world.onPlayerStomp = (pl, e) => { stats.stomps++; origStomp(pl, e); };
   if (world.onBoostPunch) { const o = world.onBoostPunch.bind(world); world.onBoostPunch = (pl, e) => { stats.punches++; o(pl, e); }; }
   world.onPowerStart = (pl, kind) => { stats.powers[kind] = (stats.powers[kind] || 0) + 1; };
+  const origPass = world.onFlockPass.bind(world), origTurn = world.onFlockTurn.bind(world);
+  world.onFlockPass = (pl, e) => { stats.flockPass++; origPass(pl, e); };
+  world.onFlockTurn = (pl, e) => { stats.flockTurn++; origTurn(pl, e); };
   const seenPowers = new Set();
   const origCut = world.cutBraid.bind(world);
   world.cutBraid = (ly, bx, y) => { stats.cuts++; stats.cutAt.push(world.player.maxY); origCut(ly, bx, y); };
-  let t = 0, witchSeen = 0, scissorsSeen = 0;
+  let t = 0, witchSeen = 0, scissorsSeen = 0, flockSeen = 0;
   while (!world.over && t < maxTime && world.heightM < cap) {
     bot.step(STEP);
     world.update(STEP);
@@ -186,6 +209,9 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
     const wc = world.enemies.filter((e) => e.kind === 'witch').length;
     if (wc > witchSeen) stats.witches++;
     witchSeen = wc;
+    const fc = world.enemies.filter((e) => e.kind === 'flock').length;
+    if (fc > flockSeen) stats.flocks++;
+    flockSeen = fc;
     const sc = world.enemies.filter((e) => e.kind === 'scissors').length;
     if (sc > scissorsSeen) stats.scissors++;
     scissorsSeen = sc;
@@ -196,6 +222,9 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   stats.cause = world.over ? world.player.deathCause : (world.heightM >= cap ? 'cap' : 'timeout');
   stats.suns = world.suns;
   if (world.over) stats.deathPower = world.player.deathPower || 'none';
+  // a fall after he had reached a flock's lower floor, while the flock was there
+  const fp = world.level.flockPlan;
+  if (stats.cause === 'fell' && fp && fp.fired && world.player.maxY >= fp.from) stats.fellAtFlock = 1;
   if (stats.cause === 'fell') stats.fellBand = band();
   // a fall in the 15 m above a cut is the cut's doing (the stretch without ribbons)
   if (stats.cause === 'fell' && stats.cutAt.some((c) => world.player.maxY >= c && world.player.maxY - c < 1500)) stats.fellAfterCut = 1;
@@ -242,6 +271,7 @@ function summarize(all, cfg) {
     scissors: total('scissors'), cuts: total('cuts'), fellAfterCut: total('fellAfterCut'),
     powers, powerSpawns: total('powerSpawns'), powerShare: totalTime ? +(total('powerTime') / totalTime).toFixed(2) : 0, deathPower,
     suns: total('suns'), speed: totalTime ? +(totalM / totalTime).toFixed(2) : 0,
+    flocks: total('flocks'), flockPass: total('flockPass'), flockTurn: total('flockTurn'), fellAtFlock: total('fellAtFlock'),
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
   };
 }
@@ -261,5 +291,6 @@ export function formatReport(r) {
   lines.push(`scissors events ${r.scissors}, braid cuts ${r.cuts}, falls within 15 m above a cut ${r.fellAfterCut}`);
   lines.push(`power-ups: ${JSON.stringify(r.powers)} of ${r.powerSpawns} passed, active ${Math.round(r.powerShare * 100)}% of the time; deaths by running power-up ${JSON.stringify(r.deathPower)}`);
   lines.push(`suns ${r.suns}, climb speed ${r.speed} m/s`);
+  lines.push(`flocks ${r.flocks}: burst through ${r.flockPass} times, turned back ${r.flockTurn} times, falls at a flock ${r.fellAtFlock}`);
   return lines.join('\n');
 }

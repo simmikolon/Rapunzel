@@ -36,6 +36,8 @@ which only copies the two folders together). The design document
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest
   window above, `?at=300&spawn=scissors` brings the witch with scissors at once,
   `?spawn=star|cloak|spring|magnet|feather` hangs that power-up above the prince,
+  `?spawn=bat` hangs a bat under the next branch, `?at=170&spawn=flock` builds a
+  flock of starlings just above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto

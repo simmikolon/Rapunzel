@@ -132,7 +132,10 @@ custom engine instead of SpriteKit physics and GameplayKit:
   him when he comes close; the witch arrives on her broom from a marked
   side, crosses above him and dives, twice near the top. Crows, spiders and
   squirrels can be stomped with the pogo (or punched through with a boost);
-  the witch must be dodged or deflected with a boost.
+  the witch must be dodged or deflected with a boost. In the deep forest
+  bats sleep under the branches and swoop when woken; and now and then a
+  flock of starlings streams across between two floors, which only a
+  boost gets through (it turns him back, it does not hurt).
 * **Hearts and a boost meter**: three hearts, invulnerability flashing after
   a hit; three boost charges refilled by landings and floating lanterns.
 * **Pickups**: sun drops, lanterns (boost refill) and hearts.

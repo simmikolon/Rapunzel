@@ -284,6 +284,26 @@ class Synth {
     platform.haptic('bounce', 1);
     [659, 784, 988, 1319].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.3, vol: 0.16, delay: i * 0.08 }));
   }
+  // A bat waking under its branch: two thin squeaks.
+  squeak() {
+    this.tone({ type: 'square', freq: 2900, to: 3600, dur: 0.05, vol: 0.04 });
+    this.tone({ type: 'square', freq: 3200, to: 4200, dur: 0.06, vol: 0.04, delay: 0.08 });
+  }
+  // The flock announced: a scatter of calls coming nearer.
+  flockWarn() {
+    for (let i = 0; i < 7; i++) this.tone({ type: 'sawtooth', freq: 1500 + (i % 3) * 260, to: 1100 + (i % 2) * 300, dur: 0.07, vol: 0.03 + i * 0.006, delay: i * 0.16 });
+  }
+  // Many wings: the stream arriving, or the prince bursting through it.
+  flockWings() {
+    for (let i = 0; i < 5; i++) this.noise({ dur: 0.1, vol: 0.09, filter: 'bandpass', freq: 700, to: 320, q: 1.1, delay: i * 0.07 });
+  }
+  // Turned back by the birds: a soft thump and an indignant call.
+  flockTurn() {
+    platform.haptic('soft');
+    this.noise({ dur: 0.1, vol: 0.16, filter: 'lowpass', freq: 700 });
+    this.tone({ type: 'sawtooth', freq: 1300, to: 900, dur: 0.1, vol: 0.07 });
+    this.tone({ type: 'sawtooth', freq: 1500, to: 1000, dur: 0.1, vol: 0.06, delay: 0.1 });
+  }
   // A string of lights brushed in passing: one soft bell, the string's own
   // step of a pentatonic scale, so a climb past several plays a little tune.
   chime(step = 0) {
