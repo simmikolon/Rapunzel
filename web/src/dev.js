@@ -10,6 +10,7 @@
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
+//   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
 //   ?spawn=stairs    (inside) with ?at: a flight of stairs right above the start
 //   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince
 //   ?spawn=web       (inside) a spider's web under the next healthy ledge above the prince (a ledge is made if none is in view)
@@ -40,6 +41,8 @@ export function startAt(world, metres, spawn = '') {
   const y = Math.max(0, metres) * PX_PER_METER;
   if (!y) return;
   if (spawn === 'scissors') world.level.nextCutY = y - 400;
+  if (spawn === 'gate') world.level.nextGateY = y + 100;                               // the first row above the start is a gate's
+  else world.level.nextGateY = Math.max(world.level.nextGateY, y + 2500);              // not on top of the start
   if (spawn === 'stairs' && world.place.inside) world.level.forceLayout = 'stairsR';   // the row above the start is a flight of stairs
   // the flock a dozen metres up (so its stream is whole before he gets there), and no braid cut in its way
   if (spawn === 'flock') { world.level.nextFlockY = y + 1200; world.level.nextCutY = Math.max(world.level.nextCutY, y + 5000); }

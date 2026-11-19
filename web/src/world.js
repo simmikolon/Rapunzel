@@ -6,6 +6,8 @@ import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
 import { Level, CUT_ROOM, FLOCK_LEAD, zoneAt } from './level.js';
+import { treeStyleIndexAt } from './altitude.js';
+import { BEAT } from './config.js';
 import { Background } from './background.js';
 import { Witch, Scissors, Flock } from './enemies.js';
 import { audio } from './audio.js';
@@ -15,6 +17,10 @@ import { hash } from './altitude.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf } from './places.js';
 import { STONE_STYLE, INSIDE } from './art/interior.js';
+
+// Through a gate: the door takes GATE_OPEN to open, then the picture closes
+// in on the prince and opens again, GATE_IRIS each way.
+const GATE_OPEN = 0.28, GATE_IRIS = 0.3;
 
 // Before the round starts the prince hops on the lawn by himself.
 const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
@@ -55,6 +61,8 @@ export class World {
     this.level.rngTower = new RNG(seed == null ? undefined : hash(seed + 4));
     this.level.rngPower = new RNG(seed == null ? undefined : hash(seed + 5));
     this.level.rngFauna = new RNG(seed == null ? undefined : hash(seed + 6));
+    this.level.rngGates = new RNG(seed == null ? undefined : hash(seed + 7));
+    this.passage = null;          // { gate, t, switched }: going through a gate (enterGate)
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
@@ -137,7 +145,8 @@ export class World {
     const pl = this.player;
     pl.update(dt, this.started ? this.input : IDLE_INPUT);
     if (this.showoff) { this.showoff.t += dt; pl.flip = clamp(this.showoff.t / this.showoff.dur, 0, 1) * TAU; }
-    if (pl.alive) this.collide();
+    if (pl.alive && !pl.frozen) this.collide();
+    if (this.passage) this.updatePassage(dt);
 
     for (const e of this.enemies) e.update(dt, this);
     for (const f of this.fields) f.update(dt, this);
@@ -230,6 +239,73 @@ export class World {
   }
   onFlockPass(pl, e) { this.audio.flockWings(); if (e.bats) this.particles.sparkles(pl.x, pl.y + 120, 8, '#a595cc'); else this.particles.feathers(pl.x, pl.y + 120, false, 6); }
   onFlockTurn(pl, e) { this.audio.flockTurn(); if (e.bats) this.particles.sparkles(pl.x, pl.headY, 6, '#a595cc'); else this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
+
+  // --- Gates ------------------------------------------------------------------
+  // He landed on a gate's landing: the door opens, the picture closes in on
+  // him, the place is the other one, the picture opens again and he bounces
+  // on, on the same landing at the same height. Nothing can touch him on
+  // the way (he waits, `frozen`), and a gate leads through once.
+  enterGate(gate) {
+    gate.used = true;
+    this.passage = { gate, t: 0, switched: false };
+    this.player.frozen = true;
+    this.audio.gate();
+  }
+  updatePassage(dt) {
+    const ps = this.passage, pl = this.player;
+    ps.t += dt;
+    if (!ps.switched && ps.t >= GATE_OPEN + GATE_IRIS) { ps.switched = true; this.switchPlace(ps.gate); }
+    if (ps.t >= GATE_OPEN + 2 * GATE_IRIS) {
+      this.passage = null;
+      pl.frozen = false;
+      pl.invuln = Math.max(pl.invuln, 0.8);
+      pl.launch();
+    }
+  }
+  // How far the picture has closed in on him, 0 to 1.
+  get iris() { const ps = this.passage; if (!ps) return 0; const u = (ps.t - GATE_OPEN) / GATE_IRIS; return clamp(u < 1 ? u : 2 - u, 0, 1); }
+  // What a platform below a gate is on the other side (the place he is in
+  // now): a branch is a ledge and a ledge a branch, a ribbon a chandelier
+  // and a bow a bell (and back, where the braid still hangs), a gallery a
+  // branch, a board a board. What has no like there is gone.
+  twin(p) {
+    const inside = this.place.inside, style = inside ? STONE_STYLE : treeStyleIndexAt(p.y);
+    const onBraid = (kind) => { const ly = Platform.worldToLayer(p.y, PARALLAX_TOWER, this.cam.y); return ly > this.braidCut.ly ? new Platform(kind, p.y, { ly }) : null; };
+    switch (p.kind) {
+      case 'branchL': case 'branchR': p.style = style; return p;
+      case 'swing': return p;
+      case 'ribbon': return inside ? new Platform('chandelier', p.y) : null;
+      case 'bow': return inside ? new Platform('bell', p.y) : null;
+      case 'chandelier': return inside ? null : onBraid('ribbon');
+      case 'bell': return inside ? null : onBraid('bow');
+      case 'gallery': return inside ? null : new Platform(p.side === 'L' ? 'branchL' : 'branchR', p.y, { style });
+      default: return null;
+    }
+  }
+  // The other place, from the gate's height on. What was built above goes
+  // (the level builds the new place's rows there), everything alive goes;
+  // below, what he could stand on stays as its like on this side (`twin`),
+  // so a prince who drops back off the landing still has something under him.
+  switchPlace(gate) {
+    const pl = this.player;
+    this.placeName = this.place.other;
+    this.place = placeOf(this.placeName);
+    this.level.place = this.place;
+    this.bg.setPlace(this.place);
+    const top = gate.y + 60;
+    this.platforms = this.platforms.map((p) => (p === gate || p.kind === 'ground' ? p : p.y > top || !p.landable ? null : this.twin(p))).filter(Boolean);
+    this.enemies.length = 0;
+    this.fields.length = 0;
+    this.pickups = this.pickups.filter((k) => k.y <= top);
+    this.particles.clear();
+    this.level.restartFrom(gate.y, BEAT * 0.9);
+    this.level.generateUpTo(this.cam.top + 900);
+    this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
+    this.floorName = zoneAt(pl.maxY, this.level.zones).name;      // the place is said, not the floor
+    this.toast(this.place.arrive, '#fff2a8', 2);
+    this.onGatePass(pl, gate);
+  }
+  onGatePass(pl, gate) {}                   // the simulator counts here
 
   // The spider's web holds whoever flies into it (enemies.js Web says how
   // he gets out); the boost shield or the star tear through it and knock
@@ -438,6 +514,7 @@ export class World {
   // ---------------------------------------------------------------- callbacks
   onPlayerLand(pl, p) {
     if (p.kind === 'ground' && !this.started) return this.groundLanding(pl);
+    if (p.kind === 'gate' && !p.used && this.started && !this.passage) this.enterGate(p);
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
     else if (p.kind === 'bell') { this.audio.bell(); p.rungAt = this.time; this.particles.sparkles(pl.x, pl.y, 8, '#ffe9a0'); return; }
     else if (p.kind === 'chandelier') { this.audio.bounce(pl.combo); this.audio.clink(); this.particles.sparkles(pl.x, pl.y + 8, 5, INSIDE.candleLight); return; }
@@ -522,6 +599,7 @@ export class World {
       case 'chandelier': s = I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
       case 'bell': s = I.bell; break;
       case 'gallery': s = I.gallery[p.side][p.variant % 2]; break;
+      case 'gate': s = I.gate[this.place.inside ? 'out' : 'in'][this.passage && this.passage.gate === p ? 1 : 0]; break;   // it shows where it leads
       case 'step': if (!p.flight) return; s = I.stairs[p.side]; break;      // the flight is one piece, drawn for its lowest tread
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
@@ -533,7 +611,7 @@ export class World {
       default: return;
     }
     const cam = this.cam;
-    const dip = p.kind === 'balcony' || p.kind === 'step' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
+    const dip = p.kind === 'balcony' || p.kind === 'step' || p.kind === 'gate' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
     const opts = {};
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {
@@ -593,7 +671,7 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
-    const order = { swing: 0, step: 0, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
+    const order = { swing: 0, step: 0, gate: 1, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
     const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - (p.flight ? 360 : 120) && p.y < cam.top + (p.flight ? 220 : 120));   // a flight of stairs reaches well above and below its lowest tread
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
@@ -607,5 +685,12 @@ export class World {
     g.layer('light');
     this.bg.drawLighting(g, cam);
     this.bg.drawVignette(g);
+    // going through a gate: the picture closes in on the prince and opens again
+    const k = this.iris;
+    if (k > 0) {
+      const cx = clamp(cam.sx(this.player.x), 0, W), cy = clamp(cam.sy(this.player.y + PLAYER_H * 0.5), 0, H);
+      const e = k * k * (3 - 2 * k), l = cx * e, r = W - (W - cx) * e, t = cy * e, b = H - (H - cy) * e;
+      g.rect(0, 0, W, t, '#0b0a12'); g.rect(0, b, W, H - b, '#0b0a12'); g.rect(0, t, l, b - t, '#0b0a12'); g.rect(r, t, W - r, b - t, '#0b0a12');
+    }
   }
 }

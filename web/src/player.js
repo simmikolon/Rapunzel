@@ -48,6 +48,7 @@ export class Player {
     this.ghosts = [];              // the golden spring's after-images
     this.ghostT = 0;
     this.fxT = 0;                  // paces the power's particles
+    this.frozen = false;           // going through a gate: he waits where he is (World.enterGate)
     this.heldBy = null;            // the spider's web he hangs in (enemies.js Web)
     this.wriggle = 0;              // 1 right after a tug, fading
   }
@@ -88,6 +89,7 @@ export class Player {
     if (this.power) this.updatePower(dt);
     this.prevY = this.y;
     if (this.heldBy) { this.updateHeld(dt, input); return; }
+    if (this.frozen) { this.vx = 0; this.vy = 0; if (this.landedOn) this.y = this.landedOn.y; this.sx = approach(this.sx, 1, 14, dt); this.sy = approach(this.sy, 1, 14, dt); return; }
 
     // --- Horizontal control -------------------------------------------------
     const axis = this.state === 'standing' || this.state === 'dead' ? 0 : input.axis;

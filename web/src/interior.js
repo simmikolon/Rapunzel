@@ -99,16 +99,17 @@ export class Interior {
     }
   }
 
-  drawWall(g, cam, time) {
+  drawWall(g, cam, time, world) {
     const A = this.art.interior;
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     for (let k = first; k <= last; k++) g.blit(A.wall[wallTile(k)], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy, tintAt(k * TILE_H / PARALLAX_TOWER));
     // banners, shields, a painting or two, books, clockwork
+    const gates = world ? world.platforms.filter((p) => p.kind === 'gate') : [];
     for (let k = first - 1; k <= last + 1; k++) {
       for (const side of [-1, 1]) {
         const d = decorAt(k, side);
-        if (!d) continue;
+        if (!d || gates.some((q) => (q.x < 0 ? -1 : 1) === side && d.ly > q.ly - 30 && d.ly < q.ly + 350)) continue;   // nothing hangs where a gate's door is
         const dx = W / 2 + d.x + cam.ox, dy = H - (d.ly - camF) + cam.oy;
         if (d.kind === 'banner') g.blit(A.banner[d.look], dx, dy, { rot: Math.sin(time * 0.9 + k) * 0.025 });
         else if (d.kind === 'shield') g.blit(A.shield, dx, dy + 44);
@@ -198,7 +199,7 @@ export class Interior {
     bg.drawSkyLanterns(g, cam, time, false);
     this.drawBraid(g, cam, time);
     bg.drawSkyLanterns(g, cam, time, true);
-    this.drawWall(g, cam, time);
+    this.drawWall(g, cam, time, world);
     this.drawChain(g, cam, time);
     this.drawFloor(g, cam);
     this.drawPillars(g, cam, time, world);

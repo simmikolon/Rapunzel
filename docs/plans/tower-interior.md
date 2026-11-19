@@ -163,7 +163,11 @@ One branch each, merged when it is fun.
    the outside's bands, each with its stone, dusk, wall decor and
    roster: the hall (0 m), the guard rooms (120 m), the library
    (250 m), the belfry (400 m). A floor says its name on arrival.
-5. **Gates** between outside and inside in the endless tower.
+5. ✅ **Gates** between outside and inside (`element/tower-gates`): a door
+   in the tower's wall over a landing, from 120 to 400 m, a branch
+   opposite so it is a choice. The passage is a cut (the picture closes
+   in on him and opens on the other side), he comes out on the same
+   landing at the same height.
 
 ## Open
 

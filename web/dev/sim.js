@@ -187,14 +187,15 @@ function makeWorld(input) {
   return new World({ art, input, best: 0 });
 }
 
-export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside' } = {}) {
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true } = {}) {
   const input = new BotInput();
   const world = makeWorld(input);
+  world.level.gates = gates;        // false: the tower without gates between outside and inside (the baseline)
   world.reset(seed, place);
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0, webCatch: 0, webFree: 0, webBite: 0, webPunch: 0 };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0, webCatch: 0, webFree: 0, webBite: 0, webPunch: 0, gates: 0 };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
@@ -213,6 +214,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   world.onWebCatch = (pl, e) => { stats.webCatch++; origWebCatch(pl, e); };
   world.onWebTear = (pl, e, punched) => { if (punched) stats.webPunch++; else stats.webFree++; origWebTear(pl, e, punched); };
   world.onWebBite = (pl, e) => { stats.webBite++; origWebBite(pl, e); };
+  world.onGatePass = () => { stats.gates++; };
   const seenPowers = new Set();
   const origCut = world.cutBraid.bind(world);
   world.cutBraid = (ly, bx, y) => { stats.cuts++; stats.cutAt.push(world.player.maxY); origCut(ly, bx, y); };
@@ -248,11 +250,13 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   return stats;
 }
 
-export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside' } = {}) {
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true } = {}) {
   const all = [];
-  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place }));
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates }));
   // the place is named in the report only when it is not the outside, so the outside's reports read as they always did
-  return summarize(all, place === 'outside' ? { runs, skill, policy, cap, startM } : { runs, skill, policy, cap, startM, place });
+  const cfg = place === 'outside' ? { runs, skill, policy, cap, startM } : { runs, skill, policy, cap, startM, place };
+  if (!gates) cfg.gates = false;
+  return summarize(all, cfg);
 }
 
 function summarize(all, cfg) {
@@ -290,6 +294,7 @@ function summarize(all, cfg) {
     powers, powerSpawns: total('powerSpawns'), powerShare: totalTime ? +(total('powerTime') / totalTime).toFixed(2) : 0, deathPower,
     suns: total('suns'), speed: totalTime ? +(totalM / totalTime).toFixed(2) : 0,
     flocks: total('flocks'), flockPass: total('flockPass'), flockTurn: total('flockTurn'), fellAtFlock: total('fellAtFlock'),
+    gates: total('gates'),
     webCatch: total('webCatch'), webFree: total('webFree'), webBite: total('webBite'), webPunch: total('webPunch'),
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
   };
@@ -311,6 +316,7 @@ export function formatReport(r) {
   lines.push(`power-ups: ${JSON.stringify(r.powers)} of ${r.powerSpawns} passed, active ${Math.round(r.powerShare * 100)}% of the time; deaths by running power-up ${JSON.stringify(r.deathPower)}`);
   lines.push(`suns ${r.suns}, climb speed ${r.speed} m/s`);
   lines.push(`flocks ${r.flocks}: burst through ${r.flockPass} times, turned back ${r.flockTurn} times, falls at a flock ${r.fellAtFlock}`);
+  if (r.gates) lines.push(`gates: gone through ${r.gates} times`);
   // the inside's own things are reported only there, so the outside's reports read as they always did
   if (r.cfg.place === 'inside') lines.push(`webs: caught ${r.webCatch} times (torn free ${r.webFree}, bitten ${r.webBite}), boosted through ${r.webPunch}`);
   return lines.join('\n');

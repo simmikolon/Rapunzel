@@ -343,6 +343,14 @@ class Synth {
     this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
   }
   skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
+  // Through a gate: the door's latch and creak, then a rising pair of notes.
+  gate() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.08, vol: 0.14, filter: 'lowpass', freq: 500 });
+    this.tone({ type: 'sawtooth', freq: 140, to: 260, dur: 0.24, vol: 0.05, slide: 'lin' });
+    this.tone({ type: 'triangle', freq: 523, dur: 0.16, vol: 0.12, delay: 0.3 });
+    this.tone({ type: 'triangle', freq: 784, dur: 0.3, vol: 0.12, delay: 0.46 });
+  }
   // The bat swarm is coming: a flurry of squeaks.
   swarmWarn() { for (let i = 0; i < 6; i++) this.tone({ type: 'square', freq: 2300 + (i % 3) * 420, to: 3100 + (i % 2) * 500, dur: 0.05, vol: 0.04, delay: i * 0.09 }); }
   // The ghost: fading in (a soft rising "ooh"), popped by a pogo (a falling whoop).

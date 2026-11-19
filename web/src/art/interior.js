@@ -446,6 +446,53 @@ function drawCog(t) {
   disc(12, 12, 2, K.iron); p(11, 11, 1, 1, K.ironHi);
 }
 
+// --- the gate ----------------------------------------------------------------------
+// A door between the outside and the inside of the tower, on a stone landing
+// he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
+// looks, by where it leads: 'in' (seen from outside: a warm, torch-lit room
+// behind it) and 'out' (seen from inside: daylight and treetops). The
+// fanlight over the leaves always shows the other side, so a shut gate
+// already says where it goes; open (frame 1), the leaves stand back against
+// the jambs and the whole doorway shows it.
+function drawGate(t, look, open) {
+  const { p, disc } = t;
+  const cx = 23, SURF = 46, hw = 13, spring = 20;        // the landing's row, the doorway's half width, where the arch begins
+  // the surround: dressed stone, lit on its left
+  p(cx - hw - 3, spring, hw * 2 + 6, SURF - spring, K.frame); disc(cx, spring, hw + 3, K.frame);
+  p(cx - hw - 3, spring, 1, SURF - spring, K.frameHi); p(cx + hw + 2, spring, 1, SURF - spring, K.frameDark);
+  p(cx - 2, spring - hw - 5, 4, 3, K.frameHi);                                           // keystone
+  // what lies beyond, in the doorway's shape
+  const beyond = (x, y, w, h) => {
+    for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) {
+      const inArch = yy >= spring || (xx - cx + 0.5) ** 2 + (yy - spring) ** 2 <= hw * hw;
+      if (!inArch || Math.abs(xx - cx + 0.5) > hw) continue;
+      let c;
+      if (look === 'out') c = yy < 22 ? '#8fd0ff' : yy < 32 ? '#bfe6ff' : yy < 36 ? C.grassLight : yy < 41 ? C.grass : C.grassDark;
+      else c = yy < 20 ? '#3a2f52' : yy < 34 ? '#5a4470' : '#7a5a6a';
+      p(xx, yy, 1, 1, c);
+    }
+  };
+  beyond(cx - hw, spring - hw, hw * 2, SURF - spring + hw);
+  if (look === 'out') { p(cx + 5, 12, 3, 3, C.sun1); p(cx - 9, 31, 5, 2, C.leaf); p(cx + 2, 33, 6, 2, C.leaf); p(cx - 4, 26, 4, 1, C.white); }
+  else { p(cx - 1, 24, 2, 5, C.flame2); p(cx - 1, 26, 1, 2, C.flame1); p(cx - 2, 29, 4, 2, K.iron); p(cx - 7, 40, 14, 1, '#9a7a80'); p(cx - 5, 37, 10, 1, '#8a6a78'); p(cx - 3, 34, 6, 1, '#7a5a70'); }
+  // the leaves: shut below the fanlight, or stood back against the jambs
+  if (!open) {
+    p(cx - hw, spring + 2, hw * 2, SURF - spring - 2, C.plank);
+    for (let x = cx - hw + 4; x < cx + hw; x += 5) p(x, spring + 3, 1, SURF - spring - 3, C.plankDark);
+    p(cx - 1, spring + 2, 2, SURF - spring - 2, C.barkShadow);
+    p(cx - hw, spring + 2, hw * 2, 1, C.plankHi); p(cx - hw, spring, hw * 2, 2, K.frameDark);            // the transom under the fanlight
+    for (const y of [spring + 8, SURF - 8]) { p(cx - hw, y, hw * 2, 2, K.iron); p(cx - hw, y, hw * 2, 1, K.ironHi); }
+    p(cx - 5, 34, 2, 2, K.bell); p(cx + 3, 34, 2, 2, K.bell); p(cx - 5, 34, 1, 1, K.bellHi); p(cx + 3, 34, 1, 1, K.bellHi);
+  } else {
+    p(cx - hw, spring - 4, 3, SURF - spring + 4, C.plank); p(cx - hw, spring - 4, 1, SURF - spring + 4, C.plankHi); p(cx - hw + 2, spring - 4, 1, SURF - spring + 4, C.plankDark);
+    p(cx + hw - 3, spring - 4, 3, SURF - spring + 4, C.plankDark); p(cx + hw - 3, spring - 4, 1, SURF - spring + 4, C.plank);
+  }
+  // the landing: a pale slab on two brackets
+  p(0, SURF, 46, 6, K.ledge); p(0, SURF, 46, 1, K.ledgeHi); p(0, SURF + 4, 46, 2, K.ledgeShade); p(0, SURF + 1, 1, 3, K.ledgeHi);
+  for (const x of [11, 23, 34]) p(x, SURF + 1, 1, 3, K.ledgeShade);
+  for (const x of [5, 35]) { p(x, SURF + 6, 6, 3, K.ledgeShade); p(x + 1, SURF + 9, 4, 3, K.ledgeDark); }
+}
+
 // --- the ghost -------------------------------------------------------------------
 // 16 x 20 art px, facing RIGHT, the anchor its middle: a small round ghost
 // with a scalloped hem, rosy cheeks and a round mouth. It carries a candle
@@ -512,6 +559,7 @@ export function buildInterior() {
     stairs: (() => { const R = makeSprite(80, 118, drawStairs, undefined, { axPx: 8 * 4, ayPx: 76 * 4 }); return { R, L: flipH(R) }; })(),
     shelf: [0, 1].map((k) => makeSprite(28, 22, (t) => drawShelf(t, k), { ax: 0.5, ay: 0 })),
     cog: makeSprite(24, 24, drawCog, { ax: 0.5, ay: 0.5 }),
+    gate: { in: [false, true].map((o) => makeSprite(46, 58, (t) => drawGate(t, 'in', o), undefined, { axPx: 23 * 4, ayPx: 46 * 4 })), out: [false, true].map((o) => makeSprite(46, 58, (t) => drawGate(t, 'out', o), undefined, { axPx: 23 * 4, ayPx: 46 * 4 })) },
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

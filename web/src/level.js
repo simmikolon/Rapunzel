@@ -1,5 +1,5 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
-import { Platform, CLOUD_SIZE, GALLERY_X } from './platforms.js';
+import { Platform, CLOUD_SIZE, GALLERY_X, GATE_X } from './platforms.js';
 import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat, Web, Ghost } from './enemies.js';
 import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
@@ -116,6 +116,17 @@ const floorLayout = (y, place) => (place.sky && cloudAmount(y) >= 0.5 ? 'cloudL+
 // lands above him even if he boosts; the margin covers the layer drift (a
 // ribbon planned for a row just above the cut can still hang below it when
 // she snips).
+// Gates between the outside and the inside (platforms.js `gate`,
+// World.enterGate): from GATE_FROM (above the forest floor and the hall,
+// which stay as gentle as they are) up to GATE_TO (the trees' end: above it
+// the outside is sky, which the inside has no rows for), every GATE_EVERY
+// of climb, a row is a gate's landing on one side and a healthy branch (a
+// ledge) on the other, so going through is a choice. Nothing crumbles or
+// lives in that row. Never inside a flock's or a braid cut's stretch. The
+// plan rolls on a stream of its own; with `gates` off (the simulator's
+// baseline) nothing of it is rolled and the tower is the one it was.
+export const GATE_FROM = 12000, GATE_TO = 40000, GATE_EVERY = [10000, 16000];
+
 export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 1600, CUT_MARGIN = 240, CUT_ROOM = 1000;
 const braidOnly = (layout) => layout.split('+').every((k) => k === 'ribbon' || k === 'bow');
 
@@ -142,6 +153,8 @@ export class Level {
     this.rngTower = rng;         // what the tower does (window guards): rolled apart so the geometry stays comparable
     this.rngPower = rng;         // the power-ups: their own stream, so the tower is the same with and without them
     this.rngFauna = rng;         // bats and the flock's timing: apart again, so only the flock's two floors change the tower
+    this.rngGates = rng;         // where the gates are
+    this.gates = true;           // false: a tower without gates (the simulator's baseline)
     this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
     this.zones = ZONES;
     this.forceLen = null;        // dev: every branch gets this length class
@@ -177,8 +190,23 @@ export class Level {
     this.flockPlan = null;       // { from, to, y, fired }: the two floors and the height the birds fly at
     this.flockNext = false;      // the next row is a flock's upper floor
     this.nextFlockY = FLOCK_FROM + this.rngFauna.range(0, 8000);   // the first between 160 and 240 m
+    this.nextGateY = this.gates ? GATE_FROM + this.rngGates.range(0, 5000) : Infinity;   // the first gate between 120 and 170 m
     this.lastPower = null;       // the kind of the last power-up (never twice in a row)
     this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
+  }
+
+  // The prince went through a gate at height y: the place is another now,
+  // and the rows from here on are its rows. (The world cleared what stood
+  // above; the next gate is already planned.)
+  restartFrom(y, gap) {
+    this.zones = this.place.inside ? ZONES_INSIDE : ZONES;
+    this.nextY = y + gap; this.lastSafeY = y; this.pendingGapCap = null;
+    this.lastLayout = null; this.nextLayout = null;
+    this.lastHadCenter = true; this.lastBowY = -1e9; this.lastStubRow = -9; this.lastBalconyRow = this.rowIndex; this.updraftLane = null;
+    this.prevRowY = y; this.prevRowApex = JUMP_VY * JUMP_VY / (2 * GRAVITY);
+    this.cutPlan = null; this.nextCutY = Math.max(this.nextCutY, y + 4000);
+    this.flockPlan = null; this.flockNext = false; this.nextFlockY = Math.max(this.nextFlockY, y + 4000);
+    this.nextPowerY = Math.max(this.nextPowerY, y + 600);
   }
 
   // Which power-up for a row at height y with pacing P; null when none fits.
@@ -334,7 +362,7 @@ export class Level {
     const inside = this.place.inside;
     const lyRow = inside ? y : Platform.worldToLayer(y, PARALLAX_TOWER, arrivalCam);
     const taken = this.world.enemies.filter((e) => e.kind === 'grabber');
-    const cover = this.world.platforms.filter((p) => (inside ? hasDoor(p) : p.kind === 'balcony'));
+    const cover = this.world.platforms.filter((p) => (inside ? hasDoor(p) : p.kind === 'balcony' || p.kind === 'gate'));
     const free = (inside ? hatchesBetween(lyRow - 60, lyRow + 420, cover) : windowsBetween(lyRow - 60, lyRow + 420, cover)).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
     if (!free.length) return null;
     const T = tierAt(y);
@@ -356,14 +384,17 @@ export class Level {
     let flockRow = null;
     if (this.flockNext) { flockRow = 'above'; this.flockNext = false; }
     else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather) flockRow = 'below';
-    const P = flockRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors: nothing crumbles, nothing small, nobody on them
+    // A gate: its landing on one side, a healthy branch on the other.
+    const gateRow = !flockRow && !this.flockPlan && !this.cutPlan && y >= this.nextGateY && y < GATE_TO;
+    const P = flockRow || gateRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row: nothing crumbles, nothing small, nobody on them
       : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
     let layout = this.nextLayout || this.pickLayout(T, y);
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
     if (flockRow) layout = floorLayout(y, this.place);
+    if (gateRow) { layout = this.rngGates.chance(0.5) ? 'gateL+branchR' : 'branchL+gateR'; this.nextGateY = y + this.rngGates.range(GATE_EVERY[0], GATE_EVERY[1]); }
     this.nextLayout = null;
     const kinds = layout.split('+');
-    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell' || k.startsWith('stairs'));
+    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell' || k.startsWith('stairs') || k.startsWith('gate'));
     if (kinds.includes('bow') || kinds.includes('bell')) this.lastBowY = y;
     const front = kinds.some((k) => k !== 'ribbon' && k !== 'bow' && !k.startsWith('balcony'));
     if (kinds.some((k) => k.startsWith('balcony') || k.startsWith('gallery') || k.startsWith('stairs'))) this.lastBalconyRow = this.rowIndex;
@@ -439,6 +470,11 @@ export class Level {
         opts.variant = r.weighted([[0, 3], [1, 3], [2, 2], [3, 2]]);
         if (canBeDry && r.chance(T.dry * P.dry)) { opts.dry = true; opts.variant = 4; }
       }
+      if (slot === 'gateL' || slot === 'gateR') {
+        kind = 'gate';
+        opts.side = slot[4];
+        opts.x = opts.side === 'L' ? -GATE_X : GATE_X;
+      }
       if (slot === 'galleryL' || slot === 'galleryR') {
         kind = 'gallery';
         opts.side = slot[7];
@@ -457,7 +493,7 @@ export class Level {
         opts.tint = r.pick([null, null, '#f2ece4', '#e4ddd2', '#d8d4cc', '#e8e0d0']);
       }
       const py = y + (kinds.length > 1 ? r.int(-16, 16) : 0);
-      if (kind === 'ribbon' || kind === 'bow' || kind === 'balcony') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
+      if (kind === 'ribbon' || kind === 'bow' || kind === 'balcony' || kind === 'gate') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
       const p = new Platform(kind, py, opts);
       platforms.push(p);
       if (p.cloud === 'storm') this.world.enemies.push(new Lightning(p, this.child()));

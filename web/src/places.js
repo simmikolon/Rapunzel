@@ -4,11 +4,12 @@
 // What it looks like, what its rows are made of and who lives there sit
 // where they act (background.js, level.js) and ask the place.
 //
-// A round has one place for now. Later a gate will change it at a height,
-// so everyone looks it up through the world (`world.place`, `level.place`)
-// instead of remembering it.
+// A round starts in one place and a gate (a door in the tower's wall, a
+// landing under it) leads to the other (`other`; `arrive` is what is said
+// on coming through), so everyone looks the place up through the world
+// (`world.place`, `level.place`) instead of remembering it.
 export const PLACES = {
-  outside: { name: 'outside', label: 'OUTSIDE', inside: false, sky: true, witch: true, storks: true },
-  inside: { name: 'inside', label: 'INSIDE', inside: true, sky: false, witch: false, storks: false },
+  outside: { name: 'outside', label: 'OUTSIDE', inside: false, sky: true, witch: true, storks: true, other: 'inside', arrive: 'Out into the forest!' },
+  inside: { name: 'inside', label: 'INSIDE', inside: true, sky: false, witch: false, storks: false, other: 'outside', arrive: 'Into the tower!' },
 };
 export const placeOf = (name) => PLACES[name] || PLACES.outside;

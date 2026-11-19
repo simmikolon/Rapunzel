@@ -44,15 +44,17 @@ which only copies the two folders together). The design document
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
   nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,
   `?spawn=web` spins a spider's web under it, `?spawn=ghost` sends a ghost, `?at=150&spawn=stairs` builds a flight
-  of stairs above the start).
+  of stairs above the start). `?at=150&spawn=gate` puts a gate to the
+  other place above the start, in either place.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
   in `web/src/art/logo.js` for now.
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
-  (also `kid`, `cautious`; then `<cap> <seedBase> <startM> <place>`, e.g.
+  (also `kid`, `cautious`; then `<cap> <seedBase> <startM> <place> <gates>`, e.g.
   `... 40 good bold 1100 100 450` measures the sky from 450 m and
-  `... 40 good bold 1500 1 0 inside` the inside of the tower). Target for
+  `... 40 good bold 1500 1 0 inside` the inside of the tower; a last
+  `off` runs the tower without gates, the baseline). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.
 - Headless browser checks need Playwright (on this machine:

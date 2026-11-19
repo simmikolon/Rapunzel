@@ -123,10 +123,12 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
 - Pickups: sun drops, lanterns (boost refill), hearts; five timed
   power-ups floating in soap bubbles (star, cloak, golden spring, sun
   magnet, feather; section 7), one at a time.
-- Two places to climb, chosen on the title sign: outside (all of the
-  above) and inside the tower (stone ledges, chandeliers and a bell on a
-  chain, scaffold boards, galleries; bats and guards; section 7). A best
-  height for each.
+- Two places to climb: outside (all of the above) and inside the tower
+  (stone ledges, chandeliers and a bell on a chain, scaffold boards,
+  galleries, stairs; bats, guards, a ghost, spider webs; four floors;
+  section 7). The title sign picks where a round starts, gates lead
+  from one to the other between 120 and 400 m. A best height for each
+  starting place.
 - Three hearts; game over on zero hearts or falling off the bottom.
 - Procedural level in rows (the original's beats) with difficulty by
   altitude and a stress-tested reachability guarantee.
@@ -477,8 +479,19 @@ is a pool to draw from, not a promise.
 
 **Tunnels and the inside of the tower**
 - ✅ the inside of the tower as a second place (plan in
-  `docs/plans/tower-interior.md`), chosen on the title sign; 🔜 reached
-  through gates in the endless tower later. The room (`src/interior.js`,
+  `docs/plans/tower-interior.md`), chosen on the title sign as the place
+  a round starts in, and reached through gates from the other.
+  ✅ Gates (from 120 m up to the trees' end at 400 m, every 100 to
+  160 m): a row is a door in the tower's wall over a stone landing on
+  one side and a healthy branch (a ledge) on the other, so going
+  through is a choice. The fanlight over the door shows where it
+  leads (a torch-lit room, or daylight and treetops). Landing on the
+  landing opens the door, the picture closes in on the prince and
+  opens again on the other side: the same landing at the same height,
+  the other place's rows above, and below him every platform as its
+  like on that side (branch and ledge, ribbon and chandelier, bow and
+  bell). Nothing can touch him on the way; a gate leads through once.
+  The round's best height counts for the place it started in. The room (`src/interior.js`,
   `src/art/interior.js`, `src/pillars.js`): stone pillars where the
   trunks stand, a violet-grey back wall on the tower layer with a tall
   arched window every third tile. The windows are holes in the wall
@@ -757,6 +770,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
 | Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
+| Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1421,3 +1435,33 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   1.06 and 1.47, falls 36 % of the deaths; good cautious median 305 m;
   kid bold median 73 m, mean 83 m; kid cautious 73 m. The outside's
   report is identical on the same seeds.
+- 2026-11-19: The inside, step 5: gates (`element/tower-gates`). The
+  two places are one tower now: a door in its wall leads from one to
+  the other. Decided: (1) A gate is a choice, never the only way up:
+  its row has a branch on the other side, and a gate that was used is a
+  plain landing afterwards. (2) The passage is a cut, not a seam: two
+  painters on one screen would have needed a floor across the picture
+  to hide where they meet, and a door one goes through is the honest
+  picture anyway. The door opens, the picture closes in on him, the
+  world is the other one, the picture opens. He waits meanwhile and
+  nothing can touch him. (3) He comes out where he went in: the same
+  landing, the same height (the floors inside are in the outside's
+  bands for this), so a gate never costs or gives metres, and the
+  round's best counts for the place it started in. (4) What was built
+  above the gate is thrown away and built again as the other place;
+  what is below becomes its like on that side, so there is still
+  something under him. In the simulator nobody ever dropped back below
+  a gate, so this is for players, not for the numbers. (5) No gates in
+  the first 120 m (with one at 60 m the kid bot inside reached 100 m in
+  28 % of its runs instead of 34 %) and none from 400 m up: above the
+  trees the outside is sky, which the inside has no rows for. (6) The
+  gates roll on a stream of their own and can be switched off in the
+  simulator (`... outside off`): without them the outside's report is
+  identical on the same seeds to the one before step 1, which stays
+  the baseline to measure against. Measured on 120 seeded runs with
+  gates: starting outside, good bold median 471 m, mean 533 m, 0.95
+  hits per 100 m, falls 47 % of the deaths (39 % without gates: the
+  runs now pass through the library, where one steps aside for
+  ghosts), 95 passages; starting inside, median 408 m, mean 519 m,
+  1.01 hits per 100 m, falls 32 %, 95 passages; kid bold median 71 m
+  outside and 73 m inside, as without gates.

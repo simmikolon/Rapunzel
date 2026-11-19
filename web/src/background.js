@@ -164,7 +164,7 @@ export class Background {
   // decides where); a lit one flickers and glows a little. None where a
   // balcony sits on the wall.
   drawWindows(g, cam, camF, time, world) {
-    const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony') : [];
+    const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony' || p.kind === 'gate') : [];   // a gate's door takes a window's place too
     const spr = this.art.windows;
     for (const w of windowsBetween(camF - 130, camF + H + 10, blockers)) {
       const sx = W / 2 + w.x + cam.ox, sy = H - (w.ly - camF) + cam.oy;

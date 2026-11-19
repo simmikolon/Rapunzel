@@ -42,6 +42,10 @@ export const KIND = {
   chandelier: { w: 112, cx: 0, surface: 0, bounce: JUMP_VY, onChain: true },
   bell:    { w: 104, cx: 0, surface: 0, bounce: SPRING_VY, onChain: true },
   gallery: { w: 160, cx: 0, surface: 0, bounce: JUMP_VY, gallery: true },
+  // A gate between the outside and the inside of the tower: a stone landing
+  // under a door in the tower's wall (x = -134 / +134), on the tower layer in
+  // both places. Landing on it leads through (World.enterGate), once.
+  gate:    { w: 180, cx: 0, surface: 0, bounce: JUMP_VY, layer: PARALLAX_TOWER, gate: true },
   // One tread of a flight of stone stairs built out from a pillar (the
   // generator builds the flight; the lowest tread carries `flight` and is
   // the one the masonry is drawn for, the top one `door`: the pillar has a
@@ -50,6 +54,7 @@ export const KIND = {
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 export const GALLERY_X = 204;
+export const GATE_X = 134;
 
 // Branch length classes: the box width (the sprite is 22 px longer: 11 px
 // of root inside the trunk, 11 px of leaves past the tip) and the sprite
