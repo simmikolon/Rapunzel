@@ -271,6 +271,68 @@ function drawWitch(t, frame) {
   p(11, 3, 12, 2, C.witchHat); p(12, 2, 10, 1, C.witchDressHi); p(15, 1, 4, 1, C.gold);
 }
 
+// Bat: violet fur, big ears with pink insides, yellow-white eyes, two small
+// fangs. It is the deep forest's sleeper, so it is drawn twice over: hanging
+// from a branch by its feet (9 x 15 art px, anchor at the feet on top:
+// frame 0 asleep and wrapped in its wings, frame 1 awake, eyes open, the
+// wings coming apart) and flying (19 x 13, anchor centre: wings up, wings
+// down, knocked out). A dark creature, so the wings carry a lighter top edge.
+const BAT = { hi: '#a595cc', fur: '#7a68a6', dark: '#4b3d70', wing: '#5a4a86', wingHi: '#8b7ab8', wingDark: '#3a2f5a' };
+// one wing as row spans [y, x0, x1], the body's side at x = 5; the other is its mirror
+const BAT_WING = [
+  [[2, 0, 2], [3, 0, 4], [4, 0, 5], [5, 1, 5], [6, 1, 2], [6, 4, 5], [7, 1, 1], [7, 5, 5]],              // raised
+  [[6, 3, 5], [7, 1, 5], [8, 0, 5], [9, 0, 4], [10, 0, 1], [10, 3, 4], [11, 0, 0], [11, 4, 4]],          // lowered
+];
+function drawBatFly(t, frame) {
+  const { p } = t;
+  const spans = BAT_WING[frame === 1 ? 1 : 0];
+  const has = new Set(spans.map(([y, x0, x1]) => { const a = []; for (let x = x0; x <= x1; x++) a.push(x + ',' + y); return a; }).flat());
+  for (const [y, x0, x1] of spans) for (let x = x0; x <= x1; x++) {
+    const c = !has.has(x + ',' + (y - 1)) ? BAT.wingHi : !has.has(x + ',' + (y + 1)) ? BAT.wingDark : BAT.wing;
+    p(x, y, 1, 1, c); p(18 - x, y, 1, 1, c);
+  }
+  // ears, head and the small body under it
+  p(6, 0, 1, 1, BAT.fur); p(6, 1, 2, 3, BAT.fur); p(7, 2, 1, 1, C.cheek);
+  p(12, 0, 1, 1, BAT.fur); p(11, 1, 2, 3, BAT.fur); p(11, 2, 1, 1, C.cheek);
+  p(6, 3, 7, 5, BAT.fur); p(6, 3, 7, 1, BAT.hi); p(6, 4, 1, 3, BAT.hi); p(12, 5, 1, 3, BAT.dark);
+  p(7, 8, 5, 3, BAT.fur); p(7, 10, 5, 1, BAT.dark); p(8, 11, 1, 1, BAT.dark); p(10, 11, 1, 1, BAT.dark);
+  if (frame === 2) { p(7, 5, 2, 1, C.black); p(10, 5, 2, 1, C.black); }           // knocked out: eyes shut tight
+  else {
+    p(7, 4, 2, 2, C.sun1); p(8, 5, 1, 1, C.black); p(10, 4, 2, 2, C.sun1); p(10, 5, 1, 1, C.black);
+  }
+  p(9, 6, 1, 1, BAT.dark); p(8, 7, 1, 1, C.white); p(10, 7, 1, 1, C.white);     // nose, fangs
+}
+function drawBatHang(t, frame) {
+  const { p } = t;
+  p(3, 0, 1, 2, BAT.dark); p(5, 0, 1, 2, BAT.dark);                               // feet on the branch
+  // wrapped in its wings: a drop that widens downward
+  for (const [y, x0, x1] of [[2, 3, 5], [3, 2, 6], [4, 1, 7], [5, 1, 7], [6, 1, 7], [7, 1, 7], [8, 2, 6]]) p(x0, y, x1 - x0 + 1, 1, BAT.wing);
+  p(3, 2, 2, 1, BAT.wingHi); p(2, 3, 1, 1, BAT.wingHi); p(1, 4, 1, 4, BAT.wingHi);
+  p(4, 3, 1, 5, BAT.wingDark); p(7, 5, 1, 3, BAT.wingDark);                       // the fold, the far side
+  if (frame) { p(0, 4, 1, 4, BAT.wing); p(8, 4, 1, 4, BAT.wing); p(0, 4, 1, 1, BAT.wingHi); }   // the wings come apart
+  // the head hangs lowest, ears pointing down
+  p(2, 9, 5, 4, BAT.fur); p(2, 9, 1, 4, BAT.hi); p(6, 10, 1, 3, BAT.dark);
+  p(2, 13, 1, 2, BAT.fur); p(6, 13, 1, 2, BAT.fur); p(2, 13, 1, 1, C.cheek); p(6, 13, 1, 1, C.cheek);
+  if (frame) { p(3, 10, 1, 2, C.sun1); p(5, 10, 1, 2, C.sun1); p(3, 10, 1, 1, C.black); p(5, 10, 1, 1, C.black); }
+  else { p(3, 11, 1, 1, BAT.dark); p(5, 11, 1, 1, BAT.dark); }                    // asleep
+  p(4, 9, 1, 1, C.white);                                                         // a fang
+}
+
+// A bird of the flock: a starling, 12 x 9 art px, flying right, wings up or
+// down. Dark with a blue sheen and pale speckles so the flock reads as a
+// band of small bright-edged shapes against the forest and the night.
+const STARLING = { hi: '#6f7fc4', body: '#39407a', dark: '#232848', speck: '#d6dcf2' };
+function drawStarling(t, frame) {
+  const { p } = t;
+  p(0, 4, 2, 1, STARLING.dark); p(1, 5, 2, 1, STARLING.dark);                     // tail
+  p(2, 3, 7, 3, STARLING.body); p(3, 6, 5, 1, STARLING.dark); p(3, 3, 5, 1, STARLING.hi);
+  p(8, 2, 3, 3, STARLING.body); p(8, 2, 2, 1, STARLING.hi);                       // head
+  p(11, 3, 1, 1, C.beak); p(9, 3, 1, 1, C.eyeWhite); p(10, 3, 1, 1, C.black);
+  p(4, 5, 1, 1, STARLING.speck); p(6, 4, 1, 1, STARLING.speck);
+  if (frame === 0) { p(4, 0, 2, 1, STARLING.hi); p(3, 1, 4, 1, STARLING.body); p(3, 2, 5, 1, STARLING.dark); }
+  else { p(3, 6, 5, 1, STARLING.body); p(3, 7, 4, 1, STARLING.dark); p(4, 8, 2, 1, STARLING.dark); }
+}
+
 // Pickups ---------------------------------------------------------------
 function drawSun(t, frame) {
   const { p, disc } = t;
@@ -314,7 +376,11 @@ export function buildCreatures() {
   const squirrelR = [0, 1, 2, 3].map((f) => makeSprite(18, 15, (t) => drawSquirrel(t, f), { ax: 0.5, ay: 1 }));
   const witchR = [0, 1].map((f) => makeSprite(34, 38, (t) => drawWitch(t, f), { ax: 0.5, ay: 0.62 }, { shift: [0, 8] }));
   const scissors = [0, 1].map((f) => makeSprite(16, 16, (t) => drawScissors(t, f), { ax: 0.5, ay: 0.5 }));
+  const bat = [0, 1, 2].map((f) => makeSprite(19, 13, (t) => drawBatFly(t, f), { ax: 0.5, ay: 0.5 }));
+  const starlingR = [0, 1].map((f) => makeSprite(12, 9, (t) => drawStarling(t, f), { ax: 0.5, ay: 0.5 }));
   return {
+    bat, batHang: [0, 1].map((f) => makeSprite(9, 15, (t) => drawBatHang(t, f), { ax: 0.5, ay: 0 })),
+    starlingR, starlingL: starlingR.map(flipH),
     crowR, crowL: crowR.map(flipH),
     storkR, storkL: storkR.map(flipH),
     guardR, guardL: guardR.map(flipH), pots,

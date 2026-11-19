@@ -5,9 +5,9 @@ import { Player } from './player.js';
 import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
-import { Level, CUT_ROOM } from './level.js';
+import { Level, CUT_ROOM, FLOCK_LEAD } from './level.js';
 import { Background } from './background.js';
-import { Witch, Scissors } from './enemies.js';
+import { Witch, Scissors, Flock } from './enemies.js';
 import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
@@ -46,6 +46,7 @@ export class World {
     this.level.rngHearts = new RNG(seed == null ? undefined : hash(seed + 2));
     this.level.rngTower = new RNG(seed == null ? undefined : hash(seed + 4));
     this.level.rngPower = new RNG(seed == null ? undefined : hash(seed + 5));
+    this.level.rngFauna = new RNG(seed == null ? undefined : hash(seed + 6));
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
@@ -178,6 +179,7 @@ export class World {
     for (const e of this.enemies) {
       if (!e.alive || e.dead || !overlaps(r, e.rect) || (e.hits && !e.hits(r))) continue;
       if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
+      if (e.kind === 'flock') { this.meetFlock(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
       else if (e.hurtful && !pl.hidden) { pl.hit(e); if (e.onHit) e.onHit(this); }   // under the cloak he passes through
@@ -190,6 +192,32 @@ export class World {
       this.collect(k);
     }
   }
+
+  // The flock of starlings is a gate, not a bite: the boost shield (or the
+  // star) bursts through it for the usual three suns, a prince coming down
+  // on it bounces off a bird's back, and one who flies into it without a
+  // boost is turned back down without losing a heart. Under the cloak he
+  // slips through like through everything else.
+  meetFlock(e) {
+    const pl = this.player;
+    if (pl.hidden) return;
+    if (pl.shielded) {
+      e.burst(this);
+      e.x = pl.x;                     // where the sparks of the punch go
+      this.suns += PUNCH_SUNS;
+      this.onBoostPunch(pl, e);
+      this.onFlockPass(pl, e);
+    } else if (pl.vy < 0 && pl.y > e.y - 10) {
+      e.stomped(this);
+      pl.stomp(e);
+    } else {
+      e.turnedBack(this);
+      pl.shoo(e.hitBottom, e.span);
+      this.onFlockTurn(pl, e);
+    }
+  }
+  onFlockPass(pl, e) { this.audio.flockWings(); this.particles.feathers(pl.x, pl.y + 120, false, 6); }
+  onFlockTurn(pl, e) { this.audio.flockTurn(); this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
 
   // Boosting through an enemy knocks it away instead of hurting the prince.
   boostPunch(e) {
@@ -271,7 +299,24 @@ export class World {
     // The witch: telegraphed dives from a fixed altitude on, never during a
     // breather stretch, and with a long cooldown so she is an event.
     const witchAbout = this.enemies.some((e) => e.kind === 'witch' || e.kind === 'scissors');
-    if (pl.maxY > this.nextWitchY && !witchAbout && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
+    // The flock: the generator built its two floors; once the prince comes
+    // within FLOCK_LEAD of the height the birds fly at and no witch is
+    // about, they are announced and come. A plan he has already climbed
+    // past (a long boost chain) is dropped. The witches keep away while a
+    // flock is near.
+    const fp = this.level.flockPlan;
+    const flockNear = this.enemies.some((e) => e.kind === 'flock') || (!!fp && pl.maxY > fp.from - 1600);
+    if (fp && !fp.fired) {
+      if (pl.maxY > fp.y) this.level.flockDone();
+      else if (pl.maxY >= fp.y - FLOCK_LEAD && !witchAbout) {
+        fp.fired = true;
+        const rf = this.level.rngFauna;
+        this.enemies.push(new Flock(fp.y, rf.sign(), this.level.child(rf), fp.span));
+        this.audio.flockWarn();
+        this.toast('A flock! Boost through!', '#ffd98a', 2.2);
+      }
+    }
+    if (pl.maxY > this.nextWitchY && !witchAbout && !flockNear && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
       const side = this.rngEvents.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));
@@ -288,7 +333,7 @@ export class World {
     const plan = this.level.cutPlan;
     if (plan && !plan.fired) {
       if (pl.maxY > plan.yc - CUT_ROOM) this.level.cutDone();
-      else if (pl.maxY >= plan.from && !witchAbout) {
+      else if (pl.maxY >= plan.from && !witchAbout && !flockNear) {
         plan.fired = true;
         this.enemies.push(new Scissors(this.level.rngTower.sign(), plan.from, plan.yc, pl));
         this.audio.witchWarn();

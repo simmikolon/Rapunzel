@@ -37,6 +37,7 @@ export class Player {
     this.maxY = 0;
     this.deathCause = null;
     this.deathPower = null;
+    this.gentle = false;           // the bonk in progress is a flock's turning back
     this.idleT = 0;
     this.flip = 0;                 // rotation of a show-off hop on the title or of a somersault (radians)
     this.power = null;             // the power-up that runs (a key of POWERS), one at a time
@@ -260,10 +261,28 @@ export class Player {
   bonk(platform) {
     this.y = platform.bottom - PLAYER_H;
     this.vy = BONK_VY;
+    this.gentle = false;
     this.setState('bonk');
     this.sx = 1.2; this.sy = 0.8;
     platform.hitFromBelow();
     this.world.onPlayerBonk(this, platform);
+  }
+
+  // A flock in the way and no boost: turned back down, nothing lost. `bottom`
+  // is the underside of the bird he met; he is put under it unless the birds
+  // came upon him from the side (then they only push him down). `span` is how
+  // far the floor under the flock reaches to each side: out beyond it (in
+  // front of a trunk, at the screen's edge) the birds sweep him back over it,
+  // so being turned back is never a fall.
+  shoo(bottom, span = 0) {
+    const y = bottom - PLAYER_H;
+    if (this.y - y < 70) this.y = Math.min(this.y, y);
+    if (span && Math.abs(this.x) > span - 30) { this.x = Math.sign(this.x) * (span - 30); this.vx = 0; }
+    this.vy = Math.min(this.vy, BONK_VY);
+    if (this.salto) { this.salto = null; this.flip = 0; }
+    this.setState('bonk');
+    this.gentle = true;            // startled, not hurt: no red face (see pose)
+    this.sx = 1.2; this.sy = 0.8;
   }
 
   stomp(enemy) {
@@ -313,7 +332,8 @@ export class Player {
       case 'jumping': return this.vy > 350 ? 'jumpUp' : 'standing';
       case 'falling': return this.vy < -250 ? 'falling' : 'standing';
       case 'boosting': return 'boosting';
-      case 'hurt': case 'bonk': case 'dead': return 'hurt';
+      case 'bonk': return this.gentle ? 'falling' : 'hurt';
+      case 'hurt': case 'dead': return 'hurt';
       default: return 'standing';
     }
   }

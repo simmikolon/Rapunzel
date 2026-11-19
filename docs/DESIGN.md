@@ -86,7 +86,9 @@ shell first and filling it later. Conditions that make this hold up:
   tuned before the next one starts.
 - **Dev helpers** that grow with need: ✅ `?at=150` starts at an altitude,
   `?spawn=squirrel` puts an element on the next branch, `?spawn=storm`
-  turns the next cloud into a storm cloud, `?spawn=star` (or `cloak`,
+  turns the next cloud into a storm cloud, `?spawn=bat` hangs one under
+  the next branch, `?at=170&spawn=flock` builds a flock of starlings just
+  above the start, `?spawn=star` (or `cloak`,
   `spring`, `magnet`, `feather`) hangs that power-up above the prince,
   `?dev=1` shows altitude and zone, `?len=stub` makes every branch one
   length class. The simulator can
@@ -115,7 +117,9 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
   swing between the trees (land on top, bonk from below).
 - Enemies: crow (patrols, homes in with altitude, stompable), spider
   (hangs on a thread, lunges when you pass below, stompable), witch
-  (marker and cackle, crosses above you, dives, twice near the top).
+  (marker and cackle, crosses above you, dives, twice near the top); the
+  later ones (squirrel, bat, guards, the witch with scissors, the flock
+  of starlings) in section 7.
 - Pickups: sun drops, lanterns (boost refill), hearts; five timed
   power-ups floating in soap bubbles (star, cloak, golden spring, sun
   magnet, feather; section 7), one at a time.
@@ -203,8 +207,9 @@ build them. Each zone: elements, look, set piece.
    falling leaves on a depth continuum, light shafts with dust motes,
    canopy dapple on the wall, boughs with birds, butterflies, owls in the
    knot holes, acorns, gusts and passing clouds, string lights slung
-   between the trunks; 🔜 thorny branches, the
-   cross branch you must boost through; crows fade out (0.6x), spiders stay.
+   between the trunks; ✅ bats asleep under the branches, which take half
+   of the spiders' places (spiders 0.5x); 🔜 thorny branches, the cross
+   branch you must boost through; crows fade out (0.6x).
 3. **The tower's windows, 250 to 400 m** (in progress): ✅ windows left
    and right of the braid on the tower layer (lit with a candle, dark,
    shuttered, flower box, curtains) in a steady storey rhythm, with stone
@@ -225,7 +230,8 @@ build them. Each zone: elements, look, set piece.
    the prince to the next row; ✅ balconies on the tower's edges in five
    looks (stone, wooden, flowered, ivy, dilapidated and fragile), with
    guards who lunge with a halberd and flowerpots that fall when the
-   prince passes below. 🔜 bird swarms to boost through; the
+   prince passes below; ✅ the flock of starlings to boost through (a
+   set piece from 160 m on, not only up here: see the enemies). 🔜 the
    tower rises out of the forest with Rapunzel's window at the top. When
    this exists, the forest tower exists.
 5. **Beyond**: storm and night (rain, wind, bats, lightning), then space
@@ -285,17 +291,53 @@ is a pool to draw from, not a promise.
   on the way in or while snipping throws her off and saves the braid
   (+3 suns like any punch). She is hurtful on the way in and while
   snipping, never stompable. Rolled on the tower stream.
+- ✅ bat: sleeps under a healthy branch, hanging by its feet, wrapped in
+  its wings (a "z" drifts up). When the prince comes within its hearing
+  (215 px, up to 275 at the top tiers) it wakes: eyes open, a squeak, a
+  "!" for 0.45 s. Then it lets go and swoops once: a U-shaped pass
+  through where he was (a little ahead of him), ending as far on the
+  other side (1.2 s, 0.95 at the top tiers), and flies back to its roost
+  in 0.9 s, where it hangs with its eyes open for 2.5 to 4 s before it
+  can be woken again. Harmless while it hangs; in flight it costs a
+  heart, and a pogo from above or the boost shield knocks it out. It
+  does not hear a prince under the cloak. One thing per branch: never
+  where a spider hangs or a squirrel lives, never under a stub or a dry
+  branch; if its branch goes, it flutters off. The deep forest's second
+  creature (tier 0.14 → 0.20 × pacing × zone: deep forest 1.0, windows
+  and the last trees 0.5), where spiders step back to 0.5. Rolled on the
+  fauna stream.
+- ✅ the flock of starlings, the barrier that needs a boost: a stream of
+  birds from one screen edge to the other, three lanes deep (130 px), in
+  a gap the generator built for it. From 160 to 240 m on, then every 300
+  to 450 m, never in a breather or a braid cut's stretch, a row becomes a
+  floor across the whole width (two long branches that meet in the
+  middle; above the trees three wide clouds), the row 500 px above it
+  another, nothing on or between them crumbles, drifts or bites, and two
+  lanterns that stay put stand on the lower floor (the boost it takes is
+  always there). When the prince comes within 16 m below the birds'
+  height they are announced (a marker with two birds at the edge they
+  come from, calls, "A flock! Boost through!") and 1.3 s later stream in,
+  so the stream is whole when it scrolls into view. It is a gate, not a
+  bite: the boost shield or the star bursts through (+3 suns, the birds
+  near him tumble away and the stream closes again within a lap); a
+  prince who flies into it without a boost is turned back down without
+  losing a heart, onto the floor (out beyond its ends the birds sweep
+  him back over it); coming down on it from above is a pogo on a bird's
+  back; under the cloak he slips through. When he stands above it the
+  last birds fly out. The witches keep away while a flock is near.
 - 💡 cross branches spanning the width, broken only by a boost. ⚠️ Only
-  spawn with a guaranteed charge (a lantern just below or a generator check).
-- 💡 a bird swarm to boost through (set piece).
+  spawn with a guaranteed charge (a lantern just below or a generator
+  check); the flock's floors and lanterns are the pattern.
 - 💡 spider webs and nets that hold or slow. ⚠️ Must break on a few taps
   or a boost.
 - 💡 vines / green zones that slow or stick (jungle); prefer slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
   for a few seconds. ⚠️ Frustrating for young players; clearly marked, short.
 - 💡 the witch as a level boss defending the window.
-- 💡 per-theme rosters: bees (summer), ice creatures (snow), bats (night),
-  knights and witches inside the tower.
+- 💡 per-theme rosters: bees (summer), ice creatures (snow), knights and
+  witches inside the tower. 💡 bats at night too, asleep under the
+  balconies; a flock that crosses twice, or two flocks one above the
+  other, for the highest tiers.
 
 **Platforms**
 - ✅ healthy branch, ✅ dry branch, ✅ ribbon, ✅ bow spring, ✅ plank swing.
@@ -576,9 +618,9 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
-| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long), string lights with moths, birds and a dormouse; 🔜 thorny branches, cross branch; sound later | in progress |
+| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long), string lights with moths, birds and a dormouse, bats under the branches; 🔜 thorny branches, cross branch; sound later | in progress |
 | 4 | Windows zone | ✅ windows spread across the tower, guards reaching out of them, the witch with scissors cutting the braid; 🔜 Rapunzel's cameo (balconies moved above the treeline) | in progress |
-| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots; 🔜 bird swarm, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
+| 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots, the flock of starlings to boost through; 🔜 Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
@@ -613,11 +655,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Balconies | x = ±210, 160 px box (the whole slab), 44 × 72 art px; only above the treeline, zone 0.4 |
 | Windows | x = ±114, 22 × 30 art px, sill at a layer height; one per storey of 440 layer px, left and right in turn (same side every 880 px), the first at 260 |
 | Window guard | tier 0 / 0 / 0.09 / 0.13 / 0.17 / 0.20 per row × pacing × zone (windows 1.0, sky 0.6); pike 130–160 px from hands 48 px above the sill, aim ± 0.35 rad; peek 0.5 s, thrust 0.15 s down + 0.4 s held, back 0.35 s, quiet 2–3.5 s (5 s after a punch) |
-| Windows band roster | crow 0.6, spider 0.5, squirrel 0.5 (were 0.8 / 0.7 / 0.6), window guard 1.0 |
+| Windows band roster | crow 0.6, spider 0.5, squirrel 0.5 (were 0.8 / 0.7 / 0.6), window guard 1.0, bat 0.5 |
+| Deep forest roster | crow 0.6, spider 0.5 (was 1.0), squirrel 1.0, bat 1.0 |
+| Bat | tier 0 / 0 / 0.14 / 0.18 / 0.20 / 0.20 per row × pacing × zone; hearing 215–275 px; wake 0.45 s, pass 1.2–0.95 s, back 0.9 s, rest 2.5–4 s; 19 × 13 art px in flight, 9 × 15 hanging; box 56 × 36 px |
+| Flock of starlings | first at 160–240 m, then every 300–450 m; floors 500 px apart, the birds 345 px above the lower one, band 130 px; 26 birds at 560 px/s in three lanes; announced 1600 px below, warn 1.3 s; a burst keeps him clear for 0.7 s; +3 suns |
 | Braid cut | from 300 m, then every 120–180 m; stretch of 1600 + 240 px above the planning row without braid-only rows or dry branches; the witch sets out when the prince reaches the stretch and is still 1000 px below its top, rides 640 px above his highest point, warn 1.0 s, approach 850 px/s, snip 0.35 s; cut pieces fall 525·t² px |
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
-| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m, the witch with scissors 300 m |
+| Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, bats 120 m, the flock 160–240 m, window guards 250 m, the witch with scissors 300 m |
 | Power-ups | one every 65–105 m of climb, the first at 15–25 m; x within ± 190 px between two rows; 88 px box (the bubble) |
 | Power-up durations | star 12 s, cloak 10 s, golden spring 8.75 s, sun magnet 12.5 s, feather 8.75 s; the last 1.5 s flicker with three blips; 0.8 s of grace after star and cloak |
 | Power-up weights | magnet 1.0, spring 1.0, star 1.0, cloak 0.9, feather 0.8 × zone (floor: star 0.5, cloak 0.3, spring 0.6, feather 1.3; windows: cloak 1.4, feather 0.8; sky: star 1.2, cloak 0.6, feather 1.5) × pacing (star, cloak: the enemies', 0 below 30 m; magnet: the suns') |
@@ -1086,3 +1131,43 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   bold runs on the same seeds give the identical report with and without
   them. To be judged by playing: whether the warm white bulbs are told
   from suns at a glance, and whether the bell stays pleasant.
+- 2026-11-19: Bats and the flock of starlings (`element/flock-and-bats`,
+  on top of the string lights). The bat is the deep forest's second
+  creature and the first that sleeps: it hangs under a branch, wakes when
+  the prince comes near and makes one swooping pass, so it is a hazard
+  you can see coming and leave alone. Spiders, which hang in the same
+  place, step back to half there, so the zone's roster changes instead
+  of growing. The flock is the barrier that needs a boost, the old "bird
+  swarm" and "cross branch" ideas in one. First thought: birds that cost
+  a heart. But a prince bounces 648 px, so he cannot wait under a flock
+  without flying into it, and after a hit his invulnerability carries him
+  through, which makes "boost through" a "pay a heart" instead. So the
+  flock does not bite, it turns him back (like the plank swing's bonk,
+  with a startled face instead of the hurt one), and the generator builds
+  the place for it: a floor across the whole width below, so being turned
+  back is a landing wherever he is, another floor above, so a burst lands
+  too, and two lanterns that do not drift (the principle from section 1:
+  a lantern precedes a barrier that needs a boost). The birds are
+  announced 16 m below their height: with the first lead of 9.5 m the
+  bot was past them before the stream had crossed the screen (at least
+  29 of 68 flocks met nobody). Asked for as very rare: first every 200 to 300 m
+  (1.7 per good run), now every 300 to 450 m (1.2). Bats and the flock's
+  timing roll on a sixth stream; the flock's two floors change the tower
+  above the first flock, so this is measured unpaired. 120 runs each,
+  before → after: good bold from 0 m median 436 → 424 m, mean 496 →
+  477 m (a second set of seeds: 428 and 524 m), 0.89 → 1.00 hits per
+  100 m, falls 46 → 39 % of deaths; the deep forest band, which read
+  0.61 since the longer power-ups, is at 0.90, the bands from 100 to
+  800 m between 0.90 and 1.53; 61 bat hits against 173 by crows and 101
+  by squirrels. Good cautious mean 285 → 254 m (it dodges bats, the bold
+  one punches them); kid bold unchanged (median 71 m, 100 m reached by
+  32 → 33 %). 142 flocks in 120 good bold runs: burst through 111 times,
+  turned back 20 times, no fall at a flock; from 450 m (cloud floors)
+  146 flocks, 127 bursts, 13 turned back, no fall. The kid bot meets 8,
+  bursts through 3 and is turned back 8 times: its reaction is slower
+  than the moment the birds are overhead; one of its runs falls there
+  (it steers out past the floor's end through the screen edge). Found on
+  the way: the bot could bounce into the edge of a plank swing for ever
+  (a run that never ended); it steps out from under a plank now, and the
+  generator treats a long branch as a centre platform, so no swing hangs
+  right above one.

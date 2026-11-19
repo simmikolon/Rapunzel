@@ -9,6 +9,8 @@
 //   ?spawn=grabber   a guard in the nearest window above the prince
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
+//   ?spawn=bat       a bat under the next healthy branch above the prince
+//   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
 //   ?dev=1           show altitude and zone in the corner
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
@@ -32,6 +34,9 @@ export function startAt(world, metres, spawn = '') {
   const y = Math.max(0, metres) * PX_PER_METER;
   if (!y) return;
   if (spawn === 'scissors') world.level.nextCutY = y - 400;
+  // the flock a dozen metres up (so its stream is whole before he gets there), and no braid cut in its way
+  if (spawn === 'flock') { world.level.nextFlockY = y + 1200; world.level.nextCutY = Math.max(world.level.nextCutY, y + 5000); }
+  else world.level.nextFlockY = Math.max(world.level.nextFlockY, y + 2500);   // not on top of the start
   const p = world.player;
   p.y = y; p.prevY = y; p.maxY = y; p.vy = 0;
   world.cam.y = y - 520; world.cam.target = world.cam.y; world.cam.maxY = world.cam.y;
@@ -59,6 +64,10 @@ export function spawnNear(world, element) {
   const p = world.player;
   const branches = world.platforms.filter((q) => (q.kind === 'branchL' || q.kind === 'branchR') && !q.dry && q.y > p.y + 50).sort((a, b) => a.y - b.y);
   if (element === 'squirrel' && branches[0]) world.level.spawnSquirrel([branches[0]]);
+  if (element === 'bat') {
+    // the first branch above that has room for one (no stub, no spider on it)
+    for (const b of branches) { const bat = world.level.spawnBat([b]); if (bat) { bat.rest = 0; break; } }
+  }
   if (element === 'guard' || element === 'pot') {
     // on the next healthy balcony above; make one if there is none in view
     let b = world.platforms.filter((q) => q.kind === 'balcony' && !q.dry && q.y > p.y + 50).sort((a, c) => a.y - c.y)[0];
