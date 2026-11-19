@@ -284,6 +284,13 @@ class Synth {
     platform.haptic('bounce', 1);
     [659, 784, 988, 1319].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.3, vol: 0.16, delay: i * 0.08 }));
   }
+  // A string of lights brushed in passing: one soft bell, the string's own
+  // step of a pentatonic scale, so a climb past several plays a little tune.
+  chime(step = 0) {
+    const f = [1047, 1175, 1319, 1568, 1760][((step % 5) + 5) % 5];
+    this.tone({ type: 'sine', freq: f, dur: 0.5, vol: 0.07 });
+    this.tone({ type: 'triangle', freq: f * 2, dur: 0.22, vol: 0.025 });
+  }
   // A power-up starts: each has its own short motif.
   power(kind) {
     platform.haptic('spring');

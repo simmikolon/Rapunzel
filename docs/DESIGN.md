@@ -169,7 +169,8 @@ one-time hint for the shield. Plus the headless gameplay simulator.
 sky, lighting), `web/src/enemies.js`, `web/src/platforms.js`,
 `web/src/player.js`, `web/src/powerups.js` (the power-ups' table; their
 rules sit in `config.js`, `level.js`, `player.js`, `world.js`),
-`web/src/atmosphere.js` (leaves, fog, shafts, life), `web/src/altitude.js` (zone-keyed curves), `web/src/gfx/*`
+`web/src/atmosphere.js` (leaves, fog, shafts, life), `web/src/lights.js`
+(the deep forest's string lights), `web/src/altitude.js` (zone-keyed curves), `web/src/gfx/*`
 (renderer facade, atlas, filters),
 `web/src/art/*` (procedural sprites), `web/dev/sprites.html` (sprite
 sheet), `web/dev/sim.html` + `tools/analyze.mjs` (simulator).
@@ -201,7 +202,8 @@ build them. Each zone: elements, look, set piece.
    (the first platform-bound enemy); ✅ the look: green shade, mist and
    falling leaves on a depth continuum, light shafts with dust motes,
    canopy dapple on the wall, boughs with birds, butterflies, owls in the
-   knot holes, acorns, gusts and passing clouds; 🔜 thorny branches, the
+   knot holes, acorns, gusts and passing clouds, string lights slung
+   between the trunks; 🔜 thorny branches, the
    cross branch you must boost through; crows fade out (0.6x), spiders stay.
 3. **The tower's windows, 250 to 400 m** (in progress): ✅ windows left
    and right of the braid on the tower layer (lit with a candle, dark,
@@ -486,10 +488,38 @@ is a pool to draw from, not a promise.
 - ✅ butterflies loop around branch tips and flee a landing (floor and
   deep forest).
 - ✅ fireflies gather around lanterns and scatter from the prince.
+- ✅ string lights in the deep forest (`src/lights.js`, art in
+  `art/lights.js`): a wire slung from trunk to trunk with eight to ten
+  fat round bulbs (28 px), wound two or three turns around each trunk
+  with a bulb per turn. Three looks: warm white, a party mix (white,
+  pink, mint, orange, sky blue), pink and white. In the prince's plane
+  (the trunks are its posts) but drawn behind platforms and prince, so
+  nothing to play with is hidden; nothing to land on, nothing that
+  hurts. The wire sags 80 to 150 px, swings with the wind and far more
+  in a gust; each bulb twinkles, one with a loose contact cuts out now
+  and then on a third of the strings. Each bulb has a small halo and
+  throws a pool of its colour over the forest's green shade (added in
+  the light layer after the time-of-day multiply), so the wall, the
+  trunks and the prince are lit by it. When the prince passes through a
+  string he brushes it: the wire bounces, a wave of light runs out along
+  it from where he crossed, sparks fly, and it rings one soft bell, each
+  string its own step of a pentatonic scale, so a climb plays a little
+  tune. Small life on them: one to three moths circle a bulb on every
+  string (wider after a brush); on about a third two or three birds sit
+  side by side until he comes near; on a quarter a dormouse sits on the
+  wire warming its paws at a bulb and looks up when he passes. Where a
+  string hangs is a hash of its height (at most one per 768 px of trunk,
+  65 % of the slots at the zone's fullest, thinning with the deep
+  forest's amount toward 70 and 290 m), so a height always shows the
+  same string whatever the seed. Purely visual plus the bell: the
+  simulator reads the same numbers with and without them.
 - 💡 sound for all of it: ambience (wind in the leaves, birdsong, an owl),
   the gust whoosh, acorn plinks.
-- 💡 seasons and weather: rain, snow; a Christmas edition with light chains
-  along the trees; more animals living in the trees.
+- 💡 seasons and weather: rain, snow; a Christmas edition (the string
+  lights in red, green and gold on every zone's trees, snow on the
+  bulbs); more animals living in the trees. 💡 for the string lights:
+  fireflies drawn to the bulbs, lanterns or pennants between the bulbs,
+  a string that lights up bulb by bulb as he climbs toward it.
 - 💡 shake and motion effects when things happen: more shake, hit-stop,
   zoom punch on bow springs and the witch, speed lines on boost.
 - 💡 more particles and atmosphere in general.
@@ -546,7 +576,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 0 | Browser port | Section 4 | ✅ |
 | 1 | Fix the ceiling | Boost shield, full-heal hearts, pacing waves, longer ramp, witch cooldown, pity heart, simulator | ✅ on `phase-1-ceiling` |
 | 2 | Zone bands and dev helpers | ✅ minimal: `ZONES` altitude bands with per-element multipliers in `level.js`; `?at`, `?spawn`, `?dev`. More only when elements need it | ✅ |
-| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long); 🔜 thorny branches, cross branch; sound later | in progress |
+| 3 | Deep forest zone | ✅ squirrels, fog, falling leaves, light shafts and motes, dapple, boughs, birds, butterflies, owls, acorns, gusts, cloud cover, fireflies' behaviour, zone-keyed sky and light, tree variety (branch variants, trunk life, a tree per zone), branch lengths (stub, short, normal, long), string lights with moths, birds and a dormouse; 🔜 thorny branches, cross branch; sound later | in progress |
 | 4 | Windows zone | ✅ windows spread across the tower, guards reaching out of them, the witch with scissors cutting the braid; 🔜 Rapunzel's cameo (balconies moved above the treeline) | in progress |
 | 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots; 🔜 bird swarm, Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
@@ -594,6 +624,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Golden spring | bounce × 1.25 (1650 → 2062 px/s, apex 648 → 1012 px), boost 1900 px/s, capped at 3000 px/s off a bow; somersault 0.6 s per bounce, 0.42 s per boost |
 | Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
 | Feather | 40 % gravity and at most 600 px/s while falling |
+| String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1035,3 +1066,23 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   spacing (`POWER_EVERY`, 65 to 105 m) is the valve.
 - 2026-11-19: The star lasts 12 s (was 7.5 s), asked for after playing.
   Not measured in the simulator.
+- 2026-11-19: String lights in the deep forest (`element/string-lights`,
+  on top of the power-ups), to try what they do for the atmosphere: a
+  wire with fat glowing bulbs from trunk to trunk, wound around the
+  trunks where it is tied. Behind the platforms and the prince, so it
+  is scenery and reads as such (a thin sagging wire, bulbs with dark
+  sockets in a row; suns have rays and hang in arcs that bulge upward).
+  The bulbs really light the place: besides the halo each adds a pool of
+  its colour in the light layer, after the forest's green multiply,
+  which is what makes the wall and the trunks glow. So that it is more
+  than a picture the prince brushes a string in passing (bounce, a wave
+  of light, sparks, one bell note per string on a pentatonic scale).
+  Life on the wire: moths on every string, birds that sit side by side
+  and take off, and a dormouse warming its paws at a bulb: the one new
+  creature, grey with pink ears so it is not a second squirrel, lit from
+  the bulb in front of it. A first density of 80 % of the slots had two
+  strings in view most of the time; 65 % now, about one. Where a string
+  hangs comes from a hash, nothing rolls on a seeded stream: 40 good
+  bold runs on the same seeds give the identical report with and without
+  them. To be judged by playing: whether the warm white bulbs are told
+  from suns at a glance, and whether the bell stays pleasant.
