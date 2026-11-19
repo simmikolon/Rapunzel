@@ -328,9 +328,11 @@ is a pool to draw from, not a promise.
 - 💡 cross branches spanning the width, broken only by a boost. ⚠️ Only
   spawn with a guaranteed charge (a lantern just below or a generator
   check); the flock's floors and lanterns are the pattern.
-- 💡 spider webs and nets that hold or slow. ⚠️ Must break on a few taps
-  or a boost.
-- 💡 vines / green zones that slow or stick (jungle); prefer slowing.
+- 🔜 spider webs that hold: inside the tower, with their spider (three
+  taps or a boost tear him free, the spider bites if he does nothing;
+  see the tower's inside). ⚠️ Never a fall, never for ever.
+- 💡 vines / green zones that slow or stick (deep forest, jungle); prefer
+  slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
   for a few seconds. ⚠️ Frustrating for young players; clearly marked, short.
 - 💡 the witch as a level boss defending the window.
@@ -451,12 +453,19 @@ is a pool to draw from, not a promise.
   as the negative one (see enemies).
 
 **Tunnels and the inside of the tower**
-- 💡 doors and openings lead inside; the game continues on stairs, steps
-  and ledges with knights and witches; from outside the hair is visible at
-  the windows. ⚠️ A system, not an element: interior tiles, its own
-  enemies, an exit. Start with windows; do doors as short bonus rooms
-  (enter a window, climb for suns, exit higher) once zones and the dev
-  menu exist.
+- 🔜 the inside of the tower as a second place (plan in
+  `docs/plans/tower-interior.md`): chosen on the title sign at first,
+  reached through gates in the endless tower later. Stone pillars where
+  the trunks stand, a back wall with a tall window every storey through
+  which the outside goes by in parallax (sky, forest, the braid, which
+  hangs outside and is only seen); stone ledges, chandeliers, a bell,
+  scaffold boards, galleries and stairs to stand on; torches, chandeliers
+  and window shafts for light; a roster of its own (bats, guards, pike
+  guards in the doors, then the spider web, a ghost, a bat swarm). ⚠️ A
+  system, not an element: built in steps (the switch, the room, its own
+  things, floors, gates), each a branch.
+- 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
+  the gates exist.
 
 **FX and atmosphere**
 - ✅ title screen (`src/title.js`, `src/sign.js`): the game loads with a
@@ -623,7 +632,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots, the flock of starlings to boost through; 🔜 Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
-| later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
+| next | Inside the tower | A second place, chosen on the title sign: the switch, the room, its own things (stairs, web, ghost, bat swarm), floors, gates. Plan in `docs/plans/tower-interior.md` | 🔜 |
+| later | Weather and seasons as effects (rain, snow), vines in the deep forest, selectable worlds, Christmas, FX preset auto-fallback | 💡 |
 
 Mode-independent polish (super jump portal, god rays, hit-stop) slots in
 wherever it fits.
@@ -1176,3 +1186,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   be shown in the devlog). The star's 12 s, entered as not measured, is
   in the "before" numbers of the bats and flock entry above. Tidied on
   the way: imports nothing used any more, two exports nothing imported.
+- 2026-11-19: Next: the inside of the tower as a second place, planned
+  in `docs/plans/tower-interior.md`. Of three ideas (webs and vines as
+  more obstacles outside, weather and seasons as effects, the inside) it
+  is the one that answers the long climb's sameness with a new place
+  instead of a twelfth enemy. Decided with it: the braid hangs outside
+  and is only seen through the windows, so the centre lane gets
+  platforms of its own (chandeliers, a bell); the spider web moves
+  inside, where it starts a roster of its own instead of adding to the
+  outside's; it is a mode chosen on the title sign first, gates between
+  outside and inside come last. Weather stays an effects branch for
+  whenever, vines an idea for the deep forest.
