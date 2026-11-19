@@ -1,0 +1,24 @@
+serving /home/user/Rapunzel/site at http://localhost:8002 and /home/user/Rapunzel/web at /play/ (no caching)
+GET /
+GET /play/fonts/press-start-2p-latin.woff2
+GET /play/icons/icon-192.png
+GET /landing.css
+GET /landing.js
+GET /img/emma-drawing.jpg
+GET /img/first-design.jpg
+GET /devlog/episodes.json
+GET /play/src/art/prince.js
+GET /play/src/art/sign.js
+GET /play/src/art/creatures.js
+GET /play/src/art/logo.js
+GET /play/src/art/tiles.js
+GET /play/src/art/lanterns.js
+GET /play/src/art/windows.js
+GET /play/src/art/platforms.js
+GET /play/src/art/clouds.js
+GET /play/src/sign.js
+GET /play/src/palette.js
+GET /play/src/art/sprite.js
+GET /play/src/config.js
+GET /play/src/util.js
+GET /play/src/platforms.js

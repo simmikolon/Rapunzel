@@ -582,6 +582,82 @@ function drawClock(t) {
 }
 function drawPendulum(t) { const { p, disc } = t; p(1, 0, 2, 8, K.iron); disc(2, 9, 2, K.bell); p(1, 8, 1, 1, K.bellHi); }
 
+// --- the witch's things ----------------------------------------------------------
+// A tapestry with the tale on it, 44 x 36 art px, hanging from the middle of
+// its rod: the tower at night, the braid down its wall, the prince at its
+// foot, the witch on her broom above. Woven, so flat colours and a border.
+function drawTapestry(t) {
+  const { p, disc, ellipse, hatch } = t;
+  p(0, 0, 44, 2, K.iron); p(0, 0, 44, 1, K.ironHi); for (const x of [4, 14, 22, 30, 39]) p(x, 1, 2, 2, K.bell);
+  p(1, 3, 42, 28, C.goldDark); p(1, 3, 42, 1, C.gold); p(42, 4, 1, 27, C.plankDark);
+  for (let x = 2; x < 42; x += 4) { p(x, 4, 2, 1, C.tights); p(x + 2, 5, 2, 1, C.tights); p(x, 29, 2, 1, C.tights); p(x + 2, 28, 2, 1, C.tights); }
+  p(3, 6, 38, 22, '#34497a'); hatch(3, 6, 38, 16, '#3e5690', 3); p(3, 22, 38, 6, '#2f6b4c'); p(3, 22, 38, 1, '#3f8a5f');
+  for (const [x, y] of [[6, 8], [13, 12], [17, 7], [29, 15], [36, 8], [38, 13], [10, 17]]) p(x, y, 1, 1, K.candle);
+  disc(9, 10, 2, C.sun1); p(10, 9, 2, 2, '#34497a');                                           // a sickle moon
+  ellipse(7, 23, 3, 2, C.leafDark); ellipse(35, 23, 4, 2, C.leafDark); p(6, 20, 2, 2, C.leaf); p(34, 20, 3, 2, C.leaf);
+  // the tower, its window, Rapunzel and the braid
+  p(19, 10, 6, 15, '#b9c9c4'); p(24, 10, 1, 15, '#8ea39d'); p(18, 9, 8, 1, C.tights); p(19, 8, 6, 1, C.tights); p(20, 7, 4, 1, C.tights); p(21, 6, 2, 1, C.tights);
+  p(21, 12, 2, 3, C.nightDeep); p(21, 12, 1, 1, C.skin); p(22, 12, 1, 1, C.braid);
+  p(22, 14, 1, 3, C.braid); p(23, 17, 1, 3, C.braid); p(22, 20, 1, 3, C.braid); p(23, 19, 1, 1, C.braidHi);
+  // the prince at its foot, on his pogo
+  p(14, 19, 2, 1, C.gold); p(14, 20, 2, 1, C.skin); p(14, 21, 2, 2, C.tunic); p(13, 21, 1, 2, C.cape); p(15, 23, 1, 2, C.pole);
+  // the witch on her broom
+  p(29, 11, 7, 1, C.broom); p(28, 10, 1, 3, C.broomStraw); p(32, 8, 2, 3, C.witchDressHi); p(32, 7, 2, 1, C.witchSkin); p(31, 6, 4, 1, C.witchHat); p(32, 5, 2, 1, C.witchHat); p(33, 4, 1, 1, C.witchHat);
+  // the fringe
+  for (let x = 1; x < 43; x += 2) p(x, 31, 1, 3 + (x % 4 === 1 ? 1 : 0), x % 4 === 1 ? C.gold : C.goldDark);
+}
+// Ivy that has come in at a window. Hanging over the sill (12 x 30 art px,
+// from its top middle), or climbing the wall from the sill's left end up
+// and outward (22 x 44, the anchor its foot at the bottom right; flipped
+// for the right end). Stems dark, leaves in three greens, lit ones on top.
+function ivyLeaf(p, x, y, i) { const c = [C.leaf, C.grass, C.leaf, C.grassDark][i % 4]; p(x, y, 2, 2, c); p(x + (i % 2), y + 2, 1, 1, c); p(x, y, 1, 1, i % 3 ? C.grass : C.grassLight); }
+function drawIvyHang(t) {
+  const { p } = t;
+  let x = 6;
+  for (let y = 0; y < 28; y++) { if (y % 5 === 4) x += (y % 10 === 4 ? -1 : 1); p(x, y, 1, 1, C.leafDark); }
+  [[3, 2], [8, 6], [3, 10], [7, 14], [2, 18], [7, 21], [4, 25], [6, 28]].forEach(([lx, ly], i) => ivyLeaf(p, lx, ly, i));
+}
+function drawIvyClimb(t) {
+  const { p, line } = t;
+  line(20, 43, 19, 26, C.leafDark); line(19, 26, 20, 10, C.leafDark); line(20, 10, 17, 2, C.leafDark);       // up the jamb
+  line(19, 30, 10, 22, C.leafDark); line(10, 22, 3, 21, C.leafDark);                                          // a runner out over the wall
+  line(20, 14, 12, 8, C.leafDark); line(12, 8, 6, 9, C.leafDark);
+  [[18, 40], [20, 35], [16, 31], [13, 26], [8, 23], [3, 18], [1, 22], [17, 20], [20, 16], [15, 11], [9, 5], [5, 10], [18, 5], [15, 0], [11, 18]].forEach(([lx, ly], i) => ivyLeaf(p, lx, ly, i));
+}
+// By the hall's door: a board with two pegs, her spare hat on one, a broom
+// hung by its loop on the other, 26 x 42 art px, hanging from its top middle.
+function drawHook(t) {
+  const { p } = t;
+  p(1, 0, 24, 3, C.plank); p(1, 0, 24, 1, C.plankHi); p(1, 2, 24, 1, C.plankDark); p(6, 2, 2, 2, K.iron); p(18, 2, 2, 2, K.iron); p(6, 2, 1, 1, K.ironHi); p(18, 2, 1, 1, K.ironHi);
+  // the hat: cone, band and buckle, a wide brim, its tip bent over
+  [[6, 8], [5, 8], [5, 9], [4, 9], [4, 10], [3, 10], [3, 11]].forEach(([x0, x1], i) => { p(x0, 4 + i, x1 - x0 + 1, 1, C.witchHat); p(x0, 4 + i, 1, 1, C.witchDressHi); });
+  p(8, 3, 2, 1, C.witchHat); p(3, 11, 9, 1, C.goldDark); p(6, 11, 2, 1, C.gold); p(0, 12, 15, 2, C.witchHat); p(0, 12, 15, 1, C.witchDressHi);
+  // the broom: a leather loop, the handle, the bound straw
+  p(18, 4, 2, 2, C.rope); p(18, 6, 2, 22, C.broom); p(18, 6, 1, 22, C.plankHi);
+  p(17, 28, 4, 2, K.iron); p(17, 28, 4, 1, K.ironHi);
+  [[16, 21], [16, 22], [15, 22], [15, 23], [14, 23], [14, 24], [13, 24], [13, 25], [13, 25], [12, 25], [12, 25]].forEach(([x0, x1], i) => { p(x0, 30 + i, x1 - x0 + 1, 1, C.broomStraw); p(x0, 30 + i, 1, 1, C.lanternHi); });
+  for (const x of [15, 18, 21, 23]) p(x, 33, 1, 8, C.lanternFrame);
+}
+// A mirror in a gilt frame, 24 x 34 art px, hanging from its top middle,
+// and what shows in it when the prince comes near (drawn over it by the
+// painter): the witch, looking out.
+const GLASS = { hi: '#cfe0ee', base: '#9db8cc', shade: '#7896ae' };
+function glassRows() { return [[7, 16], [5, 18], [4, 19], [3, 20], [3, 20]]; }        // the glass's arched top, row 4 on; straight below
+function drawMirror(t, witch) {
+  const { p } = t;
+  const row = (y) => (y - 4 < 5 ? glassRows()[y - 4] : [3, 20]);
+  if (!witch) {
+    for (let y = 2; y < 33; y++) { const [x0, x1] = y < 4 ? [6, 17] : row(y); p(x0 - 2, y, x1 - x0 + 5, 1, C.braid); p(x0 - 2, y, 1, 1, C.braidHi); p(x1 + 2, y, 1, 1, C.braidDark); }
+    p(6, 2, 12, 1, C.braidHi); p(1, 32, 22, 2, C.braidDark); p(10, 0, 4, 2, C.braid); p(11, 0, 2, 1, C.braidHi); p(2, 31, 2, 2, C.braidHi); p(20, 31, 2, 2, C.braid);
+    for (let y = 4; y < 31; y++) { const [x0, x1] = row(y); p(x0, y, x1 - x0 + 1, 1, y > 24 ? GLASS.shade : GLASS.base); }
+    for (let i = 0; i < 7; i++) { p(6 + i, 12 - i, 2, 1, GLASS.hi); p(10 + i, 20 - i, 1, 1, GLASS.hi); }       // glints across the glass
+    return;
+  }
+  drawHag(t, 3, 6, false);
+  p(9, 16, 3, 2, C.sun1); p(14, 16, 3, 2, C.sun1); p(10, 16, 1, 2, C.witchHair); p(15, 16, 1, 2, C.witchHair);   // her eyes, alight
+  for (let y = 0; y < 34; y++) { const [x0, x1] = y < 4 || y > 30 ? [1, 0] : row(y); t.ctx.clearRect(0, y * 4, x0 * 4, 4); t.ctx.clearRect((x1 + 1) * 4, y * 4, (24 - x1 - 1) * 4, 4); }   // only what is in the glass
+}
+
 // --- the gate ----------------------------------------------------------------------
 // A door between the outside and the inside of the tower, on a stone landing
 // he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
@@ -703,6 +779,12 @@ export function buildInterior() {
     herbs: makeSprite(10, 15, drawHerbs, { ax: 0.5, ay: 0 }),
     clock: makeSprite(16, 20, drawClock, { ax: 0.5, ay: 0 }),
     pendulum: makeSprite(4, 12, drawPendulum, { ax: 0.5, ay: 0 }),
+    tapestry: makeSprite(44, 36, drawTapestry, { ax: 0.5, ay: 0 }),
+    ivyHang: makeSprite(12, 31, drawIvyHang, { ax: 0.5, ay: 0 }),
+    ivyClimb: (() => { const L = makeSprite(22, 44, drawIvyClimb, { ax: 1, ay: 1 }); return { L, R: flipH(L) }; })(),
+    hook: makeSprite(26, 42, drawHook, { ax: 0.5, ay: 0 }),
+    mirror: makeSprite(24, 34, (t) => drawMirror(t, false), { ax: 0.5, ay: 0 }),
+    mirrorWitch: makeSprite(24, 34, (t) => drawMirror(t, true), { ax: 0.5, ay: 0 }),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

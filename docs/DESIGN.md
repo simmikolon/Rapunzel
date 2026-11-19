@@ -542,7 +542,13 @@ is a pool to draw from, not a promise.
     tower's keys on a board, bunches of herbs; niches with the witch's
     potions or her crystal ball, a wall clock with a swinging pendulum
     in the belfry. By hash, beside the window column; each floor has
-    its own mix.
+    its own mix. And the witch's own things: a tapestry with the tale
+    on it (the tower at night, the braid, the prince at its foot, the
+    witch on her broom), rare; her spare hat and a broom on two pegs by
+    the hall's door; a gilt mirror that is only glass until the prince
+    comes near, then she looks out of it; and ivy that has come in at
+    about half the windows below the trees' end, over the sill or up
+    the wall.
   - ✅ stairs: a flight of four stone treads (64 px each, 48 px higher
     each) built out from a pillar on a half arch, the top tread at the
     pillar under a door in it. A row of its own, wide and safe, a
@@ -1492,3 +1498,12 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   down. No reds, nothing that could be taken for a platform or a
   creature (no cage, no armour). Purely visual: the simulator does not
   draw.
+- 2026-11-19: The witch's things (`element/interior-witch-things`),
+  four pieces Simon picked from a list: a tapestry of the tale, ivy in
+  at the windows, her hat and broom by the hall's door, a mirror she
+  appears in. The mirror keeps no state: how plainly she shows is how
+  near the prince is (full within 100 px, gone beyond 300 px), so she
+  comes and goes as he bounces past and nothing can go out of step.
+  The ivy stops where the trees stop outside (400 m): it is the forest
+  coming in, so the belfry has none. Purely visual; the simulator does
+  not draw, the atlas is 4096 x 2910.

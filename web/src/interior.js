@@ -30,12 +30,13 @@ const CHAIN_END = 280;             // the chain's loose end hangs this high abov
 // room's dusk, and what hangs on the walls. A floor fades into the next
 // over 30 m, like the trees outside.
 const FLOORS = [
-  { from: 0,     tint: '#ffffff', ambient: '#8f88c4', dim: 0.34, decor: [['banner', 3], ['pictures', 3], ['shield', 1]], small: ['sconce'] },                     // the hall
-  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['shield', 4], ['banner', 3], ['pictures', 1]], small: ['sconce', 'keys', 'sconce'] },   // the guard rooms: cool stone, arms on the walls
-  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['shelf', 4], ['pictures', 5], ['niche', 2]], small: ['sconce', 'herbs', 'sconce'] },    // the library: warm stone, books, the gallery
+  { from: 0,     tint: '#ffffff', ambient: '#8f88c4', dim: 0.34, decor: [['banner', 3], ['pictures', 3], ['shield', 1], ['tapestry', 1], ['mirror', 1]], small: ['sconce'] },                     // the hall
+  { from: 12000, tint: '#dde3ff', ambient: '#8286c8', dim: 0.36, decor: [['shield', 4], ['banner', 3], ['pictures', 1], ['tapestry', 1]], small: ['sconce', 'sconce', 'keys', 'sconce', 'sconce'] },   // the guard rooms: cool stone, arms on the walls
+  { from: 25000, tint: '#ffe8d0', ambient: '#a28cb2', dim: 0.31, decor: [['shelf', 4], ['pictures', 5], ['niche', 2], ['mirror', 2], ['tapestry', 1]], small: ['sconce', 'herbs', 'sconce'] },    // the library: warm stone, books, the gallery
   { from: 40000, tint: '#cfe3da', ambient: '#7a88c0', dim: 0.38, decor: [['cog', 5], ['clock', 2], ['banner', 1]], small: ['sconce', 'herbs'] },                  // the belfry: weathered stone, clockwork
 ];
 const FLOOR_FADE = 1500;
+const IVY_TO = 40000;               // ivy comes in at the windows up to where the trees end
 // Which floors meet at height y (the prince's plane): { a, b, t }.
 function floorsAt(y) {
   for (let i = 1; i < FLOORS.length; i++) {
@@ -59,13 +60,13 @@ function wallTile(k) {
 // What hangs on the back wall, by hash, left and right of the window column
 // (never in it): at most one piece a side per storey, at different heights
 // on the two sides; which things, the floor says (FLOORS). In the hall a
-// banner hangs on each side of the door and the witch's portrait above
-// them: it is her house.
+// banner hangs on each side of the door, and above them the witch's
+// portrait and the pegs with her spare hat and a broom: it is her house.
 // Returns { kind, look, x, ly, h } with `ly` the height it hangs from
 // (layer px) and `h` the hash the piece may vary by.
 function decorAt(k, side) {
   if (k === 1) return { kind: 'banner', look: side < 0 ? 0 : 1, x: side * 196, ly: 352 };
-  if (k === 2 && side < 0) return { kind: 'pictures', only: 'witch', x: -196, ly: 556, h: 0 };
+  if (k === 2) return side < 0 ? { kind: 'pictures', only: 'witch', x: -196, ly: 556, h: 0 } : { kind: 'hook', x: 196, ly: 560, h: 0 };   // her portrait, and her spare hat and a broom by the door
   if (k < WINDOW_FIRST || k % WINDOW_EVERY !== (side < 0 ? 2 : 1)) return null;
   const h = hash(k * 19 + (side < 0 ? 7 : 11));
   if (h % 100 < 34) return null;
@@ -154,11 +155,29 @@ export class Interior {
         } else if (d.kind === 'niche') {
           g.blit(A.niche[d.look], dx, dy);
           if (d.look === 1) g.halo(dx - 2, dy + 56, 34, '#9fd0ff', 0.3 + 0.15 * Math.sin(time * 1.6 + k), { glow: 0.4 });   // the crystal ball
+        } else if (d.kind === 'tapestry') g.blit(A.tapestry, W / 2 + side * 178 + cam.ox, dy, { rot: Math.sin(time * 0.6 + k) * 0.012 });
+        else if (d.kind === 'hook') g.blit(A.hook, dx, dy);
+        else if (d.kind === 'mirror') {
+          // the nearer the prince, the plainer the witch in the glass
+          g.blit(A.mirror, dx, dy);
+          const pl = world && world.player, near = pl ? Math.hypot(cam.sx(pl.x) - dx, cam.sy(pl.y + 116) - (dy + 68)) : 1e9;
+          const a = Math.max(0, Math.min(1, 1 - (near - 100) / 200));
+          if (a > 0.02) { g.halo(dx, dy + 68, 70, '#bfe8a8', 0.25 * a, { glow: 0.3 }); g.blit(A.mirrorWitch, dx, dy, { alpha: a * (0.8 + 0.12 * Math.sin(time * 9)) }); }
         } else if (d.kind === 'clock') {
           g.blit(A.pendulum, dx, dy + 76, { rot: Math.sin(time * 2.6 + k) * 0.32 });
           g.blit(A.clock, dx, dy);
         } else this.drawHanging(g, d, dx, dy, time, k, princeX);
       }
+    }
+    // Ivy has come in at some of the windows, as long as there are trees
+    // outside: over the sill, or up the wall beside it.
+    for (let k = Math.max(WINDOW_FIRST, Math.floor((first - 2) / WINDOW_EVERY) * WINDOW_EVERY); k <= last; k += WINDOW_EVERY) {
+      if (k * TILE_H / PARALLAX_TOWER > IVY_TO) break;
+      const h = hash(k * 29 + 13), sill = H - ((k + 1) * TILE_H - 120 - camF) + cam.oy, cx = W / 2 + cam.ox;
+      if (h % 100 >= 55) continue;
+      const side = (h >>> 7) % 2 ? 1 : -1, what = (h >>> 9) % 3;                // over the sill, up the wall, or both
+      if (what !== 1) g.blit(A.ivyHang, cx + side * 36, sill - 8, { rot: Math.sin(time * 0.8 + k) * 0.04 });
+      if (what !== 0) g.blit(side < 0 ? A.ivyClimb.R : A.ivyClimb.L, cx - side * 62, sill + 6);
     }
     for (let k = first - 1; k <= last + 1; k++) {
       for (const side of [-1, 1]) {
