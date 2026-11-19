@@ -1,4 +1,4 @@
-import { makeSprite, flipH, makeCanvas } from './sprite.js';
+import { makeSprite, flipH } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { PX } from '../config.js';
 import { RNG } from '../util.js';

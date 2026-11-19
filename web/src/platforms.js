@@ -1,5 +1,4 @@
 import { W, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, CAMERA_START_Y, PARALLAX_TOWER } from './config.js';
-import { TAU } from './util.js';
 
 // Platform kinds. Collision rects are relative to the platform center.
 // - branchL / branchR: grows from the left / right trunk. Dry ones crumble

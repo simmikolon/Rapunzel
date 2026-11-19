@@ -87,8 +87,8 @@ shell first and filling it later. Conditions that make this hold up:
 - **Dev helpers** that grow with need: ✅ `?at=150` starts at an altitude,
   `?spawn=squirrel` puts an element on the next branch, `?spawn=storm`
   turns the next cloud into a storm cloud, `?spawn=bat` hangs one under
-  the next branch, `?at=170&spawn=flock` builds a flock of starlings just
-  above the start, `?spawn=star` (or `cloak`,
+  the next branch, `?at=170&spawn=flock` builds a flock of starlings a
+  dozen metres above the start, `?spawn=star` (or `cloak`,
   `spring`, `magnet`, `feather`) hangs that power-up above the prince,
   `?dev=1` shows altitude and zone, `?len=stub` makes every branch one
   length class. The simulator can
@@ -1171,3 +1171,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   (a run that never ended); it steps out from under a plank now, and the
   generator treats a long branch as a centre platform, so no swing hangs
   right above one.
+- 2026-11-19: Power-ups, string lights, bats and the flock merged into
+  `master` after playing them; the three branches stay (the steps are to
+  be shown in the devlog). The star's 12 s, entered as not measured, is
+  in the "before" numbers of the bats and flock entry above. Tidied on
+  the way: imports nothing used any more, two exports nothing imported.

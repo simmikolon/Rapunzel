@@ -1,4 +1,4 @@
-import { W, H, PX_PER_METER, PLAYER_H, PLAYER_BODY_W, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY, MAGNET_RADIUS, MAGNET_SPEED, MAGNET_ACCEL } from './config.js';
+import { W, H, PX_PER_METER, PLAYER_H, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY, MAGNET_RADIUS, MAGNET_SPEED, MAGNET_ACCEL } from './config.js';
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';

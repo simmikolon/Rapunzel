@@ -1,4 +1,4 @@
-import { makeSprite, flipH } from './sprite.js';
+import { makeSprite } from './sprite.js';
 import { PAL as C } from '../palette.js';
 
 // Hair ribbon tied around the braid. 34 x 20 art px. Surface at y = 2.

@@ -2,7 +2,7 @@
 // scripted player and collects attrition statistics. No rendering.
 import { buildAllArt } from '../src/art/index.js';
 import { World } from '../src/world.js';
-import { GRAVITY, JUMP_VY, W, H, PX_PER_METER } from '../src/config.js';
+import { GRAVITY, W, PX_PER_METER } from '../src/config.js';
 import { RNG } from '../src/util.js';
 import { startAt } from '../src/dev.js';
 
@@ -15,8 +15,6 @@ const SKILLS = {
   kid: { reaction: 0.22, hesitate: 0.25, dodgeRange: 110 },
   good: { reaction: 0.10, hesitate: 0.05, dodgeRange: 150 },
 };
-
-const unseenBy = (p) => p.hidden;     // under the cloak he slips through the flock anyway
 
 class BotInput {
   constructor() { this.axis = 0; this.usingTilt = false; this.boostQueued = 0; }
@@ -104,7 +102,7 @@ class Bot {
     }
     // A flock streaming above: boost when the birds are just overhead.
     const flock = w.enemies.find((e) => e.kind === 'flock' && e.alive && e.blocking);
-    if (flock && p.y + 216 < flock.top && p.vy > 250 && p.boost >= 1 && p.boostCooldown <= 0 && !p.shielded && !unseenBy(p)) {
+    if (flock && p.y + 216 < flock.top && p.vy > 250 && p.boost >= 1 && p.boostCooldown <= 0 && !p.shielded && !p.hidden) {   // under the cloak he slips through anyway
       const toBirds = flock.bottom - (p.y + 216);
       if (toBirds < 200 && toBirds > -40) this.input.boostQueued++;
     }

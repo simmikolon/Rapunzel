@@ -18,7 +18,6 @@ export const POWERS = {
   magnet:  { toast: 'Sun magnet!', color: '#ff8fa6' },
   feather: { toast: 'Light as a feather!', color: '#f2ece0' },
 };
-export const POWER_KINDS = Object.keys(POWERS);
 
 // The star's rainbow: 24 steps around the colour wheel, bright enough to be
 // added over the prince. `rainbow(t)` runs through it once per unit of t.

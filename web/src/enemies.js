@@ -848,7 +848,7 @@ export class Bat extends Enemy {
 // come from, their calls) -> stream (until he stands above it) -> leave (the
 // last birds fly out). It never hurts, so `hurtful` stays false and the
 // world handles the meeting (World.meetFlock).
-export const FLOCK_H = 130;
+const FLOCK_H = 130;
 const FLOCK_SPEED = 560, FLOCK_BIRDS = 26, BIRD_W = 56, BIRD_H = 36, LANE = 42;
 export class Flock extends Enemy {
   constructor(y, dir, rng = new RNG(), span = 284) {
