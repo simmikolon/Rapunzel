@@ -852,9 +852,11 @@ export class Bat extends Enemy {
 const FLOCK_H = 130;
 const FLOCK_SPEED = 560, FLOCK_BIRDS = 26, BIRD_W = 56, BIRD_H = 36, LANE = 42;
 export class Flock extends Enemy {
-  constructor(y, dir, rng = new RNG(), span = 284) {
+  // `bats`: inside the tower the same gate is a swarm of bats.
+  constructor(y, dir, rng = new RNG(), span = 284, bats = false) {
     super(0, y);
     this.kind = 'flock';
+    this.bats = bats;
     this.span = span;               // how far the floor below reaches to each side (see Player.shoo)
     this.dir = dir;                 // 1: they fly to the right
     this.w = W + 160; this.h = FLOCK_H;
@@ -927,7 +929,7 @@ export class Flock extends Enemy {
       if (Math.abs(x - p.x) > reach || Math.abs(y - (p.y + 110)) > 190) continue;
       b.hole = true;
       this.fallen.push({ x, y, vx: (x < p.x ? -1 : 1) * (120 + Math.random() * 200) + this.dir * 160, vy: 180 + Math.random() * 260, rot: 0 });
-      world.particles.feathers(x, y, false, 2);
+      if (this.bats) world.particles.sparkles(x, y, 2, '#a595cc'); else world.particles.feathers(x, y, false, 2);
     }
   }
   burst(world) { this.scatter(world, 120); this.passT = 0.7; }          // the boost shield went through
@@ -940,16 +942,16 @@ export class Flock extends Enemy {
       const side = -this.dir, sx = side < 0 ? 40 : W - 40, sy = clamp(cam.sy(this.y), 60, H - 60);
       const blink = Math.floor(this.phaseT * 8) % 2 === 0;
       g.text('!', sx, sy, 56, blink ? '#ffd04a' : '#fff2c0', 'center', true, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
-      const set = this.dir > 0 ? A.starlingR : A.starlingL;
+      const set = this.bats ? A.bat : this.dir > 0 ? A.starlingR : A.starlingL;
       for (let i = 0; i < 2; i++) g.blit(set[(Math.floor(this.phaseT * 10) + i) % 2], sx - side * (52 + i * 44), sy - 14 + i * 26);
       return;
     }
-    const set = this.dir > 0 ? A.starlingR : A.starlingL;
+    const set = this.bats ? A.bat : this.dir > 0 ? A.starlingR : A.starlingL;
     for (const b of this.birds) {
       if (b.hole || b.s < 0) continue;
       g.blit(set[Math.floor(this.t * 11 + b.flap) % 2], cam.sx(this.birdX(b)), cam.sy(this.birdY(b)));
     }
-    for (const f of this.fallen) g.blit(set[0], cam.sx(f.x), cam.sy(f.y), { rot: f.rot });
+    for (const f of this.fallen) g.blit(set[this.bats ? 2 : 0], cam.sx(f.x), cam.sy(f.y), { rot: f.rot });
   }
 }
 

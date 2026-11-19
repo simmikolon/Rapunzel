@@ -95,8 +95,9 @@ New (step 3):
   out, solid (and biting, and to be pogoed) only while it shows. The
   fade-in is its telegraph, and the candle never fades, so one always
   knows where it is.
-- **Bat swarm.** The flock's gate with bats: two long ledges as floors,
-  two lanterns, the stream between.
+- ✅ **Bat swarm** (`element/interior-swarm`). The flock's gate with
+  bats, from 160 m: two long ledges as floors, two lanterns, the stream
+  between.
 - The witch is only seen flying past outside the windows for now.
 
 ## Mode and menu

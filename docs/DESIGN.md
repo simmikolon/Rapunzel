@@ -513,8 +513,10 @@ is a pool to draw from, not a promise.
     in it, in the colour of the sky outside, so the forest's dusk, the
     day, the sunset and the night show inside.
   - ✅ the spider's web under the ledges, ✅ the ghost with its candle
-    (see enemies).
-  - 🔜 its own things (stairs, a bat swarm, wall decor, more sounds), floors of the tower as zones, gates. ⚠️ A system, not an
+    (see enemies), ✅ the bat swarm: the flock's gate from 160 m, two
+    long ledges that meet as floors, two lanterns on the lower one, a
+    stream of bats between to boost through.
+  - 🔜 its own things (stairs, wall decor, more sounds), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
@@ -1335,3 +1337,13 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   (median 424 m, mean 477 m there), without touching the other
   creatures' numbers. The outside's report is identical on the same
   seeds.
+- 2026-11-19: The bat swarm (`element/interior-swarm`): the flock's
+  gate inside, unchanged in its rules (two floors, the stream 345 px
+  above the lower one, two lanterns that stay, turned back without
+  losing a heart) and only different in who flies: the flock takes a
+  flag and draws bats, squeaks instead of calls, sparks instead of
+  feathers. Measured on 120 seeded runs inside: 180 swarms, 160 burst
+  through, 19 turned back, no fall at one; good bold median 488 m, mean
+  571 m, 1.04 hits per 100 m (0.99 to 1.57 per band from 100 to
+  1100 m), falls 26 % of the deaths; kid bold median 72 m, mean 78 m.
+  The outside's report is identical on the same seeds.

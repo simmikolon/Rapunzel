@@ -227,8 +227,8 @@ export class World {
       this.onFlockTurn(pl, e);
     }
   }
-  onFlockPass(pl, e) { this.audio.flockWings(); this.particles.feathers(pl.x, pl.y + 120, false, 6); }
-  onFlockTurn(pl, e) { this.audio.flockTurn(); this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
+  onFlockPass(pl, e) { this.audio.flockWings(); if (e.bats) this.particles.sparkles(pl.x, pl.y + 120, 8, '#a595cc'); else this.particles.feathers(pl.x, pl.y + 120, false, 6); }
+  onFlockTurn(pl, e) { this.audio.flockTurn(); if (e.bats) this.particles.sparkles(pl.x, pl.headY, 6, '#a595cc'); else this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
 
   // The spider's web holds whoever flies into it (enemies.js Web says how
   // he gets out); the boost shield or the star tear through it and knock
@@ -346,9 +346,10 @@ export class World {
       else if (pl.maxY >= fp.y - FLOCK_LEAD && !witchAbout) {
         fp.fired = true;
         const rf = this.level.rngFauna;
-        this.enemies.push(new Flock(fp.y, rf.sign(), this.level.child(rf), fp.span));
-        this.audio.flockWarn();
-        this.toast('A flock! Boost through!', '#ffd98a', 2.2);
+        const bats = this.place.inside;      // in the tower the gate is a swarm of bats
+        this.enemies.push(new Flock(fp.y, rf.sign(), this.level.child(rf), fp.span, bats));
+        if (bats) this.audio.swarmWarn(); else this.audio.flockWarn();
+        this.toast(bats ? 'Bats! Boost through!' : 'A flock! Boost through!', '#ffd98a', 2.2);
       }
     }
     if (this.place.witch && pl.maxY > this.nextWitchY && !witchAbout && !flockNear && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see

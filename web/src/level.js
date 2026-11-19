@@ -42,14 +42,15 @@ export const ZONES = [
 // in here so far, so each counts for more than it does outside: bats under
 // the ledges, guards on the galleries, pike guards in the pillars' hatches.
 // A fourth holds instead of biting: the spider's web under a ledge. The
-// ghost drifts through the room in the crow's place.
+// ghost drifts through the room in the crow's place, and the flock's gate
+// is a swarm of bats between two long ledges (above the hall).
 // The first 120 m are the gentle part, as the forest floor is outside: no
 // stubs, no pikes yet, more long ledges (inside nothing rides up with the
 // camera as the ribbons do, so a miss falls further), and the power-ups lean
 // toward the feather.
 export const ZONES_INSIDE = [
   { name: 'the hall',         from: 0,     mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
-  { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, flock: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5, web: 1.6 } },
+  { name: 'inside the tower', from: 12000, mul: { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, storm: 0.0, gallery: 0.4, guard: 0.8, grabber: 1.5, bat: 1.5, web: 1.6 } },
 ];
 export function zoneAt(y, zones = ZONES) {
   let z = zones[0];

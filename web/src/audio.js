@@ -343,6 +343,8 @@ class Synth {
     this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
   }
   skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
+  // The bat swarm is coming: a flurry of squeaks.
+  swarmWarn() { for (let i = 0; i < 6; i++) this.tone({ type: 'square', freq: 2300 + (i % 3) * 420, to: 3100 + (i % 2) * 500, dur: 0.05, vol: 0.04, delay: i * 0.09 }); }
   // The ghost: fading in (a soft rising "ooh"), popped by a pogo (a falling whoop).
   ghostIn() {
     this.tone({ type: 'sine', freq: 330, to: 520, dur: 0.5, vol: 0.07, attack: 0.15, slide: 'lin' });
