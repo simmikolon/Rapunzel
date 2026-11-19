@@ -516,7 +516,12 @@ is a pool to draw from, not a promise.
     (see enemies), ✅ the bat swarm: the flock's gate from 160 m, two
     long ledges that meet as floors, two lanterns on the lower one, a
     stream of bats between to boost through.
-  - 🔜 its own things (stairs, wall decor, more sounds), floors of the tower as zones, gates. ⚠️ A system, not an
+  - ✅ on the walls (purely visual, nothing for the bot): banners in the
+    prince's blue and in violet (one each side of the hall's door),
+    shields on crossed pikes, and gilt frames with Rapunzel's portrait,
+    which blinks now and then. By hash, left and right of the window
+    column, at most one a side per storey.
+  - 🔜 its own things (stairs, more sounds), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
@@ -1347,3 +1352,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   571 m, 1.04 hits per 100 m (0.99 to 1.57 per band from 100 to
   1100 m), falls 26 % of the deaths; kid bold median 72 m, mean 78 m.
   The outside's report is identical on the same seeds.
+- 2026-11-19: On the walls (`element/interior-decor`): banners, shields
+  on crossed pikes and framed portraits of Rapunzel on the back wall,
+  so the room is somebody's and the wall between two windows is not
+  bare. The suit of armour was left out: next to guards in helmets a
+  standing armour reads as one more of them. No reds here either. The
+  portrait is the sign's Rapunzel drawn into a frame, and she blinks.
+  Purely visual: the simulator does not draw, its reports are unchanged.

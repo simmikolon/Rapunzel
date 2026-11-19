@@ -153,8 +153,11 @@ One branch each, merged when it is fun.
    median 551 m; kid bold median 72 m (outside 71 m). The first 120 m
    became a band of their own, the hall, to get the kid bot there.
 3. **Its own things** (a branch each): stairs; the web; the ghost; the
-   bat swarm; wall decor (banners, shields, a suit of armour); sounds
-   (stone, the bell, chains, the web).
+   bat swarm; wall decor (banners, shields, portraits; no suit of
+   armour, it reads as a guard); sounds (stone, the bell, chains, the
+   web). Done so far: the web, the ghost, the bat swarm, the decor;
+   the bell, the chandelier's clink, the web and the ghost have their
+   sounds. Left: the stairs.
 4. **Floors of the tower**: zones inside as outside has them (hall and
    cellar, stairwell, gallery, belfry and roof timbers), each with its
    two or three things.

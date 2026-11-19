@@ -35,6 +35,20 @@ function wallTile(k) {
   return hash(k * 13 + 1) % 10 < 7 ? 0 : 1;
 }
 
+// What hangs on the back wall, by hash, left and right of the window column
+// (never in it): at most one piece a side per storey, at different heights
+// on the two sides. In the hall a banner hangs on each side of the door.
+// Returns { kind, look, x, ly } with `ly` the height it hangs from (layer px).
+function decorAt(k, side) {
+  if (k === 1) return { kind: 'banner', look: side < 0 ? 0 : 1, x: side * 196, ly: 352 };
+  if (k < WINDOW_FIRST || k % WINDOW_EVERY !== (side < 0 ? 2 : 1)) return null;
+  const h = hash(k * 19 + (side < 0 ? 7 : 11));
+  if (h % 100 < 34) return null;
+  const pick = (h >>> 8) % 7;
+  const kind = pick < 3 ? 'banner' : pick < 5 ? 'shield' : 'frame';
+  return { kind, look: (h >>> 5) % 2, x: side * (168 + (h >>> 12) % 34), ly: k * TILE_H + 150 + (h >>> 16) % 30 };
+}
+
 export class Interior {
   constructor(art, bg) {
     this.art = art;
@@ -66,6 +80,21 @@ export class Interior {
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     for (let k = first; k <= last; k++) g.blit(A.wall[wallTile(k)], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
+    // banners, shields and a painting or two
+    for (let k = first - 1; k <= last + 1; k++) {
+      for (const side of [-1, 1]) {
+        const d = decorAt(k, side);
+        if (!d) continue;
+        const dx = W / 2 + d.x + cam.ox, dy = H - (d.ly - camF) + cam.oy;
+        if (d.kind === 'banner') g.blit(A.banner[d.look], dx, dy, { rot: Math.sin(time * 0.9 + k) * 0.025 });
+        else if (d.kind === 'shield') g.blit(A.shield, dx, dy + 44);
+        else {
+          g.blit(A.frame, dx, dy);
+          const blink = (time * 0.31 + k * 0.37) % 1 < 0.035;        // she blinks now and then
+          g.blit(blink ? this.art.sign.rapunzelBlink : this.art.sign.rapunzel, dx, dy + 25 * 4);
+        }
+      }
+    }
     // the pillars' shadow on the wall behind them
     g.rect(TRUNK_W + cam.ox, 0, 18, H, 'rgba(0,0,0,0.2)');
     g.rect(W - TRUNK_W - 18 + cam.ox, 0, 18, H, 'rgba(0,0,0,0.2)');

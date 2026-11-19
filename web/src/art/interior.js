@@ -335,6 +335,50 @@ function drawWeb(t, tear) {
   for (const [x, y, n] of loose) { t.p(x, y, 1, n, SILK.shade); t.p(x, y + n, 1, 1, SILK.base); }
 }
 
+// --- on the walls --------------------------------------------------------------
+// What hangs on the back wall between the windows (interior.js places it by
+// hash). Nothing here is red or pink-red: red is what bites. Lit from above:
+// a cloth's top edge and left fold are light, its right fold and tail dark.
+const CLOTH = [
+  { hi: C.tunicHi, base: C.tunic, dark: C.tunicDark },                 // the prince's blue, a sun on it
+  { hi: '#a57fc4', base: C.tights, dark: C.tightsDark },               // violet, a crown on it
+];
+// A banner on an iron rod, 16 x 36 art px, hanging from the rod's middle (the anchor): a swallow tail.
+function drawBanner(t, look) {
+  const { p } = t;
+  const k = CLOTH[look];
+  p(0, 0, 16, 2, K.iron); p(0, 0, 16, 1, K.ironHi); p(0, 0, 1, 3, K.ironHi); p(15, 0, 1, 3, K.iron);
+  p(2, 2, 12, 27, k.base); p(2, 2, 12, 1, k.hi); p(2, 3, 2, 26, k.hi); p(11, 3, 3, 26, k.dark); p(7, 4, 1, 24, k.dark);
+  // the tail: two points, the notch between them
+  for (let i = 0; i < 5; i++) { p(2, 29 + i, 5 - i, 1, i < 2 ? k.hi : k.base); p(9 + i, 29 + i, 5 - i, 1, k.dark); }
+  p(2, 26, 12, 1, C.goldDark); p(2, 5, 12, 1, C.goldDark);
+  if (look === 0) { p(6, 12, 4, 4, C.gold); p(7, 10, 2, 1, C.gold); p(7, 17, 2, 1, C.gold); p(4, 13, 1, 2, C.gold); p(11, 13, 1, 2, C.gold); p(5, 11, 1, 1, C.goldDark); p(10, 11, 1, 1, C.goldDark); p(5, 16, 1, 1, C.goldDark); p(10, 16, 1, 1, C.goldDark); p(7, 13, 2, 2, C.sun2); }
+  else { p(5, 14, 6, 3, C.gold); p(5, 11, 1, 3, C.gold); p(7, 12, 2, 2, C.gold); p(10, 11, 1, 3, C.gold); p(5, 16, 6, 1, C.goldDark); p(7, 15, 1, 1, C.gem); }
+}
+// A shield on two crossed pikes, 22 x 22 art px, the anchor its middle.
+function drawShield(t) {
+  const { p, line } = t;
+  line(1, 20, 19, 2, C.plankDark, 2); line(20, 20, 2, 2, C.plank, 2);
+  p(18, 0, 3, 3, K.chain); p(19, 0, 2, 1, K.chainHi); p(1, 0, 3, 3, K.chain); p(1, 0, 2, 1, K.chainHi);
+  const rows = [[5, 16], [5, 16], [5, 16], [5, 16], [5, 16], [5, 16], [5, 16], [6, 15], [6, 15], [7, 14], [8, 13], [9, 12], [10, 11]];
+  rows.forEach(([x0, x1], i) => {
+    const y = 5 + i, m = 11;
+    p(x0, y, x1 - x0 + 1, 1, K.chain);
+    if (x1 - x0 > 3) { p(x0 + 1, y, m - x0 - 1, 1, C.tunic); p(m, y, x1 - m, 1, C.braid); }
+  });
+  p(5, 5, 12, 1, K.chainHi); p(5, 5, 1, 7, K.chainHi); p(6, 6, 2, 5, C.tunicHi); p(14, 7, 2, 6, C.braidShade); p(8, 9, 2, 2, C.gold); p(12, 8, 2, 2, C.tunic);
+}
+// A gilt frame, 24 x 27 art px, hanging from its top middle; the painting
+// in it is Rapunzel (the sign's portrait is drawn into it at runtime, and
+// now and then she blinks).
+function drawFrame(t) {
+  const { p } = t;
+  p(11, 0, 2, 2, K.iron);
+  p(0, 2, 24, 25, C.braidShade); p(0, 2, 24, 1, C.braidHi); p(0, 2, 1, 25, C.braidHi); p(1, 3, 22, 1, C.braid); p(1, 3, 1, 23, C.braid); p(22, 4, 2, 23, C.braidDark); p(1, 25, 23, 2, C.braidDark);
+  p(3, 5, 18, 20, C.dusk); p(3, 5, 18, 7, C.nightDeep);
+  for (const [x, y] of [[0, 2], [22, 2], [0, 25], [22, 25]]) p(x, y, 2, 2, C.braidHi);
+}
+
 // --- the ghost -------------------------------------------------------------------
 // 16 x 20 art px, facing RIGHT, the anchor its middle: a small round ghost
 // with a scalloped hem, rosy cheeks and a round mouth. It carries a candle
@@ -398,6 +442,9 @@ export function buildInterior() {
     web: (() => { const R = [0, 1, 2, 3].map((k) => makeSprite(30, 36, (t) => drawWeb(t, k), undefined, { axPx: 30 * 4, ayPx: 0 })); return { R, L: R.map(flipH) }; })(),
     ghost: (() => { const R = [0, 1, 2, 3].map((f) => makeSprite(16, 20, (t) => drawGhost(t, f), { ax: 0.5, ay: 0.5 })); return { R, L: R.map(flipH) }; })(),
     ghostCandle: [0, 1].map((f) => makeSprite(5, 9, (t) => drawGhostCandle(t, f), undefined, { axPx: 2.5 * 4, ayPx: 7 * 4 })),
+    banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
+    shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
+    frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),
     chain: makeSprite(5, 10, drawChain, { ax: 0.5, ay: 0 }),
     chainEnd: makeSprite(9, 12, drawChainEnd, { ax: 0.5, ay: 0 }),
     gallery: { L: galleryL, R: galleryL.map(flipH) },
