@@ -10,6 +10,7 @@ import { buildBalconies } from './balconies.js';
 import { buildWindows } from './windows.js';
 import { buildLogo } from './logo.js';
 import { buildSign } from './sign.js';
+import { buildPowerups } from './powerups.js';
 
 export function buildAllArt() {
   return {
@@ -25,5 +26,6 @@ export function buildAllArt() {
     windows: buildWindows(),
     logo: buildLogo(),
     sign: buildSign(),
+    powerups: buildPowerups(),
   };
 }

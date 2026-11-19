@@ -95,6 +95,28 @@ export const GROUND_Y = 0;
 export const MAX_HEARTS = 3;
 export const INVULNERABLE_TIME = 1.6;
 
+// --- Power-ups (src/powerups.js, spawn rule in level.js) ---
+// One at a time: collecting one ends the one that runs. Each lasts a few
+// seconds; in the last POWER_WARN seconds its effect on the prince flickers
+// and three blips count it out.
+export const POWER_TIME = { star: 12, cloak: 10, spring: 8.75, magnet: 12.5, feather: 8.75 };
+export const POWER_WARN = 1.5;
+export const POWER_GRACE = 0.8;        // after the star or the cloak ends: this long still safe (the hurt blink shows it)
+export const POWER_FIRST = [1500, 2500];  // the first one waits at 15 to 25 m, so every run meets one
+export const POWER_EVERY = [6500, 10500]; // then one every 65 to 105 m of climb
+// Golden spring: every bounce and every boost is stronger, with a somersault.
+export const SUPER_JUMP_MUL = 1.25;    // bounce 1650 -> 2062 px/s (apex 648 -> 1012 px)
+export const SUPER_BOOST_VY = 1900;    // instead of BOOST_VY
+export const SUPER_MAX_VY = 3000;      // a bow spring under the golden spring stops here (apex ~21 m)
+export const SALTO_TIME = 0.6;         // one somersault per bounce, a quicker one per boost
+// Sun magnet: suns, lanterns and hearts this near the prince's body fly to him.
+export const MAGNET_RADIUS = 380;
+export const MAGNET_SPEED = [500, 1800];  // a pulled pickup starts at the first and speeds up to the second
+export const MAGNET_ACCEL = 3600;
+// Feather: he comes down slowly, so there is twice the time to steer to a landing.
+export const FEATHER_GRAVITY = 0.4;    // of GRAVITY, while falling
+export const FEATHER_MAX_FALL = 600;
+
 // Scoring: 100 px == 1 m of tower climbed
 export const PX_PER_METER = 100;
 

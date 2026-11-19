@@ -86,8 +86,10 @@ shell first and filling it later. Conditions that make this hold up:
   tuned before the next one starts.
 - **Dev helpers** that grow with need: ✅ `?at=150` starts at an altitude,
   `?spawn=squirrel` puts an element on the next branch, `?spawn=storm`
-  turns the next cloud into a storm cloud, `?dev=1` shows altitude and
-  zone, `?len=stub` makes every branch one length class. The simulator can
+  turns the next cloud into a storm cloud, `?spawn=star` (or `cloak`,
+  `spring`, `magnet`, `feather`) hangs that power-up above the prince,
+  `?dev=1` shows altitude and zone, `?len=stub` makes every branch one
+  length class. The simulator can
   start at an altitude (`tools/analyze.mjs ... <cap> <seedBase> <startM>`)
   to measure one zone. 💡 later: toggle invulnerability, freeze the witch,
   show hitboxes.
@@ -114,7 +116,9 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
 - Enemies: crow (patrols, homes in with altitude, stompable), spider
   (hangs on a thread, lunges when you pass below, stompable), witch
   (marker and cackle, crosses above you, dives, twice near the top).
-- Pickups: sun drops, lanterns (boost refill), hearts.
+- Pickups: sun drops, lanterns (boost refill), hearts; five timed
+  power-ups floating in soap bubbles (star, cloak, golden spring, sun
+  magnet, feather; section 7), one at a time.
 - Three hearts; game over on zero hearts or falling off the bottom.
 - Procedural level in rows (the original's beats) with difficulty by
   altitude and a stress-tested reachability guarantee.
@@ -163,8 +167,9 @@ one-time hint for the shield. Plus the headless gameplay simulator.
 **Key files**: `web/src/config.js` (tunables and the `FX` block),
 `web/src/level.js` (tiers, pacing, rows), `web/src/background.js` (layers,
 sky, lighting), `web/src/enemies.js`, `web/src/platforms.js`,
-`web/src/player.js`, `web/src/atmosphere.js` (leaves, fog, shafts,
-life), `web/src/altitude.js` (zone-keyed curves), `web/src/gfx/*`
+`web/src/player.js`, `web/src/powerups.js` (the power-ups' table; their
+rules sit in `config.js`, `level.js`, `player.js`, `world.js`),
+`web/src/atmosphere.js` (leaves, fog, shafts, life), `web/src/altitude.js` (zone-keyed curves), `web/src/gfx/*`
 (renderer facade, atlas, filters),
 `web/src/art/*` (procedural sprites), `web/dev/sprites.html` (sprite
 sheet), `web/dev/sim.html` + `tools/analyze.mjs` (simulator).
@@ -358,8 +363,48 @@ is a pool to draw from, not a promise.
   light trails and speed-line blur. The best single "get higher" device.
 - 💡 zone portals: at a zone boundary, a wormhole / light-bridge warp into
   the next zone (the campaign's tower transition, reused).
-- 💡 timed power-ups: invulnerability star, jump power / speed-up.
-- 💡 magnet for suns and lanterns (store).
+- ✅ timed power-ups (plan in `docs/plans/power-ups.md`): five items
+  floating in soap bubbles, one
+  every 65 to 105 m of climb (the first at 15 to 25 m), each for a few
+  seconds, **one at a time** (a new one ends the one that runs). Each
+  shows on the prince, flickers through its last 1.5 s with three blips,
+  and has its picture and a bar at the top of the HUD.
+  - **Star** (12 s, a smiling shooting star with a rainbow tail):
+    invincible. What he touches is knocked away like under the boost
+    shield (+3 suns each, the witch is thrown off, a cut is fended off),
+    lightning does nothing. A rainbow rim runs around him, a wash of
+    colour over him, a rainbow trail behind; no halo around it.
+  - **Cloak** (10 s, a hood with nobody in it but two eyes): invisible.
+    Nothing with eyes notices him (crows do not home in, spiders do not
+    lunge, squirrels do not dash, guards do not thrust, window guards
+    stay down, pots do not wobble) and he passes through it; a pogo on
+    a head still counts. Squirrels and guards stand puzzled with a "?",
+    the witch does not set out and one who is crossing flies on with a
+    "?"; birds and butterflies stay put. Lightning does not need to see
+    him: the one thing the cloak does not stop. He is a pale glassy
+    figure with a shimmering rim, so the player still sees him.
+  - **Golden spring** (8.75 s, a toy launcher with a red cushion): every
+    bounce 1.25 times as strong (648 → 1012 px), a boost 1900 instead of
+    1500 px/s, a bow spring up to 3000 px/s; a somersault with each
+    bounce and boost in the direction he faces, golden after-images.
+  - **Sun magnet** (12.5 s, a red horseshoe): suns, lanterns and hearts
+    within 380 px fly to him, leaving sparks; nothing is drawn around the
+    prince for it, what flies to him is the sign. Never pulls
+    another power-up; what is on its way keeps coming when it runs out.
+  - **Feather** (8.75 s, the stork's): he comes down slowly (40 % gravity,
+    at most 600 px/s while falling; the way up is untouched), with two
+    small wings on his back. The one made for the youngest players:
+    falls are how their runs end.
+  When the star or the cloak ends he is safe for another 0.8 s. Which
+  item comes is a weighted pick per zone and pacing (star and cloak with
+  the enemies' pacing, never in a breather or below 30 m; the magnet
+  with the suns'; never the same twice in a row; more feather and less
+  spring on the forest floor, more cloak at the windows, more feather
+  and star above the trees), rolled on a stream of its own.
+- 💡 more power-ups: an hourglass that slows every enemy; a sun shower
+  (suns worth double, or a trail of suns to follow); a bubble that
+  carries him back up once when he falls out of the view. 💡 mushrooms
+  as the negative one (see enemies).
 
 **Tunnels and the inside of the tower**
 - 💡 doors and openings lead inside; the game continues on stairs, steps
@@ -462,8 +507,9 @@ is a pool to draw from, not a promise.
 
 **Store and meta progression**
 - 💡 suns as persistent currency, bought between towers or from the title.
-- 💡 upgrades: fourth heart, fourth boost charge, longer shield, lantern /
-  sun magnet, stronger springs, a helmet variant of boost protection.
+- 💡 upgrades: fourth heart, fourth boost charge, longer shield, longer
+  power-ups or a wider sun magnet, stronger springs, a helmet variant of
+  boost protection.
 - 💡 cosmetics: braid colors and styles, capes and crowns, palettes.
 - Principle: base defenses stay free; the store is also a difficulty valve
   for kids (collect suns on easy towers, buy a heart).
@@ -542,6 +588,12 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Guard / flowerpot sizes | guard 34 × 48 art px (the prince is 26 × 58), pot 12 × 13 |
 | Guards / flowerpots per balcony | guard 0.25 → 0.45 × zone 0.5, pot 0.25 → 0.45 × zone 0.8 (tier 2 → 5), × pacing |
 | Enemy onset | crows 22 m, spiders 65 m, witch 120 m (then every 75–105 m), squirrels 120 m, window guards 250 m, the witch with scissors 300 m |
+| Power-ups | one every 65–105 m of climb, the first at 15–25 m; x within ± 190 px between two rows; 88 px box (the bubble) |
+| Power-up durations | star 12 s, cloak 10 s, golden spring 8.75 s, sun magnet 12.5 s, feather 8.75 s; the last 1.5 s flicker with three blips; 0.8 s of grace after star and cloak |
+| Power-up weights | magnet 1.0, spring 1.0, star 1.0, cloak 0.9, feather 0.8 × zone (floor: star 0.5, cloak 0.3, spring 0.6, feather 1.3; windows: cloak 1.4, feather 0.8; sky: star 1.2, cloak 0.6, feather 1.5) × pacing (star, cloak: the enemies', 0 below 30 m; magnet: the suns') |
+| Golden spring | bounce × 1.25 (1650 → 2062 px/s, apex 648 → 1012 px), boost 1900 px/s, capped at 3000 px/s off a bow; somersault 0.6 s per bounce, 0.42 s per boost |
+| Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
+| Feather | 40 % gravity and at most 600 px/s while falling |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -919,3 +971,67 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   branches got clean stair edges; the crow's wings, the witch's cape and
   the bows' tails turned ragged, accepted for now; they are the next to
   redraw as row spans.
+- 2026-11-18: Power-ups (branch `claude/quirky-hawking-odhpnu`, plan in
+  `docs/plans/power-ups.md`): the game had hearts and the boost refill
+  and nothing that changes how a stretch plays. Five now, each for a few
+  seconds, one at a time: the star (invincible), the cloak (invisible),
+  the golden spring (stronger bounces and boosts), the sun magnet and
+  the feather (slow fall). The first four were asked for; the feather is
+  ours, because nothing helped with a fall, which is how the youngest
+  players' runs end. Decisions on the way:
+  the cloak is not a second star: enemies do not notice him and he
+  passes through them, but nothing is knocked away, a pogo on a head
+  still counts, and lightning strikes him all the same (it does not need
+  to see him); to be played and judged, a kid may find that unfair.
+  The items float in soap bubbles: a thin shell on purpose (the sprite
+  guide warns of thin lines carrying a shape; a bubble is one), it makes
+  the five one family and a bigger thing to catch. The star is a
+  shooting star with a rainbow tail and shut smiling eyes, so it is ours.
+  The rainbow on the prince was first three hues added over him and
+  read as white; it is a rim now, drawn from a flat white copy of every
+  pose (`art.prince.rightSil` / `leftSil`) a pixel or two to each side,
+  each side its own hue. Glows are kept low: with bloom on, six seconds
+  of full glow turned him into a white blob. Somersaults for the spring
+  as on the title and the landing page. Power-ups roll on a stream of
+  their own (the fifth), so the tower is identical with and without them
+  (checked on three seeds: platforms, enemies and the other pickups
+  match). Paired seeds, 120 runs each, before → after: good bold from
+  0 m median 376 → 434 m, mean 404 → 505 m, 0.98 → 0.95 hits per 100 m
+  (the bands from 100 to 800 m between 0.84 and 1.53), falls 45 → 41 %
+  of deaths, 500 m reached by 27 → 41 %; from 450 m mean climb 231 →
+  293 m, 1.78 → 1.44 hits per 100 m, falls 35 → 42 %; good cautious mean
+  225 → 247 m; kid bold mean 70 → 77 m, 100 m reached by 23 → 28 %; kid
+  cautious 62 → 70 m, 18 → 25 %. So good runs get about a quarter
+  longer: catches go from 0.136 to 0.116 per 100 m and falls from 0.111
+  to 0.081.
+  The good bold bot collects 78 % of the items it passes and has one
+  running 31 % of the time. No power-up kills the good bot: of 119
+  deaths 92 came with none running, magnet 12, spring 9, feather 5,
+  cloak 1, star 0, each near or under its share of the time (the spring
+  9 where 7 would be its share). For the kid bot the feather protects (4
+  of 34 pickups end in a death while it runs, where 7 s cost a kid run
+  about 9) and the spring is the risky one (11 of 25, where about 7
+  would be expected), so the forest floor leans to the feather (1.3) and
+  away from the spring (0.6). A first spacing of 55 to 90 m
+  had a power-up running 35 % of the time; 65 to 105 m now. Also: a toast
+  that is already up is not shown twice (two lanterns the magnet brings
+  in at once).
+- 2026-11-19: Power-ups after playing them. The rings of dots closing in
+  on the prince under the magnet got in the way and are gone: the suns
+  flying to him are the sign, with the HUD's bar for the time left. The
+  magnet reaches 380 px instead of 300. Every power-up lasts a quarter
+  longer (star 6 → 7.5 s, cloak 8 → 10 s, spring and feather 7 → 8.75 s,
+  magnet 10 → 12.5 s). The star keeps its rainbow rim and loses the soft
+  halo behind it, which took away from the rim. Paired seeds, 120 runs
+  each, without power-ups → first build → now: good bold from 0 m median
+  376 → 434 → 422 m, mean 404 → 505 → 482 m, 0.98 → 0.95 → 0.89 hits per
+  100 m, falls 45 → 41 → 48 % of deaths, a power-up running 31 → 37 % of
+  the time; from 450 m mean climb 231 → 293 → 318 m, 1.78 → 1.44 → 1.43
+  hits per 100 m; kid bold mean 70 → 77 → 81 m, 100 m reached by 23 → 28
+  → 32 %. So the longer power-ups move the heights no further than the
+  noise between two builds, but the deep forest band (100 to 200 m) now
+  reads 0.62 hits per 100 m (0.84 in the first build, 0.90 without
+  power-ups), under the 0.8 target: if it plays too easy there, the
+  spacing (`POWER_EVERY`, 65 to 105 m) is the valve.
+- 2026-11-19: The star lasts 12 s (was 7.5 s), asked for after playing.
+  Not measured in the simulator.

@@ -23,7 +23,10 @@ class BotInput {
 
 // The scripted player: steers toward the next platform, dodges enemies in
 // its path and uses boosts to save a fall or (policy 'bold') to punch
-// through an enemy above.
+// through an enemy above. Power-ups: it goes for one it can reach on the
+// way up; under the star it dodges nothing (and spends no boost on a
+// punch), under the cloak nothing but lightning; the spring, the magnet and
+// the feather change what its steering already does.
 class Bot {
   constructor(world, input, skill, policy, rng) {
     this.world = world; this.input = input; this.s = SKILLS[skill]; this.policy = policy; this.rng = rng;
@@ -71,10 +74,26 @@ class Bot {
       let dx = aimX - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
       if (Math.abs(dx) > 16) axis = dx > 0 ? 1 : -1;
     }
+    // A power-up within reach on the way up: worth leaving the line for, as
+    // long as there is time to get under it before its height is passed.
+    if (p.vy > 200) {
+      for (const k of w.pickups) {
+        if (!k.alive || k.kind !== 'power') continue;
+        const dy = k.y - (p.y + 110);
+        if (dy < -60 || dy > apexLeft) continue;
+        let dx = k.x - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+        const tUp = dy <= 0 ? 0.1 : (p.vy - Math.sqrt(Math.max(0, p.vy * p.vy - 2 * GRAVITY * dy))) / GRAVITY;
+        if (Math.abs(dx) > 30 + 480 * (tUp + 0.25)) continue;
+        if (Math.abs(dx) > 16) axis = dx > 0 ? 1 : -1;
+        break;
+      }
+    }
     // Enemies in the way: within dodgeRange horizontally and in the body's vertical path.
     let threat = null;
+    const fearless = p.power === 'star', unseen = p.hidden;
     for (const e of w.enemies) {
-      if (!e.alive || e.dead) continue;
+      if (!e.alive || e.dead || fearless) continue;
+      if (unseen && e.kind !== 'lightning') continue;
       let dx = e.x - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
       if (e.kind === 'lightning') {
         // keep out of the column while the storm cloud charges or strikes
@@ -142,7 +161,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0 };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
@@ -153,6 +172,8 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   const origStomp = world.onPlayerStomp.bind(world);
   world.onPlayerStomp = (pl, e) => { stats.stomps++; origStomp(pl, e); };
   if (world.onBoostPunch) { const o = world.onBoostPunch.bind(world); world.onBoostPunch = (pl, e) => { stats.punches++; o(pl, e); }; }
+  world.onPowerStart = (pl, kind) => { stats.powers[kind] = (stats.powers[kind] || 0) + 1; };
+  const seenPowers = new Set();
   const origCut = world.cutBraid.bind(world);
   world.cutBraid = (ly, bx, y) => { stats.cuts++; stats.cutAt.push(world.player.maxY); origCut(ly, bx, y); };
   let t = 0, witchSeen = 0, scissorsSeen = 0;
@@ -160,6 +181,8 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
     bot.step(STEP);
     world.update(STEP);
     t += STEP;
+    if (world.player.power) stats.powerTime += STEP;
+    for (const k of world.pickups) if (k.kind === 'power' && !seenPowers.has(k.id)) { seenPowers.add(k.id); if (k.y <= world.player.maxY + 1400) stats.powerSpawns++; else seenPowers.delete(k.id); }
     const wc = world.enemies.filter((e) => e.kind === 'witch').length;
     if (wc > witchSeen) stats.witches++;
     witchSeen = wc;
@@ -171,6 +194,8 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   stats.climb = Math.max(0, world.heightM - startM);
   stats.time = t;
   stats.cause = world.over ? world.player.deathCause : (world.heightM >= cap ? 'cap' : 'timeout');
+  stats.suns = world.suns;
+  if (world.over) stats.deathPower = world.player.deathPower || 'none';
   if (stats.cause === 'fell') stats.fellBand = band();
   // a fall in the 15 m above a cut is the cut's doing (the stretch without ribbons)
   if (stats.cause === 'fell' && stats.cutAt.some((c) => world.player.maxY >= c && world.player.maxY - c < 1500)) stats.fellAfterCut = 1;
@@ -197,6 +222,9 @@ function summarize(all, cfg) {
   for (const s of all) { for (let b = Math.floor(s.startM / 100) * 100; b < s.height; b += 100) bandMetres[b] = (bandMetres[b] || 0) + Math.min(100, s.height - b) - Math.max(0, s.startM - b); }
   const causes = {};
   for (const s of all) causes[s.cause] = (causes[s.cause] || 0) + 1;
+  const powers = {}, deathPower = {};
+  for (const s of all) { for (const k of Object.keys(s.powers)) powers[k] = (powers[k] || 0) + s.powers[k]; if (s.deathPower) deathPower[s.deathPower] = (deathPower[s.deathPower] || 0) + 1; }
+  const totalTime = all.reduce((a, s) => a + s.time, 0);
   const fallsByBand = {};
   for (const s of all) if (s.fellBand != null) fallsByBand[s.fellBand] = (fallsByBand[s.fellBand] || 0) + 1;
   const deaths = all.filter((s) => s.cause === 'fell' || s.cause === 'caught').length;
@@ -212,6 +240,8 @@ function summarize(all, cfg) {
     hitsByBandKind: bandKinds,
     hearts: total('hearts'), lanterns: total('lanterns'), boosts: total('boosts'), stomps: total('stomps'), punches: total('punches'), witches: total('witches'),
     scissors: total('scissors'), cuts: total('cuts'), fellAfterCut: total('fellAfterCut'),
+    powers, powerSpawns: total('powerSpawns'), powerShare: totalTime ? +(total('powerTime') / totalTime).toFixed(2) : 0, deathPower,
+    suns: total('suns'), speed: totalTime ? +(totalM / totalTime).toFixed(2) : 0,
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
   };
 }
@@ -229,5 +259,7 @@ export function formatReport(r) {
   lines.push(`hits by band and enemy: ${JSON.stringify(r.hitsByBandKind)}`);
   lines.push(`hearts ${r.hearts}, lanterns ${r.lanterns}, boosts ${r.boosts}, stomps ${r.stomps}, boost-punches ${r.punches}, witch events ${r.witches}`);
   lines.push(`scissors events ${r.scissors}, braid cuts ${r.cuts}, falls within 15 m above a cut ${r.fellAfterCut}`);
+  lines.push(`power-ups: ${JSON.stringify(r.powers)} of ${r.powerSpawns} passed, active ${Math.round(r.powerShare * 100)}% of the time; deaths by running power-up ${JSON.stringify(r.deathPower)}`);
+  lines.push(`suns ${r.suns}, climb speed ${r.speed} m/s`);
   return lines.join('\n');
 }

@@ -284,6 +284,41 @@ class Synth {
     platform.haptic('bounce', 1);
     [659, 784, 988, 1319].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.3, vol: 0.16, delay: i * 0.08 }));
   }
+  // A power-up starts: each has its own short motif.
+  power(kind) {
+    platform.haptic('spring');
+    if (kind === 'star') {
+      // a bright run up two octaves with a shimmer on top
+      [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.22, vol: 0.15, delay: i * 0.05 }));
+      this.tone({ type: 'sine', freq: 3136, dur: 0.5, vol: 0.05, delay: 0.3 });
+    } else if (kind === 'cloak') {
+      // a whisper and a whole-tone step down: gone
+      this.noise({ dur: 0.5, vol: 0.14, filter: 'bandpass', freq: 3000, to: 500, q: 0.8 });
+      [988, 880, 784, 698, 622].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.22, vol: 0.11, delay: i * 0.07 }));
+    } else if (kind === 'spring') {
+      // boing: two sweeps, the second higher
+      this.tone({ type: 'square', freq: 180, to: 720, dur: 0.16, vol: 0.1 });
+      this.tone({ type: 'sine', freq: 240, to: 960, dur: 0.18, vol: 0.18 });
+      this.tone({ type: 'square', freq: 260, to: 1300, dur: 0.22, vol: 0.1, delay: 0.16 });
+      this.tone({ type: 'sine', freq: 340, to: 1700, dur: 0.26, vol: 0.18, delay: 0.16 });
+    } else if (kind === 'magnet') {
+      // a hum that pulls upward, twice
+      for (let i = 0; i < 2; i++) {
+        this.tone({ type: 'sawtooth', freq: 110, to: 330, dur: 0.2, vol: 0.09, delay: i * 0.2, slide: 'linear' });
+        this.tone({ type: 'sine', freq: 440, to: 1320, dur: 0.2, vol: 0.14, delay: i * 0.2 });
+      }
+    } else {
+      // the feather: breath and three soft notes floating down
+      this.noise({ dur: 0.6, vol: 0.1, filter: 'bandpass', freq: 1200, to: 2600, q: 0.6 });
+      [1319, 1047, 880].forEach((f, i) => this.tone({ type: 'sine', freq: f, dur: 0.4, vol: 0.12, delay: i * 0.12 }));
+    }
+  }
+  // the last moments of a power-up, three times; then its end
+  powerWarn() { this.tone({ type: 'triangle', freq: 990, dur: 0.07, vol: 0.1 }); }
+  powerEnd() {
+    this.tone({ type: 'triangle', freq: 660, to: 330, dur: 0.22, vol: 0.12 });
+    this.tone({ type: 'sine', freq: 440, to: 220, dur: 0.25, vol: 0.08, delay: 0.05 });
+  }
   witchWarn() {
     // "heh-heh-heh" cackle: short descending FM-ish blips.
     for (let i = 0; i < 5; i++) {

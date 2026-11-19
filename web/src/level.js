@@ -1,7 +1,7 @@
-import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER } from './config.js';
+import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
 import { Platform, CLOUD_SIZE } from './platforms.js';
 import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber } from './enemies.js';
-import { Sun, Lantern, Heart } from './pickups.js';
+import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
 import { windowsBetween } from './windows.js';
@@ -28,10 +28,10 @@ const TIERS = [
 // other. An element's rule is: tier chance x pacing x zone multiplier,
 // starting at the band where its multiplier first becomes positive.
 export const ZONES = [
-  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0 } },
+  { name: 'forest floor', from: 0,     mul: { crow: 1.0, spider: 1.0, squirrel: 0.0, stub: 0.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
   { name: 'deep forest',  from: 12000, mul: { crow: 0.6, spider: 1.0, squirrel: 1.0, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 0.0, scissors: 0.0 } },
-  { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0 } },
-  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0 } },
+  { name: 'windows',      from: 25000, mul: { crow: 0.6, spider: 0.5, squirrel: 0.5, stub: 1.0, balcony: 0.0, guard: 0.0, pot: 0.0, grabber: 1.0, scissors: 1.0, cloak: 1.4, feather: 0.8 } },
+  { name: 'above the trees', from: 40000, mul: { crow: 1.0, spider: 0.3, squirrel: 0.3, stub: 0.7, storm: 1.0, balcony: 0.4, guard: 0.5, pot: 0.8, grabber: 0.6, scissors: 1.0, star: 1.2, cloak: 0.6, feather: 1.5 } },
 ];
 export function zoneAt(y) {
   let z = ZONES[0];
@@ -51,6 +51,19 @@ export function pacingAt(y) {
   const t = phase / (PACE_CYCLE - PACE_BREATHER);          // 0 at the start of a cycle, 1 at the peak
   return { breather: false, enemy: 0.75 + 0.45 * t, dry: 0.8 + 0.4 * t, short: 0.8 + 0.4 * t, long: 1, gap: 1, sun: 1, lantern: 1 };
 }
+
+// Power-ups (src/powerups.js): one item every POWER_EVERY px of climb, the
+// first within POWER_FIRST. Which one is a weighted pick: the weight here x
+// the zone's multiplier x pacing (the star and the cloak follow the enemies'
+// pacing, so none in a breather and none on the first 30 m, where there is
+// nothing to fend off; the magnet follows the suns' and likes a breather),
+// never the same twice in a row. The zones lean toward what helps there: the
+// feather on the forest floor (where the youngest play and falls end the
+// run; the spring is the one that makes landing harder, so less of it), the
+// cloak at the windows (guards, the witch), the feather above the trees
+// (clouds are where falls happen; lightning does not care about the cloak).
+const POWER_WEIGHT = { magnet: 1.0, spring: 1.0, feather: 0.8, star: 1.0, cloak: 0.9 };
+const POWER_CALM = 3000;        // below this height no star and no cloak
 
 // The braid cut. From CUT_FROM on, every CUT_EVERY of climb the generator
 // plans a cut stretch from the row it is at (`from`) to CUT_AHEAD above it
@@ -87,6 +100,7 @@ export class Level {
     this.rng = rng;              // the geometry stream: rows, lengths, enemies, suns, lanterns
     this.rngHearts = rng;        // hearts depend on the prince's state, so they get a stream of their own
     this.rngTower = rng;         // what the tower does (window guards): rolled apart so the geometry stays comparable
+    this.rngPower = rng;         // the power-ups: their own stream, so the tower is the same with and without them
     this.forceLen = null;        // dev: every branch gets this length class
   }
 
@@ -112,6 +126,20 @@ export class Level {
     this.lastBalconyRow = -9;    // row index of the last balcony row
     this.nextCutY = CUT_FROM;    // the next braid cut is planned at the first row from here
     this.cutPlan = null;         // { from, yc, until, fired }: the stretch kept free of braid-only rows
+    this.lastPower = null;       // the kind of the last power-up (never twice in a row)
+    this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
+  }
+
+  // Which power-up for a row at height y with pacing P; null when none fits.
+  pickPower(y, P) {
+    const items = [];
+    for (const kind of Object.keys(POWER_WEIGHT)) {
+      let w = kind === this.lastPower ? 0 : POWER_WEIGHT[kind] * zoneMul(y, kind);
+      if (kind === 'star' || kind === 'cloak') w *= y < POWER_CALM ? 0 : P.enemy;
+      if (kind === 'magnet') w *= P.sun;
+      if (w > 0) items.push([kind, w]);
+    }
+    return items.length ? this.rngPower.weighted(items) : null;
   }
 
   // Is row height y inside the planned cut's stretch?
@@ -390,6 +418,17 @@ export class Level {
     if (pity || (this.rowsSinceHeart > 12 && hearts < 3 && rh.chance(0.25))) {
       this.world.pickups.push(new Heart(rh.range(-200, 200), y + gap * 0.5, rh));
       this.rowsSinceHeart = 0;
+    }
+
+    // A power-up between this row and the next, where the climb passes anyway.
+    if (y >= this.nextPowerY) {
+      const rp = this.rngPower;
+      const kind = this.pickPower(y, P0);
+      if (kind) {
+        this.world.pickups.push(new PowerUp(kind, rp.range(-190, 190), y + gap * 0.5, rp));
+        this.lastPower = kind;
+        this.nextPowerY = y + rp.range(POWER_EVERY[0], POWER_EVERY[1]);
+      }
     }
 
     this.nextY = y + gap;

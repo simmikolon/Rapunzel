@@ -1,4 +1,5 @@
-import { W, H, H_MIN, SAFE, BOOST_CHARGES, MAX_HEARTS } from './config.js';
+import { W, H, H_MIN, SAFE, BOOST_CHARGES, MAX_HEARTS, POWER_WARN } from './config.js';
+import { POWERS } from './powerups.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
 import { drawSign, signHeight, drawPlankTag, drawRibbon, drawPlaque, paint, INK_RED, FRAME, BOARD } from './sign.js';
@@ -183,6 +184,18 @@ export class HUD {
     for (let i = 0; i < MAX_HEARTS; i++) {
       const full = i < pl.hearts;
       g.blit(full ? art.creatures.heart : art.creatures.heartEmpty, W - 48 - i * 50, top + 60, full ? { glow: 0.35 } : undefined);
+    }
+    // The power-up that runs: its picture and the time left as a bar, top
+    // centre; it blinks through its last moments like the effect on the prince.
+    if (pl.power && pl.alive) {
+      const P = POWERS[pl.power], k = clamp(pl.powerT / pl.powerMax, 0, 1);
+      const cx = W / 2, cy = top + 62;
+      const on = pl.powerT > POWER_WARN || Math.floor(pl.powerT * 9) % 2 === 0;
+      g.roundRect(cx - 84, cy - 34, 168, 68, 12, { fill: 'rgba(16,32,36,0.6)', stroke: on ? P.color : C.uiLine, width: 3 });
+      const icon = art.powerups[pl.power][0];
+      g.blit(icon, cx - 48, cy, { glow: 0.2, alpha: on ? 1 : 0.5 });
+      g.rect(cx - 12, cy - 8, 80, 16, C.uiDark, 0.8);
+      g.rect(cx - 12, cy - 8, Math.round(80 * k / 4) * 4, 16, P.color, on ? 1 : 0.5, { glow: 0.2 });
     }
     // Boost charges
     const bx = 28, by = H - 78 - bottom;

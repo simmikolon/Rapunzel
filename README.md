@@ -93,8 +93,9 @@ countdown on the knight's hops; MENU on the pause and game-over screens
 leads back to the title. `M` toggles sound, `F` (or the button on the
 title screen) cycles the screen effects (off to begin with). The best
 height and the effects the player picked are kept in `localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
-`?spawn=squirrel` puts one on the next branch, `?dev=1` shows altitude and
-zone.
+`?spawn=squirrel` puts one on the next branch, `?spawn=star` (or `cloak`,
+`spring`, `magnet`, `feather`) hangs that power-up above the knight,
+`?dev=1` shows altitude and zone.
 
 ### What was ported from the prototype
 
@@ -135,6 +136,12 @@ custom engine instead of SpriteKit physics and GameplayKit:
 * **Hearts and a boost meter**: three hearts, invulnerability flashing after
   a hit; three boost charges refilled by landings and floating lanterns.
 * **Pickups**: sun drops, lanterns (boost refill) and hearts.
+* **Power-ups** (new in the browser version): five that float in soap
+  bubbles and last a few seconds, one at a time: a shooting star
+  (invincible, in a rainbow), a cloak (invisible to everything with
+  eyes), a golden spring (stronger bounces and boosts, with somersaults),
+  a sun magnet (suns, lanterns and hearts fly to him) and a stork's
+  feather (he comes down slowly).
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
   debris, boost flames, feathers, screen shake, a swaying braid that moves
   the ribbons (harder with altitude), sky and lighting keyed to the zones
