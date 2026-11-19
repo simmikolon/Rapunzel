@@ -446,6 +446,142 @@ function drawCog(t) {
   disc(12, 12, 2, K.iron); p(11, 11, 1, 1, K.ironHi);
 }
 
+// --- the gallery ---------------------------------------------------------------
+// The tower is the witch's house, so its pictures are hers: herself, her
+// grandmother, her cat, her raven, the rampion in her garden that the tale
+// began with, the tower in its forest. (Rapunzel's own portrait is the gilt
+// frame above with the sign's Rapunzel in it.) Sizes differ, frames are dark
+// wood or gilt, two px wide; each hangs from its top middle. Where a face
+// looks out of a picture its eyes are left white: the painter (interior.js)
+// puts the pupils in, turned toward the prince (PICTURES says where).
+const WOOD = { hi: C.plankHi, base: C.plank, dark: C.plankDark }, GILT = { hi: C.braidHi, base: C.braid, dark: C.braidDark };
+const HAG = { skin: C.witchSkin, skinShade: '#a3c48a', lip: '#5a2a4a' };
+export const PICTURES = [
+  { key: 'witch',   w: 28, h: 34, eyes: [[11, 16], [16, 16]], ew: 3 },
+  { key: 'granny',  w: 22, h: 28, eyes: [[8, 12], [13, 12]], ew: 3 },
+  { key: 'cat',     w: 16, h: 16, eyes: [[5, 8], [9, 8]], ew: 2 },
+  { key: 'raven',   w: 16, h: 18 },
+  { key: 'rampion', w: 16, h: 20 },
+  { key: 'tower',   w: 28, h: 18 },
+  { key: 'rapunzel', w: 24, h: 27 },             // the gilt frame (`frame`) with the sign's portrait
+];
+function picFrame(t, w, h, m) {
+  const { p } = t;
+  p(0, 0, w, h, m.base); p(0, 0, w, 1, m.hi); p(0, 0, 1, h, m.hi); p(w - 1, 1, 1, h - 1, m.dark); p(1, h - 1, w - 1, 1, m.dark);
+  p(1, 1, w - 2, 1, m.base); p(2, h - 2, w - 3, 1, m.dark); p(w - 2, 2, 1, h - 3, m.dark);
+  for (const [x, y] of [[0, 0], [w - 2, 0], [0, h - 2], [w - 2, h - 2]]) p(x, y, 2, 2, m.hi);
+}
+// The witch from the shoulders up, in an 18 x 24 box at (ox, oy): the hat,
+// the wild hair, the long nose. `granny`: grey hair, a plum hat, a shawl, spectacles.
+function drawHag(t, ox, oy, granny) {
+  const { p, disc } = t;
+  const hair = granny ? K.chainHi : C.witchHair, hat = granny ? C.witchDressHi : C.witchHat, hatHi = granny ? '#6a4a94' : C.witchDressHi;
+  const P = (x, y, w, h, c) => p(ox + x, oy + y, w, h, c);
+  // dress or shawl
+  P(2, 19, 14, 5, granny ? C.tunicDark : C.witchDress); P(6, 19, 6, 2, granny ? C.tunic : C.witchDressHi); P(8, 21, 2, 1, C.gold);
+  // hair, wild, behind the face
+  P(2, 8, 3, 10, hair); P(13, 8, 3, 9, hair); P(1, 12, 1, 5, hair); P(16, 11, 1, 4, hair); P(3, 17, 2, 2, hair); P(14, 16, 2, 2, hair);
+  // the face
+  disc(ox + 9, oy + 12, 5, HAG.skin); P(8, 17, 3, 2, HAG.skin); P(13, 10, 1, 5, HAG.skinShade); P(8, 18, 3, 1, HAG.skinShade);
+  P(10, 12, 2, 2, HAG.skin); P(11, 14, 2, 1, HAG.skin); P(12, 14, 1, 1, HAG.skinShade); P(6, 14, 1, 1, HAG.skinShade);     // the nose, a wart
+  P(6, 10, 3, 2, C.eyeWhite); P(11, 10, 3, 2, C.eyeWhite);                                                               // eyes: the painter adds the pupils
+  if (granny) { P(5, 9, 5, 1, C.goldDark); P(10, 9, 5, 1, C.goldDark); P(5, 12, 5, 1, C.goldDark); P(10, 12, 5, 1, C.goldDark); P(5, 10, 1, 2, C.goldDark); P(14, 10, 1, 2, C.goldDark); }
+  else { P(5, 9, 4, 1, C.witchHair); P(11, 8, 3, 1, C.witchHair); P(10, 9, 1, 1, C.witchHair); }                        // brows, one raised
+  P(7, 16, 4, 1, HAG.lip); P(10, 15, 1, 1, HAG.lip); P(8, 16, 1, 1, C.white);                                             // a crooked smile, one tooth
+  // the hat: brim, cone, band and buckle, the tip bent over
+  P(0, 6, 18, 2, hat); P(0, 6, 18, 1, hatHi);
+  [[5, 12], [6, 11], [6, 10], [7, 10], [8, 10], [9, 11]].forEach(([x0, x1], i) => P(x0, 5 - i, x1 - x0 + 1, 1, hat));
+  P(5, 5, 8, 1, C.goldDark); P(8, 5, 2, 1, C.gold); P(6, 2, 1, 3, hatHi); P(11, 0, 2, 1, hat);
+}
+function drawPicture(t, key) {
+  const { p, disc, ellipse, line } = t;
+  const d = PICTURES.find((q) => q.key === key), w = d.w, h = d.h;
+  if (key === 'witch') {
+    picFrame(t, w, h, WOOD); p(2, 2, w - 4, 1, C.goldDark); p(2, 2, 1, h - 4, C.goldDark);
+    p(3, 3, w - 5, h - 5, '#4f7180'); p(3, 3, w - 5, 9, '#648b9a'); p(3, h - 12, w - 5, 10, '#3d5967');   // a dusk behind her
+    disc(6, 7, 2, C.sun1); p(7, 6, 2, 2, '#648b9a');                                                      // a sickle moon
+    drawHag(t, 5, 6, false);
+  } else if (key === 'granny') {
+    picFrame(t, w, h, GILT); p(2, 2, w - 4, h - 4, '#7d8a5c'); p(2, 2, w - 4, 8, '#94a06e');
+    drawHag(t, 2, 2, true);
+  } else if (key === 'cat') {
+    picFrame(t, w, h, WOOD); p(2, 2, w - 4, h - 4, '#c9a468'); p(2, 2, w - 4, 4, '#dcbb80');
+    disc(8, 9, 4, C.crow); p(4, 4, 2, 3, C.crow); p(10, 4, 2, 3, C.crow); p(5, 5, 1, 1, C.cheek); p(10, 5, 1, 1, C.cheek);
+    p(5, 6, 6, 1, C.crowHi); p(4, 12, 8, 2, C.crow);
+    p(5, 8, 2, 2, C.sun2); p(9, 8, 2, 2, C.sun2); p(7, 10, 2, 1, C.cheek);                                // eyes: the painter adds the slits
+    p(2, 10, 2, 1, K.chainHi); p(12, 10, 2, 1, K.chainHi);
+  } else if (key === 'raven') {
+    picFrame(t, w, h, GILT); p(2, 2, w - 4, h - 4, '#a9c6d8'); p(2, 2, w - 4, 5, '#c4dcea');
+    ellipse(7, 10, 3, 4, C.crow); disc(9, 6, 2, C.crow); p(11, 6, 2, 1, C.beak); p(9, 5, 1, 1, C.eyeWhite);
+    p(4, 11, 2, 4, C.crow); p(6, 8, 2, 4, C.crowHi); p(2, 14, 12, 1, C.plankDark); p(7, 14, 1, 1, C.beak); p(9, 14, 1, 1, C.beak);
+  } else if (key === 'rampion') {
+    picFrame(t, w, h, WOOD); p(2, 2, w - 4, h - 4, '#e6dcc0'); p(2, 14, w - 4, 4, '#cfc2a0');
+    p(5, 13, 6, 4, C.lanternFrame); p(4, 12, 8, 1, C.lanternFrame); p(5, 13, 1, 4, C.lanternPaper); p(4, 12, 8, 1, C.lanternPaper);
+    ellipse(8, 9, 4, 3, C.grass); p(5, 7, 2, 2, C.grassLight); p(9, 6, 2, 3, C.grassLight); p(7, 8, 2, 3, C.leaf); p(3, 10, 2, 1, C.grass); p(11, 9, 2, 1, C.grass);
+    for (const [x, y] of [[6, 4], [9, 3], [11, 5]]) { p(x, y + 1, 1, 3, C.leaf); p(x, y, 2, 2, '#a57fc4'); p(x, y, 1, 1, C.tights); }
+  } else if (key === 'tower') {
+    picFrame(t, w, h, GILT); p(2, 2, w - 4, 8, '#8fd0ff'); p(2, 7, w - 4, 3, '#bfe6ff');
+    disc(6, 5, 1, C.sun2); p(16, 4, 5, 1, C.white); p(18, 3, 3, 1, C.white);
+    p(2, 10, w - 4, 6, C.grass); p(2, 13, w - 4, 3, C.grassDark); ellipse(8, 11, 4, 2, C.leaf); ellipse(21, 12, 4, 2, C.leaf); ellipse(15, 13, 5, 2, C.grassDark);
+    p(12, 5, 4, 9, '#9fc4bb'); p(15, 5, 1, 9, '#6f988f'); p(11, 4, 6, 1, C.tights); p(12, 3, 4, 1, C.tights); p(13, 2, 2, 1, C.tights);
+    p(13, 7, 2, 2, C.nightDeep); p(13, 9, 1, 4, C.braid);
+  }
+}
+
+// --- small things on the wall ----------------------------------------------------
+// An old candle on an iron sconce, 8 x 15 art px, the anchor where the
+// plate meets the wall: wax has run down its side. Two flames, and one
+// burnt down to a stub (frame 2), a thread of smoke left.
+function drawSconce(t, frame) {
+  const { p } = t;
+  p(3, 10, 2, 5, K.iron); p(3, 10, 1, 5, K.ironHi); p(1, 9, 6, 1, K.iron); p(1, 9, 6, 1, K.ironHi); p(2, 10, 4, 1, K.iron);
+  const top = frame === 2 ? 7 : 3;
+  p(3, top, 2, 9 - top, K.candle); p(3, top, 1, 9 - top, C.white); p(5, top + 1, 1, 3, K.candle); p(2, 8, 1, 1, K.candle);      // the candle and its drips
+  if (frame === 2) { p(4, 5, 1, 2, K.chain); p(3, 3, 1, 2, K.chainDark); return; }
+  p(3, frame ? 0 : 1, 2, frame ? 3 : 2, C.flame2); p(frame ? 4 : 3, frame ? 0 : 1, 1, 1, C.flame3); p(3, 2, 1, 1, C.flame1);
+}
+// A niche in the wall with the witch's things, 18 x 22 art px, hanging from
+// its top middle: potions (0), or a crystal ball and a book (1).
+function drawNiche(t, look) {
+  const { p, disc } = t;
+  p(1, 6, 16, 16, K.frame); disc(8.5, 7, 8, K.frame); p(1, 6, 1, 16, K.frameHi);
+  p(3, 7, 12, 13, '#221e30'); disc(8.5, 8, 6, '#221e30'); p(3, 20, 12, 2, K.frameHi); p(2, 21, 14, 1, K.frameDark);
+  if (look === 0) {
+    for (const [x, hgt, c, hi] of [[4, 6, C.grass, C.grassLight], [8, 8, C.tights, '#a57fc4'], [12, 5, C.tunic, C.tunicHi]]) {
+      p(x, 20 - hgt + 2, 3, hgt - 2, c); p(x, 20 - hgt + 2, 1, hgt - 2, hi); p(x + 1, 20 - hgt, 1, 2, K.candle); p(x + 1, 20 - hgt - 1, 1, 1, C.plank);
+    }
+  } else {
+    p(5, 18, 6, 2, K.bell); p(5, 18, 6, 1, K.bellHi); disc(8, 14, 3, '#9fd0ff'); p(6, 12, 2, 2, C.white); p(10, 15, 1, 2, '#5f9fe0');
+    p(12, 17, 3, 3, C.tights); p(12, 17, 3, 1, '#a57fc4'); p(12, 19, 3, 1, K.candle);
+  }
+}
+// A board with the tower's keys, 20 x 14 art px, hanging from its top middle.
+function drawKeys(t) {
+  const { p } = t;
+  p(0, 0, 20, 4, C.plank); p(0, 0, 20, 1, C.plankHi); p(0, 3, 20, 1, C.plankDark);
+  [[3, 8, K.bell, K.bellHi], [9, 6, K.chain, K.chainHi], [15, 9, K.bell, K.bellHi]].forEach(([x, len, c, hi]) => {
+    p(x, 2, 1, 2, K.iron);
+    p(x - 1, 4, 3, 3, c); p(x, 5, 1, 1, C.plankDark); p(x - 1, 4, 1, 1, hi);                 // the bow
+    p(x, 7, 1, len - 3, c); p(x + 1, 4 + len - 2, 1, 1, c); p(x + 1, 4 + len, 1, 1, c);      // the shank and its bit
+  });
+}
+// A bunch of herbs hung up to dry, 10 x 15 art px, from a nail at its top middle.
+function drawHerbs(t) {
+  const { p } = t;
+  p(4, 0, 2, 1, K.iron); p(4, 1, 2, 3, C.rope);
+  for (const [x, y, n, c] of [[2, 4, 8, C.leaf], [4, 4, 10, C.grass], [6, 4, 9, C.leaf], [3, 5, 7, C.grassDark], [7, 5, 6, C.grass]]) p(x, y, 1, n, c);
+  for (const [x, y] of [[1, 11], [4, 13], [6, 12], [3, 10], [8, 10]]) { p(x, y, 2, 2, '#a57fc4'); p(x, y, 1, 1, C.tights); }
+}
+// A wall clock, 16 x 20 art px, hanging from its top middle; its pendulum
+// (4 x 12, hanging from its top) is drawn apart and swings.
+function drawClock(t) {
+  const { p, disc, ring } = t;
+  p(1, 0, 14, 18, C.plank); p(1, 0, 14, 1, C.plankHi); p(1, 0, 1, 18, C.plankHi); p(14, 1, 1, 17, C.plankDark); p(0, 17, 16, 3, C.plankDark); p(0, 17, 16, 1, C.plank);
+  disc(8, 8, 5, K.candle); ring(8, 8, 5, C.goldDark); p(8, 5, 1, 4, K.iron); p(8, 8, 3, 1, K.iron); p(8, 8, 1, 1, C.gold);
+  for (const [x, y] of [[8, 4], [12, 8], [8, 12], [4, 8]]) p(x, y, 1, 1, C.plankDark);
+}
+function drawPendulum(t) { const { p, disc } = t; p(1, 0, 2, 8, K.iron); disc(2, 9, 2, K.bell); p(1, 8, 1, 1, K.bellHi); }
+
 // --- the gate ----------------------------------------------------------------------
 // A door between the outside and the inside of the tower, on a stone landing
 // he can stand on, 46 x 58 art px, the anchor the landing's top middle. Two
@@ -560,6 +696,13 @@ export function buildInterior() {
     shelf: [0, 1].map((k) => makeSprite(28, 22, (t) => drawShelf(t, k), { ax: 0.5, ay: 0 })),
     cog: makeSprite(24, 24, drawCog, { ax: 0.5, ay: 0.5 }),
     gate: { in: [false, true].map((o) => makeSprite(46, 58, (t) => drawGate(t, 'in', o), undefined, { axPx: 23 * 4, ayPx: 46 * 4 })), out: [false, true].map((o) => makeSprite(46, 58, (t) => drawGate(t, 'out', o), undefined, { axPx: 23 * 4, ayPx: 46 * 4 })) },
+    pictures: Object.fromEntries(PICTURES.filter((d) => d.key !== 'rapunzel').map((d) => [d.key, makeSprite(d.w, d.h, (t) => drawPicture(t, d.key), { ax: 0.5, ay: 0 })])),
+    sconce: [0, 1, 2].map((f) => makeSprite(8, 15, (t) => drawSconce(t, f), undefined, { axPx: 4 * 4, ayPx: 12 * 4 })),
+    niche: [0, 1].map((k) => makeSprite(18, 22, (t) => drawNiche(t, k), { ax: 0.5, ay: 0 })),
+    keys: makeSprite(20, 14, drawKeys, { ax: 0.5, ay: 0 }),
+    herbs: makeSprite(10, 15, drawHerbs, { ax: 0.5, ay: 0 }),
+    clock: makeSprite(16, 20, drawClock, { ax: 0.5, ay: 0 }),
+    pendulum: makeSprite(4, 12, drawPendulum, { ax: 0.5, ay: 0 }),
     banner: [0, 1].map((k) => makeSprite(16, 36, (t) => drawBanner(t, k), { ax: 0.5, ay: 0 })),
     shield: makeSprite(22, 22, drawShield, { ax: 0.5, ay: 0.5 }),
     frame: makeSprite(24, 27, drawFrame, { ax: 0.5, ay: 0 }),

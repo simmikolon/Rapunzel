@@ -531,9 +531,18 @@ is a pool to draw from, not a promise.
     stream of bats between to boost through.
   - ✅ on the walls (purely visual, nothing for the bot): banners in the
     prince's blue and in violet (one each side of the hall's door),
-    shields on crossed pikes, and gilt frames with Rapunzel's portrait,
-    which blinks now and then. By hash, left and right of the window
-    column, at most one a side per storey.
+    shields on crossed pikes, and the gallery. It is the witch's house,
+    so the pictures are hers: herself (large, in dark wood, also over
+    the hall), her grandmother, her cat, her raven, the rampion from
+    her garden, the tower in its forest, and Rapunzel in a gilt frame.
+    They hang one to three together in different sizes, some a little
+    askew. A face that looks out of its frame follows the prince with
+    its eyes; Rapunzel blinks. Small things between: old candles on
+    iron sconces (lit ones light the wall, some are burnt down), the
+    tower's keys on a board, bunches of herbs; niches with the witch's
+    potions or her crystal ball, a wall clock with a swinging pendulum
+    in the belfry. By hash, beside the window column; each floor has
+    its own mix.
   - ✅ stairs: a flight of four stone treads (64 px each, 48 px higher
     each) built out from a pillar on a half arch, the top tread at the
     pillar under a door in it. A row of its own, wide and safe, a
@@ -1465,3 +1474,21 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   ghosts), 95 passages; starting inside, median 408 m, mean 519 m,
   1.01 hits per 100 m, falls 32 %, 95 passages; kid bold median 71 m
   outside and 73 m inside, as without gates.
+- 2026-11-19: The gallery (`element/interior-gallery`). Simon: the
+  tower is where the witch keeps Rapunzel, so it should be the witch
+  whose pictures hang there, in several kinds and sizes, and an old
+  candle here and there, so it looks lived in and old. Decided: the
+  pictures tell whose house it is (the witch, her grandmother with
+  spectacles, her cat, her raven), where the tale began (the rampion
+  her neighbours stole, which is what "Rapunzel" means) and where we
+  are (the tower in its forest); Rapunzel's portrait stays as one of
+  them. A hanging is one to three pictures of different sizes below
+  one another, slightly off, landscapes and still lifes a little
+  askew. The idea of its own: painted eyes are left white and the
+  painter puts the pupils in toward the prince, so the witch watches
+  him climb her tower. The big portrait hangs over the hall so it is
+  the first thing a round passes. Candles are the small thing between
+  the big ones: lit ones use the room's light pools, a third are burnt
+  down. No reds, nothing that could be taken for a platform or a
+  creature (no cage, no armour). Purely visual: the simulator does not
+  draw.
