@@ -37,7 +37,7 @@ export function devParams() {
 // Teleport a fresh round to an altitude (in metres) before it starts.
 // `spawn` is the ?spawn element: a braid cut must be planned before the
 // rows above are generated, so it is handled here.
-export function startAt(world, metres, spawn = '') {
+export function startAt(world, metres, spawn = '', overBranch = false) {
   const y = Math.max(0, metres) * PX_PER_METER;
   if (!y) return;
   if (spawn === 'scissors') world.level.nextCutY = y - 400;
@@ -59,6 +59,10 @@ export function startAt(world, metres, spawn = '') {
   world.hintShown = true;
   world.platforms = world.platforms.filter((q) => q.kind === 'ground');
   world.platforms.push(y > TREELINE_Y && world.place.sky ? new Platform('cloud', y - 10, { x: -190, cloud: 'thick' }) : new Platform('branchL', y - 10, { style: world.place.inside ? STONE_STYLE : 0 })); // something to land on at the start
+  // In the browser the prince starts over that branch, so a round nobody
+  // steers bounces there instead of dropping past it (the simulator keeps
+  // its start in the middle: its reports are measured from there).
+  if (overBranch) p.x = world.platforms[world.platforms.length - 1].x;
   world.enemies.length = 0; world.pickups.length = 0;
   world.level.generateUpTo(world.cam.top + 900);
 }

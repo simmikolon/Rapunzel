@@ -164,7 +164,7 @@ class Game {
     if (this.world.started || this.world.placeName !== config.place) this.world.reset(config.seed, config.place);
     if (this.dev.at) {
       // the dev teleport skips the countdown; it needs the fresh lawn state first
-      startAt(this.world, this.dev.at, this.dev.spawn);
+      startAt(this.world, this.dev.at, this.dev.spawn, true);
       this.world.start();
       this.beginPlaying();
       return;

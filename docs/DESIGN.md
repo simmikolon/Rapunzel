@@ -1613,3 +1613,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   where the ledges are. The walkways, the furniture on them and the
   ladders leant against the bookcases stay; whether that is calm enough
   is to be played next.
+- 2026-11-19: `?at=` starts the prince over the start branch. A browser
+  check with a prince nobody steers failed now and then: with `?at=`
+  he started in the middle while the branch put there for him hangs at
+  the left trunk, so he dropped past it and, in a tower with nothing
+  under the middle, out of the picture (and a power-up he had just
+  taken went with him). In the browser he now starts over that branch.
+  The simulator keeps its start in the middle, so its reports from a
+  start height are the ones they were (the sky's baseline is identical).
