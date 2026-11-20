@@ -47,7 +47,7 @@ which only copies the two folders together). The design document
   of stairs above the start). `?at=150&spawn=gate` puts a gate to the
   other place above the start, in either place;
   `?place=inside&at=50&spawn=vault` puts a golden door to the treasury
-  above the start (`vault1`, `vault2`, `vault3` pick the room);
+  above the start (`vault1` to `vault6` pick the room's first section);
   `?place=inside&at=200&spawn=dark` puts the lights out above the start.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`

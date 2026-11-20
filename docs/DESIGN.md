@@ -629,22 +629,31 @@ is a pool to draw from, not a promise.
     a choice): its leaves carry a sun, its fanlight blazes, it shines
     and glints. The first stands in the hall, between 40 and 70 m, so
     the youngest find one; then one every 200 to 300 m above where the
-    last lets him out. Behind it is a room of its own, 27 m high
-    between the two pillars, in a warmer stone, with a floor and a
-    ceiling: nobody lives in it, nothing crumbles, and nobody falls.
+    last lets him out. Behind it is a room of its own, 47 to 50 m high
+    between the two pillars (three and a half pictures), in a warmer
+    stone, with a floor and a ceiling: nobody lives in it, nothing
+    crumbles, and nobody falls.
     The camera is the tower's (it only climbs; it starts with the floor
     where the lawn lies at a round's start and stops under the
     ceiling), and a prince who drops out of the bottom of the picture
     is taken by a golden bubble, carried back up to the lowest thing in
-    the picture he can stand on and let down on it. It is full of
-    suns (rows over the ledges, columns up the chain, arcs, rings, a
-    crown of suns under the ceiling), with chests that open the first
-    time he lands on them and throw eight suns out at once, and one
-    heart. One room in three hangs the sun magnet over its first ledge
-    and its suns where only that reaches. Three plans, mirrored by the
-    side the door is on. The way out is a second golden door 20 m up:
-    he comes out into the tower that much higher, the climb counts,
-    and a line says what he took. The power-up he brought in waits
+    the picture he can stand on and let down on it. A room is put
+    together anew each time: the floor, then three of six sections one
+    on top of the other, each mirrored or not (the stair, from side to
+    side over the chain; the well, ledges on both sides; the magnet's,
+    with the sun magnet over its first ledge and its suns where only
+    that reaches; the chests, on a floor of two long ledges; the
+    chain, chandeliers only, the best of it out by the pillars; the
+    stairs, a flight up to a pillar's door), then the top with the
+    door out. What there is to take: suns (rows over the ledges, a
+    column over every chandelier, arcs, rings, a crown of suns under
+    the ceiling), chests that open the first time he lands on them and
+    throw eight suns out at once, and pieces of the hoard, which count
+    as suns: cut stones (3), golden goblets (5) and, inside the crown
+    of suns, the crown itself (10). One heart. A room holds what is
+    worth some 220 suns. The way out is a second golden door about
+    40 m up: he comes out into the tower that much higher, the climb
+    counts, and a line says what he took. The power-up he brought in waits
     while he is in there (only the magnet's clock runs). On its floor
     the hoard is heaped in the corners (coins, a crown, a sword, a
     silver goblet, pearls), on its wall hang shelves with her cups and
@@ -884,7 +893,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
 | Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
-| The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; the room 2760 px high (a bounce off its highest platform stays under the ceiling), its door out 2040 px above the floor; 69 to 76 suns a room (three chests of 8 in two plans, two in the magnet's), one heart; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
+| The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -1857,3 +1866,39 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   565 m; starting outside median 510 m, mean 605 m, falls 43 % of the
   deaths. With treasuries off, inside and outside are identical to the
   reports before. The atlas is 4096 x 3238.
+- 2026-11-20: The treasury is twice as high and holds more to take
+  (`element/treasure-room`). Simon, after playing it with the tower's
+  camera: really good now; the rooms could be twice as high and hold
+  more treasure, of the kind one can collect. Decisions:
+  - A room is put together from sections now instead of drawn up as a
+    whole: the floor, three of six sections, the top. The old room
+    made twice as long would have been the old room twice; three of
+    six in any order, each mirrored or not, are rooms one does not
+    know by heart, and a new section is a dozen lines. Every section
+    ends with a chandelier in the middle, so the next one knows what
+    it stands over.
+  - More to take, and not only more suns: pieces of the hoard as
+    pickups (a cut stone, a goblet, the crown inside the crown of
+    suns). They are what stands on the shelves, but in full colour,
+    bobbing, with a glint and a glow, where the shelves' are stepped
+    back: what one can take moves and shines. There is no new counter
+    for them. They count as suns (3, 5 and 10) and say so as they are
+    taken. A room is worth some 220 suns now, 72 before.
+  - The doors stay 200 to 300 m apart, counted from where a room lets
+    him out. A visit is 40 safe metres now instead of 20, and it takes
+    twice as long.
+  Measured on the same three sets of 120 seeded runs inside without
+  gates: good bold mean 581 m against 536 m without treasuries (602 m
+  with the rooms half as high, which three sets cannot tell apart),
+  medians 561, 494 and 498 m; 0.97 to 1.04 hits per 100 m; falls 23 to
+  28 % of the deaths. Kid bold mean 92 m against 81 m, medians 94, 96
+  and 66 m against 74, 74 and 59 m. The good bot goes through 530 of
+  783 doors, stays 9 s (longest 13.3 s) and takes 118 of a room's 224
+  suns' worth; the kid bot goes through 110 of 237, stays 14 s
+  (longest 34 s) and is carried back up by the bubble 41 times. Nobody
+  dies or stays in a treasury. With gates (one set of 120): starting
+  inside median 553 m, mean 647 m; starting outside median 509 m, mean
+  591 m, falls 44 % of the deaths. With treasuries off, inside and
+  outside are identical to the reports before. In the browser the
+  camera stops exactly under the ceiling and the door out hangs where
+  it was planned. The atlas is 4096 x 3242.

@@ -73,3 +73,20 @@ export class PowerUp extends Pickup {
     }
   }
 }
+
+// A piece of the hoard one can take (the treasury, vault.js): a cut stone,
+// a golden goblet, the crown. It counts as suns (its `value`), bobs and
+// glints like everything one can take, and glows a little more than the
+// gold that only furnishes the room.
+export const TREASURE = { gem: 3, goblet: 5, crown: 10 };
+export class Treasure extends Pickup {
+  constructor(what, x, y, rng) { super(x, y, rng); this.kind = 'treasure'; this.what = what; this.value = TREASURE[what]; this.look = Math.floor(this.t * 7) % 4; this.w = 44; this.h = 44; this.baseY = y; }
+  update(dt) { this.t += dt; this.y = this.baseY + Math.sin(this.t * 2.6) * 6; }
+  draw(g, cam, art) {
+    const A = art.vault.treasure, s = this.what === 'gem' ? A.gem[this.look] : A[this.what], sx = cam.sx(this.x), sy = cam.sy(this.y);
+    g.halo(sx, sy, this.what === 'crown' ? 74 : 48, '#ffe9a0', 0.3 + 0.1 * Math.sin(this.t * 4), { glow: 0.5 });
+    g.blit(s, sx, sy, { glow: 0.6 });
+    const k = (this.t * 0.9) % 1, sc = 0.5 + 0.4 * Math.sin(Math.PI * k);          // a glint that comes and goes
+    g.blit(art.sign.sparkle, sx + 14, sy - 14, { alpha: Math.sin(Math.PI * k), sx: sc, sy: sc, glow: 0.5 });
+  }
+}

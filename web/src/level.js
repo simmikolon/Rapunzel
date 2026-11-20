@@ -182,7 +182,7 @@ export class Level {
     this.gates = true;           // false: a tower without gates (the simulator's baseline)
     this.rngVault = rng;         // where the golden doors are, and which room is behind one
     this.vaults = true;          // false: a tower without treasuries (the simulator's baseline)
-    this.forcePlan = null;       // dev: every treasury is this plan (vault.js PLANS)
+    this.forcePlan = null;       // dev: every treasury begins with this section (vault.js SECTIONS)
     this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
     this.zones = ZONES;
     this.forceLen = null;        // dev: every branch gets this length class
@@ -476,7 +476,7 @@ export class Level {
     if (gateRow) { layout = this.rngGates.chance(0.5) ? 'gateL+branchR' : 'branchL+gateR'; this.nextGateY = y + this.rngGates.range(GATE_EVERY[0], GATE_EVERY[1]); this.nextVaultY = Math.max(this.nextVaultY, y + 1500); }
     if (vaultRow) {
       layout = this.rngVault.chance(0.5) ? 'vaultL+branchR' : 'branchL+vaultR';
-      this.nextVaultY = y + VAULT.exit + this.rngVault.range(VAULT_EVERY[0], VAULT_EVERY[1]);
+      this.nextVaultY = y + VAULT.rise + this.rngVault.range(VAULT_EVERY[0], VAULT_EVERY[1]);
       this.nextGateY = Math.max(this.nextGateY, y + 1500);        // two doors are not side by side
     }
     this.nextLayout = null;

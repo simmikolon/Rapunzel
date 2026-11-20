@@ -391,6 +391,13 @@ class Synth {
     this.noise({ dur: 0.05, vol: 0.12, filter: 'highpass', freq: 2400 });
     this.tone({ type: 'sine', freq: 1320, to: 1980, dur: 0.07, vol: 0.12 });
   }
+  // A piece of the hoard taken: bright notes up, one more the more it is worth.
+  treasure(value = 3) {
+    platform.haptic('bounce', 1);
+    const notes = [1047, 1319, 1568, 2093].slice(0, value >= 10 ? 4 : value >= 5 ? 3 : 2);
+    notes.forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.22, vol: 0.12, delay: i * 0.06 }));
+    this.tone({ type: 'sine', freq: notes[notes.length - 1] * 2, dur: 0.3, vol: 0.04, delay: notes.length * 0.06 });
+  }
   // A chest thrown open: the lid's knock, then coins ringing out.
   chest() {
     platform.haptic('spring');

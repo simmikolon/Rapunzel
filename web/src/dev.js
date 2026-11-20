@@ -12,7 +12,7 @@
 //   ?spawn=bat       a bat under the next healthy branch above the prince
 //   ?spawn=dark      (inside) with ?at: a dark stretch begins five metres above the start
 //   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
-//   ?spawn=vault     (inside) with ?at: a golden door to the treasury right above the start (vault1, vault2, vault3: that room)
+//   ?spawn=vault     (inside) with ?at: a golden door to the treasury right above the start (vault1 to vault6: the room begins with that section)
 //   ?spawn=stairs    (inside) with ?at: a flight of stairs right above the start
 //   ?spawn=cat       (inside) the witch's cat on the next healthy ledge above the prince
 //   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince

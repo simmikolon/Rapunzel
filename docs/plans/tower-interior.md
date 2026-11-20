@@ -170,10 +170,10 @@ One branch each, merged when it is fun.
    landing at the same height.
 6. ✅ **The treasury** (`element/treasure-room`), not in the first plan:
    a golden door inside the tower leads into the witch's hoard, a room
-   with a floor and a ceiling, full of suns and chests, and a door out
-   of it 20 m higher. The gates' passage, a room furnished from a plan
-   instead of rows, and a camera that goes down as well as up while he
-   is in it.
+   with a floor and a ceiling, full of suns, chests and pieces of the
+   hoard, and a door out of it 40 m higher. The gates' passage, a room
+   put together from sections instead of rows, the tower's camera, and
+   a bubble that carries back up whoever drops out of the picture.
 
 ## Open
 

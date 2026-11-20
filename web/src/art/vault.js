@@ -212,6 +212,45 @@ function drawShelf(t, look) {
   }
 }
 
+// --- pieces of the hoard to take ----------------------------------------------------
+// The pickups of the treasury (pickups.js Treasure), the anchor their
+// middle: a cut stone (9 x 9 art px, in four kinds), a golden goblet (9 x 12)
+// and the crown (15 x 12). Unlike what stands on the shelves they are not
+// stepped back: bright, lit from the upper left, a white glint on each.
+const STONES = [
+  { hi: '#cfe6ff', base: C.tunicHi, shade: C.tunic },            // sapphire
+  { hi: '#d6ffd9', base: C.grassLight, shade: C.grass },         // emerald
+  { hi: '#f0e0ff', base: '#c79aff', shade: C.tights },           // amethyst
+  { hi: '#e6fffd', base: '#7fe3e0', shade: '#3fa9a8' },          // aquamarine
+];
+function drawGem(t, k) {
+  const { p } = t, s = STONES[k];
+  // a brilliant seen from the side: the crown's facets, the girdle, the pavilion down to its point
+  const rows = [[3, 3], [2, 5], [1, 7], [0, 9], [1, 7], [2, 5], [3, 3], [4, 1]];
+  rows.forEach(([x, w], y) => p(x, y, w, 1, y < 3 ? s.base : s.shade));
+  p(0, 3, 9, 1, s.base);                                              // the girdle
+  p(3, 0, 2, 1, s.hi); p(2, 1, 2, 1, s.hi); p(1, 2, 2, 1, s.hi); p(1, 3, 3, 1, s.hi);   // the lit facets
+  p(4, 4, 1, 3, s.base); p(5, 1, 1, 2, s.shade);                      // a facet's edge down the middle, one in shade above
+  p(3, 1, 1, 1, C.white);
+}
+function drawGoblet(t) {
+  const { p } = t;
+  p(0, 0, 9, 1, GOLD.hi);                                             // the rim
+  p(0, 1, 9, 3, GOLD.base); p(1, 4, 7, 1, GOLD.base); p(2, 5, 5, 1, GOLD.shade);
+  p(0, 1, 2, 3, GOLD.hi); p(7, 1, 2, 3, GOLD.shade); p(6, 4, 2, 1, GOLD.shade);
+  p(4, 2, 2, 2, STONES[0].base); p(4, 2, 1, 1, C.white);              // a stone set in the cup
+  p(4, 6, 2, 3, GOLD.base); p(4, 6, 1, 3, GOLD.hi); p(3, 7, 4, 1, GOLD.shade);   // the stem and its knop
+  p(1, 9, 7, 1, GOLD.base); p(1, 9, 3, 1, GOLD.hi); p(0, 10, 9, 1, GOLD.shade); p(0, 11, 9, 1, GOLD.dark);
+}
+function drawCrown(t) {
+  const { p } = t;
+  // the band, lit on top, a stone in each field
+  p(0, 6, 15, 5, GOLD.base); p(0, 6, 15, 1, GOLD.hi); p(0, 10, 15, 1, GOLD.shade); p(0, 11, 15, 1, GOLD.dark); p(0, 6, 1, 5, GOLD.hi); p(14, 6, 1, 5, GOLD.shade);
+  p(2, 8, 2, 2, STONES[1].base); p(2, 8, 1, 1, C.white); p(6, 7, 3, 3, STONES[0].base); p(6, 7, 1, 1, C.white); p(11, 8, 2, 2, STONES[2].base); p(11, 8, 1, 1, C.white);
+  // five points, the middle one highest, a pearl on each
+  for (const [x, h] of [[0, 3], [3, 4], [7, 6], [11, 4], [14, 3]]) { p(x, 6 - h, 1, h, GOLD.base); if (x > 0 && x < 14) { p(x - 1, 6 - h + 2, 1, h - 2, GOLD.hi); p(x + 1, 6 - h + 2, 1, h - 2, GOLD.shade); } p(x, 6 - h - 1, 1, 1, C.white); }
+}
+
 // --- the bubble -----------------------------------------------------------------
 // What carries a prince who dropped out of the treasury's picture back up
 // (world.js rescue): the power-ups' soap bubble at his size and in gold,
@@ -252,6 +291,11 @@ export function buildVault() {
     chest: [false, true].map((o) => makeSprite(26, 30, (t) => drawChest(t, o), undefined, { axPx: 13 * 4, ayPx: 12 * 4 })),
     hoard: { L: hoardL, R: flipH(hoardL) },
     pile: { L: pileL, R: flipH(pileL) },
+    treasure: {
+      gem: STONES.map((_, k) => makeSprite(9, 9, (t) => drawGem(t, k), { ax: 0.5, ay: 0.5 })),
+      goblet: makeSprite(9, 12, drawGoblet, { ax: 0.5, ay: 0.5 }),
+      crown: makeSprite(15, 13, drawCrown, { ax: 0.5, ay: 0.5 }, { shift: [0, 1] }),
+    },
     bubble: makeSprite(68, 68, drawBubble, { ax: 0.5, ay: 0.5 }),
     bubbleFill: makeSprite(68, 68, drawBubbleFill, { ax: 0.5, ay: 0.5 }),
     shelf,

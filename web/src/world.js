@@ -440,6 +440,12 @@ export class World {
       this.particles.hearts(k.x, k.y);
     } else if (k.kind === 'power') {
       this.givePower(k.power, k.x, k.y);
+    } else if (k.kind === 'treasure') {
+      // a piece of the hoard: its worth in suns
+      this.suns += k.value;
+      this.audio.treasure(k.value);
+      this.particles.sparkles(k.x, k.y, 8 + k.value, VAULT_LOOK.goldLight);
+      this.toast(`+${k.value}`, '#ffe9a0', 0.9);
     }
   }
 
@@ -485,7 +491,8 @@ export class World {
     const floor = this.cam.y - 320;
     this.platforms = this.platforms.filter((p) => p.alive && (p.y > floor || p.kind === 'ground'));
     this.enemies = this.enemies.filter((e) => e.alive && (e.kind === 'witch' || e.y > floor - 200));
-    this.pickups = this.pickups.filter((k) => k.alive && k.y > floor && k.y < this.cam.top + 2500);
+    const far = this.vault ? Infinity : this.cam.top + 2500;       // (a treasury is furnished to its ceiling at once)
+    this.pickups = this.pickups.filter((k) => k.alive && k.y > floor && k.y < far);
     this.fields = this.fields.filter((f) => f.alive);
   }
 
@@ -707,6 +714,7 @@ export class World {
     const A = this.art.platforms;
     let s;
     const T = this.art.trees, I = this.art.interior;
+    const opts = {};
     // a ledge inside the tower is a branch in stone: the same lengths and variants
     const stone = p.style === STONE_STYLE;
     switch (p.kind) {
@@ -725,7 +733,7 @@ export class World {
         break;
       }
       case 'chest': s = this.art.vault.chest[p.opened ? 1 : 0]; break;
-      case 'step': if (!p.flight) return; s = I.stairs[p.side]; break;      // the flight is one piece, drawn for its lowest tread
+      case 'step': if (!p.flight) return; s = I.stairs[p.side]; if (this.vault) opts.tint = VAULT_LOOK.stone; break;      // the flight is one piece, drawn for its lowest tread (in the treasury, in its warmer stone)
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
@@ -737,7 +745,6 @@ export class World {
     }
     const cam = this.cam;
     const dip = p.kind === 'balcony' || p.kind === 'step' || p.kind === 'gate' || p.kind === 'chest' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
-    const opts = {};
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {
       // the glow breathes around the bright dome above the flame; the paper

@@ -154,7 +154,8 @@ custom engine instead of SpriteKit physics and GameplayKit:
   webs that hold; four floors (hall, guard rooms, library, belfry);
   torches, candles and the windows' light in a dim room. Behind a
   golden door lies the witch's treasury: a room with a floor, full of
-  suns and chests, and a second door out of it 20 m higher.
+  suns, chests and pieces of the hoard to take, and a second door out
+  of it 40 m higher.
   `web/src/interior.js` paints it, `web/src/places.js` says what differs
   between the places.
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
