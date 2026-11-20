@@ -43,7 +43,7 @@ which only copies the two folders together). The design document
   where the round is climbed whatever the title's selector says (inside,
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
   nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,
-  `?spawn=web` spins a spider's web under it, `?spawn=ghost` sends a ghost, `?at=150&spawn=stairs` builds a flight
+  `?spawn=web` spins a spider's web under it, `?spawn=cat` sits the witch's cat on it, `?spawn=ghost` sends a ghost, `?at=150&spawn=stairs` builds a flight
   of stairs above the start). `?at=150&spawn=gate` puts a gate to the
   other place above the start, in either place;
   `?place=inside&at=200&spawn=dark` puts the lights out above the start.

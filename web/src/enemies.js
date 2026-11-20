@@ -1165,3 +1165,92 @@ export class Ghost extends Enemy {
     if (this.state === 'in') g.text('!', sx, sy - 58, 22, '#ffe9a0', 'center', true, { alpha: Math.min(1, this.stateT / 0.25) });
   }
 }
+
+// The witch's cat (inside the tower, in the squirrel's place on the
+// ledges). It does not patrol: it sits where it sits, swishes its tail and
+// keeps its eyes on the prince. When he is on its ledge or just over it and
+// within CAT_SEES, it crouches and wiggles its rear (CAT_WIGGLE seconds: the
+// telegraph, with a meow), then pounces at where he is, a short flat hop
+// along the ledge, and sits again. Touching it is a scratch; a pogo on it
+// from above sends it off, puffed up and offended (a cat is not knocked
+// out). If he leaves during the wiggle it sits back down. Under the cloak
+// it sees nothing and looks puzzled. `keen` (0 to 1, with altitude) makes
+// the wiggle shorter and the rest between pounces too.
+const CAT_SEES = 210, CAT_WIGGLE = 0.55, CAT_POUNCE = 0.3, CAT_REACH = 150;
+export class Cat extends Enemy {
+  constructor(platform, offset, keen = 0, rng = new RNG()) {
+    super(platform.x + offset, platform.y);
+    this.kind = 'cat';
+    this.platform = platform; this.keen = keen; this.rng = rng;
+    this.w = 60; this.h = 56;
+    this.dir = platform.def.dir || 1;        // it faces the room
+    this.state = 'sit';                      // sit | wiggle | pounce | off
+    this.stateT = 0;
+    this.rest = rng.range(0.2, 1.2);         // no pounce while this runs
+    this.from = this.x; this.to = this.x; this.hop = 0;
+    this.phase = rng.range(0, TAU);
+    this.vy = 0;
+    this.puzzled = false;
+  }
+  get left() { return this.platform.left + 26; }
+  get right() { return this.platform.right - 26; }
+  get rect() {
+    const r = { x: this.x - this.w / 2, y: this.y - this.h / 2, w: this.w, h: this.h };
+    if (this.state === 'pounce') { r.w += 22; if (this.dir < 0) r.x -= 22; }      // its paws ahead of it
+    return r;
+  }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    const pf = this.platform;
+    if (this.dead) {
+      // off in an arc, the way it was sent
+      this.vy -= GRAVITY * 0.9 * dt;
+      this.y += this.vy * dt; this.x += this.dir * 250 * dt;
+      if (this.y < world.cam.y - 200) this.alive = false;
+      return;
+    }
+    if (!pf.landable) { this.dead = true; this.hurtful = false; this.state = 'off'; this.vy = 200; return; }   // its ledge went
+    const p = world.player;
+    const dx = p.x - this.x;
+    const within = Math.abs(dx) < CAT_SEES && p.y >= pf.y - 40 && p.y < pf.y + 300;
+    const sees = p.seen && within;
+    this.puzzled = p.hidden && within;
+    if (this.rest > 0) this.rest -= dt;
+    this.hop = 0;
+    if (this.state === 'sit') {
+      if (sees && Math.abs(dx) > 8) this.dir = dx > 0 ? 1 : -1;
+      if (sees && this.rest <= 0) { this.state = 'wiggle'; this.stateT = 0; world.audio.meow(); }
+    } else if (this.state === 'wiggle') {
+      if (Math.abs(dx) > 8) this.dir = dx > 0 ? 1 : -1;
+      if (!sees) { this.state = 'sit'; this.stateT = 0; this.rest = 0.5; }
+      else if (this.stateT > CAT_WIGGLE - 0.15 * this.keen) {
+        this.state = 'pounce'; this.stateT = 0;
+        this.from = this.x; this.to = clamp(this.x + clamp(dx, -CAT_REACH, CAT_REACH), this.left, this.right);
+        world.audio.hiss();
+      }
+    } else {
+      const u = Math.min(1, this.stateT / CAT_POUNCE);
+      this.x = this.from + (this.to - this.from) * u * (2 - u);
+      this.hop = Math.sin(u * Math.PI) * 34;
+      if (u >= 1) { this.state = 'sit'; this.stateT = 0; this.rest = 1.7 - 0.5 * this.keen; }
+    }
+    this.x = clamp(this.x, this.left, this.right);
+    this.y = pf.y + this.h / 2 + this.hop;
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false; this.state = 'off';
+    this.vy = 560; this.dir = this.x < world.player.x ? -1 : 1;
+    world.audio.yowl();
+    world.particles.sparkles(this.x, this.y, 8, '#8683b8');
+  }
+  draw(g, cam, art) {
+    const set = this.dir > 0 ? art.cat.R : art.cat.L;
+    const sx = cam.sx(this.x), sy = cam.sy(this.y - this.h / 2);
+    if (this.dead) { g.blit(set[4], sx, sy); return; }
+    if (this.state === 'wiggle') g.blit(set[2], sx + Math.sin(this.stateT * 42) * 3, sy);       // the rear wiggles
+    else if (this.state === 'pounce') g.blit(set[3], sx, sy);
+    else g.blit(set[Math.floor(this.t * 1.2 + this.phase) % 2], sx, sy);                          // the tail swishes
+    if (this.state === 'wiggle') g.text('!', sx, sy - 96, 22, '#ffe9a0', 'center', true);
+    else if (this.puzzled) g.text('?', sx, sy - 96, 22, PUZZLED, 'center', true);
+  }
+}

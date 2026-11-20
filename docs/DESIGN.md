@@ -356,6 +356,18 @@ is a pool to draw from, not a promise.
   pool of light, so one always knows where the ghost is. Close to the
   prince it says boo (arms up, mouth wide). Higher up it drifts toward
   his height while it is there. Under the cloak it notices nothing.
+- ✅ the witch's cat (inside the tower, from the guard rooms up, most
+  in the library; `Cat` in `src/enemies.js`, `src/art/cat.js`): the
+  black cat from her portraits, in the squirrel's place on the ledges.
+  It does not patrol. It sits, swishes its tail and watches; when the
+  prince is on its ledge or just over it, within 210 px, it crouches
+  and wiggles its rear for half a second with a meow and a "!", then
+  pounces at where he is, a flat hop of at most 150 px along the ledge,
+  and sits again. Touching it is a scratch; a pogo from above sends it
+  off, puffed up and offended. If he leaves during the wiggle it sits
+  back down; under the cloak it sees nothing. White socks, a white bib
+  and a white tail tip make a black cat a shape on a dark wall; in the
+  dark one sees its eyes.
 - 💡 vines / green zones that slow or stick (deep forest, jungle); prefer
   slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
@@ -843,6 +855,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
 | Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
+| The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1692,3 +1705,21 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 - 2026-11-20: `?at=` does not start in the dark any more (fixed on
   `element/interior-dark`): a dark stretch that was due below the start
   height began with the first row built.
+- 2026-11-20: The witch's cat (`element/interior-cat`). The inside had
+  nothing that lives on a ledge as the squirrel lives on a branch, and
+  the cat was already in the witch's pictures. It is not the squirrel
+  in black: a squirrel patrols and dashes, a cat sits and pounces. Its
+  telegraph is the one every child knows, the wiggle before the jump,
+  and it only goes for a prince who is on its ledge or just above it,
+  so the far end of a long ledge is a safe place to land and look at
+  it. Stomped it is not knocked out but sent off, puffed up. Drawn
+  first all black with violet lights it was a pair of eyes on the wall
+  and little else, so it got white socks, a bib and a tail tip, which
+  is also its feature. The art has a file of its own; the inside's
+  drawing file is long enough. Measured on 120 seeded runs inside
+  without gates: good bold median 500 m, mean 589 m (507 m and 641 m
+  before), 1.06 hits per 100 m, every band from 100 to 1300 m between
+  1.09 and 1.61, the cat 67 of 747 hits, falls 24 % of the deaths; kid
+  bold median 74 m, mean 87 m, three scratches in 120 runs. With gates,
+  starting inside: median 467 m, mean 563 m. The outside without gates
+  is identical to the baseline. The atlas is 4096 x 3096.

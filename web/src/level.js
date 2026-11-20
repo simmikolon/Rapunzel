@@ -1,6 +1,6 @@
 import { W, SAFE_GAP, BEAT, LAYER_GAP_CAP, LAYER_GAP_CAP_DRY, CAMERA_PLAYER_OFFSET, CAMERA_START_Y, GRAVITY, JUMP_VY, WEAK_JUMP_VY, SPRING_VY, PARALLAX_TOWER, POWER_FIRST, POWER_EVERY } from './config.js';
 import { Platform, CLOUD_SIZE, GALLERY_X, GATE_X } from './platforms.js';
-import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat, Web, Ghost } from './enemies.js';
+import { Crow, Spider, Squirrel, Lightning, Guard, Flowerpot, Grabber, Bat, Web, Ghost, Cat } from './enemies.js';
 import { Sun, Lantern, Heart, PowerUp } from './pickups.js';
 import { lerp, invLerp, clamp, RNG } from './util.js';
 import { treeStyleIndexAt, cloudAmount, lanternAmount } from './altitude.js';
@@ -42,21 +42,22 @@ export const ZONES = [
 // height). What is not named counts as 1, so the outside's creatures are
 // switched off by name. Who lives in here: bats under the ledges, guards on
 // the galleries, pike guards in the pillars' hatches, the spider's web under
-// a ledge (it holds instead of biting), the ghost in the crow's place, and
+// a ledge (it holds instead of biting), the witch's cat on the ledges (the
+// squirrel's place), the ghost in the crow's place, and
 // the flock's gate as a swarm of bats (from 160 m). Each floor leans on two
 // or three of them and on its own things to stand on.
 const OUTSIDERS = { crow: 0.0, spider: 0.0, squirrel: 0.0, balcony: 0.0, pot: 0.0, scissors: 0.0, storm: 0.0 };
 export const ZONES_INSIDE = [
   // The hall: the gentle part, as the forest floor is outside. No stubs, no
   // pikes, no ghost, more long ledges, the power-ups lean toward the feather.
-  { name: 'the hall',        from: 0,     mul: { ...OUTSIDERS, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
+  { name: 'the hall',        from: 0,     mul: { ...OUTSIDERS, stub: 0.0, long: 2.0, gallery: 0.5, guard: 0.6, grabber: 0.0, bat: 0.8, ghost: 0.0, cat: 0.0, star: 0.5, cloak: 0.3, spring: 0.6, feather: 1.3 } },
   // The guard rooms: galleries, guards on them, pikes from the hatches, stairs.
-  { name: 'the guard rooms', from: 12000, mul: { ...OUTSIDERS, gallery: 0.8, guard: 1.2, grabber: 2.4, bat: 1.2, web: 1.0, ghost: 0.6, stairs: 1.5 } },
+  { name: 'the guard rooms', from: 12000, mul: { ...OUTSIDERS, gallery: 0.8, guard: 1.2, grabber: 2.4, bat: 1.2, web: 1.0, ghost: 0.6, cat: 0.5, stairs: 1.5 } },
   // The library: dusty and haunted. Webs and ghosts, few guards; the cloak
   // helps here. Its spring is the great chained book (the bell's slot).
-  { name: 'the library',     from: 25000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.5, web: 2.4, ghost: 1.9, bell: 1.6, cloak: 1.4 } },
+  { name: 'the library',     from: 25000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.5, web: 2.4, ghost: 1.9, cat: 1.0, bell: 1.6, cloak: 1.4 } },
   // The belfry: bells to bounce on, scaffold boards, and the bats' home.
-  { name: 'the belfry',      from: 40000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.9, web: 1.2, ghost: 1.0, bell: 3.0, board: 2.0, stairs: 0.5, feather: 1.5 } },
+  { name: 'the belfry',      from: 40000, mul: { ...OUTSIDERS, gallery: 0.3, guard: 0.7, grabber: 1.2, bat: 1.9, web: 1.2, ghost: 1.0, cat: 0.6, bell: 3.0, board: 2.0, stairs: 0.5, feather: 1.5 } },
 ];
 export function zoneAt(y, zones = ZONES) {
   let z = zones[0];
@@ -267,7 +268,7 @@ export class Level {
     const rf = this.rngFauna;
     const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len !== 'stub');
     // one thing per branch: not where a spider hangs or a squirrel lives
-    if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat' || e.kind === 'web') && e.platform === branch))) return null;
+    if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === branch))) return null;
     const T = tierAt(branch.y);
     const half = branch.w / 2 - 30;
     const bat = new Bat(branch, rf.range(-half, half), clamp((T.index - 2) / 2.5, 0, 1), this.child(rf));
@@ -280,11 +281,25 @@ export class Level {
   // ledge: not where a bat hangs.
   spawnWeb(platforms) {
     const ledge = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && (p.len === 'normal' || p.len === 'long')
-      && !this.world.enemies.some((e) => (e.kind === 'bat' || e.kind === 'web') && e.platform === p));
+      && !this.world.enemies.some((e) => (e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === p));
     if (!ledge) return null;
     const web = new Web(ledge, this.child(this.rngFauna));
     this.world.enemies.push(web);
     return web;
+  }
+
+  // The witch's cat on a healthy ledge of this row that is long enough to
+  // land beside it (inside the tower). One thing per ledge: none where a
+  // bat hangs or a web is spun.
+  spawnCat(platforms) {
+    const rf = this.rngFauna;
+    const ledge = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && (p.len === 'normal' || p.len === 'long')
+      && !this.world.enemies.some((e) => (e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === p));
+    if (!ledge) return null;
+    const half = ledge.w / 2 - 44;
+    const cat = new Cat(ledge, rf.range(-half, half), clamp((tierAt(ledge.y).index - 2) / 2.5, 0, 1), this.child(rf));
+    this.world.enemies.push(cat);
+    return cat;
   }
 
   get difficulty() { return tierAt(this.world.player.maxY); }
@@ -614,6 +629,8 @@ export class Level {
     if (this.rngFauna.chance(T.bat * P.enemy * this.zoneMul(y, 'bat'))) this.spawnBat(platforms);
     // Webs (inside only, from 65 m as the spiders outside): the spider's tier chance.
     if (this.place.inside && y > 6500 && this.rngFauna.chance(T.spider * P.enemy * this.zoneMul(y, 'web'))) this.spawnWeb(platforms);
+    // The witch's cat (inside only): the squirrel's tier chance, on the ledges as the squirrel is on the branches.
+    if (this.place.inside && this.rngFauna.chance(T.squirrel * P.enemy * this.zoneMul(y, 'cat'))) this.spawnCat(platforms);
     if (this.rngTower.chance(T.grabber * P.enemy * this.zoneMul(y, 'grabber'))) this.spawnGrabber(y, arrivalCam);
     // One thing per balcony (inside: per gallery), never on a dilapidated one: a guard, or a flowerpot.
     for (const p of platforms) {

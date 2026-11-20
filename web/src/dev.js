@@ -13,6 +13,7 @@
 //   ?spawn=dark      (inside) with ?at: a dark stretch begins five metres above the start
 //   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
 //   ?spawn=stairs    (inside) with ?at: a flight of stairs right above the start
+//   ?spawn=cat       (inside) the witch's cat on the next healthy ledge above the prince
 //   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince
 //   ?spawn=web       (inside) a spider's web under the next healthy ledge above the prince (a ledge is made if none is in view)
 //   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
@@ -84,6 +85,13 @@ export function spawnNear(world, element) {
   if (element === 'bat') {
     // the first branch above that has room for one (no stub, no spider on it)
     for (const b of branches) { const bat = world.level.spawnBat([b]); if (bat) { bat.rest = 0; break; } }
+  }
+  if (element === 'cat') {
+    // on the first ledge above that has room for it; a ledge is made if none is in view
+    let cat = null;
+    for (const b of branches) { cat = world.level.spawnCat([b]); if (cat) break; }
+    if (!cat) { const b = new Platform('branchR', p.y + 430, { style: STONE_STYLE }); world.platforms.push(b); cat = world.level.spawnCat([b]); }
+    if (cat) cat.rest = 0;
   }
   if (element === 'web') {
     // under the first ledge above that can carry one; a ledge is made if none is in view

@@ -161,7 +161,7 @@ class Bot {
     if (threat) {
       const e = threat.e;
       const canPunch = this.policy === 'bold' && !threat.noPunch && p.boost >= 1 && p.vy > -200 && threat.dy > 0 && threat.dy < 300;
-      if ((e.kind === 'squirrel' || e.kind === 'guard') && target && e.platform === target) {
+      if ((e.kind === 'squirrel' || e.kind === 'guard' || e.kind === 'cat') && target && e.platform === target) {
         // A squirrel on the branch we are landing on: a bold player stomps it
         // (aim at it while falling from above), a cautious one lands on the
         // far end of the branch instead of fleeing the platform altogether.

@@ -343,6 +343,17 @@ class Synth {
     this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
   }
   skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
+  // The witch's cat: a meow as it crouches, a hiss as it pounces, a yowl as it is sent off.
+  meow() {
+    this.tone({ type: 'sawtooth', freq: 620, to: 880, dur: 0.16, vol: 0.06, slide: 'lin' });
+    this.tone({ type: 'sawtooth', freq: 880, to: 560, dur: 0.22, vol: 0.06, delay: 0.16, slide: 'lin' });
+  }
+  hiss() { this.noise({ dur: 0.22, vol: 0.14, filter: 'highpass', freq: 3200 }); }
+  yowl() {
+    platform.haptic('bounce', 0.8);
+    this.tone({ type: 'sawtooth', freq: 900, to: 1500, dur: 0.12, vol: 0.09, slide: 'lin' });
+    this.tone({ type: 'sawtooth', freq: 1500, to: 500, dur: 0.3, vol: 0.09, delay: 0.12, slide: 'lin' });
+  }
   // The lights are out: a breath that takes the flames, a low note after it.
   lightsOut() {
     this.noise({ dur: 0.5, vol: 0.12, filter: 'bandpass', freq: 1400, to: 300, q: 0.8 });

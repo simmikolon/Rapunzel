@@ -726,6 +726,7 @@ export class World {
       if (!e.alive || e.dead || e.y < cam.y - 200 || e.y > cam.top + 200) continue;
       if (e.kind === 'bat') g.lamp(cam.sx(e.x), cam.sy(e.y), e.state === 'hang' ? 70 : 120, '#d9c8ff', e.state === 'hang' ? 0.45 : 0.8);        // its eyes
       else if (e.kind === 'ghost') g.lamp(cam.sx(e.x), cam.sy(e.y), 150, '#e9e6f7', 0.75 * e.vis);
+      else if (e.kind === 'cat') g.lamp(cam.sx(e.x), cam.sy(e.y + 12), 84, '#fff3a0', 0.75);                                                // its eyes
       else if (e.kind === 'guard') g.lamp(cam.sx(e.x), cam.sy(e.y), 190, '#ffd596', 0.7);                                                    // he has a lantern by him
       else if (e.kind === 'grabber') { if (e.head > 0) g.lamp(cam.sx(e.win.x), cam.sy(e.armY), 170, '#ffd596', 0.8 * e.head); }              // light from behind him as he looks out
       else if (e.kind === 'web') { if (!e.torn) g.lamp(cam.sx(e.x), cam.sy(e.y), 130, '#f6f3ff', 0.4); g.lamp(cam.sx(e.spX), cam.sy(e.spY), 60, '#ffb0b0', 0.5); }   // dew on the threads, the spider's eyes
