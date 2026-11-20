@@ -1022,6 +1022,32 @@ function drawGhostCandle(t, frame) {
   p(2, frame ? 0 : 1, 1, frame ? 3 : 2, C.flame2); p(2, 2, 1, 1, C.flame1); if (frame) p(1, 1, 1, 1, C.flame3); else p(3, 1, 1, 1, C.flame3);
 }
 
+// --- stepping back -----------------------------------------------------------------
+// What furnishes the back wall (the walkways, the ladders, what stands on a
+// walkway, the wall's small things) is drawn in full colour above and then
+// taken part of the way toward the wall's own colour: less contrast, a
+// little of the wall's violet in everything. Played, the room behind the
+// prince was as loud as the play in front of it; this keeps the room and
+// gives the eye back to him. How far each piece goes (0 not at all, 1 all
+// the way to the wall) is its row here. Not in the list, and so in full
+// colour: what hangs to be looked at (the pictures, the mirror, the
+// tapestry, the shields, the banners), whatever shines (the candles on
+// their sconces, the runes), and everything he stands on or meets.
+const RECEDE = {
+  walkway: 0.48, walkwayGuard: 0.48, walkwayBelfry: 0.48, ladder: 0.48,
+  bookcase: 0.42, shelf: 0.42, scrolls: 0.42, scroll: 0.36, pile: 0.36, lectern: 0.24, niche: 0.3,
+  rack: 0.42, helmets: 0.42, table: 0.42, poster: 0.3, keys: 0.36, horn: 0.36,
+  truss: 0.48, cog: 0.42, dial: 0.36, hand: 0.3, clock: 0.36, pendulum: 0.3, bellRope: 0.36, smallBell: 0.36, coil: 0.36, owl: 0.2,
+  herbs: 0.36, hook: 0.3,
+};
+function recede(sprite, k, toward = K.wall) {
+  const ctx = sprite.canvas.getContext('2d'), img = ctx.getImageData(0, 0, sprite.canvas.width, sprite.canvas.height), d = img.data;
+  const to = [1, 3, 5].map((i) => parseInt(toward.slice(i, i + 2), 16));
+  for (let i = 0; i < d.length; i += 4) { if (!d[i + 3]) continue; for (let c = 0; c < 3; c++) d[i + c] += (to[c] - d[i + c]) * k; }
+  ctx.putImageData(img, 0, 0);
+  return sprite;
+}
+
 export function buildInterior() {
   const wall = [0, 1, 2, 3, 4, 5, 6, 7].map((v) => makeSprite(WALL_W, 48, (t) => drawWall(t, v, new RNG(300 + v)), { ax: 0.5, ay: 1 }));
   const pillarL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawPillar(t, v, new RNG(400 + v)), { ax: 0, ay: 1 }));
@@ -1038,7 +1064,7 @@ export function buildInterior() {
   const flipAll = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? v.map(flipH) : flipH(v)]));
   const stone = { name: 'stone', branchR, branchL: flipAll(branchR), dryR, dryL: flipAll(dryR) };
   const galleryL = [0, 1].map((v) => makeSprite(56, 72, (t) => drawGallery(t, v), undefined, { axPx: 36 * 4, ayPx: 56 * 4 }));
-  return {
+  const art = {
     wall, pillarL, pillarR: pillarL.map(flipH), torch, floor, stone,
     chandelier: [0, 1].map((f) => makeSprite(30, 15, (t) => drawChandelier(t, f), undefined, { axPx: 15 * 4, ayPx: 9 * 4 })),
     chandelierOut: makeSprite(30, 15, (t) => drawChandelier(t, 2), undefined, { axPx: 15 * 4, ayPx: 9 * 4 }),
@@ -1094,4 +1120,7 @@ export function buildInterior() {
     chainEnd: makeSprite(9, 12, drawChainEnd, { ax: 0.5, ay: 0 }),
     gallery: { L: galleryL, R: galleryL.map(flipH) },
   };
+  // what furnishes the back wall steps back into it (see RECEDE)
+  for (const [key, k] of Object.entries(RECEDE)) for (const sp of [].concat(art[key])) recede(sp, k);
+  return art;
 }

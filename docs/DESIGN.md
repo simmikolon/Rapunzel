@@ -610,6 +610,15 @@ is a pool to draw from, not a promise.
     small, fewer creatures and more lanterns, and no gate or swarm.
     Said as he comes up to it. The renderer has a light map for this
     (`g.dark`, `g.lamp`).
+  - ✅ what furnishes the wall steps back into it: the walkways, the
+    ladders, what stands on a walkway (bookcases, racks, the table, the
+    clockwork, the timbers) and the wall's small things are taken
+    between a third and a half of the way toward the wall's colour
+    when they are drawn (`RECEDE` in `src/art/interior.js`), and the
+    walkways take their floor's tint as the wall does. In full colour
+    stay what hangs to be looked at (pictures, the mirror, the
+    tapestry, shields, banners), whatever shines, and everything he
+    stands on or meets.
   - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
@@ -1662,3 +1671,24 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   what the dark asks of a player: that is to be played, and the rows'
   kindness taken back if it is too easy. The outside without gates is
   identical to the baseline. The atlas is 4096 x 3064.
+- 2026-11-20: The wall's furniture steps back (`element/interior-muted`).
+  Simon, after playing the library with its walkways: what is in the
+  background is still as present in colour as what is in front; less
+  contrast and a little of the wall's colour in it would keep the
+  atmosphere and disturb less, but not for the pictures, the mirror,
+  the tapestry and the shields, which are right as they are. So there
+  are two classes on the wall now. What furnishes it is the room: it is
+  drawn in full colour and then moved 30 to 48 % of the way toward the
+  wall's own violet-grey (the walkways, ladders and timbers furthest,
+  the spell book's lectern and the owl least), which lowers contrast
+  and saturation at once and costs no second sprite. What hangs to be
+  looked at is a picture in the room and keeps its colour, as do the
+  lights. The walkways lost their own cool tint and take the floor's,
+  like the wall behind them. The side effect wanted: ledges,
+  chandeliers and creatures now are the brightest and most coloured
+  things on the screen without having changed. Purely visual; to be
+  judged by playing, and the one table of amounts is where to turn it
+  up or down.
+- 2026-11-20: `?at=` does not start in the dark any more (fixed on
+  `element/interior-dark`): a dark stretch that was due below the start
+  height began with the first row built.

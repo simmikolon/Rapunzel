@@ -42,7 +42,6 @@ const FLOOR_FADE = 1500;
 const NO_DARK = () => 0;
 const IVY_TO = 40000;
 const LIBRARY = 2;                 // the library's row in FLOORS: its books fly
-const WALK_TINT = '#cfc6dc';       // the walkways stand back in the room's shade: nothing to land on
 const libraryAmount = (y) => { const f = floorsAt(y); return (f.a === LIBRARY ? 1 - f.t : 0) + (f.b === LIBRARY ? f.t : 0); };
 const BOOK_TINTS = ['#ffffff', '#cfe6ff', '#fff0c8'];               // ivy comes in at the windows up to where the trees end
 // Which floors meet at height y (the prince's plane): { a, b, t }.
@@ -222,7 +221,7 @@ export class Interior {
         }
         if (sd.small && !behindGate(sd.side, sd.small.ly)) this.drawSmall(g, sd.small, W / 2 + sd.small.x + cam.ox, H - (sd.small.ly - camF) + cam.oy, kb, time);
       }
-      g.blit(A[st.walk], cx, wy, { tint: WALK_TINT });
+      g.blit(A[st.walk], cx, wy, tintAt(st.L / PARALLAX_TOWER));
       g.rect(TRUNK_W + cam.ox, wy + 64, W - 2 * TRUNK_W, 16, 'rgba(0,0,0,0.16)');                                  // its shadow on the wall
     }
     // Ivy has come in at some of the windows, as long as there are trees
@@ -314,7 +313,7 @@ export class Interior {
       if ((d.h >>> 18) % 100 < 45) g.blit(A.owl[(time * 0.27 + k * 0.41) % 1 < 0.05 ? 1 : 0], W / 2 + side * 180 + cam.ox + (d.look ? 44 : -44), dy + 8);   // an owl on the beam, blinking
     } else if (d.kind === 'bells') {
       // a row of small bells on a beam, each swinging a little
-      g.rect(dx - 70, dy + 4, 140, 12, '#7a5235'); g.rect(dx - 70, dy + 4, 140, 4, '#b9875a');
+      g.rect(dx - 70, dy + 4, 140, 12, '#655065'); g.rect(dx - 70, dy + 4, 140, 4, '#8a6f5c');      // the beam, stepped back like the rest (art/interior.js RECEDE)
       for (let i = 0; i < 3; i++) { const sc = 1.15 - i * 0.2; g.blit(A.smallBell, dx - 44 + i * 44, dy + 16, { rot: Math.sin(time * (1.6 + i * 0.4) + k + i) * 0.16, sx: sc, sy: sc }); }
     } else if (d.kind === 'bookcase') {
       g.blit(A.bookcase[(d.h >>> 5) % 3], dx, dy);
