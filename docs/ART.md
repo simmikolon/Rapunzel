@@ -50,7 +50,8 @@ sprite fit the rule.
 - Warm, saturated, soft: royal blue, gold, pink, orange fur, creamy
   whites. Pure black only for eyes.
 - No outline. Outline only where something would otherwise vanish (trees
-  against the sky, the witches' edge markers on birch).
+  against the sky, the witches' edge markers on birch, the black cat on
+  the tower's wall: a pale rim along its top and sides, none underneath).
 - Shading in flat planes: a highlight block and a shadow block, no
   gradients. `hatch` is for texture, not for shading.
 - Characters are chibi: head about a third of the figure, round bodies,

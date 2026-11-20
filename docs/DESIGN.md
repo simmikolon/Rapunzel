@@ -365,9 +365,10 @@ is a pool to draw from, not a promise.
   pounces at where he is, a flat hop of at most 150 px along the ledge,
   and sits again. Touching it is a scratch; a pogo from above sends it
   off, puffed up and offended. If he leaves during the wiggle it sits
-  back down; under the cloak it sees nothing. White socks, a white bib
-  and a white tail tip make a black cat a shape on a dark wall; in the
-  dark one sees its eyes.
+  back down; under the cloak it sees nothing. It is black all over, as
+  in the portraits, with yellow eyes; a thin pale contour along its top
+  and its sides keeps it a shape on a dark wall, and in the dark one
+  sees its eyes.
 - 💡 vines / green zones that slow or stick (deep forest, jungle); prefer
   slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
@@ -1723,3 +1724,18 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   bold median 74 m, mean 87 m, three scratches in 120 runs. With gates,
   starting inside: median 467 m, mean 563 m. The outside without gates
   is identical to the baseline. The atlas is 4096 x 3096.
+- 2026-11-20: The cat is black (`element/interior-cat`). Simon, after
+  playing it: in the portraits the cat is black, in the game it had come
+  out grey-blue, the colour of the room; a witch's cat should be really
+  black, with some contrast and a contour, and yellow eyes. So the fur
+  is nearly black now, a dark violet only where the light from above
+  catches the crown, the back and the tail, and the white socks, bib and
+  tail tip are gone again: they made it a house cat. What keeps it from
+  being a hole in the wall is a contour, one of the few the style
+  allows (`docs/ART.md`: only where something would otherwise vanish).
+  It is drawn by a pass over the finished sprite: every empty pixel with
+  fur beside it or under it takes a pale violet, so the line runs along
+  the top and both sides and not underneath, as a rim of light from
+  above would. The eyes are the sun's yellow with a lighter pixel, the
+  brightest thing on it. Only the drawing changed; the numbers above
+  stand.
