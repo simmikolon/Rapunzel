@@ -43,6 +43,7 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
   if (!y) return;
   if (spawn === 'scissors') world.level.nextCutY = y - 400;
   if (spawn === 'dark' && world.place.inside) world.level.nextDarkY = y + 500;          // the lights go out five metres above the start
+  else if (world.level.nextDarkY < y + 2500) world.level.nextDarkY = y + 2500 + world.level.rngDark.range(0, 6000);   // not on top of the start (a dark stretch that was due below it)
   if (spawn === 'gate') world.level.nextGateY = y + 100;                               // the first row above the start is a gate's
   else world.level.nextGateY = Math.max(world.level.nextGateY, y + 2500);              // not on top of the start
   if (spawn === 'stairs' && world.place.inside) world.level.forceLayout = 'stairsR';   // the row above the start is a flight of stairs
