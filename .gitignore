@@ -8,3 +8,6 @@ ios/build/
 
 # The deployed site, put together by tools/build_site.sh
 dist/
+
+# Logs of the local test servers
+*.log
