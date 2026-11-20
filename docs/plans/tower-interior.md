@@ -168,6 +168,12 @@ One branch each, merged when it is fun.
    opposite so it is a choice. The passage is a cut (the picture closes
    in on him and opens on the other side), he comes out on the same
    landing at the same height.
+6. ✅ **The treasury** (`element/treasure-room`), not in the first plan:
+   a golden door inside the tower leads into the witch's hoard, a room
+   with a floor and a ceiling, full of suns and chests, and a door out
+   of it 20 m higher. The gates' passage, a room furnished from a plan
+   instead of rows, and a camera that goes down as well as up while he
+   is in it.
 
 ## Open
 

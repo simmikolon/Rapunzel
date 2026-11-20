@@ -150,6 +150,15 @@ export class Particles {
       g: 0.08, drag: 3, spin: (Math.random() - 0.5) * 8, angle: Math.random() * TAU, shape: 'feather', shrink: false,
     }));
   }
+  // a chest thrown open: its gold goes up in a fountain and comes down again
+  fountain(x, y, colors, n = 22) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * 50, y,
+      vx: (Math.random() - 0.5) * 420, vy: 520 + Math.random() * 520,
+      life: 0.7 + Math.random() * 0.4, size: 8 + Math.random() * 6, color: colors[Math.floor(Math.random() * colors.length)],
+      g: 0.9, drag: 0.6, shape: Math.random() < 0.35 ? 'spark' : 'square', glow: 0.8,
+    }));
+  }
   boostTrail(x, y) {
     this.burst(x, y, 3, () => ({
       x: x + (Math.random() - 0.5) * 24, y: y + Math.random() * 10,

@@ -14,6 +14,7 @@ import { buildPowerups } from './powerups.js';
 import { buildLights } from './lights.js';
 import { buildInterior } from './interior.js';
 import { buildCat } from './cat.js';
+import { buildVault } from './vault.js';
 
 export function buildAllArt() {
   return {
@@ -33,5 +34,6 @@ export function buildAllArt() {
     lights: buildLights(),
     interior: buildInterior(),
     cat: buildCat(),
+    vault: buildVault(),
   };
 }

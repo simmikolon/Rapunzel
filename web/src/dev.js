@@ -12,6 +12,7 @@
 //   ?spawn=bat       a bat under the next healthy branch above the prince
 //   ?spawn=dark      (inside) with ?at: a dark stretch begins five metres above the start
 //   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
+//   ?spawn=vault     (inside) with ?at: a golden door to the treasury right above the start (vault1, vault2, vault3: that room)
 //   ?spawn=stairs    (inside) with ?at: a flight of stairs right above the start
 //   ?spawn=cat       (inside) the witch's cat on the next healthy ledge above the prince
 //   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince
@@ -47,6 +48,9 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
   else if (world.level.nextDarkY < y + 2500) world.level.nextDarkY = y + 2500 + world.level.rngDark.range(0, 6000);   // not on top of the start (a dark stretch that was due below it)
   if (spawn === 'gate') world.level.nextGateY = y + 100;                               // the first row above the start is a gate's
   else world.level.nextGateY = Math.max(world.level.nextGateY, y + 2500);              // not on top of the start
+  const vault = /^vault(\d)?$/.exec(spawn);
+  if (vault && world.place.inside) { world.level.nextVaultY = y + 100; if (vault[1]) world.level.forcePlan = +vault[1] - 1; }   // the first row above the start has a golden door
+  else world.level.nextVaultY = Math.max(world.level.nextVaultY, y + 2500);              // not on top of the start
   if (spawn === 'stairs' && world.place.inside) world.level.forceLayout = 'stairsR';   // the row above the start is a flight of stairs
   // the flock a dozen metres up (so its stream is whole before he gets there), and no braid cut in its way
   if (spawn === 'flock') { world.level.nextFlockY = y + 1200; world.level.nextCutY = Math.max(world.level.nextCutY, y + 5000); }
@@ -137,5 +141,5 @@ export function spawnNear(world, element) {
 }
 
 export function devLabel(world) {
-  return `${world.heightM} m  ${zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}`;
+  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}`;
 }

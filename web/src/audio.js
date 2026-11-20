@@ -373,6 +373,21 @@ class Synth {
     this.tone({ type: 'triangle', freq: 523, dur: 0.16, vol: 0.12, delay: 0.3 });
     this.tone({ type: 'triangle', freq: 784, dur: 0.3, vol: 0.12, delay: 0.46 });
   }
+  // A golden door: the latch, then gold answering, a run of bright notes up.
+  goldDoor() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.08, vol: 0.12, filter: 'lowpass', freq: 600 });
+    [659, 784, 988, 1175, 1319, 1568, 1976].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.26, vol: 0.1, delay: 0.1 + i * 0.055 }));
+    this.tone({ type: 'sine', freq: 2637, dur: 0.6, vol: 0.05, delay: 0.5 });
+  }
+  // A chest thrown open: the lid's knock, then coins ringing out.
+  chest() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.07, vol: 0.2, filter: 'lowpass', freq: 420 });
+    for (let i = 0; i < 7; i++) this.tone({ type: 'square', freq: 1760 + (i % 3) * 330 + i * 90, dur: 0.05, vol: 0.05, delay: 0.05 + i * 0.045 });
+    this.tone({ type: 'sine', freq: 1319, dur: 0.3, vol: 0.12, delay: 0.1 });
+    this.tone({ type: 'sine', freq: 1976, dur: 0.4, vol: 0.1, delay: 0.2 });
+  }
   // The great chained book: a thump of boards, then the spell in it.
   tome() {
     platform.haptic('spring');

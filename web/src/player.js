@@ -86,7 +86,8 @@ export class Player {
     if (this.invuln > 0) this.invuln -= dt;
     if (this.shield > 0) this.shield -= dt;
     if (this.boostCooldown > 0) this.boostCooldown -= dt;
-    if (this.power) this.updatePower(dt);
+    // In the treasury the power-up he brought waits (there is nothing to use it on); the magnet he finds there runs.
+    if (this.power && !(this.world.vault && this.power !== 'magnet')) this.updatePower(dt);
     this.prevY = this.y;
     if (this.heldBy) { this.updateHeld(dt, input); return; }
     if (this.frozen) { this.vx = 0; this.vy = 0; if (this.landedOn) this.y = this.landedOn.y; this.sx = approach(this.sx, 1, 14, dt); this.sy = approach(this.sy, 1, 14, dt); return; }

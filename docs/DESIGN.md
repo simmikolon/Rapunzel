@@ -623,6 +623,31 @@ is a pool to draw from, not a promise.
     small, fewer creatures and more lanterns, and no gate or swarm.
     Said as he comes up to it. The renderer has a light map for this
     (`g.dark`, `g.lamp`).
+  - ✅ the treasury (`src/vault.js`, `src/art/vault.js`): the witch's
+    hoard behind a golden door. The door is a gate in gold (a landing
+    on one side of a row, a healthy ledge on the other, so going in is
+    a choice): its leaves carry a sun, its fanlight blazes, it shines
+    and glints. The first stands in the hall, between 40 and 70 m, so
+    the youngest find one; then one every 200 to 300 m above where the
+    last lets him out. Behind it is a room of its own, 27 m high
+    between the two pillars, in a warmer stone, with a floor and a
+    ceiling: nobody lives in it, nothing crumbles, and nobody can fall
+    out of it, because the camera goes down with him there as well as
+    up; who misses a ledge lands lower and climbs again. It is full of
+    suns (rows over the ledges, columns up the chain, arcs, rings, a
+    crown of suns under the ceiling), with chests that open the first
+    time he lands on them and throw eight suns out at once, and one
+    heart. One room in three hangs the sun magnet over its first ledge
+    and its suns where only that reaches. Three plans, mirrored by the
+    side the door is on. The way out is a second golden door 20 m up:
+    he comes out into the tower that much higher, the climb counts,
+    and a line says what he took. The power-up he brought in waits
+    while he is in there (only the magnet's clock runs). On its floor
+    the hoard is heaped in the corners (coins, a crown, a sword, a
+    silver goblet, pearls), on its wall hang shelves with her cups and
+    coin stacks, her portrait, a mirror; all of it stepped back toward
+    the wall, so the suns one can take are the brightest gold in the
+    room.
   - ✅ what furnishes the wall steps back into it: the walkways, the
     ladders, what stands on a walkway (bookcases, racks, the table, the
     clockwork, the timbers) and the wall's small things are taken
@@ -856,6 +881,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
 | Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
+| The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; the room 2760 px high (a bounce off its highest platform stays under the ceiling), its door out 2040 px above the floor; 69 to 76 suns a room (three chests of 8 in two plans, two in the magnet's), one heart; the camera shows what he stands on 300 px above its bottom edge and a falling prince 400 px above it |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -1739,3 +1765,59 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   above would. The eyes are the sun's yellow with a lighter pixel, the
   brightest thing on it. Only the drawing changed; the numbers above
   stand.
+- 2026-11-20: The treasury (`element/treasure-room`). Simon picked it
+  from the ideas for the inside: a golden door into a room full of
+  suns, out of which one comes a little higher; a moment that shows well
+  in a video and a reward to play for. He asked for the room to be
+  larger than "small", with hearts in it. Decisions:
+  - It is a room, not a stretch of the tower: a third place the world
+    is in while he is there (`TREASURY` in `places.js`, not among the
+    places a round is climbed in), furnished at once from a plan
+    instead of built row by row, at the height he went in at. So the
+    gates' technique carries it both ways (the door opens, the picture
+    closes in on him and opens again), and since the door out is 20 m
+    above the floor, he is simply that much higher when he is back.
+  - Nobody can lose anything in it. A bonus room that can kill is a
+    trap for a child. It has a floor, and the camera, which everywhere
+    else only climbs, rests there on what he stands on and goes down
+    with a prince who drops, so the fall off a ledge that ends a round
+    in the tower costs a moment here. That is also why the room can be
+    two pictures high instead of one.
+  - The hoard is counted in suns, the game's own gold, so there is no
+    new currency. The chests are the one new verb: a platform that
+    opens the first time he lands on it. A heart is in every room; it
+    restores all three, as every heart does.
+  - Gold is the braid's ramp (the witch hoards what Rapunzel's hair is
+    the colour of), and what only furnishes is stepped back as in the
+    tower, after what the library taught: the suns to take have to be
+    the brightest thing in the picture.
+  - The first door stands in the hall, so that the youngest see one
+    (the kid bot's median inside is 74 m). The doors were first spaced
+    150 to 220 m apart; a good bold run then met 3.4 of them and went
+    through 2.5, so every round had two or three. At 200 to 300 m apart
+    it meets 2.4 and goes through 1.7: a door is rarer and the room an
+    event.
+  - The ceiling is 27.6 m up. At 24.4 m a bounce off the highest
+    chandelier ended at it every time, a bump and a shake per bounce;
+    now only a boost reaches it.
+  Measured on three sets of 120 seeded runs inside without gates,
+  against the same seeds without treasuries. One set is not enough
+  here: the door in the hall sends nearly every run down another path,
+  and two builds that differed only in the height of the ceiling were
+  80 m apart in the median of one set. Good bold: mean 602 m against
+  536 m, the three medians 483, 510 and 499 m against 500, 413 and
+  435 m, so about a tenth more, 35 m of it the rooms themselves (1.7
+  visits of 20 m), the rest the heart; 1.03 hits per 100 m against
+  1.02; falls 22 to 29 % of the deaths. Kid bold: mean 88 m against
+  81 m, medians 83, 84 and 66 m against 74, 74 and 59 m. The good bot
+  goes through 610 of 879 doors, stays 5.4 s (longest 9.7 s) and takes
+  37 of a room's 72 suns: it climbs straight through and hardly ever
+  lands on a chest, so that is the least a player gets; in one visit
+  in five the heart restored something. The kid bot goes through 109
+  of 239 doors and stays 7 to 8.5 s (longest 17.3 s). Nobody dies in a
+  treasury and nobody stays in one. With gates (one set of 120):
+  starting inside median 489 m, mean 565 m (467 m and 563 m); starting
+  outside median 522 m, mean 626 m (491 m and 554 m), falls 43 % of
+  the deaths. With treasuries switched off the inside is identical to
+  the cat's report and the outside to the baseline. The atlas is
+  4096 x 3206.

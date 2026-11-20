@@ -53,6 +53,10 @@ export const KIND = {
   // the one the masonry is drawn for, the top one `door`: the pillar has a
   // door there).
   step:    { w: 64, cx: 0, surface: 0, bounce: JUMP_VY, step: true },
+  // The treasury (vault.js): a chest to bounce on, which opens the first
+  // time and throws its suns out, and the room's floor from pillar to pillar.
+  chest:   { w: 96, cx: 0, surface: 0, bounce: JUMP_VY, chest: true },
+  vaultFloor: { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, floor: true },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 export const GALLERY_X = 204;
@@ -119,6 +123,9 @@ export class Platform {
     this.wobble = 0;
     this.rungAt = -10;                // the bell: when it was last landed on (world time)
     this.unlit = !!opts.unlit;        // a chandelier where the lights are out: dark until he lands on it
+    this.gold = opts.gold || null;    // a gate: 'in' is a golden door into the treasury, 'out' the one out of it
+    this.opened = false;              // a chest: landed on once, its suns are out
+    this.openedAt = -10;              // and when (world time)
     this.prevX = this.x;
   }
 

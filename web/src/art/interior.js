@@ -49,6 +49,7 @@ const K = {
 // upper half (the opening and its arch), 4 and 5 the hall's door and its
 // arch. The window is a real hole: what is outside is drawn first and shows
 // through.
+export { K as STONEWORK };            // the room's stone, for what else is built in here (art/vault.js)
 export const WALL_W = 150;
 const WIN_X0 = 60, WIN_W = 30, WIN_CX = WIN_X0 + WIN_W / 2;
 function drawWall(t, variant, rng) {
@@ -1040,7 +1041,7 @@ const RECEDE = {
   truss: 0.48, cog: 0.42, dial: 0.36, hand: 0.3, clock: 0.36, pendulum: 0.3, bellRope: 0.36, smallBell: 0.36, coil: 0.36, owl: 0.2,
   herbs: 0.36, hook: 0.3,
 };
-function recede(sprite, k, toward = K.wall) {
+export function recede(sprite, k, toward = K.wall) {
   const ctx = sprite.canvas.getContext('2d'), img = ctx.getImageData(0, 0, sprite.canvas.width, sprite.canvas.height), d = img.data;
   const to = [1, 3, 5].map((i) => parseInt(toward.slice(i, i + 2), 16));
   for (let i = 0; i < d.length; i += 4) { if (!d[i + 3]) continue; for (let c = 0; c < 3; c++) d[i + c] += (to[c] - d[i + c]) * k; }

@@ -8,6 +8,7 @@ import { windowsBetween } from './windows.js';
 import { hatchesBetween, pillarTile, hasDoor, HATCH } from './pillars.js';
 import { STONE_STYLE, STAIR } from './art/interior.js';
 import { placeOf } from './places.js';
+import { VAULT } from './vault.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -129,6 +130,16 @@ const floorLayout = (y, place) => (place.sky && cloudAmount(y) >= 0.5 ? 'cloudL+
 // baseline) nothing of it is rolled and the tower is the one it was.
 export const GATE_FROM = 12000, GATE_TO = 40000, GATE_EVERY = [10000, 16000];
 
+// Golden doors to the treasury (vault.js; inside the tower only): the first
+// VAULT_FIRST up, so that the youngest find one too (it is in the hall),
+// then one every VAULT_EVERY of climb above where the last one lets him out.
+// Its row is a gate's: the door's landing on one side, a healthy ledge on
+// the other, nothing that crumbles and nobody in it; never in the dark and
+// never at a swarm's floors. Going in is a choice, and a door one passed by
+// is gone. The plan rolls on a stream of its own; with `vaults` off (the
+// simulator's baseline) nothing of it is rolled.
+export const VAULT_FIRST = [4000, 7000], VAULT_EVERY = [20000, 30000];
+
 // Where the lights are out (inside the tower only): from DARK_FROM on,
 // every DARK_EVERY of climb, a stretch DARK_LEN long is dark. The torches
 // there are out, the windows walled up, the chandeliers unlit until he
@@ -169,6 +180,9 @@ export class Level {
     this.rngDark = rng;          // where the lights are out
     this.darks = [];             // the dark stretches built so far: { from, to, said }
     this.gates = true;           // false: a tower without gates (the simulator's baseline)
+    this.rngVault = rng;         // where the golden doors are, and which room is behind one
+    this.vaults = true;          // false: a tower without treasuries (the simulator's baseline)
+    this.forcePlan = null;       // dev: every treasury is this plan (vault.js PLANS)
     this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
     this.zones = ZONES;
     this.forceLen = null;        // dev: every branch gets this length class
@@ -207,6 +221,7 @@ export class Level {
     this.darks = [];
     this.nextDarkY = this.place.inside ? DARK_FROM + this.rngDark.range(0, 6000) : Infinity;   // the first dark stretch between 150 and 210 m
     this.nextGateY = this.gates ? GATE_FROM + this.rngGates.range(0, 5000) : Infinity;   // the first gate between 120 and 170 m
+    this.nextVaultY = this.vaults && this.place.inside ? this.rngVault.range(VAULT_FIRST[0], VAULT_FIRST[1]) : Infinity;   // the first golden door between 40 and 70 m
     this.lastPower = null;       // the kind of the last power-up (never twice in a row)
     this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
   }
@@ -224,6 +239,22 @@ export class Level {
     this.flockPlan = null; this.flockNext = false; this.nextFlockY = Math.max(this.nextFlockY, y + 4000);
     this.nextPowerY = Math.max(this.nextPowerY, y + 600);
     if (this.place.inside && this.nextDarkY === Infinity) this.nextDarkY = y + this.rngDark.range(3000, 9000);   // he came in at a gate: the dark has its turn too
+    // and the treasury: a door some way up for one who came in at a gate, none right behind one
+    if (this.vaults && this.place.inside) this.nextVaultY = this.nextVaultY === Infinity ? y + this.rngVault.range(2000, 8000) : Math.max(this.nextVaultY, y + 2000);
+  }
+
+  // He came out of the treasury at height y, having gone in at `entryY`:
+  // the tower's rows go on from here. A dark stretch that had been planned
+  // for the rows he never climbed is planned again further up (nobody
+  // steps out of the gold into the dark), and no gate stands right at the door.
+  leaveVault(y, gap, entryY) {
+    this.restartFrom(y, gap);
+    if (this.darks.some((d) => d.from > entryY)) {
+      this.darks = this.darks.filter((d) => d.from <= entryY);
+      this.nextDarkY = y + this.rngDark.range(3000, 9000);
+    }
+    this.nextDarkY = Math.max(this.nextDarkY, y + 1500);
+    this.nextGateY = Math.max(this.nextGateY, y + 2500);
   }
 
   // Is row height y in a dark stretch? And how dark is it at a height (0 to 1)?
@@ -306,6 +337,7 @@ export class Level {
   pacingAt(y) { return pacingAt(y); }
 
   generateUpTo(yTop) {
+    if (this.place.vault) return;      // the treasury is furnished at once (vault.js), it has no rows
     while (this.nextY < yTop) this.makeRow();
   }
 
@@ -433,16 +465,23 @@ export class Level {
     else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather && !dark && !this.inDark(y + FLOCK_GAP)) flockRow = 'below';
     // A gate: its landing on one side, a healthy branch on the other.
     const gateRow = !flockRow && !this.flockPlan && !this.cutPlan && !dark && y >= this.nextGateY && y < GATE_TO;
-    const P = flockRow || gateRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row: nothing crumbles, nothing small, nobody on them
+    // A golden door: the same row as a gate's, on its own plan.
+    const vaultRow = !gateRow && !flockRow && !this.flockPlan && !this.cutPlan && !dark && this.place.inside && y >= this.nextVaultY;
+    const P = flockRow || gateRow || vaultRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row: nothing crumbles, nothing small, nobody on them
       : dark ? { ...P0, dry: 0, short: 0, enemy: P0.enemy * 0.7, lantern: P0.lantern * 2.2 }   // in the dark: nothing crumbles, nothing small, fewer creatures, more lanterns
       : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
     let layout = this.nextLayout || this.pickLayout(T, y);
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
     if (flockRow) layout = floorLayout(y, this.place);
-    if (gateRow) { layout = this.rngGates.chance(0.5) ? 'gateL+branchR' : 'branchL+gateR'; this.nextGateY = y + this.rngGates.range(GATE_EVERY[0], GATE_EVERY[1]); }
+    if (gateRow) { layout = this.rngGates.chance(0.5) ? 'gateL+branchR' : 'branchL+gateR'; this.nextGateY = y + this.rngGates.range(GATE_EVERY[0], GATE_EVERY[1]); this.nextVaultY = Math.max(this.nextVaultY, y + 1500); }
+    if (vaultRow) {
+      layout = this.rngVault.chance(0.5) ? 'vaultL+branchR' : 'branchL+vaultR';
+      this.nextVaultY = y + VAULT.exit + this.rngVault.range(VAULT_EVERY[0], VAULT_EVERY[1]);
+      this.nextGateY = Math.max(this.nextGateY, y + 1500);        // two doors are not side by side
+    }
     this.nextLayout = null;
     const kinds = layout.split('+');
-    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell' || k.startsWith('stairs') || k.startsWith('gate'));
+    this.lastHadCenter = kinds.some((k) => k === 'ribbon' || k === 'bow' || k === 'swing' || k === 'cloudC' || k === 'chandelier' || k === 'bell' || k.startsWith('stairs') || k.startsWith('gate') || k.startsWith('vault'));
     if (kinds.includes('bow') || kinds.includes('bell')) this.lastBowY = y;
     const front = kinds.some((k) => k !== 'ribbon' && k !== 'bow' && !k.startsWith('balcony'));
     if (kinds.some((k) => k.startsWith('balcony') || k.startsWith('gallery') || k.startsWith('stairs'))) this.lastBalconyRow = this.rowIndex;
@@ -523,6 +562,13 @@ export class Level {
       if (slot === 'gateL' || slot === 'gateR') {
         kind = 'gate';
         opts.side = slot[4];
+        opts.x = opts.side === 'L' ? -GATE_X : GATE_X;
+      }
+      if (slot === 'vaultL' || slot === 'vaultR') {
+        // a gate in gold: it leads into the treasury
+        kind = 'gate';
+        opts.gold = 'in';
+        opts.side = slot[5];
         opts.x = opts.side === 'L' ? -GATE_X : GATE_X;
       }
       if (slot === 'galleryL' || slot === 'galleryR') {
