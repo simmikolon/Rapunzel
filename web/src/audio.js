@@ -380,6 +380,17 @@ class Synth {
     [659, 784, 988, 1175, 1319, 1568, 1976].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.26, vol: 0.1, delay: 0.1 + i * 0.055 }));
     this.tone({ type: 'sine', freq: 2637, dur: 0.6, vol: 0.05, delay: 0.5 });
   }
+  // The treasury's bubble takes him: two soft notes sliding up.
+  bubble() {
+    platform.haptic('soft');
+    this.tone({ type: 'sine', freq: 392, to: 784, dur: 0.28, vol: 0.14, slide: 'exp' });
+    this.tone({ type: 'sine', freq: 587, to: 1175, dur: 0.32, vol: 0.1, delay: 0.12, slide: 'exp' });
+  }
+  // And lets him go: a pop.
+  bubblePop() {
+    this.noise({ dur: 0.05, vol: 0.12, filter: 'highpass', freq: 2400 });
+    this.tone({ type: 'sine', freq: 1320, to: 1980, dur: 0.07, vol: 0.12 });
+  }
   // A chest thrown open: the lid's knock, then coins ringing out.
   chest() {
     platform.haptic('spring');

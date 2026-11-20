@@ -4,7 +4,7 @@ import {
   PLAYER_W, PLAYER_H, PLAYER_BODY_W, BOOST_CHARGES, BOOST_REFILL_PER_LANDING, BOOST_COOLDOWN, BOOST_SHIELD_TIME,
   MAX_HEARTS, INVULNERABLE_TIME, STOMP_VY, PX,
   POWER_TIME, POWER_WARN, POWER_GRACE, SUPER_JUMP_MUL, SUPER_BOOST_VY, SUPER_MAX_VY, SALTO_TIME,
-  FEATHER_GRAVITY, FEATHER_MAX_FALL,
+  FEATHER_GRAVITY, FEATHER_MAX_FALL, CARRY_ABOVE, CARRY_VY, CARRY_VX,
 } from './config.js';
 import { approach, clamp, moveToward, sign, easeInOutCubic, TAU } from './util.js';
 import { rainbow, POWER_FX } from './powerups.js';
@@ -49,6 +49,7 @@ export class Player {
     this.ghostT = 0;
     this.fxT = 0;                  // paces the power's particles
     this.frozen = false;           // going through a gate: he waits where he is (World.enterGate)
+    this.carried = null;           // { platform, t }: in the bubble that carries him back up (the treasury, World.rescue)
     this.heldBy = null;            // the spider's web he hangs in (enemies.js Web)
     this.wriggle = 0;              // 1 right after a tug, fading
   }
@@ -90,6 +91,7 @@ export class Player {
     if (this.power && !(this.world.vault && this.power !== 'magnet')) this.updatePower(dt);
     this.prevY = this.y;
     if (this.heldBy) { this.updateHeld(dt, input); return; }
+    if (this.carried) { this.updateCarried(dt); return; }
     if (this.frozen) { this.vx = 0; this.vy = 0; if (this.landedOn) this.y = this.landedOn.y; this.sx = approach(this.sx, 1, 14, dt); this.sy = approach(this.sy, 1, 14, dt); return; }
 
     // --- Horizontal control -------------------------------------------------
@@ -184,6 +186,36 @@ export class Player {
       this.sway = true; this.flip = Math.sin(this.idleT * 4) * 0.09;
     } else if (this.sway) { this.sway = false; this.flip = 0; }
     this.updatePowerFx(dt);
+  }
+
+  // --- The treasury's bubble ----------------------------------------------------------
+  // Taken where he fell out of the picture: nothing steers, nothing falls.
+  // The bubble rises with him, quickly at first and gently at the end, to a
+  // little above `platform`, drifting over its middle, and lets him go
+  // there: he drops onto it and bounces on.
+  carry(platform) {
+    this.carried = { platform, t: 0 };
+    this.vx = 0; this.vy = 0;
+    this.landedOn = null;
+    this.salto = null; this.sway = false; this.flip = 0;
+    this.setState('held');
+  }
+  updateCarried(dt) {
+    const c = this.carried, p = c.platform;
+    c.t += dt;
+    const tx = p.x, ty = p.y + CARRY_ABOVE;
+    this.vx = 0; this.vy = 0;
+    this.x += clamp(tx - this.x, -CARRY_VX * dt, CARRY_VX * dt);
+    this.y = Math.min(ty, this.y + clamp((ty - this.y) * 3.2, CARRY_VY[0], CARRY_VY[1]) * dt);
+    this.flip = Math.sin(this.idleT * 3.2) * 0.07;
+    this.sx = approach(this.sx, 1, 14, dt);
+    this.sy = approach(this.sy, 1, 14, dt);
+    this.updatePowerFx(dt);
+    if ((ty - this.y < 2 && Math.abs(tx - this.x) < 10) || c.t > 4 || !p.landable) {
+      this.carried = null; this.flip = 0;
+      this.setState('falling');
+      this.world.onCarryEnd(this);
+    }
   }
 
   // --- The spider's web ------------------------------------------------------------
@@ -359,6 +391,7 @@ export class Player {
     this.salto = null; this.sway = false; this.flip = 0;
     this.deathPower = this.power;          // what ran when it ended (the simulator asks)
     this.power = null; this.powerT = 0;    // over without a sound
+    this.carried = null;
     if (cause === 'caught') this.vy = 700;
     this.world.onPlayerDie(this, cause);
   }

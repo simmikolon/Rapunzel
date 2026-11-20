@@ -631,9 +631,12 @@ is a pool to draw from, not a promise.
     the youngest find one; then one every 200 to 300 m above where the
     last lets him out. Behind it is a room of its own, 27 m high
     between the two pillars, in a warmer stone, with a floor and a
-    ceiling: nobody lives in it, nothing crumbles, and nobody can fall
-    out of it, because the camera goes down with him there as well as
-    up; who misses a ledge lands lower and climbs again. It is full of
+    ceiling: nobody lives in it, nothing crumbles, and nobody falls.
+    The camera is the tower's (it only climbs; it starts with the floor
+    where the lawn lies at a round's start and stops under the
+    ceiling), and a prince who drops out of the bottom of the picture
+    is taken by a golden bubble, carried back up to the lowest thing in
+    the picture he can stand on and let down on it. It is full of
     suns (rows over the ledges, columns up the chain, arcs, rings, a
     crown of suns under the ceiling), with chests that open the first
     time he lands on them and throw eight suns out at once, and one
@@ -881,7 +884,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
 | Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
-| The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; the room 2760 px high (a bounce off its highest platform stays under the ceiling), its door out 2040 px above the floor; 69 to 76 suns a room (three chests of 8 in two plans, two in the magnet's), one heart; the camera shows what he stands on 300 px above its bottom edge and a falling prince 400 px above it |
+| The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; the room 2760 px high (a bounce off its highest platform stays under the ceiling), its door out 2040 px above the floor; 69 to 76 suns a room (three chests of 8 in two plans, two in the magnet's), one heart; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -1821,3 +1824,36 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   the deaths. With treasuries switched off the inside is identical to
   the cat's report and the outside to the baseline. The atlas is
   4096 x 3206.
+- 2026-11-20: The treasury's camera is the tower's
+  (`element/treasure-room`). Simon, after playing it: the rooms are
+  great, but the camera does not feel good because it is so different;
+  it hurts in the head. It was a camera of its own in there: it rested
+  on what he stood on, a third up the picture, stepped up when he
+  landed on the next thing, and went down with a prince who dropped.
+  Each of the three was a difference to the eye: he stood higher in
+  the picture than anywhere else, the picture moved after his jump
+  instead of with it, and it moved down, which nothing in this game
+  does. So the room has the tower's camera now: it only climbs, with
+  his rise. It starts with the floor where the lawn lies at a round's
+  start, and its one rule of its own is that it stops under the
+  ceiling. What the downward camera was there for, that nobody falls in
+  the treasury, is a golden bubble instead: a prince whose head has
+  gone out of the bottom of the picture (where the tower ends the
+  round) is taken by it, carried back up to the lowest thing in the
+  picture he can stand on and let down just above it. The camera does
+  not move for it. What hangs below the picture is gone, as in the
+  tower; that is all one can lose in there.
+  Measured on the same three sets of 120 seeded runs inside without
+  gates: good bold mean 602 m against 536 m without treasuries (medians
+  513, 485 and 499 m against 500, 413 and 435 m), 1.01 to 1.05 hits per
+  100 m, falls 25 to 28 % of the deaths; kid bold mean 88 m against
+  81 m (medians 91, 84 and 66 m against 74, 74 and 59 m). The good bot
+  goes through 605 of 886 doors, stays 5.4 s (longest 8.7 s), takes 37
+  of a room's 72 suns and never needs the bubble; the kid bot goes
+  through 109 of 239, stays 6.5 to 7.5 s (longest 17 s) and is carried
+  back up 16 times. A check in the browser climbs each of the three
+  rooms and counts the frames in which the camera goes down: none.
+  With gates (one set of 120): starting inside median 489 m, mean
+  565 m; starting outside median 510 m, mean 605 m, falls 43 % of the
+  deaths. With treasuries off, inside and outside are identical to the
+  reports before. The atlas is 4096 x 3238.

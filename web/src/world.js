@@ -29,6 +29,9 @@ const DARK_DEPTH = 0.86, DARK_COLOR = '#07061a';
 const GATE_OPEN = 0.28, GATE_IRIS = 0.3;
 // The treasury's ceiling, for a head that meets it.
 const CEILING = { hitFromBelow() {} };
+// A prince who dropped out of the treasury's picture is carried back up to
+// the lowest thing he can stand on that is at least this far above its bottom edge.
+const RESCUE_MIN = 100;
 
 // Before the round starts the prince hops on the lawn by himself.
 const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
@@ -158,7 +161,7 @@ export class World {
     const pl = this.player;
     pl.update(dt, this.started ? this.input : IDLE_INPUT);
     if (this.showoff) { this.showoff.t += dt; pl.flip = clamp(this.showoff.t / this.showoff.dur, 0, 1) * TAU; }
-    if (pl.alive && !pl.frozen) this.collide();
+    if (pl.alive && !pl.frozen && !pl.carried) this.collide();
     if (this.passage) this.updatePassage(dt);
 
     for (const e of this.enemies) e.update(dt, this);
@@ -178,7 +181,8 @@ export class World {
       this.braidCut.pieces = this.braidCut.pieces.filter((pc) => pc.top - fallDist(pc.t) > camF - 200);
     }
 
-    if (pl.alive && !this.vault && pl.headY < this.cam.y - 10) pl.die('fell');      // nobody falls out of the treasury: it has a floor
+    // Out of the bottom of the picture: the end of the round, except in the treasury (rescue).
+    if (pl.alive && pl.headY < this.cam.y - 10) { if (!this.vault) pl.die('fell'); else if (!pl.carried) this.rescue(); }
     if (!pl.alive) {
       this.overT += dt;
       if ((pl.deathCause === 'caught' && this.overT > 1.3) || pl.headY < this.cam.y - 200 || this.overT > 3) this.over = true;
@@ -331,8 +335,9 @@ export class World {
   // --- The treasury (vault.js) --------------------------------------------------
   // Through a golden door: the tower is gone and he stands on the floor of
   // the witch's treasury, at the height he was at. Nothing of the tower
-  // comes along. The room is furnished at once, the camera is the room's
-  // (camera.js), and the power-up he brought waits (player.js).
+  // comes along. The room is furnished at once, the camera starts at its
+  // floor as at a round's lawn (camera.js), and the power-up he brought
+  // waits (player.js).
   enterVault(gate) {
     const pl = this.player, from = this.placeName;
     this.setPlace(TREASURY.name);
@@ -342,7 +347,7 @@ export class World {
     const room = furnishVault(this, pl.y, gate.side, this.level.child(this.level.rngVault), this.level.forcePlan);
     this.vault = { ...room, from, entryY: pl.y, suns0: this.suns, hearts0: pl.hearts, t0: this.time };
     pl.landedOn = this.platforms.find((p) => p.kind === 'vaultFloor');
-    this.cam.setRoom({ lo: room.camLo, hi: room.camHi, stand: room.floor });
+    this.cam.setRoom({ lo: room.camLo, hi: room.camHi });
     this.toast(this.place.arrive, VAULT_LOOK.doorLight, 2.2);
     this.onVaultEnter(pl, this.vault);
   }
@@ -363,9 +368,28 @@ export class World {
     this.vault = null;
     this.onVaultLeave(pl, { suns: got, of: v.suns, hearts: pl.hearts - v.hearts0, time: this.time - v.t0 });
   }
+  // Nobody falls in the treasury. He dropped out of the bottom of the
+  // picture: in the tower that is the end of the round; in here a golden
+  // bubble takes him, carries him back up to the lowest thing in the
+  // picture he can stand on (in a row of two, the nearer) and lets him down
+  // on it. The camera stays where it is: it is the tower's, it only climbs.
+  rescue() {
+    const pl = this.player, floor = this.cam.y + RESCUE_MIN;
+    let to = null;
+    for (const p of this.platforms) {
+      if (!p.landable || p.kind === 'chest' || p.y < floor) continue;
+      if (!to || p.y < to.y - 40 || (Math.abs(p.y - to.y) <= 40 && Math.abs(p.x - pl.x) < Math.abs(to.x - pl.x))) to = p;
+    }
+    if (!to) return;                        // (the door out is always there)
+    pl.carry(to);
+    this.audio.bubble();
+    this.onRescue(pl, to);
+  }
+  onCarryEnd(pl) { this.audio.bubblePop(); this.particles.sparkles(pl.x, pl.y + PLAYER_H * 0.5, 12, VAULT_LOOK.goldLight); }
   onVaultEnter(pl, room) {}                 // the simulator counts here
   onVaultLeave(pl, got) {}
   onChest(pl, chest) {}
+  onRescue(pl, platform) {}
 
   // The spider's web holds whoever flies into it (enemies.js Web says how
   // he gets out); the boost shield or the star tear through it and knock
@@ -458,8 +482,6 @@ export class World {
   }
 
   cull() {
-    // in the treasury the camera comes down again: what is below the picture stays
-    if (this.vault) { this.platforms = this.platforms.filter((p) => p.alive); this.pickups = this.pickups.filter((k) => k.alive); return; }
     const floor = this.cam.y - 320;
     this.platforms = this.platforms.filter((p) => p.alive && (p.y > floor || p.kind === 'ground'));
     this.enemies = this.enemies.filter((e) => e.alive && (e.kind === 'witch' || e.y > floor - 200));
@@ -588,7 +610,6 @@ export class World {
   // ---------------------------------------------------------------- callbacks
   onPlayerLand(pl, p) {
     if (p.kind === 'ground' && !this.started) return this.groundLanding(pl);
-    if (this.cam.room) this.cam.room.stand = p.y;         // in the treasury the camera rests on what he stands on
     if (p.kind === 'gate' && !p.used && this.started && !this.passage) this.enterGate(p);
     if (p.kind === 'chest') {
       // the first landing opens it: its suns at once, in a fountain
@@ -849,6 +870,13 @@ export class World {
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);
     this.player.draw(g, cam, this.art);
+    if (this.player.carried) {
+      // the bubble that carries him (the treasury's rescue): the power-ups' soap bubble at his size, in gold
+      const V = this.art.vault, bx = cam.sx(this.player.x), by = cam.sy(this.player.y + PLAYER_H * 0.5), wob = Math.sin(this.time * 5) * 0.03;
+      g.halo(bx, by, 200, VAULT_LOOK.goldLight, 0.3, { glow: 0.4 });
+      g.blit(V.bubbleFill, bx, by, { sx: 1 + wob, sy: 1 - wob, alpha: 0.16, tint: VAULT_LOOK.goldLight });
+      g.blit(V.bubble, bx, by, { sx: 1 + wob, sy: 1 - wob, alpha: 0.95, glow: 0.2 });
+    }
     this.particles.draw(g, cam);
     this.bg.drawFront(g, cam, this.time);
     this.bg.drawFrontAtmosphere(g, cam, this.time, this);

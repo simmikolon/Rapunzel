@@ -200,7 +200,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
-  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0, webCatch: 0, webFree: 0, webBite: 0, webPunch: 0, gates: 0, darks: 0, vaultDoors: 0, vaults: 0, vaultSuns: 0, vaultSunsOf: 0, vaultHearts: 0, vaultTime: 0, vaultMaxTime: 0, chests: 0 };
+  const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0, webCatch: 0, webFree: 0, webBite: 0, webPunch: 0, gates: 0, darks: 0, vaultDoors: 0, vaults: 0, vaultSuns: 0, vaultSunsOf: 0, vaultHearts: 0, vaultTime: 0, vaultMaxTime: 0, chests: 0, rescues: 0 };
   const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
@@ -224,6 +224,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   world.onVaultEnter = (pl, room) => { stats.vaults++; stats.vaultSunsOf += room.suns; };
   world.onVaultLeave = (pl, got) => { stats.vaultSuns += got.suns; stats.vaultHearts += Math.max(0, got.hearts); stats.vaultTime += got.time; stats.vaultMaxTime = Math.max(stats.vaultMaxTime, got.time); };
   world.onChest = () => { stats.chests++; };
+  world.onRescue = () => { stats.rescues++; };
   const seenDoors = new Set();
   const seenPowers = new Set();
   const origCut = world.cutBraid.bind(world);
@@ -308,7 +309,7 @@ function summarize(all, cfg) {
     suns: total('suns'), speed: totalTime ? +(totalM / totalTime).toFixed(2) : 0,
     flocks: total('flocks'), flockPass: total('flockPass'), flockTurn: total('flockTurn'), fellAtFlock: total('fellAtFlock'),
     gates: total('gates'), darks: total('darks'),
-    vaultDoors: total('vaultDoors'), vaults: total('vaults'), vaultSuns: total('vaultSuns'), vaultSunsOf: total('vaultSunsOf'), vaultHearts: total('vaultHearts'), chests: total('chests'),
+    vaultDoors: total('vaultDoors'), vaults: total('vaults'), vaultSuns: total('vaultSuns'), vaultSunsOf: total('vaultSunsOf'), vaultHearts: total('vaultHearts'), chests: total('chests'), rescues: total('rescues'),
     vaultTime: total('vaults') ? +(total('vaultTime') / total('vaults')).toFixed(1) : 0, vaultMaxTime: +Math.max(0, ...all.map((s) => s.vaultMaxTime)).toFixed(1), endedInVault: total('endedInVault'),
     webCatch: total('webCatch'), webFree: total('webFree'), webBite: total('webBite'), webPunch: total('webPunch'),
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
@@ -333,7 +334,7 @@ export function formatReport(r) {
   lines.push(`flocks ${r.flocks}: burst through ${r.flockPass} times, turned back ${r.flockTurn} times, falls at a flock ${r.fellAtFlock}`);
   if (r.gates) lines.push(`gates: gone through ${r.gates} times`);
   if (r.darks) lines.push(`dark stretches entered: ${r.darks}`);
-  if (r.vaultDoors) lines.push(`treasuries: ${r.vaults} entered of ${r.vaultDoors} golden doors; suns ${r.vaultSuns} of ${r.vaultSunsOf}, chests ${r.chests}, visits that restored hearts ${r.vaultHearts}; ${r.vaultTime} s inside on average (longest ${r.vaultMaxTime} s), runs that ended inside ${r.endedInVault}`);
+  if (r.vaultDoors) lines.push(`treasuries: ${r.vaults} entered of ${r.vaultDoors} golden doors; suns ${r.vaultSuns} of ${r.vaultSunsOf}, chests ${r.chests}, visits that restored hearts ${r.vaultHearts}, carried back up by the bubble ${r.rescues} times; ${r.vaultTime} s inside on average (longest ${r.vaultMaxTime} s), runs that ended inside ${r.endedInVault}`);
   // the inside's own things are reported only there, so the outside's reports read as they always did
   if (r.cfg.place === 'inside') lines.push(`webs: caught ${r.webCatch} times (torn free ${r.webFree}, bitten ${r.webBite}), boosted through ${r.webPunch}`);
   return lines.join('\n');

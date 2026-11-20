@@ -10,11 +10,12 @@ import { PILLAR_X, TORCH_Y, TORCH, PLAIN } from './pillars.js';
 // The treasury: the witch's hoard, behind a golden door inside the tower
 // (level.js builds the door's row; world.js leads through, as through a
 // gate). A room of its own, VAULT.top high between the tower's two pillars,
-// with a floor and a ceiling, full of suns. There is nobody in it and
-// nothing crumbles; the camera goes down with him as well as up
-// (camera.js), so a prince who misses a ledge lands lower and climbs again.
-// It is a reward, not a test: the only way to lose anything in here is to
-// leave by the door at the top without having looked around.
+// with a floor and a ceiling, full of suns. There is nobody in it, nothing
+// crumbles, and nobody falls: the camera is the tower's (it only climbs,
+// and stops under the ceiling), and a prince who drops out of the bottom of
+// the picture is taken by a golden bubble and set down on the lowest thing
+// in it he can stand on (world.js rescue). It is a reward, not a test: all
+// one can lose in here is what hangs below the picture.
 //
 // The way out is that door, VAULT.exit above the floor: he comes out into
 // the tower that much higher than he went in, and the climb counts.
@@ -29,8 +30,8 @@ export const VAULT = {
   exit: 2040,            // the door out, above the floor
   top: 2760,             // the ceiling: high enough that a bounce off the highest thing in the room stays under it (a boost reaches it: he bumps his head)
   chest: 64,             // how high a chest stands
-  floorShown: 100,       // how far above the picture's bottom edge the floor lies when he stands on it
-  ceilingShown: 60,      // and how much of the ceiling's stone the picture shows at the most
+  floorShown: 100,       // how far above the picture's bottom edge the floor lies when he comes in (the lawn's place at a round's start)
+  ceilingShown: 60,      // how much of the ceiling's stone the picture shows at the most: the camera stops there
 };
 export const CHEST_SUNS = 8;
 

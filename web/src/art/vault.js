@@ -212,6 +212,33 @@ function drawShelf(t, look) {
   }
 }
 
+// --- the bubble -----------------------------------------------------------------
+// What carries a prince who dropped out of the treasury's picture back up
+// (world.js rescue): the power-ups' soap bubble at his size and in gold,
+// 68 x 68 art px, the anchor its middle. A thin shell, white where the
+// light catches it at the upper left and deeper gold at the lower right, a
+// second line inside the lit quarter so that it is a ball and not a ring,
+// the window's glint and its echo. `bubbleFill` is its inside as a flat
+// disc (drawn faint, the shell over it).
+const BUBBLE_R = 33;
+function drawBubble(t) {
+  const { p } = t;
+  const c = 34, r = BUBBLE_R;
+  const shell = (rr, pick) => {
+    for (let y = -rr; y <= rr; y++) for (let x = -rr; x <= rr; x++) {
+      const d = x * x + y * y;
+      if (d > rr * rr + rr * 0.5 || d <= (rr - 1) * (rr - 1) + (rr - 1) * 0.5) continue;
+      const col = pick(x, y);
+      if (col) p(c + x, c + y, 1, 1, col);
+    }
+  };
+  shell(r, (x, y) => (x + y < -20 ? C.white : x + y > 24 ? GOLD.shade : GOLD.hi));
+  shell(r - 2, (x, y) => (x + y < -30 ? GOLD.hi : null));
+  p(13, 15, 7, 2, C.white); p(11, 17, 2, 7, C.white); p(14, 18, 3, 2, C.white);        // the window's reflection
+  p(49, 54, 5, 1, GOLD.hi); p(54, 50, 1, 4, GOLD.hi);                                   // and its echo below
+}
+function drawBubbleFill(t) { t.disc(34, 34, BUBBLE_R - 1, C.white); }
+
 export function buildVault() {
   const door = (leaves, beyond) => makeSprite(46, 58, (t) => drawDoor(t, leaves, beyond), undefined, { axPx: 23 * 4, ayPx: 46 * 4 });
   const hoardL = makeSprite(64, 36, drawHoard, { ax: 0.5, ay: 1 });
@@ -225,6 +252,8 @@ export function buildVault() {
     chest: [false, true].map((o) => makeSprite(26, 30, (t) => drawChest(t, o), undefined, { axPx: 13 * 4, ayPx: 12 * 4 })),
     hoard: { L: hoardL, R: flipH(hoardL) },
     pile: { L: pileL, R: flipH(pileL) },
+    bubble: makeSprite(68, 68, drawBubble, { ax: 0.5, ay: 0.5 }),
+    bubbleFill: makeSprite(68, 68, drawBubbleFill, { ax: 0.5, ay: 0.5 }),
     shelf,
   };
 }

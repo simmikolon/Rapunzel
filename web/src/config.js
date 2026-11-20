@@ -117,6 +117,14 @@ export const MAGNET_ACCEL = 3600;
 export const FEATHER_GRAVITY = 0.4;    // of GRAVITY, while falling
 export const FEATHER_MAX_FALL = 600;
 
+// The treasury's bubble (World.rescue, Player.carry): it sets a prince who
+// dropped out of the picture down from this far above a platform, rising at
+// between the two speeds (fast at first, gently at the end) and drifting
+// sideways at up to CARRY_VX.
+export const CARRY_ABOVE = 130;
+export const CARRY_VY = [240, 760];
+export const CARRY_VX = 520;
+
 // Scoring: 100 px == 1 m of tower climbed
 export const PX_PER_METER = 100;
 
