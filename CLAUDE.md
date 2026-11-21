@@ -39,14 +39,26 @@ which only copies the two folders together). The design document
   `?spawn=bat` hangs a bat under the next branch, `?at=170&spawn=flock` builds a
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
-  altitude and zone, `?fx=off|bloom|full`.
+  altitude and zone, `?fx=off|bloom|full`, `?place=inside|outside` picks
+  where the round is climbed whatever the title's selector says (inside,
+  `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
+  nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,
+  `?spawn=web` spins a spider's web under it, `?spawn=cat` sits the witch's cat on it, `?spawn=ghost` sends a ghost, `?at=150&spawn=stairs` builds a flight
+  of stairs above the start). `?at=150&spawn=gate` puts a gate to the
+  other place above the start, in either place;
+  `?place=inside&at=50&spawn=vault` puts a golden door to the treasury
+  above the start (`vault1` to `vault6` pick the room's first section);
+  `?place=inside&at=200&spawn=dark` puts the lights out above the start.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
   in `web/src/art/logo.js` for now.
 - Simulator: `node tools/analyze.mjs http://localhost:8000/dev/sim.html 40 good bold`
-  (also `kid`, `cautious`; then `<cap> <seedBase> <startM>`, e.g.
-  `... 40 good bold 1100 100 450` measures the sky from 450 m). Target for
+  (also `kid`, `cautious`; then `<cap> <seedBase> <startM> <place> <gates> <vaults>`, e.g.
+  `... 40 good bold 1100 100 450` measures the sky from 450 m and
+  `... 40 good bold 1500 1 0 inside` the inside of the tower; `off`
+  for `<gates>` runs the tower without gates, a second `off` without
+  treasuries: `... inside off off` is the inside's baseline). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.
 - Headless browser checks need Playwright (on this machine:
@@ -82,6 +94,7 @@ which only copies the two folders together). The design document
   `beat` = 300 px.
 - Drawing goes through the renderer facade `g` (`web/src/gfx/renderer.js`);
   gameplay code never touches PixiJS. Pass `glow` on draw calls for bloom.
+  `g.dark(amount)` makes a frame dark and `g.lamp(x, y, r)` lights it.
 - Keep kids in mind: hazards telegraphed, no trap without a way out.
 - Commit messages describe the change and the measured effect; no model
   names in commits, code or docs.

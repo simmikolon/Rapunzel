@@ -311,6 +311,119 @@ class Synth {
     this.tone({ type: 'sine', freq: f, dur: 0.5, vol: 0.07 });
     this.tone({ type: 'triangle', freq: f * 2, dur: 0.22, vol: 0.025 });
   }
+  // The bell inside the tower, rung by a landing: a strike and its long hum.
+  bell() {
+    platform.haptic('spring');
+    this.tone({ type: 'sine', freq: 392, dur: 1.4, vol: 0.2 });
+    this.tone({ type: 'sine', freq: 784, dur: 0.9, vol: 0.09 });
+    this.tone({ type: 'triangle', freq: 1176, dur: 0.5, vol: 0.05 });
+    this.tone({ type: 'square', freq: 1960, dur: 0.05, vol: 0.04 });
+  }
+  // A landing on a chandelier: its chains and candle cups clink.
+  clink() {
+    this.tone({ type: 'triangle', freq: 2100, dur: 0.08, vol: 0.04 });
+    this.tone({ type: 'triangle', freq: 2640, dur: 0.1, vol: 0.03, delay: 0.05 });
+  }
+  // The spider's web: flown into (a soft stretch), a tug at it (a pluck, a
+  // step higher each time), torn (a rip), and the spider setting out (ticks).
+  webCatch() {
+    platform.haptic('soft');
+    this.tone({ type: 'sine', freq: 520, to: 260, dur: 0.22, vol: 0.14 });
+    this.noise({ dur: 0.12, vol: 0.06, filter: 'highpass', freq: 3000 });
+  }
+  webTug(n = 1) {
+    platform.haptic('bounce', 0.7);
+    const f = 440 * Math.pow(1.26, n);
+    this.tone({ type: 'triangle', freq: f, to: f * 1.5, dur: 0.09, vol: 0.14 });
+    this.noise({ dur: 0.07, vol: 0.07, filter: 'highpass', freq: 2500 });
+  }
+  webTear() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.22, vol: 0.16, filter: 'bandpass', freq: 3200, to: 900, q: 0.8 });
+    this.tone({ type: 'triangle', freq: 700, to: 1400, dur: 0.14, vol: 0.1 });
+  }
+  skitter() { for (let i = 0; i < 5; i++) this.tone({ type: 'square', freq: 1700 + (i % 2) * 300, dur: 0.02, vol: 0.03, delay: i * 0.07 }); }
+  // The witch's cat: a meow as it crouches, a hiss as it pounces, a yowl as it is sent off.
+  meow() {
+    this.tone({ type: 'sawtooth', freq: 620, to: 880, dur: 0.16, vol: 0.06, slide: 'lin' });
+    this.tone({ type: 'sawtooth', freq: 880, to: 560, dur: 0.22, vol: 0.06, delay: 0.16, slide: 'lin' });
+  }
+  hiss() { this.noise({ dur: 0.22, vol: 0.14, filter: 'highpass', freq: 3200 }); }
+  yowl() {
+    platform.haptic('bounce', 0.8);
+    this.tone({ type: 'sawtooth', freq: 900, to: 1500, dur: 0.12, vol: 0.09, slide: 'lin' });
+    this.tone({ type: 'sawtooth', freq: 1500, to: 500, dur: 0.3, vol: 0.09, delay: 0.12, slide: 'lin' });
+  }
+  // The lights are out: a breath that takes the flames, a low note after it.
+  lightsOut() {
+    this.noise({ dur: 0.5, vol: 0.12, filter: 'bandpass', freq: 1400, to: 300, q: 0.8 });
+    this.tone({ type: 'sine', freq: 196, to: 131, dur: 0.7, vol: 0.12, delay: 0.15 });
+  }
+  // A chandelier's candles catch: a small rush and a warm chord.
+  candleLit() {
+    platform.haptic('soft');
+    this.noise({ dur: 0.16, vol: 0.08, filter: 'bandpass', freq: 900, to: 2600, q: 1 });
+    for (const [f, d] of [[523, 0], [659, 0.05], [784, 0.1]]) this.tone({ type: 'triangle', freq: f, dur: 0.3, vol: 0.07, delay: d });
+  }
+  // Through a gate: the door's latch and creak, then a rising pair of notes.
+  gate() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.08, vol: 0.14, filter: 'lowpass', freq: 500 });
+    this.tone({ type: 'sawtooth', freq: 140, to: 260, dur: 0.24, vol: 0.05, slide: 'lin' });
+    this.tone({ type: 'triangle', freq: 523, dur: 0.16, vol: 0.12, delay: 0.3 });
+    this.tone({ type: 'triangle', freq: 784, dur: 0.3, vol: 0.12, delay: 0.46 });
+  }
+  // A golden door: the latch, then gold answering, a run of bright notes up.
+  goldDoor() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.08, vol: 0.12, filter: 'lowpass', freq: 600 });
+    [659, 784, 988, 1175, 1319, 1568, 1976].forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.26, vol: 0.1, delay: 0.1 + i * 0.055 }));
+    this.tone({ type: 'sine', freq: 2637, dur: 0.6, vol: 0.05, delay: 0.5 });
+  }
+  // The treasury's bubble takes him: two soft notes sliding up.
+  bubble() {
+    platform.haptic('soft');
+    this.tone({ type: 'sine', freq: 392, to: 784, dur: 0.28, vol: 0.14, slide: 'exp' });
+    this.tone({ type: 'sine', freq: 587, to: 1175, dur: 0.32, vol: 0.1, delay: 0.12, slide: 'exp' });
+  }
+  // And lets him go: a pop.
+  bubblePop() {
+    this.noise({ dur: 0.05, vol: 0.12, filter: 'highpass', freq: 2400 });
+    this.tone({ type: 'sine', freq: 1320, to: 1980, dur: 0.07, vol: 0.12 });
+  }
+  // A piece of the hoard taken: bright notes up, one more the more it is worth.
+  treasure(value = 3) {
+    platform.haptic('bounce', 1);
+    const notes = [1047, 1319, 1568, 2093].slice(0, value >= 10 ? 4 : value >= 5 ? 3 : 2);
+    notes.forEach((f, i) => this.tone({ type: 'triangle', freq: f, dur: 0.22, vol: 0.12, delay: i * 0.06 }));
+    this.tone({ type: 'sine', freq: notes[notes.length - 1] * 2, dur: 0.3, vol: 0.04, delay: notes.length * 0.06 });
+  }
+  // A chest thrown open: the lid's knock, then coins ringing out.
+  chest() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.07, vol: 0.2, filter: 'lowpass', freq: 420 });
+    for (let i = 0; i < 7; i++) this.tone({ type: 'square', freq: 1760 + (i % 3) * 330 + i * 90, dur: 0.05, vol: 0.05, delay: 0.05 + i * 0.045 });
+    this.tone({ type: 'sine', freq: 1319, dur: 0.3, vol: 0.12, delay: 0.1 });
+    this.tone({ type: 'sine', freq: 1976, dur: 0.4, vol: 0.1, delay: 0.2 });
+  }
+  // The great chained book: a thump of boards, then the spell in it.
+  tome() {
+    platform.haptic('spring');
+    this.noise({ dur: 0.1, vol: 0.2, filter: 'lowpass', freq: 380 });
+    for (let i = 0; i < 4; i++) this.tone({ type: 'triangle', freq: 392 * Math.pow(1.26, i), dur: 0.16, vol: 0.09, delay: 0.04 + i * 0.05 });
+    this.tone({ type: 'sine', freq: 1568, dur: 0.4, vol: 0.05, delay: 0.24 });
+  }
+  // The bat swarm is coming: a flurry of squeaks.
+  swarmWarn() { for (let i = 0; i < 6; i++) this.tone({ type: 'square', freq: 2300 + (i % 3) * 420, to: 3100 + (i % 2) * 500, dur: 0.05, vol: 0.04, delay: i * 0.09 }); }
+  // The ghost: fading in (a soft rising "ooh"), popped by a pogo (a falling whoop).
+  ghostIn() {
+    this.tone({ type: 'sine', freq: 330, to: 520, dur: 0.5, vol: 0.07, attack: 0.15, slide: 'lin' });
+    this.tone({ type: 'sine', freq: 495, to: 780, dur: 0.5, vol: 0.03, attack: 0.2, slide: 'lin' });
+  }
+  ghostPop() {
+    this.tone({ type: 'sine', freq: 700, to: 180, dur: 0.3, vol: 0.14 });
+    this.noise({ dur: 0.18, vol: 0.06, filter: 'lowpass', freq: 900 });
+  }
   // A power-up starts: each has its own short motif.
   power(kind) {
     platform.haptic('spring');

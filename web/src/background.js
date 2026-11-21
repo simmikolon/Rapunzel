@@ -6,6 +6,7 @@ import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleA
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
 import { StringLights } from './lights.js';
+import { Interior } from './interior.js';
 import { windowsBetween } from './windows.js';
 import { fallDist, fallSwing } from './platforms.js';
 
@@ -18,6 +19,9 @@ import { fallDist, fallSwing } from './platforms.js';
 //   -> fireflies (drawn after the actors) -> lighting, the string lights'
 //      glow over it, and the vignette.
 // Stars, the moon and the fireflies also go into the bloom layer (`glow`).
+// Inside the tower (places.js) the room's own painter draws instead
+// (interior.js); the sky, the far layer, the forest and the braid here are
+// then what its windows show.
 
 // Keyed to the zone bands (100 px = 1 m): forest floor, deep forest from
 // 120 m, dawn light at the windows from 250 m, open sky above the trees
@@ -73,7 +77,14 @@ export class Background {
     for (const f of this.fireflies) { f.vx = 0; f.vy = 0; }
     this.atmo = new Atmosphere(art, r);
     this.lights = new StringLights(art);
+    this.interior = new Interior(art, this);
+    this.place = null;
   }
+
+  // Where the round is climbed (places.js): the world says so before every reset.
+  setPlace(place) { this.place = place; }
+  get inside() { return !!this.place && this.place.inside; }
+  skyColors(cam) { return skyAt(cam.y); }
 
   // A new round reseeds what can touch gameplay (the gusts that swing the braid).
   reset(rng) { this.atmo.reset(rng); this.lights.reset(); }
@@ -89,16 +100,20 @@ export class Background {
     g.sky(top, bot);
   }
 
+  // Seen from inside the tower nothing out here goes into the bloom layer
+  // (it would shine through the wall), and the moon stands where a window
+  // can pass over it.
   drawFar(g, cam, time) {
     const camF = cam.layerY(PARALLAX_FAR);
     const night = nightAlpha(cam.y);
+    const bloom = this.inside ? 0 : 1;
     if (night > 0) {
       for (const s of this.stars) {
         const sy = ((H - (s.y - camF)) % H + H) % H;        // world y up, screen y down
         const tw = 0.5 + 0.5 * Math.sin(time * 2 + s.ph);
-        g.rect(Math.round(s.x), Math.round(sy), s.s, s.s, '#ffffff', night * (0.4 + 0.6 * tw), { glow: 0.7 });
+        g.rect(Math.round(s.x), Math.round(sy), s.s, s.s, '#ffffff', night * (0.4 + 0.6 * tw), { glow: 0.7 * bloom });
       }
-      g.blit(this.art.tiles.moon, W - 150, 170 + Math.sin(time * 0.2) * 4, { alpha: night, glow: 0.6 });
+      g.blit(this.art.tiles.moon, this.inside ? W / 2 + 16 : W - 150, (this.inside ? 330 : 170) + Math.sin(time * 0.2) * 4, { alpha: night, glow: 0.6 * bloom });
     }
     const ca = cloudAlpha(cam.y);
     if (ca > 0) {
@@ -149,7 +164,7 @@ export class Background {
   // decides where); a lit one flickers and glows a little. None where a
   // balcony sits on the wall.
   drawWindows(g, cam, camF, time, world) {
-    const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony') : [];
+    const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony' || p.kind === 'gate') : [];   // a gate's door takes a window's place too
     const spr = this.art.windows;
     for (const w of windowsBetween(camF - 130, camF + H + 10, blockers)) {
       const sx = W / 2 + w.x + cam.ox, sy = H - (w.ly - camF) + cam.oy;
@@ -351,6 +366,7 @@ export class Background {
   }
 
   drawBack(g, cam, time, world) {
+    if (this.inside) return this.interior.drawBack(g, cam, time, world);
     this.drawSky(g, cam);
     this.drawFar(g, cam, time);
     this.drawForest(g, cam);
@@ -372,9 +388,11 @@ export class Background {
   }
 
   // Closest layer: big leaves and mist drifting in front of everything.
-  drawFrontAtmosphere(g, cam, time, world) { this.atmo.drawFront(g, cam, time, world); }
+  drawFrontAtmosphere(g, cam, time, world) { if (!this.inside) this.atmo.drawFront(g, cam, time, world); }
 
+  // No weather indoors: no gusts, fog, leaves or string lights.
   updateAtmosphere(dt, cam, time, world) {
+    if (this.inside) return;
     this.atmo.update(dt, cam, time, world);
     this.lights.update(dt, cam, time, world, this.atmo.gustEnv());
   }
@@ -397,19 +415,20 @@ export class Background {
     if (amount <= 0) return;
     const night = nightAlpha(cam.y);
     const alpha = amount * (0.55 + 0.45 * night);
-    const spr = this.art.lanterns.far;
+    const spr = this.art.lanterns.far, bloom = this.inside ? 0 : 1;
     for (const l of this.skyLanterns) {
       if ((l.f > 0.7) !== near) continue;
       const camL = cam.layerY(l.f);
       const sx = W / 2 + l.x + Math.sin(time * 0.5 + l.ph) * 14 + cam.ox, sy = H - (l.y - camL) + cam.oy;
       if (sy < -40 || sy > H + 40) continue;
-      g.halo(sx, sy, 26 * l.s, '#ffbe50', alpha * 0.5, { glow: 1 });
-      g.blit(spr, sx, sy, { sx: l.s, sy: l.s, alpha, glow: 0.8 });
+      g.halo(sx, sy, 26 * l.s, '#ffbe50', alpha * 0.5, { glow: bloom });
+      g.blit(spr, sx, sy, { sx: l.s, sy: l.s, alpha, glow: 0.8 * bloom });
     }
   }
 
   updateFireflies(dt, cam, time, world) {
     this.updateSkyLanterns(dt, cam);
+    if (this.inside) return;
     const lanterns = world ? world.pickups.filter((k) => k.alive && k.kind === 'lantern') : [];
     const p = world && world.player;
     for (const f of this.fireflies) {
@@ -435,6 +454,7 @@ export class Background {
   }
 
   drawFront(g, cam, time) {
+    if (this.inside) return;
     const a = forestAlpha(cam.y);
     const night = nightAlpha(cam.y);
     const alpha = Math.max(a, night * 0.7);
@@ -449,6 +469,7 @@ export class Background {
   }
 
   drawLighting(g, cam) {
+    if (this.inside) return this.interior.drawLighting(g, cam);
     const l = lightAt(cam.y);
     if (l.alpha > 0.001) g.lighting(l.color, l.alpha);
     this.lights.drawGlow(g);      // lamps shine through the time of day

@@ -12,6 +12,9 @@ import { buildLogo } from './logo.js';
 import { buildSign } from './sign.js';
 import { buildPowerups } from './powerups.js';
 import { buildLights } from './lights.js';
+import { buildInterior } from './interior.js';
+import { buildCat } from './cat.js';
+import { buildVault } from './vault.js';
 
 export function buildAllArt() {
   return {
@@ -29,5 +32,8 @@ export function buildAllArt() {
     sign: buildSign(),
     powerups: buildPowerups(),
     lights: buildLights(),
+    interior: buildInterior(),
+    cat: buildCat(),
+    vault: buildVault(),
   };
 }

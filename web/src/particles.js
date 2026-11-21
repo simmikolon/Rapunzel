@@ -87,11 +87,12 @@ export class Particles {
       g: 0.1, drag: 2.5, spin: (Math.random() - 0.5) * 10, shape: 'leaf', shrink: false,
     }));
   }
-  crumble(x, y, w, dry = true) {
+  // `colors`: [light, dark] of the material when it is not wood (a stone ledge).
+  crumble(x, y, w, dry = true, colors = null) {
     this.burst(x, y, 14, () => ({
       x: x + (Math.random() - 0.5) * w, y: y - Math.random() * 30,
       vx: (Math.random() - 0.5) * 160, vy: -40 + Math.random() * 160,
-      life: 0.8 + Math.random() * 0.6, size: 6 + Math.random() * 8, color: Math.random() < 0.5 ? (dry ? C.dry : C.barkMid) : (dry ? C.dryDark : C.barkDark),
+      life: 0.8 + Math.random() * 0.6, size: 6 + Math.random() * 8, color: colors ? colors[Math.random() < 0.5 ? 0 : 1] : Math.random() < 0.5 ? (dry ? C.dry : C.barkMid) : (dry ? C.dryDark : C.barkDark),
       g: 0.9, drag: 0.4, spin: (Math.random() - 0.5) * 8, shape: 'leaf', shrink: false,
     }));
   }
@@ -129,6 +130,33 @@ export class Particles {
       vx: (Math.random() - 0.5) * 260, vy: 60 + Math.random() * 260,
       life: 0.9 + Math.random() * 0.6, size: 5 + Math.random() * 3, color: Math.random() < 0.5 ? C.braid : (Math.random() < 0.5 ? C.braidHi : C.braidShade),
       g: 0.15, drag: 2.2, spin: (Math.random() - 0.5) * 10, angle: Math.random() * TAU, shape: 'feather', shrink: false, glow: 0.3,
+    }));
+  }
+  // loose pages thrown up by the great chained book
+  pages(x, y, n = 8) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * 80, y: y + Math.random() * 20,
+      vx: (Math.random() - 0.5) * 260, vy: 160 + Math.random() * 260,
+      life: 0.9 + Math.random() * 0.5, size: 6 + Math.random() * 3, color: Math.random() < 0.7 ? '#fff1c4' : '#d8c9a0',
+      g: 0.12, drag: 2.4, spin: (Math.random() - 0.5) * 12, angle: Math.random() * TAU, shape: 'leaf', shrink: false,
+    }));
+  }
+  // torn threads of a spider's web
+  silk(x, y, n = 8) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * 70, y: y + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 200, vy: 40 + Math.random() * 160,
+      life: 0.7 + Math.random() * 0.5, size: 4 + Math.random() * 3, color: Math.random() < 0.6 ? '#f6f3ff' : '#cdc9e4',
+      g: 0.08, drag: 3, spin: (Math.random() - 0.5) * 8, angle: Math.random() * TAU, shape: 'feather', shrink: false,
+    }));
+  }
+  // a chest thrown open: its gold goes up in a fountain and comes down again
+  fountain(x, y, colors, n = 22) {
+    this.burst(x, y, n, () => ({
+      x: x + (Math.random() - 0.5) * 50, y,
+      vx: (Math.random() - 0.5) * 420, vy: 520 + Math.random() * 520,
+      life: 0.7 + Math.random() * 0.4, size: 8 + Math.random() * 6, color: colors[Math.floor(Math.random() * colors.length)],
+      g: 0.9, drag: 0.6, shape: Math.random() < 0.35 ? 'spark' : 'square', glow: 0.8,
     }));
   }
   boostTrail(x, y) {

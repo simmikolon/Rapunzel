@@ -123,6 +123,12 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
 - Pickups: sun drops, lanterns (boost refill), hearts; five timed
   power-ups floating in soap bubbles (star, cloak, golden spring, sun
   magnet, feather; section 7), one at a time.
+- Two places to climb: outside (all of the above) and inside the tower
+  (stone ledges, chandeliers and a bell on a chain, scaffold boards,
+  galleries, stairs; bats, guards, a ghost, spider webs; four floors;
+  section 7). The title sign picks where a round starts, gates lead
+  from one to the other between 120 and 400 m. A best height for each
+  starting place.
 - Three hearts; game over on zero hearts or falling off the bottom.
 - Procedural level in rows (the original's beats) with difficulty by
   altitude and a stress-tested reachability guarantee.
@@ -328,9 +334,43 @@ is a pool to draw from, not a promise.
 - 💡 cross branches spanning the width, broken only by a boost. ⚠️ Only
   spawn with a guaranteed charge (a lantern just below or a generator
   check); the flock's floors and lanterns are the pattern.
-- 💡 spider webs and nets that hold or slow. ⚠️ Must break on a few taps
-  or a boost.
-- 💡 vines / green zones that slow or stick (jungle); prefer slowing.
+- ✅ the spider's web (inside the tower; `Web` in `src/enemies.js`): a
+  quarter web in the corner under a healthy ledge at its pillar, with
+  its spider in the hub. It holds whoever flies into it with his head or
+  chest: he hangs there by the shoulders, the pogo dangling. Every tap
+  is a tug that tears it further, three free him (no boost is spent),
+  and he is tossed up through the ledge the web hangs under and lands
+  on it. The spider comes down from the hub for him, slowly at first,
+  and bites after 2.2 s in the web (a heart); the web lets go all the
+  same. So a web is never a fall and never for ever: it costs time, or
+  a heart if ignored. The boost shield and the star tear straight
+  through and knock the spider out (three suns); under the cloak the
+  web still holds but the spider does not come. The way round is to
+  rise beside the ledge's tip and land from above.
+- ✅ ghost (inside the tower, from 120 m, in the crow's place; `Ghost` in
+  `src/enemies.js`): a small round ghost with a candle drifts to and
+  fro between the pillars. It comes and goes: there for two to three
+  seconds (it bites; a pogo on its head sends it off), fading out, gone
+  for about two, fading in over 0.8 s with a "!" and a flaring candle,
+  harmless until it is all there. The candle never fades, with its
+  pool of light, so one always knows where the ghost is. Close to the
+  prince it says boo (arms up, mouth wide). Higher up it drifts toward
+  his height while it is there. Under the cloak it notices nothing.
+- ✅ the witch's cat (inside the tower, from the guard rooms up, most
+  in the library; `Cat` in `src/enemies.js`, `src/art/cat.js`): the
+  black cat from her portraits, in the squirrel's place on the ledges.
+  It does not patrol. It sits, swishes its tail and watches; when the
+  prince is on its ledge or just over it, within 210 px, it crouches
+  and wiggles its rear for half a second with a meow and a "!", then
+  pounces at where he is, a flat hop of at most 150 px along the ledge,
+  and sits again. Touching it is a scratch; a pogo from above sends it
+  off, puffed up and offended. If he leaves during the wiggle it sits
+  back down; under the cloak it sees nothing. It is black all over, as
+  in the portraits, with yellow eyes; a thin pale contour along its top
+  and its sides keeps it a shape on a dark wall, and in the dark one
+  sees its eyes.
+- 💡 vines / green zones that slow or stick (deep forest, jungle); prefer
+  slowing.
 - 💡 mushrooms (negative power-up): dizziness, wobbly or reversed controls
   for a few seconds. ⚠️ Frustrating for young players; clearly marked, short.
 - 💡 the witch as a level boss defending the window.
@@ -451,12 +491,188 @@ is a pool to draw from, not a promise.
   as the negative one (see enemies).
 
 **Tunnels and the inside of the tower**
-- 💡 doors and openings lead inside; the game continues on stairs, steps
-  and ledges with knights and witches; from outside the hair is visible at
-  the windows. ⚠️ A system, not an element: interior tiles, its own
-  enemies, an exit. Start with windows; do doors as short bonus rooms
-  (enter a window, climb for suns, exit higher) once zones and the dev
-  menu exist.
+- ✅ the inside of the tower as a second place (plan in
+  `docs/plans/tower-interior.md`), chosen on the title sign as the place
+  a round starts in, and reached through gates from the other.
+  ✅ Gates (from 120 m up to the trees' end at 400 m, every 100 to
+  160 m): a row is a door in the tower's wall over a stone landing on
+  one side and a healthy branch (a ledge) on the other, so going
+  through is a choice. The fanlight over the door shows where it
+  leads (a torch-lit room, or daylight and treetops). Landing on the
+  landing opens the door, the picture closes in on the prince and
+  opens again on the other side: the same landing at the same height,
+  the other place's rows above, and below him every platform as its
+  like on that side (branch and ledge, ribbon and chandelier, bow and
+  bell). Nothing can touch him on the way; a gate leads through once.
+  The round's best height counts for the place it started in. The room (`src/interior.js`,
+  `src/art/interior.js`, `src/pillars.js`): stone pillars where the
+  trunks stand, a violet-grey back wall on the tower layer with a tall
+  arched window every third tile. The windows are holes in the wall
+  tiles: the sky of that height, the stars and the moon, the far clouds,
+  the distant forest and the braid (which hangs outside, on a layer of
+  its own at 0.8) are drawn first and slide past the frames as he
+  climbs. The round starts in the entrance hall: flagstones, the shut
+  door, a torch on each pillar.
+  - ✅ stone ledge: the branch in stone (the same four lengths, rules and
+    bot), a pale slab on a stepped corbel; a cracked one (loose stones,
+    one sagging) crumbles like a dry branch.
+  - ✅ the chain: one long chain down the middle of the shaft, the
+    inside's braid. It sways in a slow heavy wave, wider as the climb
+    gets harder, and what hangs in the centre lane rides on it.
+  - ✅ chandelier (the ribbon's place): a pewter ring with four candles
+    on the chain, 112 px; it lights the room around it.
+  - ✅ bell (the bow's place): a brass bell under a wooden headstock; a
+    landing on the headstock rings it and throws him up like a bow.
+  - ✅ scaffold board: the plank swing on chains.
+  - ✅ gallery (the balcony's place, from 35 m): a wooden landing with a
+    railing in front of a door in a pillar, 160 px, in the prince's
+    plane. Never two rows running. A guard may stand on it.
+  - ✅ who lives there: bats under the ledges, guards on the galleries,
+    pike guards in the pillars' hatches (the window guard, thrusting from
+    the pillar over the ledges; a ledge's tip is out of his reach). The
+    hatches are a fixed map like the windows outside, so an empty one
+    looks like a manned one until he peeks.
+  - ✅ light: the room is dim (a violet multiply, a little deeper at
+    night), and every lamp adds a pool of its colour after it: torches
+    every third pillar tile, left and right in turn; the chandeliers;
+    the windows, with a bloom on the wall and a stepped shaft with dust
+    in it, in the colour of the sky outside, so the forest's dusk, the
+    day, the sunset and the night show inside.
+  - ✅ the spider's web under the ledges, ✅ the ghost with its candle
+    (see enemies), ✅ the bat swarm: the flock's gate from 160 m, two
+    long ledges that meet as floors, two lanterns on the lower one, a
+    stream of bats between to boost through.
+  - ✅ on the walls (purely visual, nothing for the bot): banners in the
+    prince's blue and in violet (one each side of the hall's door),
+    shields on crossed pikes, and the gallery. It is the witch's house,
+    so the pictures are hers: herself (large, in dark wood, also over
+    the hall), her grandmother, her cat, her raven, the rampion from
+    her garden, the tower in its forest, and Rapunzel in a gilt frame.
+    They hang one to three together in different sizes, some a little
+    askew. A face that looks out of its frame follows the prince with
+    its eyes; Rapunzel blinks. Small things between: old candles on
+    iron sconces (lit ones light the wall, some are burnt down), the
+    tower's keys on a board, bunches of herbs; niches with the witch's
+    potions or her crystal ball, a wall clock with a swinging pendulum
+    in the belfry. By hash, beside the window column; each floor has
+    its own mix. And the witch's own things: a tapestry with the tale
+    on it (the tower at night, the braid, the prince at its foot, the
+    witch on her broom), rare; her spare hat and a broom on two pegs by
+    the hall's door; a gilt mirror that is only glass until the prince
+    comes near, then she looks out of it; and ivy that has come in at
+    about half the windows below the trees' end, over the sill or up
+    the wall.
+  - ✅ stairs: a flight of four stone treads (64 px each, 48 px higher
+    each) built out from a pillar on a half arch, the top tread at the
+    pillar under a door in it. A row of its own, wide and safe, a
+    relief like the long ledge; most flights carry a sun over each
+    tread. The next row is measured from the top tread, 170 to 300 px
+    above it.
+  - ✅ floors: the inside has zones in the outside's bands, each with its
+    stone, its dusk, what hangs on its walls and who lives there, and it
+    says its name when he gets there. The hall (0 m: gentle, banners);
+    the guard rooms (120 m: cool stone, shields and banners, galleries
+    with guards, pikes from the hatches, stairs); the library (250 m:
+    warm stone, shelves of books and Rapunzel's portraits, webs and
+    ghosts); the belfry (400 m: weathered stone, cog wheels turning in
+    pairs, bells to bounce on, scaffold boards, the bats' home).
+  - ✅ the library's books (250 to 400 m). Every storey there has a
+    wooden walkway across the whole back wall, just under the window's
+    sill, its railing toward the room; the furniture stands on it left
+    and right of the window, pictures and the rest hang above within
+    reach of a ladder. The walkway is wood in shade
+    with no lit top: it stands at the back wall and is nothing to land
+    on. Tall bookcases in three
+    fillings (a potion, an hourglass, a candle end or a scroll between
+    the books), a third of them with a ladder leant against them; a
+    rack of scrolls with one hung open; hung parchments and piles of
+    books with inkwell and quill as the small things; the spell book
+    open on a wall lectern, glowing, runes rising from it, a page
+    going over by itself now and then; and books that have taken wing
+    and drift about behind everything, the room's life as the
+    butterflies are the forest's (paper-pale, so they are not bats).
+    Its spring is not the bell but a great chained book on the chain
+    (`tome`, the bell's slot and bounce): pages fly when he lands on it.
+  - ✅ walkways on every floor above the hall, as in the library
+    (`storeyOn` in `src/interior.js`): the guard rooms have a wall-walk
+    of heavy planks on stone corbels with the racks, the watch's table,
+    the helmets and the notice on it; the belfry a staging of rough
+    boards with a rope for a rail, the bell ropes coming down to it
+    and the clockwork beside it. In the hall the pegs with the hat and
+    the broom hang by the door within reach from the floor.
+  - ✅ the guard rooms' and the belfry's things (purely visual). Guard rooms: racks of pole arms
+    (put away, so without the red collar of the one that thrusts),
+    shelves of helmets (the captain's with a blue plume), the watch's
+    table with a tankard, dice and a hand of cards, a notice with the
+    prince's face and a purse under it, a signal horn. Belfry: roof
+    timbers, on some an owl that blinks; bell ropes with striped grips,
+    each swaying in its own time; the great clock's dial, its hands
+    going round; a row of small bells on a beam; coils of rope and
+    small wheels between.
+  - ✅ where the lights are out (from 150 m, a stretch of 32 to 42 m
+    every 140 to 220 m of climb, never in the hall): the torches are
+    out, the windows walled up, and the picture goes down to nearly
+    nothing, a ledge still a shape in it. What he sees he sees by his
+    own light, which goes with him, and by whatever shines: suns,
+    lanterns and power-ups glimmer, the spell book and a ghost's candle
+    keep their light, and every creature has one (a bat's eyes, the
+    lantern by a guard, the light behind a pike guard as he looks out,
+    dew on a web). The chandeliers there are unlit and catch when he
+    lands on them: he brings the light back as he climbs. To keep the
+    dark tense but fair its rows have nothing that crumbles, nothing
+    small, fewer creatures and more lanterns, and no gate or swarm.
+    Said as he comes up to it. The renderer has a light map for this
+    (`g.dark`, `g.lamp`).
+  - ✅ the treasury (`src/vault.js`, `src/art/vault.js`): the witch's
+    hoard behind a golden door. The door is a gate in gold (a landing
+    on one side of a row, a healthy ledge on the other, so going in is
+    a choice): its leaves carry a sun, its fanlight blazes, it shines
+    and glints. The first stands in the hall, between 40 and 70 m, so
+    the youngest find one; then one every 200 to 300 m above where the
+    last lets him out. Behind it is a room of its own, 47 to 50 m high
+    between the two pillars (three and a half pictures), in a warmer
+    stone, with a floor and a ceiling: nobody lives in it, nothing
+    crumbles, and nobody falls.
+    The camera is the tower's (it only climbs; it starts with the floor
+    where the lawn lies at a round's start and stops under the
+    ceiling), and a prince who drops out of the bottom of the picture
+    is taken by a golden bubble, carried back up to the lowest thing in
+    the picture he can stand on and let down on it. A room is put
+    together anew each time: the floor, then three of six sections one
+    on top of the other, each mirrored or not (the stair, from side to
+    side over the chain; the well, ledges on both sides; the magnet's,
+    with the sun magnet over its first ledge and its suns where only
+    that reaches; the chests, on a floor of two long ledges; the
+    chain, chandeliers only, the best of it out by the pillars; the
+    stairs, a flight up to a pillar's door), then the top with the
+    door out. What there is to take: suns (rows over the ledges, a
+    column over every chandelier, arcs, rings, a crown of suns under
+    the ceiling), chests that open the first time he lands on them and
+    throw eight suns out at once, and pieces of the hoard, which count
+    as suns: cut stones (3), golden goblets (5) and, inside the crown
+    of suns, the crown itself (10). One heart. A room holds what is
+    worth some 220 suns. The way out is a second golden door about
+    40 m up: he comes out into the tower that much higher, the climb
+    counts, and a line says what he took. The power-up he brought in waits
+    while he is in there (only the magnet's clock runs). On its floor
+    the hoard is heaped in the corners (coins, a crown, a sword, a
+    silver goblet, pearls), on its wall hang shelves with her cups and
+    coin stacks, her portrait, a mirror; all of it stepped back toward
+    the wall, so the suns one can take are the brightest gold in the
+    room.
+  - ✅ what furnishes the wall steps back into it: the walkways, the
+    ladders, what stands on a walkway (bookcases, racks, the table, the
+    clockwork, the timbers) and the wall's small things are taken
+    between a third and a half of the way toward the wall's colour
+    when they are drawn (`RECEDE` in `src/art/interior.js`), and the
+    walkways take their floor's tint as the wall does. In full colour
+    stay what hangs to be looked at (pictures, the mirror, the
+    tapestry, shields, banners), whatever shines, and everything he
+    stands on or meets.
+  - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
+    element: built in steps, each a branch.
+- 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
+  the gates exist.
 
 **FX and atmosphere**
 - ✅ title screen (`src/title.js`, `src/sign.js`): the game loads with a
@@ -623,7 +839,8 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 5 | Above the trees and the end of the tower | ✅ treeline, cloud platforms (thick, wispy, drifting, storm with lightning), sky lanterns, storks, updrafts, balconies with guards and flowerpots, the flock of starlings to boost through; 🔜 Rapunzel's window as a goal element; with it the forest tower exists, so a minimal campaign mode (play to the window, progress bar, stars) | in progress |
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
-| later | Tunnels / tower interior, selectable worlds, seasons and Christmas, FX preset auto-fallback | 💡 |
+| next | Inside the tower | A second place, chosen on the title sign. ✅ the switch, the room (pillars, windows with the outside behind them, the hall, ledges, chandeliers and the bell on the chain, scaffold boards, galleries, bats and guards, its light); 🔜 its own things (stairs, web, ghost, bat swarm), floors, gates. Plan in `docs/plans/tower-interior.md` | in progress |
+| later | Weather and seasons as effects (rain, snow), vines in the deep forest, selectable worlds, Christmas, FX preset auto-fallback | 💡 |
 
 Mode-independent polish (super jump portal, god rays, hit-stop) slots in
 wherever it fits.
@@ -670,6 +887,14 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Sun magnet | reach 380 px around his middle; a pulled pickup flies at 500 → 1800 px/s |
 | Feather | 40 % gravity and at most 600 px/s while falling |
 | String lights | at most one per 768 px of trunk, 65 % of the slots × the deep forest's amount; knots 8 px inside the trunks' inner edge, the right one up to 120 px higher or lower; sag 80–150 px; 8–10 bulbs of 7 × 9 art px; bounce a damped spring (about 1.3 Hz); wave of light 1.3 s; birds on 30 %, a dormouse on 25 % |
+| Inside the tower | floors: the hall 0 m (no stubs, long ledges × 2, bats × 0.8, gallery guards × 0.6, no pikes, no ghost), the guard rooms 120 m (galleries × 0.8, guards × 1.2, pikes × 2.4, bats × 1.2, ghost × 0.6, stairs × 1.5), the library 250 m (webs × 2.4, ghost × 1.9, bats × 1.5, pikes × 1.2, guards × 0.7, the chained book × 1.6 of the bow's chance), the belfry 400 m (bells × 3, boards × 2, bats × 1.9, pikes × 1.2, stairs × 0.5); a floor's stone tint, dusk and wall decor fade over 30 m; chandelier 112 px, bell 104 px (the bow's bounce), gallery 160 px at ± 204; the chain sways with the braid's amplitude (12–68 px) in a wave of 2640 px; a window every 576 px of wall, a torch every 576 px of pillar, a hatch in half of the tiles that may have one (one per 640 px of climb); the pike is 165–195 px inside (130–160 outside) |
+| Spider's web | 120 × 136 px quarter under a ledge (normal or long, healthy, no bat on it), from 65 m; the spider's tier chance × pacing × 1.0 in the hall, × 1.6 above; 3 tugs free him, the spider bites after 2.2 s; freed he is tossed 320 px up, onto the ledge |
+| Ghost | from 120 m, the crow's tier chance × pacing; 45 % of the crow's speed (60–190 px/s), turns 48 px before the pillars; there 2–3.2 s, out 0.5 s, gone 1.4–2.4 s, in 0.8 s; 56 × 64 px box; drifts toward his height at up to 46 px/s from tier 2 |
+| Stairs (inside) | layout weight 0.3 a side (a branch is 1.0), never within two rows of a gallery; 4 treads of 64 px, 48 px rise, from 28 px beside the middle to the pillar; the next row 314–444 px above the lowest tread |
+| Gates | the first between 120 and 170 m, then every 100–160 m of climb, none from 400 m up; the landing 180 px at ± 134 on the tower layer, a normal branch opposite; the door opens in 0.28 s, the picture closes and opens in 0.3 s each; 0.8 s without hits after it; the first row on the other side 270 px above the landing |
+| The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
+| The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
+| The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1176,3 +1401,504 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   be shown in the devlog). The star's 12 s, entered as not measured, is
   in the "before" numbers of the bats and flock entry above. Tidied on
   the way: imports nothing used any more, two exports nothing imported.
+- 2026-11-19: Next: the inside of the tower as a second place, planned
+  in `docs/plans/tower-interior.md`. Of three ideas (webs and vines as
+  more obstacles outside, weather and seasons as effects, the inside) it
+  is the one that answers the long climb's sameness with a new place
+  instead of a twelfth enemy. Decided with it: the braid hangs outside
+  and is only seen through the windows, so the centre lane gets
+  platforms of its own (chandeliers, a bell); the spider web moves
+  inside, where it starts a roster of its own instead of adding to the
+  outside's; it is a mode chosen on the title sign first, gates between
+  outside and inside come last. Weather stays an effects branch for
+  whenever, vines an idea for the deep forest.
+- 2026-11-19: The inside, step 1: the switch (`element/interior-switch`).
+  A round has a place (`places.js`: outside or inside); the world, the
+  level and the background ask it instead of deciding themselves (sky
+  rows, the witch and the storks are the outside's; zone multipliers
+  come from the place's table). The title sign has two boards under
+  PLAY, a tree and a door, the chosen one with the gold rim (O / I or
+  left / right on a keyboard); the choice and a best height per place
+  are saved; `?place=` and a simulator argument pick it too. The sprite
+  atlas is 4096 wide now (4096 x 1958 instead of 2048 x 3810, which was
+  close to the 4096 limit of older phones). Inside is a stub until the
+  room is built: the forest's rows with only bats. The outside is
+  unchanged: the simulator's report is identical on the same seeds
+  before and after (40 good bold, 40 kid cautious, 40 good bold from
+  450 m).
+- 2026-11-19: The inside, step 2: the room (`element/interior-room`).
+  The tower's inside is a place to play now. Decided while building:
+  (1) The centre lane hangs on one chain down the shaft instead of a
+  chain per chandelier: single chains to the top of the screen crossed
+  each other and every platform above, and one swaying chain is the
+  braid's mechanic in the room's own material, in the prince's plane,
+  so nothing inside needs layer heights. (2) The chandelier is pewter,
+  not brass: in gold it vanished in front of the braid, which hangs
+  right behind the centre windows. The bell stays brass. (3) Nothing
+  that only decorates is red in here (a red pennant under a ledge read
+  as something that bites; it is the prince's blue now, the gallery's
+  cloth too). (4) The balcony's drawing was not reused: a gallery is
+  drawn new, a wooden landing at a pillar's door. (5) The window guard
+  is the same class with a layer factor from his window, so a hatch in
+  a pillar (the prince's plane) works like a window on the tower layer;
+  his pike is 35 px longer inside because he thrusts from the edge.
+  (6) What is outside goes into no bloom layer when seen from inside
+  (the moon and the sky lanterns shone through the wall), and the moon
+  stands where a window passes over it. (7) The first 120 m are a band
+  of their own, the hall: without it the kid bot fell earlier than
+  outside (median 66 m against 71 m) although nothing had bitten it,
+  because inside nothing rides up with the camera as the ribbons do and
+  a miss falls further; more long ledges and no stubs there made up for
+  it. Measured on 120 seeded runs inside: good bold median 551 m, mean
+  576 m, 1.17 hits per 100 m (0.16 in the hall, 1.08 to 1.47 per 100 m
+  band from 100 to 600 m, just under 2 from 600 to 800 m), falls 6 % of
+  the deaths; good cautious median 311 m; kid bold median 72 m, mean
+  85 m (outside 71 m and 81 m); kid cautious 71 m. A good run gets
+  further inside than outside (median 424 m there) because hardly
+  anyone falls in here: there is no sky. That room is left for step 3's
+  stairs, web and ghost on purpose. The outside is unchanged: its
+  simulator report is identical on the same seeds before and after. The
+  atlas is 4096 x 2502 now.
+- 2026-11-19: The spider's web (`element/interior-web`), the first of
+  the inside's own things. It hangs in the corner under a ledge, not on
+  top of it and not free on a pillar: under the ledge it takes nothing
+  away from the landing, asks for the way round the tip instead of
+  straight up through the stone, and whoever is freed from it is
+  tossed up through that very ledge and lands on it, which is what
+  makes "never a fall" true without a rule in the generator. A tap in
+  the web is a tug and spends no boost (three free him); "one boost"
+  is flying into it with the shield on, which tears it and knocks the
+  spider out for the usual three suns. The spider's walk is slow at
+  first (the square of the time), so the 2.2 s are seen coming. Nothing
+  else is drawn for it: the spider is the one the forest has. Measured
+  on 120 seeded runs inside: a good bold run meets 2.4 webs (a third
+  caught and torn free, the rest boosted through), nobody was bitten
+  (the bots tap at once; a child who does not will lose a heart and
+  still land on the ledge); good bold median 518 m, mean 617 m, 1.18
+  hits per 100 m, falls 7 % of the deaths; kid bold median 72 m, mean
+  84 m, as before. So the web costs time and a boost charge, not
+  hearts; the room a good run has inside is left for the ghost and the
+  stairs. The outside's report is identical on the same seeds.
+- 2026-11-19: The ghost (`element/interior-ghost`): the inside's
+  patroller. Its idea is the candle: it is drawn apart from the ghost
+  and never fades, so the ghost that is "gone" is a candle floating by
+  itself with its light on the wall, and the fade-in (0.8 s, a "!", the
+  candle flaring) is a telegraph one can read from across the room.
+  Solid is the only state that bites or can be pogoed. It keeps out of
+  the hall: with ghosts below 120 m the kid bot lost five metres of
+  median to dodging them. Measured on 120 seeded runs inside (webs and
+  ghosts in): good bold median 476 m, mean 513 m, 1.13 hits per 100 m
+  (1.05 to 1.66 per band from 100 to 1000 m), falls 19 % of the deaths
+  (the ghost is what a good run steps aside for, and stepping aside is
+  where falls come from); kid bold median 72 m, mean 79 m (outside 71 m
+  and 81 m). The inside is now about as far a climb as the outside
+  (median 424 m, mean 477 m there), without touching the other
+  creatures' numbers. The outside's report is identical on the same
+  seeds.
+- 2026-11-19: The bat swarm (`element/interior-swarm`): the flock's
+  gate inside, unchanged in its rules (two floors, the stream 345 px
+  above the lower one, two lanterns that stay, turned back without
+  losing a heart) and only different in who flies: the flock takes a
+  flag and draws bats, squeaks instead of calls, sparks instead of
+  feathers. Measured on 120 seeded runs inside: 180 swarms, 160 burst
+  through, 19 turned back, no fall at one; good bold median 488 m, mean
+  571 m, 1.04 hits per 100 m (0.99 to 1.57 per band from 100 to
+  1100 m), falls 26 % of the deaths; kid bold median 72 m, mean 78 m.
+  The outside's report is identical on the same seeds.
+- 2026-11-19: On the walls (`element/interior-decor`): banners, shields
+  on crossed pikes and framed portraits of Rapunzel on the back wall,
+  so the room is somebody's and the wall between two windows is not
+  bare. The suit of armour was left out: next to guards in helmets a
+  standing armour reads as one more of them. No reds here either. The
+  portrait is the sign's Rapunzel drawn into a frame, and she blinks.
+  Purely visual: the simulator does not draw, its reports are unchanged.
+- 2026-11-19: Stairs (`element/interior-stairs`), the last of the
+  inside's own things for now. A pogo does not need stairs, so they are
+  not a way up but a place to come down on: three treads and a gallery
+  make a landing 350 px wide across the middle of the room, each tread
+  an ordinary platform. They lead up to a gallery because a flight that
+  ends at a blank pillar looks unfinished, and the gallery brings its
+  door with it. The generator keeps one row for the whole flight (the
+  lowest tread's height) and measures the next row from the gallery, so
+  the next row is within a bounce of every tread. No guard at the top:
+  with one the kid bot's hits in the hall doubled, and a relief should
+  not bite. Measured on 120 seeded runs inside, with everything of step
+  3 in: good bold median 523 m, mean 604 m, 1.01 hits per 100 m (0.81
+  to 1.54 per band from 100 to 1200 m), falls 21 % of the deaths; good
+  cautious median 347 m; kid bold median 74 m, mean 88 m (outside 71 m
+  and 81 m); kid cautious 76 m. 189 bat swarms, none fallen at. The
+  outside's report is identical on the same seeds. The atlas is 4096 x
+  2584.
+- 2026-11-19: The stairs rebuilt (still `element/interior-stairs`). The
+  first flight hung in the middle of the room beside a wooden gallery
+  and looked as if it floated (Simon, playing it). Now it is masonry
+  that grows out of the pillar: four treads, the top one at the
+  pillar's face under a door, the whole on a half arch that springs
+  from the pillar below, in the pillar's stone with only the treads in
+  the pale stone he stands on. Rule for anything built in here: it must
+  be seen to be carried by a pillar, the chain or the wall. Measured on
+  120 seeded runs inside: good bold median 486 m, mean 570 m, 1.02 hits
+  per 100 m, falls 25 % of the deaths; kid bold median 73 m, mean 85 m.
+  The outside's report is identical.
+- 2026-11-19: The inside, step 4: floors (`element/interior-floors`).
+  One band of "inside the tower" became four floors in the outside's
+  bands (so a gate can lead across at a height later): the hall, the
+  guard rooms, the library, the belfry. A floor is three things at
+  once: a row in the painter's table (the stone's tint on wall and
+  pillars, the room's dusk, the wall decor: shields, books, clockwork),
+  a row in the level's zones (who lives there, what one stands on), and
+  a name that is said when he arrives. The pieces were all there; the
+  floors only lean on them differently, which is what makes 400 m in
+  here not the same room as 100 m. New drawings: two shelves of books
+  and a cog wheel (two turn in mesh). The first numbers were too easy
+  (0.95 hits per 100 m, median 570 m), the second too hard in two
+  places (23 of 52 falls in the library, where a bot stepping aside
+  for three ghosts at once steps off; 1.6 to 1.7 hits in the belfry).
+  Measured on 120 seeded runs as it is now: good bold median 486 m,
+  mean 536 m, 1.01 hits per 100 m, every band from 100 to 800 m between
+  1.06 and 1.47, falls 36 % of the deaths; good cautious median 305 m;
+  kid bold median 73 m, mean 83 m; kid cautious 73 m. The outside's
+  report is identical on the same seeds.
+- 2026-11-19: The inside, step 5: gates (`element/tower-gates`). The
+  two places are one tower now: a door in its wall leads from one to
+  the other. Decided: (1) A gate is a choice, never the only way up:
+  its row has a branch on the other side, and a gate that was used is a
+  plain landing afterwards. (2) The passage is a cut, not a seam: two
+  painters on one screen would have needed a floor across the picture
+  to hide where they meet, and a door one goes through is the honest
+  picture anyway. The door opens, the picture closes in on him, the
+  world is the other one, the picture opens. He waits meanwhile and
+  nothing can touch him. (3) He comes out where he went in: the same
+  landing, the same height (the floors inside are in the outside's
+  bands for this), so a gate never costs or gives metres, and the
+  round's best counts for the place it started in. (4) What was built
+  above the gate is thrown away and built again as the other place;
+  what is below becomes its like on that side, so there is still
+  something under him. In the simulator nobody ever dropped back below
+  a gate, so this is for players, not for the numbers. (5) No gates in
+  the first 120 m (with one at 60 m the kid bot inside reached 100 m in
+  28 % of its runs instead of 34 %) and none from 400 m up: above the
+  trees the outside is sky, which the inside has no rows for. (6) The
+  gates roll on a stream of their own and can be switched off in the
+  simulator (`... outside off`): without them the outside's report is
+  identical on the same seeds to the one before step 1, which stays
+  the baseline to measure against. Measured on 120 seeded runs with
+  gates: starting outside, good bold median 471 m, mean 533 m, 0.95
+  hits per 100 m, falls 47 % of the deaths (39 % without gates: the
+  runs now pass through the library, where one steps aside for
+  ghosts), 95 passages; starting inside, median 408 m, mean 519 m,
+  1.01 hits per 100 m, falls 32 %, 95 passages; kid bold median 71 m
+  outside and 73 m inside, as without gates.
+- 2026-11-19: The gallery (`element/interior-gallery`). Simon: the
+  tower is where the witch keeps Rapunzel, so it should be the witch
+  whose pictures hang there, in several kinds and sizes, and an old
+  candle here and there, so it looks lived in and old. Decided: the
+  pictures tell whose house it is (the witch, her grandmother with
+  spectacles, her cat, her raven), where the tale began (the rampion
+  her neighbours stole, which is what "Rapunzel" means) and where we
+  are (the tower in its forest); Rapunzel's portrait stays as one of
+  them. A hanging is one to three pictures of different sizes below
+  one another, slightly off, landscapes and still lifes a little
+  askew. The idea of its own: painted eyes are left white and the
+  painter puts the pupils in toward the prince, so the witch watches
+  him climb her tower. The big portrait hangs over the hall so it is
+  the first thing a round passes. Candles are the small thing between
+  the big ones: lit ones use the room's light pools, a third are burnt
+  down. No reds, nothing that could be taken for a platform or a
+  creature (no cage, no armour). Purely visual: the simulator does not
+  draw.
+- 2026-11-19: The witch's things (`element/interior-witch-things`),
+  four pieces Simon picked from a list: a tapestry of the tale, ivy in
+  at the windows, her hat and broom by the hall's door, a mirror she
+  appears in. The mirror keeps no state: how plainly she shows is how
+  near the prince is (full within 100 px, gone beyond 300 px), so she
+  comes and goes as he bounces past and nothing can go out of step.
+  The ivy stops where the trees stop outside (400 m): it is the forest
+  coming in, so the belfry has none. Purely visual; the simulator does
+  not draw, the atlas is 4096 x 2910.
+- 2026-11-19: The library's books (`element/interior-library`). Simon:
+  the floor is called the library, so do much more with books there:
+  cases, old scrolls, a spell book. Decided: the library is the one
+  floor whose walls are nearly full (92 % of the places instead of
+  66 %, and a second place a side per storey), because a library is
+  the room where the wall is the furniture. The bookcase is the staple
+  there, the scroll rack and the lectern with the spell book the
+  showpieces. Two ideas of its own: some books fly (five of them drift
+  behind everything while the camera is in the library, beating their
+  boards; first drawn violet, they read as small bats, so they are
+  brown and cream), and the floor's spring is a great chained book
+  instead of the bell, after the chained libraries of the time. At 2.5
+  times the bow's chance the book made the library a lift (a good run's
+  median went from 486 m to 558 m); at 1.6 it is about one a visit.
+  Measured on 120 seeded runs inside without gates: good bold median
+  460 m, mean 556 m, 1.01 hits per 100 m (1.03 to 1.54 per band from
+  100 to 1000 m), falls 38 % of the deaths; kid bold median 73 m, mean
+  83 m. With gates, starting inside: median 415 m, mean 533 m. The
+  outside without gates is identical to the baseline. The atlas is
+  4096 x 2954: about 1100 px are left before the 4096 limit.
+- 2026-11-19: The guard rooms and the belfry furnished
+  (`element/interior-guardrooms-belfry`), as the library was. Each
+  floor now tells who uses it: the guard rooms are where the watch
+  waits (arms in racks, helmets on a shelf, a game left on the table)
+  and where the prince is looked for (the notice with his face); the
+  belfry is the tower's machinery and roof (timbers, ropes, the dial,
+  wheels) with one inhabitant who minds nobody, an owl. What moves does
+  so slowly and in place (hands, ropes, small bells, a blink), so
+  nothing on the wall is taken for something to dodge. Purely visual:
+  the simulator does not draw. The atlas is 4096 x 2974, about 1100 px
+  short of the limit.
+- 2026-11-19: Walkways in the library (`element/library-walkways`).
+  Simon, playing it: the bookcases look fine but are nailed to the back
+  wall at random, and nobody could get to them; give them a wooden
+  balcony across the wall to stand on. So the library is no longer
+  furnished by the wall's places but by storey: a walkway across the
+  whole back wall just under the window's sill (one can stand at the
+  window), the bookcase, the lectern or the scroll rack on it either
+  side of the window, what hangs (pictures, a mirror, a tapestry) above
+  them where a ladder reaches, and a long ladder at one end up to the
+  next walkway, left and right in turn. The rule the stairs brought
+  ("it must be seen to be carried") gets its twin: furniture must be
+  seen to be reachable. The risk is that a wooden floor across the
+  whole picture looks like something to land on. Against that: it is
+  the back wall's layer, wood in shade under a cool tint, its railing
+  is on our side of it (a gallery he can stand on has its railing
+  behind him), and it has no pale lit top, which every platform has.
+  To be watched when played. Purely visual; the simulator does not
+  draw. The atlas is 4096 x 2990.
+- 2026-11-19: Walkways on the other floors (`element/floor-walkways`,
+  a branch of its own so it can be judged apart from the library's).
+  The library's layout by storey became the layout of every floor
+  above the hall, each with a walkway of its own make and its own
+  split between what is used (on the walkway, or hung at a hand's
+  height: racks, the table, helmets, the notice; bell ropes, wheels, a
+  clock) and what is looked at (above, where a ladder reaches: shields,
+  banners, pictures; timbers, the dial, the row of bells). The hall
+  keeps its open wall: nothing there is used but the pegs by the door,
+  which came down to where a hand reaches from the floor. What this
+  costs is quiet: from 120 m up there is a walkway across the back wall
+  every 6.4 m, three in view at a time. If that is too much structure
+  behind the play, the guard rooms and the belfry can go back to the
+  open wall by taking `galleried` off their rows in FLOORS. Purely
+  visual; the simulator does not draw. The atlas is 4096 x 3014.
+- 2026-11-19: The ladders between the walkways are gone, here as on
+  the library's branch. Simon, having
+  played the library: a great deal goes on behind the play now, enough
+  to lose sight of the prince, and the ladders from one walkway up to
+  the next are the worst of it. They were the only thing on the wall
+  that ran the whole height of the picture, right beside the pillars
+  where the ledges are. The walkways, the furniture on them and the
+  ladders leant against the bookcases stay; whether that is calm enough
+  is to be played next.
+- 2026-11-19: `?at=` starts the prince over the start branch. A browser
+  check with a prince nobody steers failed now and then: with `?at=`
+  he started in the middle while the branch put there for him hangs at
+  the left trunk, so he dropped past it and, in a tower with nothing
+  under the middle, out of the picture (and a power-up he had just
+  taken went with him). In the browser he now starts over that branch.
+  The simulator keeps its start in the middle, so its reports from a
+  start height are the ones they were (the sky's baseline is identical).
+- 2026-11-19: Where the lights are out (`element/interior-dark`).
+  Simon's idea: a section inside that is dark, or very dark. A good one
+  on one condition: the dark must never hide what bites. Decided:
+  (1) Not a floor of its own but stretches, announced and about 40 m
+  long, from the guard rooms up, so that the dark is an event one comes
+  out of again and every floor can have it. (2) Real darkness, not a
+  darker tint: the renderer got a light map (a texture at half
+  resolution, the dark's colour as its ground, every lamp added to it,
+  multiplied over the picture under the HUD). The lamps are for the
+  most part the light pools the room already registered for its
+  ordinary lighting, so whatever shone before lights the dark now
+  without knowing of it. (3) The prince carries his own light, big
+  enough to see the next row as he rises to it. (4) The mechanic of
+  its own: chandeliers are out and catch when he lands on them, so the
+  way he came is lit behind him. (5) Fair: every creature has a light,
+  the picture never goes to black (a pale ledge stays a shape), and
+  the rows there are the kind ones (nothing crumbles, nothing small,
+  fewer creatures, more lanterns); torches out and windows walled up
+  say where it begins before it is dark. Measured on 120 seeded runs
+  inside without gates: 306 dark stretches entered; good bold median
+  507 m, mean 641 m (460 m and 556 m before), 0.97 hits per 100 m,
+  falls 34 % of the deaths; kid bold median 73 m, mean 84 m. The bot
+  sees in the dark, so these numbers show only the kinder rows, not
+  what the dark asks of a player: that is to be played, and the rows'
+  kindness taken back if it is too easy. The outside without gates is
+  identical to the baseline. The atlas is 4096 x 3064.
+- 2026-11-20: The wall's furniture steps back (`element/interior-muted`).
+  Simon, after playing the library with its walkways: what is in the
+  background is still as present in colour as what is in front; less
+  contrast and a little of the wall's colour in it would keep the
+  atmosphere and disturb less, but not for the pictures, the mirror,
+  the tapestry and the shields, which are right as they are. So there
+  are two classes on the wall now. What furnishes it is the room: it is
+  drawn in full colour and then moved 30 to 48 % of the way toward the
+  wall's own violet-grey (the walkways, ladders and timbers furthest,
+  the spell book's lectern and the owl least), which lowers contrast
+  and saturation at once and costs no second sprite. What hangs to be
+  looked at is a picture in the room and keeps its colour, as do the
+  lights. The walkways lost their own cool tint and take the floor's,
+  like the wall behind them. The side effect wanted: ledges,
+  chandeliers and creatures now are the brightest and most coloured
+  things on the screen without having changed. Purely visual; to be
+  judged by playing, and the one table of amounts is where to turn it
+  up or down.
+- 2026-11-20: `?at=` does not start in the dark any more (fixed on
+  `element/interior-dark`): a dark stretch that was due below the start
+  height began with the first row built.
+- 2026-11-20: The witch's cat (`element/interior-cat`). The inside had
+  nothing that lives on a ledge as the squirrel lives on a branch, and
+  the cat was already in the witch's pictures. It is not the squirrel
+  in black: a squirrel patrols and dashes, a cat sits and pounces. Its
+  telegraph is the one every child knows, the wiggle before the jump,
+  and it only goes for a prince who is on its ledge or just above it,
+  so the far end of a long ledge is a safe place to land and look at
+  it. Stomped it is not knocked out but sent off, puffed up. Drawn
+  first all black with violet lights it was a pair of eyes on the wall
+  and little else, so it got white socks, a bib and a tail tip, which
+  is also its feature. The art has a file of its own; the inside's
+  drawing file is long enough. Measured on 120 seeded runs inside
+  without gates: good bold median 500 m, mean 589 m (507 m and 641 m
+  before), 1.06 hits per 100 m, every band from 100 to 1300 m between
+  1.09 and 1.61, the cat 67 of 747 hits, falls 24 % of the deaths; kid
+  bold median 74 m, mean 87 m, three scratches in 120 runs. With gates,
+  starting inside: median 467 m, mean 563 m. The outside without gates
+  is identical to the baseline. The atlas is 4096 x 3096.
+- 2026-11-20: The cat is black (`element/interior-cat`). Simon, after
+  playing it: in the portraits the cat is black, in the game it had come
+  out grey-blue, the colour of the room; a witch's cat should be really
+  black, with some contrast and a contour, and yellow eyes. So the fur
+  is nearly black now, a dark violet only where the light from above
+  catches the crown, the back and the tail, and the white socks, bib and
+  tail tip are gone again: they made it a house cat. What keeps it from
+  being a hole in the wall is a contour, one of the few the style
+  allows (`docs/ART.md`: only where something would otherwise vanish).
+  It is drawn by a pass over the finished sprite: every empty pixel with
+  fur beside it or under it takes a pale violet, so the line runs along
+  the top and both sides and not underneath, as a rim of light from
+  above would. The eyes are the sun's yellow with a lighter pixel, the
+  brightest thing on it. Only the drawing changed; the numbers above
+  stand.
+- 2026-11-20: The treasury (`element/treasure-room`). Simon picked it
+  from the ideas for the inside: a golden door into a room full of
+  suns, out of which one comes a little higher; a moment that shows well
+  in a video and a reward to play for. He asked for the room to be
+  larger than "small", with hearts in it. Decisions:
+  - It is a room, not a stretch of the tower: a third place the world
+    is in while he is there (`TREASURY` in `places.js`, not among the
+    places a round is climbed in), furnished at once from a plan
+    instead of built row by row, at the height he went in at. So the
+    gates' technique carries it both ways (the door opens, the picture
+    closes in on him and opens again), and since the door out is 20 m
+    above the floor, he is simply that much higher when he is back.
+  - Nobody can lose anything in it. A bonus room that can kill is a
+    trap for a child. It has a floor, and the camera, which everywhere
+    else only climbs, rests there on what he stands on and goes down
+    with a prince who drops, so the fall off a ledge that ends a round
+    in the tower costs a moment here. That is also why the room can be
+    two pictures high instead of one.
+  - The hoard is counted in suns, the game's own gold, so there is no
+    new currency. The chests are the one new verb: a platform that
+    opens the first time he lands on it. A heart is in every room; it
+    restores all three, as every heart does.
+  - Gold is the braid's ramp (the witch hoards what Rapunzel's hair is
+    the colour of), and what only furnishes is stepped back as in the
+    tower, after what the library taught: the suns to take have to be
+    the brightest thing in the picture.
+  - The first door stands in the hall, so that the youngest see one
+    (the kid bot's median inside is 74 m). The doors were first spaced
+    150 to 220 m apart; a good bold run then met 3.4 of them and went
+    through 2.5, so every round had two or three. At 200 to 300 m apart
+    it meets 2.4 and goes through 1.7: a door is rarer and the room an
+    event.
+  - The ceiling is 27.6 m up. At 24.4 m a bounce off the highest
+    chandelier ended at it every time, a bump and a shake per bounce;
+    now only a boost reaches it.
+  Measured on three sets of 120 seeded runs inside without gates,
+  against the same seeds without treasuries. One set is not enough
+  here: the door in the hall sends nearly every run down another path,
+  and two builds that differed only in the height of the ceiling were
+  80 m apart in the median of one set. Good bold: mean 602 m against
+  536 m, the three medians 483, 510 and 499 m against 500, 413 and
+  435 m, so about a tenth more, 35 m of it the rooms themselves (1.7
+  visits of 20 m), the rest the heart; 1.03 hits per 100 m against
+  1.02; falls 22 to 29 % of the deaths. Kid bold: mean 88 m against
+  81 m, medians 83, 84 and 66 m against 74, 74 and 59 m. The good bot
+  goes through 610 of 879 doors, stays 5.4 s (longest 9.7 s) and takes
+  37 of a room's 72 suns: it climbs straight through and hardly ever
+  lands on a chest, so that is the least a player gets; in one visit
+  in five the heart restored something. The kid bot goes through 109
+  of 239 doors and stays 7 to 8.5 s (longest 17.3 s). Nobody dies in a
+  treasury and nobody stays in one. With gates (one set of 120):
+  starting inside median 489 m, mean 565 m (467 m and 563 m); starting
+  outside median 522 m, mean 626 m (491 m and 554 m), falls 43 % of
+  the deaths. With treasuries switched off the inside is identical to
+  the cat's report and the outside to the baseline. The atlas is
+  4096 x 3206.
+- 2026-11-20: The treasury's camera is the tower's
+  (`element/treasure-room`). Simon, after playing it: the rooms are
+  great, but the camera does not feel good because it is so different;
+  it hurts in the head. It was a camera of its own in there: it rested
+  on what he stood on, a third up the picture, stepped up when he
+  landed on the next thing, and went down with a prince who dropped.
+  Each of the three was a difference to the eye: he stood higher in
+  the picture than anywhere else, the picture moved after his jump
+  instead of with it, and it moved down, which nothing in this game
+  does. So the room has the tower's camera now: it only climbs, with
+  his rise. It starts with the floor where the lawn lies at a round's
+  start, and its one rule of its own is that it stops under the
+  ceiling. What the downward camera was there for, that nobody falls in
+  the treasury, is a golden bubble instead: a prince whose head has
+  gone out of the bottom of the picture (where the tower ends the
+  round) is taken by it, carried back up to the lowest thing in the
+  picture he can stand on and let down just above it. The camera does
+  not move for it. What hangs below the picture is gone, as in the
+  tower; that is all one can lose in there.
+  Measured on the same three sets of 120 seeded runs inside without
+  gates: good bold mean 602 m against 536 m without treasuries (medians
+  513, 485 and 499 m against 500, 413 and 435 m), 1.01 to 1.05 hits per
+  100 m, falls 25 to 28 % of the deaths; kid bold mean 88 m against
+  81 m (medians 91, 84 and 66 m against 74, 74 and 59 m). The good bot
+  goes through 605 of 886 doors, stays 5.4 s (longest 8.7 s), takes 37
+  of a room's 72 suns and never needs the bubble; the kid bot goes
+  through 109 of 239, stays 6.5 to 7.5 s (longest 17 s) and is carried
+  back up 16 times. A check in the browser climbs each of the three
+  rooms and counts the frames in which the camera goes down: none.
+  With gates (one set of 120): starting inside median 489 m, mean
+  565 m; starting outside median 510 m, mean 605 m, falls 43 % of the
+  deaths. With treasuries off, inside and outside are identical to the
+  reports before. The atlas is 4096 x 3238.
+- 2026-11-20: The treasury is twice as high and holds more to take
+  (`element/treasure-room`). Simon, after playing it with the tower's
+  camera: really good now; the rooms could be twice as high and hold
+  more treasure, of the kind one can collect. Decisions:
+  - A room is put together from sections now instead of drawn up as a
+    whole: the floor, three of six sections, the top. The old room
+    made twice as long would have been the old room twice; three of
+    six in any order, each mirrored or not, are rooms one does not
+    know by heart, and a new section is a dozen lines. Every section
+    ends with a chandelier in the middle, so the next one knows what
+    it stands over.
+  - More to take, and not only more suns: pieces of the hoard as
+    pickups (a cut stone, a goblet, the crown inside the crown of
+    suns). They are what stands on the shelves, but in full colour,
+    bobbing, with a glint and a glow, where the shelves' are stepped
+    back: what one can take moves and shines. There is no new counter
+    for them. They count as suns (3, 5 and 10) and say so as they are
+    taken. A room is worth some 220 suns now, 72 before.
+  - The doors stay 200 to 300 m apart, counted from where a room lets
+    him out. A visit is 40 safe metres now instead of 20, and it takes
+    twice as long.
+  Measured on the same three sets of 120 seeded runs inside without
+  gates: good bold mean 581 m against 536 m without treasuries (602 m
+  with the rooms half as high, which three sets cannot tell apart),
+  medians 561, 494 and 498 m; 0.97 to 1.04 hits per 100 m; falls 23 to
+  28 % of the deaths. Kid bold mean 92 m against 81 m, medians 94, 96
+  and 66 m against 74, 74 and 59 m. The good bot goes through 530 of
+  783 doors, stays 9 s (longest 13.3 s) and takes 118 of a room's 224
+  suns' worth; the kid bot goes through 110 of 237, stays 14 s
+  (longest 34 s) and is carried back up by the bubble 41 times. Nobody
+  dies or stays in a treasury. With gates (one set of 120): starting
+  inside median 553 m, mean 647 m; starting outside median 509 m, mean
+  591 m, falls 44 % of the deaths. With treasuries off, inside and
+  outside are identical to the reports before. In the browser the
+  camera stops exactly under the ceiling and the door out hangs where
+  it was planned. The atlas is 4096 x 3242.

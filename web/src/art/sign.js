@@ -82,6 +82,20 @@ function drawTower(t) {
   p(3, 6, 3, 2, C.uiDark); p(4, 6, 1, 1, C.lanternGlow);
 }
 
+// The two places on the title's selector, 9 x 11 art px each: a tree for the
+// outside, an arched door for the inside of the tower.
+function drawTreeIcon(t) {
+  const { p, disc } = t;
+  p(4, 6, 2, 5, C.barkMid); p(4, 6, 1, 5, C.barkLight); p(3, 10, 4, 1, C.barkDark);
+  disc(4, 3, 3, C.leaf); disc(3, 2, 2, C.grass); p(2, 1, 2, 1, C.grassLight); p(6, 5, 2, 1, C.leafDark);
+}
+function drawDoorIcon(t) {
+  const { p } = t;
+  p(1, 2, 7, 9, C.stoneDark); p(2, 1, 5, 1, C.stoneDark); p(1, 2, 1, 9, C.stoneLight); p(2, 1, 2, 1, C.stoneLight);
+  p(2, 3, 5, 8, C.plank); p(3, 2, 3, 1, C.plank); p(2, 3, 1, 8, C.plankHi); p(4, 3, 1, 8, C.plankDark);
+  p(2, 6, 5, 1, C.plankDark); p(5, 7, 1, 1, C.gold);
+}
+
 // Rapunzel peeking over the sign's top edge: her head and shoulders (drawn
 // behind the sign, so the frame hides the rest) and her hands on the edge
 // (drawn over it). 18 x 20 art px, anchored at the bottom centre.
@@ -125,6 +139,8 @@ export function buildSign() {
     phoneOn: makeSprite(11, 12, (t) => drawPhone(t, true), { ax: 0.5, ay: 0.5 }),
     star: makeSprite(9, 9, drawStar, { ax: 0.5, ay: 0.5 }),
     tower: makeSprite(9, 12, drawTower, { ax: 0.5, ay: 0.5 }),
+    tree: makeSprite(9, 11, drawTreeIcon, { ax: 0.5, ay: 0.5 }),
+    door: makeSprite(9, 11, drawDoorIcon, { ax: 0.5, ay: 0.5 }),
     vineTL: makeSprite(VINE_W, VINE_H, (t) => drawVine(t, false), undefined, { axPx: 9 * PX, ayPx: 9 * PX }),
     vineBR: makeSprite(VINE_W, VINE_H, (t) => drawVine(t, true), undefined, { axPx: (VINE_W - 10) * PX, ayPx: (VINE_H - 10) * PX }),
     bow: makeSprite(14, 10, ({ p }) => BOW.forEach((row, y) => row.split('').forEach((ch, x) => p(x, y, 1, 1, BOW_COL[ch]))), undefined, { axPx: 7 * PX, ayPx: 4 * PX }),

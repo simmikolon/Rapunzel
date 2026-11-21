@@ -145,6 +145,19 @@ custom engine instead of SpriteKit physics and GameplayKit:
   eyes), a golden spring (stronger bounces and boosts, with somersaults),
   a sun magnet (suns, lanterns and hearts fly to him) and a stork's
   feather (he comes down slowly).
+* **Inside the tower**: a second place to climb. The title sign picks
+  where a round starts, and gates (doors in the tower's wall, between
+  120 and 400 m) lead from one to the other. Stone pillars instead of
+  trees, windows through which the forest, the sky and Rapunzel's braid
+  go by, stone ledges, chandeliers and a bell on a long chain, scaffold
+  boards, galleries, stairs; bats, guards, a ghost with a candle, spider
+  webs that hold; four floors (hall, guard rooms, library, belfry);
+  torches, candles and the windows' light in a dim room. Behind a
+  golden door lies the witch's treasury: a room with a floor, full of
+  suns, chests and pieces of the hoard to take, and a second door out
+  of it 40 m higher.
+  `web/src/interior.js` paints it, `web/src/places.js` says what differs
+  between the places.
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
   debris, boost flames, feathers, screen shake, a swaying braid that moves
   the ribbons (harder with altitude), sky and lighting keyed to the zones

@@ -7,7 +7,7 @@ import { makeCanvas } from '../art/sprite.js';
 // frame is the sprite's rectangle in the atlas. The atlas samples with
 // nearest-neighbour filtering so the chunky art stays crisp when scaled.
 
-const ATLAS_W = 2048;
+const ATLAS_W = 4096;   // wide rather than tall: 4096 is the texture limit of older phones, and at 2048 the sheet had grown to 3810 high
 const GUTTER = 2;      // transparent pixels between sprites against bleeding
 
 function collect(obj, out, seen) {

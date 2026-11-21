@@ -70,6 +70,9 @@ export const ZONES = {
   boost: { id: 'boost', x: W - 190, get y() { return H - 200 - SAFE.bottom; }, w: 160, h: 160 },
   // on the title's sign: PLAY in the middle, the settings in the bottom row
   play: { id: 'play', x: W / 2 - 248, y: 468, w: 496, h: 96 },     // a ribbon: its tails take the outer 48 px
+  // the place to climb: outside or inside, side by side under PLAY
+  placeOut: { id: 'placeOut', x: W / 2 - 268, y: 580, w: 256, h: 52 },
+  placeIn: { id: 'placeIn', x: W / 2 + 12, y: 580, w: 256, h: 52 },
   fx: { id: 'fx', x: 72, y: 688, w: 240, h: 56 },
   titleSound: { id: 'sound', x: W / 2 - 28, y: 688, w: 56, h: 56 },
   tilt: { id: 'tilt', x: W - 312, y: 688, w: 240, h: 56 },
@@ -165,7 +168,7 @@ export class HUD {
     if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
     if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, shiftZone(ZONES.pauseMenu));
     if (mode === 'title') {
-      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx));
+      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn));
       if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(shiftZone(ZONES.tilt));
     }
     if (mode === 'gameover') zones.push(ZONES.sound, shiftZone(ZONES.again), shiftZone(ZONES.menu));

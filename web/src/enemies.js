@@ -531,9 +531,10 @@ export class Grabber extends Enemy {
   // `camY` is the view bottom at spawn time: the height starts in the
   // prince's plane (the cull runs before the first update would convert it).
   constructor(win, rng = new RNG(), reach = 130, camY = 0) {
-    super(win.x, Platform.layerToWorld(win.ly, PARALLAX_TOWER, camY) + ARM_ABOVE_SILL);
+    super(win.x, Platform.layerToWorld(win.ly, win.f || PARALLAX_TOWER, camY) + ARM_ABOVE_SILL);
     this.kind = 'grabber';
-    this.win = win;                 // { i, side, ly, x } from windows.js
+    this.win = win;                 // { i, side, ly, x } from windows.js, or a pillar's hatch inside the tower (pillars.js, with its layer `f`)
+    this.f = win.f || PARALLAX_TOWER;
     this.ly = win.ly;               // the sill, in layer coordinates
     this.dir = win.side === 'L' ? 1 : -1;   // the thrust goes inward
     this.rng = rng;
@@ -575,7 +576,7 @@ export class Grabber extends Enemy {
   update(dt, world) {
     this.t += dt; this.stateT += dt;
     const p = world.player;
-    this.sillY = Platform.layerToWorld(this.ly, PARALLAX_TOWER, world.cam.y);
+    this.sillY = Platform.layerToWorld(this.ly, this.f, world.cam.y);
     this.armY = this.sillY + ARM_ABOVE_SILL;
     this.y = this.armY;
     if (this.cooldown > 0) this.cooldown -= dt;
@@ -851,9 +852,11 @@ export class Bat extends Enemy {
 const FLOCK_H = 130;
 const FLOCK_SPEED = 560, FLOCK_BIRDS = 26, BIRD_W = 56, BIRD_H = 36, LANE = 42;
 export class Flock extends Enemy {
-  constructor(y, dir, rng = new RNG(), span = 284) {
+  // `bats`: inside the tower the same gate is a swarm of bats.
+  constructor(y, dir, rng = new RNG(), span = 284, bats = false) {
     super(0, y);
     this.kind = 'flock';
+    this.bats = bats;
     this.span = span;               // how far the floor below reaches to each side (see Player.shoo)
     this.dir = dir;                 // 1: they fly to the right
     this.w = W + 160; this.h = FLOCK_H;
@@ -926,7 +929,7 @@ export class Flock extends Enemy {
       if (Math.abs(x - p.x) > reach || Math.abs(y - (p.y + 110)) > 190) continue;
       b.hole = true;
       this.fallen.push({ x, y, vx: (x < p.x ? -1 : 1) * (120 + Math.random() * 200) + this.dir * 160, vy: 180 + Math.random() * 260, rot: 0 });
-      world.particles.feathers(x, y, false, 2);
+      if (this.bats) world.particles.sparkles(x, y, 2, '#a595cc'); else world.particles.feathers(x, y, false, 2);
     }
   }
   burst(world) { this.scatter(world, 120); this.passT = 0.7; }          // the boost shield went through
@@ -939,15 +942,315 @@ export class Flock extends Enemy {
       const side = -this.dir, sx = side < 0 ? 40 : W - 40, sy = clamp(cam.sy(this.y), 60, H - 60);
       const blink = Math.floor(this.phaseT * 8) % 2 === 0;
       g.text('!', sx, sy, 56, blink ? '#ffd04a' : '#fff2c0', 'center', true, { family: 'system-ui, sans-serif', weight: 'bold', glow: 0.6 });
-      const set = this.dir > 0 ? A.starlingR : A.starlingL;
+      const set = this.bats ? A.bat : this.dir > 0 ? A.starlingR : A.starlingL;
       for (let i = 0; i < 2; i++) g.blit(set[(Math.floor(this.phaseT * 10) + i) % 2], sx - side * (52 + i * 44), sy - 14 + i * 26);
       return;
     }
-    const set = this.dir > 0 ? A.starlingR : A.starlingL;
+    const set = this.bats ? A.bat : this.dir > 0 ? A.starlingR : A.starlingL;
     for (const b of this.birds) {
       if (b.hole || b.s < 0) continue;
       g.blit(set[Math.floor(this.t * 11 + b.flap) % 2], cam.sx(this.birdX(b)), cam.sy(this.birdY(b)));
     }
-    for (const f of this.fallen) g.blit(set[0], cam.sx(f.x), cam.sy(f.y), { rot: f.rot });
+    for (const f of this.fallen) g.blit(set[this.bats ? 2 : 0], cam.sx(f.x), cam.sy(f.y), { rot: f.rot });
+  }
+}
+
+// The spider's web (inside the tower): a quarter web in the corner under a
+// ledge at its pillar, with its spider in the hub. It is a thing, not a
+// creature: it does not hurt, it holds. A prince who flies into it hangs
+// there by the shoulders with the pogo dangling; every tap is a tug that
+// tears it further (WEB_TUGS free him, no boost is spent), and the spider
+// comes down from the hub for him, slowly at first: after WEB_BITE seconds
+// in the web it bites (a heart) and the web lets go of him all the same.
+// Freed either way he is tossed up through the ledge the web hangs under
+// and comes down on it, so a web is never a fall and never for ever. The
+// boost shield and the star tear straight through and knock the spider out
+// (the usual three suns). Under the cloak the web still holds (it has no
+// eyes) but the spider does not come. The world handles the meeting
+// (World.meetWeb); nothing here is stompable.
+export const WEB_W = 120, WEB_H = 136, WEB_TUGS = 3, WEB_BITE = 2.2;
+const LEDGE_THICK = 28;
+export class Web extends Enemy {
+  constructor(platform, rng = new RNG()) {
+    const dir = platform.def.dir, face = platform.def.root;
+    super(face + dir * WEB_W / 2, platform.y - LEDGE_THICK - WEB_H / 2);
+    this.kind = 'web';
+    this.platform = platform;
+    this.dir = dir;                          // inward, away from the pillar
+    this.face = face;                        // the pillar's face
+    this.topY = platform.y - LEDGE_THICK;    // the ledge's underside
+    this.w = WEB_W; this.h = WEB_H;
+    this.hurtful = false;
+    this.tugs = 0;
+    this.torn = false;
+    this.prey = null;                        // the prince while he hangs in it
+    this.comeT = 0;                          // how long the spider has been on its way
+    this.shake = 0;
+    this.puzzled = false;
+    this.spider = 'wait';                    // wait | come | back | sulk | out | gone
+    this.spX = this.hubX; this.spY = this.hubY; this.spVy = 0; this.spSpin = 0;
+    this.phase = rng.range(0, TAU);
+  }
+  get stompable() { return false; }
+  get hubX() { return this.face + this.dir * 28; }
+  get hubY() { return this.topY - 32; }
+  // Where the prince hangs: his head just under the ledge, the web about his shoulders.
+  get holdX() { return this.face + this.dir * 62; }
+  get holdY() { return this.topY - 236; }
+  // The toss that frees him: up through the ledge with room to spare.
+  get tossVy() { return Math.sqrt(2 * GRAVITY * (this.platform.y - this.holdY + 60)); }
+  inside(x, y) {
+    const dx = (x - this.face) * this.dir, dy = this.topY - y;
+    return dx > -12 && dy > 0 && (dx / WEB_W) ** 2 + (dy / WEB_H) ** 2 < 1;
+  }
+  // His head or his chest in the threads; the pogo below him does not catch.
+  hits(r) { const x = r.x + r.w / 2; return !this.torn && (this.inside(x, r.y + r.h - 24) || this.inside(x, r.y + r.h * 0.62)); }
+  update(dt, world) {
+    this.t += dt;
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 3);
+    const p = world.player;
+    if (!this.platform.alive) { if (p.heldBy === this) p.release(this.tossVy); this.alive = false; return; }
+    const held = this.prey && p.heldBy === this;
+    if (this.prey && !held) { this.prey = null; if (this.spider === 'come') this.spider = 'back'; }   // something else knocked him out of it
+    this.puzzled = !!held && !p.seen;
+    if (held && p.seen) {
+      if (this.spider === 'wait' || this.spider === 'back') { this.spider = 'come'; world.audio.skitter(); }
+      if (this.spider === 'come') {
+        this.comeT += dt;
+        const k = clamp(this.comeT / WEB_BITE, 0, 1), e = k * k;      // slow at first: time to see it coming
+        this.spX = this.hubX + (p.x - this.dir * 8 - this.hubX) * e;
+        this.spY = this.hubY + (p.y + 176 - this.hubY) * e;
+        if (this.comeT >= WEB_BITE) this.bite(world);
+      }
+    } else if (this.spider === 'back' || this.spider === 'come') {
+      // home to the hub, where it sulks if the web is in tatters
+      const dx = this.hubX - this.spX, dy = this.hubY - this.spY, d = Math.hypot(dx, dy), step = 170 * dt;
+      if (d <= step) { this.spX = this.hubX; this.spY = this.hubY; this.spider = this.torn ? 'sulk' : 'wait'; this.comeT = 0; }
+      else { this.spX += dx / d * step; this.spY += dy / d * step; this.spider = 'back'; }
+    } else if (this.spider === 'out') {
+      this.spVy -= GRAVITY * 0.8 * dt; this.spY += this.spVy * dt; this.spX += this.dir * 80 * dt; this.spSpin += dt * 10;
+      if (this.spY < world.cam.y - 120) this.spider = 'gone';
+    }
+  }
+  caught(world) { this.prey = world.player; this.comeT = 0; this.shake = 1; world.onWebCatch(world.player, this); }
+  // A tap while he hangs in it.
+  tug(world) {
+    if (this.torn) return;
+    this.tugs++; this.shake = 1;
+    world.onWebTug(world.player, this);
+    if (this.tugs >= WEB_TUGS) this.tear(world, false);
+  }
+  // Torn for good: by his tugs, or `punched` through with the shield.
+  tear(world, punched) {
+    const p = world.player, held = p.heldBy === this;
+    this.torn = true; this.tugs = WEB_TUGS; this.prey = null;
+    if (punched && this.spider !== 'gone') { this.spider = 'out'; this.spVy = 300; }
+    else if (this.spider === 'wait' || this.spider === 'come') this.spider = 'back';
+    if (held) p.release(this.tossVy);
+    world.onWebTear(p, this, punched);
+  }
+  bite(world) {
+    const p = world.player;
+    p.heldBy = null;
+    p.hit(this);
+    this.torn = true; this.tugs = WEB_TUGS; this.prey = null; this.spider = 'back';
+    if (p.state === 'held') p.release(this.tossVy);           // he could not be hurt just now: let go all the same
+    else if (p.alive) { p.vx = 0; p.vy = this.tossVy; }        // the hurt hop, but straight up, onto the ledge
+    world.onWebBite(p, this);
+  }
+  // A few threads across him while he hangs in it (the player draws himself, then this).
+  drawFront(g, cam, p) {
+    const hx = cam.sx(p.x), hy = cam.sy(p.y + 176), j = Math.sin(this.t * 40) * 4 * this.shake;
+    const c = 'rgba(246,243,255,0.85)';
+    g.line(cam.sx(this.hubX), cam.sy(this.hubY), hx - this.dir * 26 + j, hy + 40, c, 2);
+    g.line(cam.sx(this.face + this.dir * 110), cam.sy(this.topY - 6), hx + this.dir * 22 - j, hy + 66, c, 2);
+    g.line(hx - this.dir * 30, hy + 8 + j, hx + this.dir * 30, hy + 26 - j, c, 2);
+  }
+  draw(g, cam, art) {
+    const A = art.interior.web[this.dir > 0 ? 'L' : 'R'];
+    const cx = cam.sx(this.face), cy = cam.sy(this.topY);
+    g.blit(A[this.torn ? 3 : this.tugs], cx, cy, this.shake > 0 ? { rot: Math.sin(this.t * 55) * 0.06 * this.shake * -this.dir } : undefined);
+    if (!this.torn) {
+      // dew catching the light now and then
+      for (const [ax, ay, ph] of [[88, 76, 0], [58, 108, 2.1], [40, 44, 4.2]]) {
+        const tw = Math.sin(this.t * 1.7 + this.phase + ph);
+        if (tw > 0.86) g.rect(cx + this.dir * ax - 4, cy + ay - 4, 8, 8, '#ffffff', (tw - 0.86) * 6, { glow: 0.5 });
+      }
+    }
+    if (this.spider === 'gone') return;
+    const S = art.creatures.spider, sx = cam.sx(this.spX), sy = cam.sy(this.spY);
+    if (this.spider === 'out') { g.blit(S[0], sx, sy - 24, { rot: this.spSpin }); return; }
+    const walking = this.spider === 'come' || this.spider === 'back';
+    g.blit(S[walking ? Math.floor(this.t * 12) % 2 : Math.floor(this.t * 1.5 + this.phase) % 2], sx, sy - 24, this.spider === 'sulk' ? { sy: 0.85 } : undefined);
+    if (this.spider === 'come') g.text('!', sx + this.dir * 34, sy - 40, 22, '#ffe9a0', 'center', true);
+    else if (this.puzzled) g.text('?', sx + this.dir * 34, sy - 40, 22, PUZZLED, 'center', true);
+  }
+}
+
+// The ghost (inside the tower, in the crow's place): drifts to and fro
+// between the pillars with a candle. It comes and goes: fading in (GHOST_IN,
+// harmless, its candle flaring: the telegraph), there for a while (it
+// bites, and a pogo on its head sends it off), fading out, gone but for the
+// candle, which never fades, so one always knows where it is. With `track`
+// > 0 it drifts toward the prince's height while it is there and sees him.
+// Under the cloak it notices nothing and he passes through it, like through
+// anything with eyes.
+const GHOST_IN = 0.8, GHOST_OUT = 0.5, GHOST_FAINT = 0.13;
+export class Ghost extends Enemy {
+  constructor(x, y, dir, speed, track = 0, rng = new RNG()) {
+    super(x, y);
+    this.kind = 'ghost';
+    this.baseY = y; this.dir = dir; this.speed = speed; this.track = track; this.rng = rng;
+    this.w = 56; this.h = 64;
+    this.phase = rng.range(0, TAU);
+    this.state = rng.chance(0.5) ? 'gone' : 'solid';   // gone | in | solid | out
+    this.stateT = 0;
+    this.stateFor = this.state === 'gone' ? rng.range(0.4, 2) : rng.range(1.2, 2.8);
+    this.hurtful = this.state === 'solid';
+    this.vis = this.hurtful ? 1 : GHOST_FAINT;   // how much of it shows
+    this.boo = 0;
+    this.sink = 0;
+    this.room = null;                             // the room's painter, for the candle's light
+  }
+  get stompable() { return this.state === 'solid'; }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    this.room = world.bg.interior;
+    if (this.dead) { this.sink += dt; this.y += 90 * dt; this.vis = Math.max(0, 1 - this.sink / 0.6); if (this.sink > 0.6) this.alive = false; return; }
+    const p = world.player;
+    if (this.state === 'gone') {
+      this.vis = GHOST_FAINT;
+      if (this.stateT > this.stateFor) { this.state = 'in'; this.stateT = 0; if (Math.abs(this.y - world.cam.y - H / 2) < H / 2 + 60) world.audio.ghostIn(); }
+    } else if (this.state === 'in') {
+      this.vis = GHOST_FAINT + (1 - GHOST_FAINT) * (this.stateT / GHOST_IN) ** 2;
+      if (this.stateT > GHOST_IN) { this.state = 'solid'; this.stateT = 0; this.stateFor = this.rng.range(2, 3.2); }
+    } else if (this.state === 'solid') {
+      this.vis = 1;
+      if (this.stateT > this.stateFor) { this.state = 'out'; this.stateT = 0; }
+    } else {
+      this.vis = 1 - (1 - GHOST_FAINT) * (this.stateT / GHOST_OUT);
+      if (this.stateT > GHOST_OUT) { this.state = 'gone'; this.stateT = 0; this.stateFor = this.rng.range(1.4, 2.4); }
+    }
+    this.hurtful = this.state === 'solid';
+    this.x += this.dir * this.speed * dt;
+    if (this.x > 236) { this.x = 236; this.dir = -1; } else if (this.x < -236) { this.x = -236; this.dir = 1; }
+    const near = p.seen && this.state === 'solid' && Math.hypot(p.x - this.x, p.y + 110 - this.y) < 230;
+    if (this.track > 0 && this.state === 'solid' && p.seen) {
+      const want = clamp(p.y + 110, this.baseY - 260, this.baseY + 260);
+      this.baseY += clamp(want - this.baseY, -1, 1) * 46 * this.track * dt;
+    }
+    this.boo = near ? Math.min(1, this.boo + dt * 6) : Math.max(0, this.boo - dt * 3);
+    this.y = this.baseY + Math.sin(this.t * 1.9 + this.phase) * 14;
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false;
+    world.audio.ghostPop();
+    world.particles.cloudPuff(this.x, this.y, 60, 8);
+  }
+  draw(g, cam, art) {
+    const A = art.interior, set = this.dir > 0 ? A.ghost.R : A.ghost.L;
+    const sx = cam.sx(this.x), sy = cam.sy(this.y);
+    const frame = this.dead ? 3 : this.boo > 0.5 ? 2 : Math.floor(this.t * 3 + this.phase) % 2;
+    // fading in it shimmers
+    const a = this.state === 'in' ? this.vis * (0.75 + 0.25 * Math.sin(this.t * 38)) : this.vis;
+    g.blit(set[frame], sx, sy, { alpha: a, glow: 0.2 * this.vis });
+    if (this.dead) return;
+    // the candle in its hand (above its head for a boo): always there
+    const hx = sx + this.dir * 34, hy = sy + (frame === 2 ? -22 : 14);
+    const flare = this.state === 'in' ? 1 + 0.8 * Math.sin(Math.min(1, this.stateT / GHOST_IN) * Math.PI) : 1;
+    const fl = (0.85 + 0.15 * Math.sin(this.t * 10 + this.phase)) * flare;
+    g.halo(hx, hy - 22, 46 * flare, '#ffd596', 0.5 * fl, { glow: 0.5 });
+    g.blit(A.ghostCandle[Math.floor(this.t * 8) % 2], hx, hy, { glow: 0.5 });
+    if (this.room) this.room.glow(hx, hy - 20, 170 * flare, '#ffd596', 0.16 * fl);
+    if (this.state === 'in') g.text('!', sx, sy - 58, 22, '#ffe9a0', 'center', true, { alpha: Math.min(1, this.stateT / 0.25) });
+  }
+}
+
+// The witch's cat (inside the tower, in the squirrel's place on the
+// ledges). It does not patrol: it sits where it sits, swishes its tail and
+// keeps its eyes on the prince. When he is on its ledge or just over it and
+// within CAT_SEES, it crouches and wiggles its rear (CAT_WIGGLE seconds: the
+// telegraph, with a meow), then pounces at where he is, a short flat hop
+// along the ledge, and sits again. Touching it is a scratch; a pogo on it
+// from above sends it off, puffed up and offended (a cat is not knocked
+// out). If he leaves during the wiggle it sits back down. Under the cloak
+// it sees nothing and looks puzzled. `keen` (0 to 1, with altitude) makes
+// the wiggle shorter and the rest between pounces too.
+const CAT_SEES = 210, CAT_WIGGLE = 0.55, CAT_POUNCE = 0.3, CAT_REACH = 150;
+export class Cat extends Enemy {
+  constructor(platform, offset, keen = 0, rng = new RNG()) {
+    super(platform.x + offset, platform.y);
+    this.kind = 'cat';
+    this.platform = platform; this.keen = keen; this.rng = rng;
+    this.w = 60; this.h = 56;
+    this.dir = platform.def.dir || 1;        // it faces the room
+    this.state = 'sit';                      // sit | wiggle | pounce | off
+    this.stateT = 0;
+    this.rest = rng.range(0.2, 1.2);         // no pounce while this runs
+    this.from = this.x; this.to = this.x; this.hop = 0;
+    this.phase = rng.range(0, TAU);
+    this.vy = 0;
+    this.puzzled = false;
+  }
+  get left() { return this.platform.left + 26; }
+  get right() { return this.platform.right - 26; }
+  get rect() {
+    const r = { x: this.x - this.w / 2, y: this.y - this.h / 2, w: this.w, h: this.h };
+    if (this.state === 'pounce') { r.w += 22; if (this.dir < 0) r.x -= 22; }      // its paws ahead of it
+    return r;
+  }
+  update(dt, world) {
+    this.t += dt; this.stateT += dt;
+    const pf = this.platform;
+    if (this.dead) {
+      // off in an arc, the way it was sent
+      this.vy -= GRAVITY * 0.9 * dt;
+      this.y += this.vy * dt; this.x += this.dir * 250 * dt;
+      if (this.y < world.cam.y - 200) this.alive = false;
+      return;
+    }
+    if (!pf.landable) { this.dead = true; this.hurtful = false; this.state = 'off'; this.vy = 200; return; }   // its ledge went
+    const p = world.player;
+    const dx = p.x - this.x;
+    const within = Math.abs(dx) < CAT_SEES && p.y >= pf.y - 40 && p.y < pf.y + 300;
+    const sees = p.seen && within;
+    this.puzzled = p.hidden && within;
+    if (this.rest > 0) this.rest -= dt;
+    this.hop = 0;
+    if (this.state === 'sit') {
+      if (sees && Math.abs(dx) > 8) this.dir = dx > 0 ? 1 : -1;
+      if (sees && this.rest <= 0) { this.state = 'wiggle'; this.stateT = 0; world.audio.meow(); }
+    } else if (this.state === 'wiggle') {
+      if (Math.abs(dx) > 8) this.dir = dx > 0 ? 1 : -1;
+      if (!sees) { this.state = 'sit'; this.stateT = 0; this.rest = 0.5; }
+      else if (this.stateT > CAT_WIGGLE - 0.15 * this.keen) {
+        this.state = 'pounce'; this.stateT = 0;
+        this.from = this.x; this.to = clamp(this.x + clamp(dx, -CAT_REACH, CAT_REACH), this.left, this.right);
+        world.audio.hiss();
+      }
+    } else {
+      const u = Math.min(1, this.stateT / CAT_POUNCE);
+      this.x = this.from + (this.to - this.from) * u * (2 - u);
+      this.hop = Math.sin(u * Math.PI) * 34;
+      if (u >= 1) { this.state = 'sit'; this.stateT = 0; this.rest = 1.7 - 0.5 * this.keen; }
+    }
+    this.x = clamp(this.x, this.left, this.right);
+    this.y = pf.y + this.h / 2 + this.hop;
+  }
+  stomped(world) {
+    this.dead = true; this.hurtful = false; this.state = 'off';
+    this.vy = 560; this.dir = this.x < world.player.x ? -1 : 1;
+    world.audio.yowl();
+    world.particles.sparkles(this.x, this.y, 8, '#8683b8');
+  }
+  draw(g, cam, art) {
+    const set = this.dir > 0 ? art.cat.R : art.cat.L;
+    const sx = cam.sx(this.x), sy = cam.sy(this.y - this.h / 2);
+    if (this.dead) { g.blit(set[4], sx, sy); return; }
+    if (this.state === 'wiggle') g.blit(set[2], sx + Math.sin(this.stateT * 42) * 3, sy);       // the rear wiggles
+    else if (this.state === 'pounce') g.blit(set[3], sx, sy);
+    else g.blit(set[Math.floor(this.t * 1.2 + this.phase) % 2], sx, sy);                          // the tail swishes
+    if (this.state === 'wiggle') g.text('!', sx, sy - 96, 22, '#ffe9a0', 'center', true);
+    else if (this.puzzled) g.text('?', sx, sy - 96, 22, PUZZLED, 'center', true);
   }
 }

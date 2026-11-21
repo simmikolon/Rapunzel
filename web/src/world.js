@@ -5,7 +5,9 @@ import { Player } from './player.js';
 import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
-import { Level, CUT_ROOM, FLOCK_LEAD } from './level.js';
+import { Level, CUT_ROOM, FLOCK_LEAD, zoneAt } from './level.js';
+import { treeStyleIndexAt } from './altitude.js';
+import { BEAT } from './config.js';
 import { Background } from './background.js';
 import { Witch, Scissors, Flock } from './enemies.js';
 import { audio } from './audio.js';
@@ -13,6 +15,23 @@ import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
 import { POWERS, RAINBOW } from './powerups.js';
+import { placeOf, TREASURY } from './places.js';
+import { furnishVault, CHEST_SUNS } from './vault.js';
+import { VAULT_LOOK } from './art/vault.js';
+import { STONE_STYLE, INSIDE } from './art/interior.js';
+
+// Where the lights are out: how far the picture goes down (1 would be
+// black: a ledge must still be a shape in it), and toward which colour.
+const DARK_DEPTH = 0.86, DARK_COLOR = '#07061a';
+
+// Through a gate: the door takes GATE_OPEN to open, then the picture closes
+// in on the prince and opens again, GATE_IRIS each way.
+const GATE_OPEN = 0.28, GATE_IRIS = 0.3;
+// The treasury's ceiling, for a head that meets it.
+const CEILING = { hitFromBelow() {} };
+// A prince who dropped out of the treasury's picture is carried back up to
+// the lowest thing he can stand on that is at least this far above its bottom edge.
+const RESCUE_MIN = 100;
 
 // Before the round starts the prince hops on the lawn by himself.
 const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
@@ -25,15 +44,23 @@ export class World {
     this.input = game.input;
     this.audio = audio;
     this.particles = new Particles();
+    this.sparkles = [];           // this frame's glints: [sx, sy, alpha, scale] (drawPlatform collects them)
     this.cam = new Camera();
     this.bg = new Background(this.art);
     this.player = new Player(this);
     this.rng = new RNG();
     this.level = new Level(this, this.rng);
+    this.placeName = (game.round && game.round.place) || 'outside';
     this.reset();
   }
 
-  reset(seed) {
+  // A fresh round from `seed`, in `place` (places.js; the one it was in when none is named).
+  reset(seed, place = this.placeName) {
+    if (place === TREASURY.name) place = (this.vault && this.vault.from) || 'inside';   // a round is never begun in the treasury
+    this.placeName = place;
+    this.place = placeOf(place);
+    this.level.place = this.place;
+    this.bg.setPlace(this.place);
     // Streams from one seed: the level geometry, the hearts (their timing
     // depends on the prince's state), the events (the witch), the
     // background's gusts, what the tower itself does (window guards) and
@@ -47,6 +74,11 @@ export class World {
     this.level.rngTower = new RNG(seed == null ? undefined : hash(seed + 4));
     this.level.rngPower = new RNG(seed == null ? undefined : hash(seed + 5));
     this.level.rngFauna = new RNG(seed == null ? undefined : hash(seed + 6));
+    this.level.rngGates = new RNG(seed == null ? undefined : hash(seed + 7));
+    this.level.rngDark = new RNG(seed == null ? undefined : hash(seed + 8));
+    this.level.rngVault = new RNG(seed == null ? undefined : hash(seed + 9));
+    this.passage = null;          // { gate, t, switched }: going through a gate (enterGate)
+    this.vault = null;            // the treasury he is in (enterVault): its floor, ceiling, doors, and what he had when he came
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
@@ -64,6 +96,8 @@ export class World {
     this.nextStorkY = 47000;      // storks cross the sky every 1200 to 2000 px of climb
     this.nextMilestone = 100;
     this.hintShown = false;
+    this.floorName = 'the hall';    // the floor he is on inside the tower (events() says so when it changes)
+    this.webHints = 0;            // how often this round has said how to get out of a web
     this.toasts = [];
     this.over = false;
     this.overT = 0;
@@ -120,13 +154,15 @@ export class World {
     for (const t of this.toasts) t.life -= dt;
     this.toasts = this.toasts.filter((t) => t.life > 0);
 
-    const braidX = (ly) => this.bg.braidX(ly, this.time);
+    // (inside the tower it is the chain down the shaft that sways, with the chandeliers on it)
+    const braidX = this.place.inside ? (y) => this.bg.interior.chainX(y, this.time) : (ly) => this.bg.braidX(ly, this.time);
     for (const p of this.platforms) p.update(dt, this.time, braidX, this.cam);
 
     const pl = this.player;
     pl.update(dt, this.started ? this.input : IDLE_INPUT);
     if (this.showoff) { this.showoff.t += dt; pl.flip = clamp(this.showoff.t / this.showoff.dur, 0, 1) * TAU; }
-    if (pl.alive) this.collide();
+    if (pl.alive && !pl.frozen && !pl.carried) this.collide();
+    if (this.passage) this.updatePassage(dt);
 
     for (const e of this.enemies) e.update(dt, this);
     for (const f of this.fields) f.update(dt, this);
@@ -145,7 +181,8 @@ export class World {
       this.braidCut.pieces = this.braidCut.pieces.filter((pc) => pc.top - fallDist(pc.t) > camF - 200);
     }
 
-    if (pl.alive && pl.headY < this.cam.y - 10) pl.die('fell');
+    // Out of the bottom of the picture: the end of the round, except in the treasury (rescue).
+    if (pl.alive && pl.headY < this.cam.y - 10) { if (!this.vault) pl.die('fell'); else if (!pl.carried) this.rescue(); }
     if (!pl.alive) {
       this.overT += dt;
       if ((pl.deathCause === 'caught' && this.overT > 1.3) || pl.headY < this.cam.y - 200 || this.overT > 3) this.over = true;
@@ -158,7 +195,7 @@ export class World {
     const xOverlap = (p) => right > p.left && left < p.right;
 
     // Platforms: one-way surfaces, plus plank swings that are solid from below.
-    if (pl.vy <= 0 && pl.state !== 'bouncing') {
+    if (pl.vy <= 0 && pl.state !== 'bouncing' && !pl.heldBy) {
       let best = null;
       for (const p of this.platforms) {
         if (!p.landable) continue;
@@ -171,6 +208,8 @@ export class World {
         const prevHead = pl.prevY + PLAYER_H, head = pl.headY;
         if (prevHead <= p.bottom && head >= p.bottom && xOverlap(p)) { pl.bonk(p); break; }
       }
+      // the treasury has a ceiling
+      if (this.vault && pl.headY >= this.vault.top && pl.state !== 'bonk') { CEILING.bottom = this.vault.top; pl.bonk(CEILING); }
     }
     if (!this.started) return;        // hopping on the lawn: nothing to collect, nothing that hurts
 
@@ -180,6 +219,7 @@ export class World {
       if (!e.alive || e.dead || !overlaps(r, e.rect) || (e.hits && !e.hits(r))) continue;
       if (e.kind === 'lightning') { if (e.hurtful && !pl.shielded) pl.hit(e); continue; }
       if (e.kind === 'flock') { this.meetFlock(e); continue; }
+      if (e.kind === 'web') { this.meetWeb(e); continue; }
       if (pl.shielded && e.hurtful) { this.boostPunch(e); continue; }
       if (e.stompable && pl.vy < 0 && pl.y > e.y - 10) { e.stomped(this); pl.stomp(e); }
       else if (e.hurtful && !pl.hidden) { pl.hit(e); if (e.onHit) e.onHit(this); }   // under the cloak he passes through
@@ -216,8 +256,164 @@ export class World {
       this.onFlockTurn(pl, e);
     }
   }
-  onFlockPass(pl, e) { this.audio.flockWings(); this.particles.feathers(pl.x, pl.y + 120, false, 6); }
-  onFlockTurn(pl, e) { this.audio.flockTurn(); this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
+  onFlockPass(pl, e) { this.audio.flockWings(); if (e.bats) this.particles.sparkles(pl.x, pl.y + 120, 8, '#a595cc'); else this.particles.feathers(pl.x, pl.y + 120, false, 6); }
+  onFlockTurn(pl, e) { this.audio.flockTurn(); if (e.bats) this.particles.sparkles(pl.x, pl.headY, 6, '#a595cc'); else this.particles.feathers(pl.x, pl.headY, false, 5); this.cam.shake(4, 0.18); }
+
+  // --- Gates ------------------------------------------------------------------
+  // He landed on a gate's landing: the door opens, the picture closes in on
+  // him, the place is the other one, the picture opens again and he bounces
+  // on, on the same landing at the same height. Nothing can touch him on
+  // the way (he waits, `frozen`), and a gate leads through once.
+  enterGate(gate) {
+    gate.used = true;
+    this.passage = { gate, t: 0, switched: false };
+    this.player.frozen = true;
+    if (gate.gold) this.audio.goldDoor(); else this.audio.gate();
+  }
+  updatePassage(dt) {
+    const ps = this.passage, pl = this.player;
+    ps.t += dt;
+    if (!ps.switched && ps.t >= GATE_OPEN + GATE_IRIS) { ps.switched = true; this.switchPlace(ps.gate); }
+    if (ps.t >= GATE_OPEN + 2 * GATE_IRIS) {
+      this.passage = null;
+      pl.frozen = false;
+      pl.invuln = Math.max(pl.invuln, 0.8);
+      pl.launch();
+    }
+  }
+  // How far the picture has closed in on him, 0 to 1.
+  get iris() { const ps = this.passage; if (!ps) return 0; const u = (ps.t - GATE_OPEN) / GATE_IRIS; return clamp(u < 1 ? u : 2 - u, 0, 1); }
+  // What a platform below a gate is on the other side (the place he is in
+  // now): a branch is a ledge and a ledge a branch, a ribbon a chandelier
+  // and a bow a bell (and back, where the braid still hangs), a gallery a
+  // branch, a board a board. What has no like there is gone.
+  twin(p) {
+    const inside = this.place.inside, style = inside ? STONE_STYLE : treeStyleIndexAt(p.y);
+    const onBraid = (kind) => { const ly = Platform.worldToLayer(p.y, PARALLAX_TOWER, this.cam.y); return ly > this.braidCut.ly ? new Platform(kind, p.y, { ly }) : null; };
+    switch (p.kind) {
+      case 'branchL': case 'branchR': p.style = style; return p;
+      case 'swing': return p;
+      case 'ribbon': return inside ? new Platform('chandelier', p.y) : null;
+      case 'bow': return inside ? new Platform('bell', p.y) : null;
+      case 'chandelier': return inside ? null : onBraid('ribbon');
+      case 'bell': case 'tome': return inside ? null : onBraid('bow');
+      case 'gallery': return inside ? null : new Platform(p.side === 'L' ? 'branchL' : 'branchR', p.y, { style });
+      default: return null;
+    }
+  }
+  // The other place, from the gate's height on. What was built above goes
+  // (the level builds the new place's rows there), everything alive goes;
+  // below, what he could stand on stays as its like on this side (`twin`),
+  // so a prince who drops back off the landing still has something under him.
+  setPlace(name) {
+    this.placeName = name;
+    this.place = placeOf(name);
+    this.level.place = this.place;
+    this.bg.setPlace(this.place);
+  }
+  switchPlace(gate) {
+    if (gate.gold === 'in') return this.enterVault(gate);
+    if (gate.gold === 'out') return this.leaveVault(gate);
+    const pl = this.player;
+    this.setPlace(this.place.other);
+    const top = gate.y + 60;
+    this.platforms = this.platforms.map((p) => (p === gate || p.kind === 'ground' ? p : p.y > top || !p.landable ? null : this.twin(p))).filter(Boolean);
+    this.enemies.length = 0;
+    this.fields.length = 0;
+    this.pickups = this.pickups.filter((k) => k.y <= top);
+    this.particles.clear();
+    this.level.restartFrom(gate.y, BEAT * 0.9);
+    this.level.generateUpTo(this.cam.top + 900);
+    this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
+    this.floorName = zoneAt(pl.maxY, this.level.zones).name;      // the place is said, not the floor
+    this.toast(this.place.arrive, '#fff2a8', 2);
+    this.onGatePass(pl, gate);
+  }
+  onGatePass(pl, gate) {}                   // the simulator counts here
+  onDark(pl, d) {}                          // and here
+
+  // --- The treasury (vault.js) --------------------------------------------------
+  // Through a golden door: the tower is gone and he stands on the floor of
+  // the witch's treasury, at the height he was at. Nothing of the tower
+  // comes along. The room is furnished at once, the camera starts at its
+  // floor as at a round's lawn (camera.js), and the power-up he brought
+  // waits (player.js).
+  enterVault(gate) {
+    const pl = this.player, from = this.placeName;
+    this.setPlace(TREASURY.name);
+    this.platforms = this.platforms.filter((p) => p.kind === 'ground');
+    this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
+    this.particles.clear();
+    const room = furnishVault(this, pl.y, gate.side, this.level.child(this.level.rngVault), this.level.forcePlan);
+    this.vault = { ...room, from, entryY: pl.y, suns0: this.suns, hearts0: pl.hearts, t0: this.time };
+    pl.landedOn = this.platforms.find((p) => p.kind === 'vaultFloor');
+    this.cam.setRoom({ lo: room.camLo, hi: room.camHi });
+    this.toast(this.place.arrive, VAULT_LOOK.doorLight, 2.2);
+    this.onVaultEnter(pl, this.vault);
+  }
+  // Out by the door at the top: the tower again, from this height on, and
+  // the door he came out of shut behind him.
+  leaveVault(gate) {
+    const pl = this.player, v = this.vault;
+    this.setPlace(v.from);
+    this.platforms = this.platforms.filter((p) => p === gate || p.kind === 'ground');
+    this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
+    this.particles.clear();
+    this.cam.setRoom(null);
+    this.level.leaveVault(gate.y, BEAT * 0.9, v.entryY);
+    this.level.generateUpTo(this.cam.top + 900);
+    this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
+    const got = this.suns - v.suns0;
+    this.toast(got ? `${got} suns from the hoard!` : 'Back into the tower!', VAULT_LOOK.doorLight, 2.4);
+    this.vault = null;
+    this.onVaultLeave(pl, { suns: got, of: v.suns, hearts: pl.hearts - v.hearts0, time: this.time - v.t0 });
+  }
+  // Nobody falls in the treasury. He dropped out of the bottom of the
+  // picture: in the tower that is the end of the round; in here a golden
+  // bubble takes him, carries him back up to the lowest thing in the
+  // picture he can stand on (in a row of two, the nearer) and lets him down
+  // on it. The camera stays where it is: it is the tower's, it only climbs.
+  rescue() {
+    const pl = this.player, floor = this.cam.y + RESCUE_MIN;
+    let to = null;
+    for (const p of this.platforms) {
+      if (!p.landable || p.kind === 'chest' || p.y < floor) continue;
+      if (!to || p.y < to.y - 40 || (Math.abs(p.y - to.y) <= 40 && Math.abs(p.x - pl.x) < Math.abs(to.x - pl.x))) to = p;
+    }
+    if (!to) return;                        // (the door out is always there)
+    pl.carry(to);
+    this.audio.bubble();
+    this.onRescue(pl, to);
+  }
+  onCarryEnd(pl) { this.audio.bubblePop(); this.particles.sparkles(pl.x, pl.y + PLAYER_H * 0.5, 12, VAULT_LOOK.goldLight); }
+  onVaultEnter(pl, room) {}                 // the simulator counts here
+  onVaultLeave(pl, got) {}
+  onChest(pl, chest) {}
+  onRescue(pl, platform) {}
+
+  // The spider's web holds whoever flies into it (enemies.js Web says how
+  // he gets out); the boost shield or the star tear through it and knock
+  // the spider out, for the usual three suns.
+  meetWeb(e) {
+    const pl = this.player;
+    if (e.torn || pl.heldBy) return;
+    if (pl.shielded) {
+      e.tear(this, true);
+      this.suns += PUNCH_SUNS;
+      this.onBoostPunch(pl, e);
+      return;
+    }
+    pl.catchIn(e);
+    e.caught(this);
+  }
+  onWebCatch(pl, e) {
+    this.audio.webCatch();
+    this.particles.silk(pl.x, pl.y + 170, 5);
+    if (this.webHints < 2) { this.webHints++; this.toast('Tap to tear free!', '#f6f3ff', 1.8); }
+  }
+  onWebTug(pl, e) { this.audio.webTug(e.tugs); this.particles.silk(pl.x, pl.y + 170, 6); this.cam.shake(2, 0.1); }
+  onWebTear(pl, e, punched) { this.audio.webTear(); this.particles.silk(e.x, e.y, 14); }
+  onWebBite(pl, e) {}
 
   // Boosting through an enemy knocks it away instead of hurting the prince.
   boostPunch(e) {
@@ -244,6 +440,12 @@ export class World {
       this.particles.hearts(k.x, k.y);
     } else if (k.kind === 'power') {
       this.givePower(k.power, k.x, k.y);
+    } else if (k.kind === 'treasure') {
+      // a piece of the hoard: its worth in suns
+      this.suns += k.value;
+      this.audio.treasure(k.value);
+      this.particles.sparkles(k.x, k.y, 8 + k.value, VAULT_LOOK.goldLight);
+      this.toast(`+${k.value}`, '#ffe9a0', 0.9);
     }
   }
 
@@ -289,13 +491,23 @@ export class World {
     const floor = this.cam.y - 320;
     this.platforms = this.platforms.filter((p) => p.alive && (p.y > floor || p.kind === 'ground'));
     this.enemies = this.enemies.filter((e) => e.alive && (e.kind === 'witch' || e.y > floor - 200));
-    this.pickups = this.pickups.filter((k) => k.alive && k.y > floor && k.y < this.cam.top + 2500);
+    const far = this.vault ? Infinity : this.cam.top + 2500;       // (a treasury is furnished to its ceiling at once)
+    this.pickups = this.pickups.filter((k) => k.alive && k.y > floor && k.y < far);
     this.fields = this.fields.filter((f) => f.alive);
+  }
+
+  // Height milestones
+  milestones() {
+    if (this.heightM < this.nextMilestone) return;
+    this.toast(`${this.nextMilestone} m`, '#fff2a8', 1.4);
+    if (this.nextMilestone % 500 === 0) this.audio.milestone();
+    this.nextMilestone += 100;
   }
 
   events() {
     const pl = this.player;
     if (!pl.alive) return;
+    if (this.vault) return this.milestones();      // nothing happens in the treasury but the climb
     // The witch: telegraphed dives from a fixed altitude on, never during a
     // breather stretch, and with a long cooldown so she is an event.
     const witchAbout = this.enemies.some((e) => e.kind === 'witch' || e.kind === 'scissors');
@@ -311,12 +523,13 @@ export class World {
       else if (pl.maxY >= fp.y - FLOCK_LEAD && !witchAbout) {
         fp.fired = true;
         const rf = this.level.rngFauna;
-        this.enemies.push(new Flock(fp.y, rf.sign(), this.level.child(rf), fp.span));
-        this.audio.flockWarn();
-        this.toast('A flock! Boost through!', '#ffd98a', 2.2);
+        const bats = this.place.inside;      // in the tower the gate is a swarm of bats
+        this.enemies.push(new Flock(fp.y, rf.sign(), this.level.child(rf), fp.span, bats));
+        if (bats) this.audio.swarmWarn(); else this.audio.flockWarn();
+        this.toast(bats ? 'Bats! Boost through!' : 'A flock! Boost through!', '#ffd98a', 2.2);
       }
     }
-    if (pl.maxY > this.nextWitchY && !witchAbout && !flockNear && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
+    if (this.place.witch && pl.maxY > this.nextWitchY && !witchAbout && !flockNear && pl.seen && !this.level.pacingAt(pl.maxY).breather) {   // she does not set out for a prince she cannot see
       const side = this.rngEvents.sign();
       const dives = this.level.difficulty.index >= 3.5 ? 2 : 1;
       this.enemies.push(new Witch(pl, side, dives));
@@ -342,7 +555,7 @@ export class World {
     }
     // Storks: once the clouds are fully in, a stork crosses the screen a few
     // bounces above the prince, from one edge to the other.
-    if (pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
+    if (this.place.storks && pl.maxY > this.nextStorkY && cloudAmount(pl.maxY) >= 1) {
       this.spawnStork();
       this.nextStorkY = pl.maxY + this.rngEvents.range(1200, 2000);
     }
@@ -351,12 +564,20 @@ export class World {
       this.hintShown = true;
       this.toast('Boost to punch through enemies!', '#ffd98a', 2.6);
     }
-    // Height milestones
-    if (this.heightM >= this.nextMilestone) {
-      this.toast(`${this.nextMilestone} m`, '#fff2a8', 1.4);
-      if (this.nextMilestone % 500 === 0) this.audio.milestone();
-      this.nextMilestone += 100;
+    // Where the lights are out, it is said as he comes up to it.
+    if (this.place.inside) {
+      for (const d of this.level.darks) {
+        if (d.said || pl.maxY < d.from - 800) continue;
+        d.said = true;
+        if (pl.maxY < d.to) { this.toast('The lights are out!', '#cfc8ff', 2.4); this.audio.lightsOut(); this.onDark(pl, d); }
+      }
     }
+    // Inside the tower a new floor says its name.
+    if (this.place.inside) {
+      const floor = zoneAt(pl.maxY, this.level.zones).name;
+      if (floor !== this.floorName) { this.floorName = floor; this.toast(floor[0].toUpperCase() + floor.slice(1), '#e9e6f7', 2.2); }
+    }
+    this.milestones();
   }
 
   // The witch cut the braid at layer height `ly`: the braid ends there now,
@@ -396,7 +617,30 @@ export class World {
   // ---------------------------------------------------------------- callbacks
   onPlayerLand(pl, p) {
     if (p.kind === 'ground' && !this.started) return this.groundLanding(pl);
+    if (p.kind === 'gate' && !p.used && this.started && !this.passage) this.enterGate(p);
+    if (p.kind === 'chest') {
+      // the first landing opens it: its suns at once, in a fountain
+      if (!p.opened) {
+        p.opened = true; p.openedAt = this.time;
+        this.suns += CHEST_SUNS;
+        this.audio.chest();
+        this.particles.fountain(p.x, p.y + 10, VAULT_LOOK.chestSuns);
+        this.toast(`+${CHEST_SUNS}`, '#ffe9a0', 0.9);
+        this.cam.shake(3, 0.15);
+        this.onChest(pl, p);
+      } else { this.audio.bounce(pl.combo); this.particles.sparkles(pl.x, pl.y, 4, '#ffe9a0'); }
+      return;
+    }
     if (p.kind === 'bow') { this.audio.spring(); this.particles.petals(pl.x, pl.y, 10); this.particles.sparkles(pl.x, pl.y, 6, '#ffd1e3'); }
+    else if (p.kind === 'bell') { this.audio.bell(); p.rungAt = this.time; this.particles.sparkles(pl.x, pl.y, 8, '#ffe9a0'); return; }
+    else if (p.kind === 'tome') { this.audio.tome(); this.particles.pages(pl.x, pl.y + 10, 8); this.particles.sparkles(pl.x, pl.y, 8, '#d9c8ff'); return; }
+    else if (p.kind === 'chandelier') {
+      this.audio.bounce(pl.combo); this.audio.clink();
+      // where the lights are out, a landing lights its candles: he brings the light back as he climbs
+      if (p.unlit) { p.unlit = false; this.audio.candleLit(); this.particles.sparkles(pl.x, pl.y + 20, 14, INSIDE.candleLight); }
+      else this.particles.sparkles(pl.x, pl.y + 8, 5, INSIDE.candleLight);
+      return;
+    }
     else if (p.kind === 'cloud') { this.audio.poof(p.dry); this.particles.cloudPuff(pl.x, pl.y, 70, p.dry ? 6 : 9); return; }
     else if (p.kind === 'skyLantern') { this.audio.paper(); this.particles.sparkles(pl.x, pl.y + 10, 7, '#ffd04a'); return; }
     else if (p.kind === 'stork') {
@@ -405,9 +649,10 @@ export class World {
       this.suns += 3; this.toast('+3', '#ffe9a0', 0.9);
       return;
     }
-    else if (p.dry) { this.audio.weakBounce(); this.particles.crumble(pl.x, pl.y, 60, true); }
+    else if (p.dry) { this.audio.weakBounce(); this.particles.crumble(pl.x, pl.y, 60, true, p.style === STONE_STYLE ? INSIDE.rubble : null); }
     else { this.audio.bounce(pl.combo); }
-    if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
+    if (p.style === STONE_STYLE) this.particles.landingDust(pl.x, pl.y, 0.9);      // a stone ledge: dust, no leaves
+    else if (p.kind === 'branchL' || p.kind === 'branchR') this.particles.leaves(pl.x, pl.y, p.dry ? 2 : 5);
     else if (p.kind === 'ribbon') this.particles.petals(pl.x, pl.y, 4);
     else if (p.kind === 'swing') this.particles.landingDust(pl.x, pl.y, 0.6);
     else this.particles.landingDust(pl.x, pl.y, 1.4);
@@ -446,7 +691,7 @@ export class World {
     }
     if (p && p.dry && p.used) {
       if (p.kind === 'cloud') { this.audio.dissolve(); this.particles.cloudPuff(p.x, p.y, p.w, 16); }
-      else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true); }
+      else { this.audio.crumble(); this.particles.crumble(p.x, p.y, p.w, true, p.style === STONE_STYLE ? INSIDE.rubble : null); }
     }
   }
   onPlayerBoost(pl) { this.audio.boost(); this.particles.sparkles(pl.x, pl.y, 8, '#ffd04a'); }
@@ -462,13 +707,33 @@ export class World {
   onPlayerDie(pl, cause) { this.audio.gameOver(); this.cam.shake(14, 0.5); }
 
   // ------------------------------------------------------------------- draw
+  // The slope of the shaft's chain at height y, as a rotation for what hangs on it.
+  chainLean(y) { const c = this.bg.interior; return (c.chainX(y + 30, this.time) - c.chainX(y - 30, this.time)) / 60; }
+
   drawPlatform(g, p) {
     const A = this.art.platforms;
     let s;
-    const T = this.art.trees;
+    const T = this.art.trees, I = this.art.interior;
+    const opts = {};
+    // a ledge inside the tower is a branch in stone: the same lengths and variants
+    const stone = p.style === STONE_STYLE;
     switch (p.kind) {
-      case 'branchL': s = p.dry ? (T.branchLDry[p.len] || T.branchLDry.normal) : T.styles[p.style].branchL[p.len][p.variant]; break;
-      case 'branchR': s = p.dry ? (T.branchRDry[p.len] || T.branchRDry.normal) : T.styles[p.style].branchR[p.len][p.variant]; break;
+      case 'branchL': { const dry = stone ? I.stone.dryL : T.branchLDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchL[p.len][p.variant]; break; }
+      case 'branchR': { const dry = stone ? I.stone.dryR : T.branchRDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchR[p.len][p.variant]; break; }
+      case 'chandelier': s = p.unlit ? I.chandelierOut : I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
+      case 'bell': s = I.bell; break;
+      case 'tome': s = I.tome[p.squash > 0.4 ? 1 : 0]; break;
+      case 'gallery': s = I.gallery[p.side][p.variant % 2]; break;
+      case 'gate': {
+        const open = this.passage && this.passage.gate === p ? 1 : 0;
+        if (!p.gold) { s = I.gate[this.place.inside ? 'out' : 'in'][open]; break; }      // it shows where it leads
+        // a golden door: into the treasury, out of it, or (in the tower, gone through) shut for good
+        const V = this.art.vault.door;
+        s = p.gold === 'in' ? V.in[open] : this.vault ? V.out[open] : V.spent;
+        break;
+      }
+      case 'chest': s = this.art.vault.chest[p.opened ? 1 : 0]; break;
+      case 'step': if (!p.flight) return; s = I.stairs[p.side]; if (this.vault) opts.tint = VAULT_LOOK.stone; break;      // the flight is one piece, drawn for its lowest tread (in the treasury, in its warmer stone)
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
       case 'swing': s = A.plank; break;
@@ -479,8 +744,7 @@ export class World {
       default: return;
     }
     const cam = this.cam;
-    const dip = p.kind === 'balcony' ? 0 : p.squash * 10;   // stone does not give
-    const opts = {};
+    const dip = p.kind === 'balcony' || p.kind === 'step' || p.kind === 'gate' || p.kind === 'chest' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {
       // the glow breathes around the bright dome above the flame; the paper
@@ -506,12 +770,94 @@ export class World {
     else if (p.wobble) opts.rot = p.wobble * 0.004;
     if (p.def.root != null) { opts.sx = p.lenScale; if (p.tint && !p.dry) opts.tint = p.tint; }
     if (p.kind === 'swing') {
-      // ropes up into the canopy
+      // ropes up into the canopy; inside the tower the board hangs on chains
       const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
       const lean = (opts.rot || 0) * 60;
-      for (const dx of [-94, 94]) g.line(sx + dx, sy + 4, sx + dx + lean, -40, C.rope, 4);
+      for (const dx of [-94, 94]) {
+        if (!this.place.inside) { g.line(sx + dx, sy + 4, sx + dx + lean, -40, C.rope, 4); continue; }
+        g.line(sx + dx, sy + 4, sx + dx + lean, -40, INSIDE.chainDark, 6);
+        g.line(sx + dx, sy + 4, sx + dx + lean, -40, INSIDE.chain, 2);
+      }
+    }
+    if (p.kind === 'chandelier') {
+      // its candles: a halo on the ring and a pool of light in the room
+      const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
+      const fl = 0.88 + 0.12 * Math.sin(this.time * 9 + p.id) * Math.sin(this.time * 2.7 + p.id * 2);
+      if (!p.unlit) {
+        g.halo(sx, sy - 14, 96, INSIDE.candleLight, 0.42 * fl, { glow: 0.45 });
+        this.bg.interior.glow(sx, sy - 10, 300, INSIDE.candleLight, 0.2 * fl);
+        opts.glow = 0.25;
+      }
+      opts.rot = this.chainLean(p.y) * 0.5;              // it leans a little the way the chain hangs there
+    }
+    if (p.kind === 'tome') {
+      // it hangs the way the chain hangs, and there is magic in it
+      const sx = cam.sx(p.x), sy = cam.sy(p.y) + dip;
+      g.halo(sx, sy + 20, 80, '#b9a0ff', 0.2 + 0.08 * Math.sin(this.time * 2.4 + p.id), { glow: 0.35 });
+      this.bg.interior.glow(sx, sy + 10, 180, '#b9a0ff', 0.1);
+      opts.rot = this.chainLean(p.y) * 0.5;
+    }
+    if (p.kind === 'gate' && p.gold && (p.gold === 'in' || this.vault)) {
+      // a golden door that still leads somewhere shines, and glints
+      const sx = cam.sx(p.x), sy = cam.sy(p.y), t = this.time;
+      g.halo(sx, sy - 92, 150, VAULT_LOOK.doorLight, 0.3 + 0.08 * Math.sin(t * 2.6 + p.id), { glow: 0.5 });
+      this.bg.interior.glow(sx, sy - 80, 320, VAULT_LOOK.goldLight, 0.2);
+      opts.glow = 0.25;
+      for (let i = 0; i < 3; i++) {
+        const k = (t * 0.8 + i / 3 + p.id * 0.37) % 1, a = i * 2.1 + Math.floor(t * 0.8 + i / 3 + p.id * 0.37) * 2.4, sc = 0.5 + 0.6 * Math.sin(Math.PI * k);
+        this.sparkles.push([sx + Math.cos(a) * 78, sy - 96 + Math.sin(a) * 86, Math.sin(Math.PI * k), sc]);
+      }
+    }
+    if (p.kind === 'chest') {
+      // it gives a little under him; just opened, the gold in it flares
+      opts.sy = 1 - p.squash * 0.1;
+      const dt = this.time - p.openedAt;
+      if (p.opened) g.halo(cam.sx(p.x), cam.sy(p.y) + 8, 70, VAULT_LOOK.goldLight, 0.22 + (dt < 0.6 ? 0.5 * (1 - dt / 0.6) : 0), { glow: 0.4 });
+    }
+    if (p.kind === 'bell') {
+      // rung by a landing: it rocks under its headstock and comes to rest
+      const dt = this.time - p.rungAt;
+      opts.rot = this.chainLean(p.y) * 0.5 + (dt < 3 ? Math.sin(dt * 13) * 0.2 * Math.exp(-dt * 1.8) : 0);
     }
     g.blit(s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
+  }
+
+  // Where the lights are out (level.js, the dark stretches): the picture is
+  // multiplied down to nearly nothing and brought back around every light.
+  // His own light goes with the prince; the room's lamps are the pools the
+  // painter and the platforms already registered this frame (the lit
+  // chandeliers, a ghost's candle, the spell book; the torches and windows
+  // of a dark stretch are out and register none); what one picks up
+  // glimmers; and every creature has a light of its own, so nothing that
+  // bites comes out of the black.
+  get darkness() { return this.place.inside && !this.vault ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }
+  drawDarkness(g) {
+    const dk = this.darkness;
+    if (dk <= 0.01) return;
+    const cam = this.cam, pl = this.player;
+    g.dark(dk * DARK_DEPTH, DARK_COLOR);
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 560, '#ffe6c4', 0.4);
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 340, '#fff0da', 0.9);
+    for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);
+    for (const p of this.platforms) {
+      if (p.y < cam.y - 200 || p.y > cam.top + 200) continue;
+      if (p.kind === 'gate') g.lamp(cam.sx(p.x), cam.sy(p.y + 90), 230, '#ffe2b0', 0.8);
+      else if (p.kind === 'gallery') g.lamp(cam.sx(p.x + (p.side === 'L' ? -70 : 70)), cam.sy(p.y + 70), 190, '#ffd596', 0.6);   // the light in its door
+    }
+    for (const k of this.pickups) {
+      if (!k.alive || k.y < cam.y - 100 || k.y > cam.top + 100) continue;
+      const r = k.kind === 'sun' ? 62 : k.kind === 'lantern' ? 170 : k.kind === 'power' ? 150 : 90;
+      g.lamp(cam.sx(k.x), cam.sy(k.y), r, k.kind === 'sun' ? '#fff3a0' : k.kind === 'heart' ? '#ffb0c0' : '#ffd98a', k.kind === 'sun' ? 0.75 : 0.9);
+    }
+    for (const e of this.enemies) {
+      if (!e.alive || e.dead || e.y < cam.y - 200 || e.y > cam.top + 200) continue;
+      if (e.kind === 'bat') g.lamp(cam.sx(e.x), cam.sy(e.y), e.state === 'hang' ? 70 : 120, '#d9c8ff', e.state === 'hang' ? 0.45 : 0.8);        // its eyes
+      else if (e.kind === 'ghost') g.lamp(cam.sx(e.x), cam.sy(e.y), 150, '#e9e6f7', 0.75 * e.vis);
+      else if (e.kind === 'cat') g.lamp(cam.sx(e.x), cam.sy(e.y + 12), 84, '#fff3a0', 0.75);                                                // its eyes
+      else if (e.kind === 'guard') g.lamp(cam.sx(e.x), cam.sy(e.y), 190, '#ffd596', 0.7);                                                    // he has a lantern by him
+      else if (e.kind === 'grabber') { if (e.head > 0) g.lamp(cam.sx(e.win.x), cam.sy(e.armY), 170, '#ffd596', 0.8 * e.head); }              // light from behind him as he looks out
+      else if (e.kind === 'web') { if (!e.torn) g.lamp(cam.sx(e.x), cam.sy(e.y), 130, '#f6f3ff', 0.4); g.lamp(cam.sx(e.spX), cam.sy(e.spY), 60, '#ffb0b0', 0.5); }   // dew on the threads, the spider's eyes
+    }
   }
 
   // `g` is the renderer facade (gfx/renderer.js); everything is drawn in
@@ -521,19 +867,36 @@ export class World {
     g.layer('bg');
     this.bg.drawBack(g, cam, this.time, this);
     g.layer('world');
-    const order = { swing: 0, balcony: 1, ribbon: 1, bow: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3 };
-    const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - 120 && p.y < cam.top + 120);
+    const order = { swing: 0, step: 0, gate: 1, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, tome: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3, chest: 3 };
+    this.sparkles.length = 0;
+    const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - (p.flight ? 360 : 120) && p.y < cam.top + (p.flight ? 220 : 120));   // a flight of stairs reaches well above and below its lowest tread
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);
+    for (const [x, y, a, sc] of this.sparkles) g.blit(this.art.sign.sparkle, x, y, { alpha: a, sx: sc, sy: sc, glow: 0.5 });   // the golden doors' glints, over everything one stands on
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);
     this.player.draw(g, cam, this.art);
+    if (this.player.carried) {
+      // the bubble that carries him (the treasury's rescue): the power-ups' soap bubble at his size, in gold
+      const V = this.art.vault, bx = cam.sx(this.player.x), by = cam.sy(this.player.y + PLAYER_H * 0.5), wob = Math.sin(this.time * 5) * 0.03;
+      g.halo(bx, by, 200, VAULT_LOOK.goldLight, 0.3, { glow: 0.4 });
+      g.blit(V.bubbleFill, bx, by, { sx: 1 + wob, sy: 1 - wob, alpha: 0.16, tint: VAULT_LOOK.goldLight });
+      g.blit(V.bubble, bx, by, { sx: 1 + wob, sy: 1 - wob, alpha: 0.95, glow: 0.2 });
+    }
     this.particles.draw(g, cam);
     this.bg.drawFront(g, cam, this.time);
     this.bg.drawFrontAtmosphere(g, cam, this.time, this);
     g.layer('light');
     this.bg.drawLighting(g, cam);
     this.bg.drawVignette(g);
+    this.drawDarkness(g);
+    // going through a gate: the picture closes in on the prince and opens again
+    const k = this.iris;
+    if (k > 0) {
+      const cx = clamp(cam.sx(this.player.x), 0, W), cy = clamp(cam.sy(this.player.y + PLAYER_H * 0.5), 0, H);
+      const e = k * k * (3 - 2 * k), l = cx * e, r = W - (W - cx) * e, t = cy * e, b = H - (H - cy) * e;
+      g.rect(0, 0, W, t, '#0b0a12'); g.rect(0, b, W, H - b, '#0b0a12'); g.rect(0, t, l, b - t, '#0b0a12'); g.rect(r, t, W - r, b - t, '#0b0a12');
+    }
   }
 }
