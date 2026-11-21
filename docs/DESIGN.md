@@ -760,6 +760,15 @@ is a pool to draw from, not a promise.
 - ✅ a tree per zone (`treeStyleAt`): oak on the forest floor, mossy
   giants in the deep forest, birch-like trunks at the windows, bare tops
   above the trees; trunk tiles crossfade over 30 m at each boundary.
+  A trunk is round the way the tower is: what one sees is the inner
+  flank of a tree far thicker than the strip of it in the picture, so
+  its bark's ridges get narrower toward the inner edge, and the light,
+  which for a trunk comes from that edge, lies on it in upright planes.
+  The bark is ridges between furrows, broken into plates (oak; wider
+  and darker on the giants), smooth with dark marks and the eyes where
+  branches were (birch), or dead wood with long cracks and bare
+  patches (above the trees). At the lawn a trunk flares out into a
+  buttress root.
 - ✅ trunk life: moss, cracks, woodpecker holes, fungus shelves, lichen
   and burls scattered per tile; roots at the lawn; climbing vines (ivy,
   thorny tendrils with red barbs, flowering creepers) winding across tile
@@ -1987,3 +1996,20 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   lower end. Inside the
   tower the two columns stand in the middle, behind the windows. The
   atlas is 4096 x 3422.
+- 2026-11-21: The trunks (`element/tree-trunks`). They were a brown
+  band with a light strip at the inner edge and some twenty thin lines
+  of two colours thrown down it at random: the "thin lines carrying
+  the shape" the style warns of. Redrawn on the tower's idea of
+  roundness, with the trunk's middle 16 art px outside the picture: one
+  sees its flank from 24° round to its edge. The furrows stand where
+  ridges 9° wide (12° on the giants, 7.5° on dead wood) put them, 6 px
+  apart at the picture's border and 1 px at the inner edge, and five
+  planes of the bark's ramp (with a half step either side of its
+  middle) go from the lit edge to the border. Furrows stray a pixel on
+  their way and are back in their columns where a tile ends, so the
+  bark runs on. A lit top edge on every plate was tried and was too
+  much. The birch keeps what it had (pale, marks across), now round;
+  its marks get shorter toward the edge. The roots at the lawn are a
+  buttress now, 136 px into the lawn, instead of a low wedge. For the
+  eye only: `tools/checks/identity.sh` reports all five the same. The
+  atlas is 4096 x 3460.
