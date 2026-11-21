@@ -246,15 +246,15 @@ export class Background {
     const gust = this.atmo.gustEnv();
     for (let k = first; k <= last; k++) {
       const sy = cam.sy(k * TILE_H);
-      if (k === crownTile) { g.blit(T.crownL, cam.ox, sy); g.blit(T.crownR, W + cam.ox, sy); continue; }
+      if (k === crownTile) { g.blit(T.crownL, cam.ox, sy); g.blit(T.crownL, W + cam.ox, sy, { flip: true }); continue; }      // (the right tree is the left one, mirrored)
       const st = treeStyleAt(k * TILE_H);
       const vL = this.trunkVariant(k, 'L'), vR = this.trunkVariant(k, 'R');
       g.blit(T.styles[st.a].trunkL[vL], cam.ox, sy);
-      g.blit(T.styles[st.a].trunkR[vR], W + cam.ox, sy);
-      if (st.t > 0) { g.blit(T.styles[st.b].trunkL[vL], cam.ox, sy, { alpha: st.t }); g.blit(T.styles[st.b].trunkR[vR], W + cam.ox, sy, { alpha: st.t }); }
+      g.blit(T.styles[st.a].trunkL[vR], W + cam.ox, sy, { flip: true });
+      if (st.t > 0) { g.blit(T.styles[st.b].trunkL[vL], cam.ox, sy, { alpha: st.t }); g.blit(T.styles[st.b].trunkL[vR], W + cam.ox, sy, { alpha: st.t, flip: true }); }
       this.drawTrunkOverlays(g, cam, k, st.t < 0.5 ? st.a : st.b, sy);
     }
-    if (first === 0) { g.blit(T.overlays.rootsL, TRUNK_W - 10 + cam.ox, cam.sy(-2)); g.blit(T.overlays.rootsR, W - TRUNK_W + 10 + cam.ox, cam.sy(-2)); }
+    if (first === 0) { g.blit(T.overlays.rootsL, TRUNK_W - 10 + cam.ox, cam.sy(-2)); g.blit(T.overlays.rootsL, W - TRUNK_W + 10 + cam.ox, cam.sy(-2), { flip: true }); }
     this.drawVines(g, cam, time, gust, first, last);
     this.drawLianas(g, cam, time, gust, first, last);
   }

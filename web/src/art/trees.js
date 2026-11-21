@@ -28,89 +28,143 @@ export const TREE_STYLES = [
 ];
 
 // --- branches -------------------------------------------------------------
-// L x 18 art px (L = 20 stub, 32 short, 50 normal, 76 long), growing out of
-// the RIGHT trunk toward the left: the root is at x = L - 1, the tip at
-// x = 3; the surface (collision top) is y = 7. Mirrored for the left.
-// Features sit relative to the tip and the root, never stretched.
-function drawBranch(t, style, variant, rng, L = 50) {
-  const { p, poly, line, disc } = t;
-  const B = style.branchBark || style.bark, L_ = style.leaf;
-  const R = L - 1;                                   // root x
-  const at = (f) => Math.round(3 + (R - 3) * f);     // x at a fraction of the length, tip = 0
-  const stub = L <= 24;
-  // log shape: thick at the trunk (right), tapering to the tip; gnarled adds a hump
-  const top = variant === 1 && !stub ? [[3, 8], [at(0.22), 8], [at(0.4), 6], [at(0.58), 7], [R, 5]] : [[3, 8], [R, 5]];
-  poly([...top, [R, 16], [3, 12]], B.mid);
-  poly([...top, [R, 7], ...[...top].reverse().map(([x, y]) => [x, y + 1])], B.light);
-  poly([[3, 11], [R, 13], [R, 16], [3, 12]], B.dark);
-  // grain
-  for (let x = 6; x < R - 6; x += 10) { line(x, 10, Math.min(R - 4, x + 8), 9 + (x % 20 ? 1 : 0), B.dark); }
-  for (let x = 10; x < R - 8; x += 14) line(x, 8, Math.min(R - 4, x + 6), 7, B.light);
-  if (stub) {
-    // stub: a knob with one leaf tuft (0) or a snapped stump (1)
-    if (variant === 1) {
-      poly([[6, 7], [4, 9], [7, 11], [5, 13], [R, 16], [R, 5], [8, 6]], B.mid);
-      poly([[6, 7], [8, 6], [10, 7], [9, 10], [11, 12], [8, 13], [5, 13], [7, 11], [4, 9]], B.light);
-      line(8, 7, 7, 12, B.deep); p(9, 9, 1, 1, B.deep); p(6, 8, 1, 1, B.deep);
-      if (L_) p(4, 5, 2, 1, L_.a);
-    } else if (L_) {
-      disc(6, 7, 4, L_.a); disc(4, 5, 3, L_.b); disc(8, 4, 2, L_.c); p(2, 9, 3, 2, L_.dark); p(1, 7, 2, 2, L_.a);
-    } else {
-      line(6, 8, 2, 3, B.dark); line(4, 6, 1, 7, B.dark); line(5, 9, 2, 12, B.dark);
+// A limb growing out of the RIGHT trunk toward the left, on a canvas of
+// (L + BRANCH.root) x BRANCH.h art px (L = 20 stub, 32 short, 50 normal,
+// 76 long): the tip is at x = 3, the end of what one can stand on at
+// x = L - 1 (which lies a little inside the trunk), and BRANCH.root more
+// art px of collar lie over the trunk, where the limb swells into it: a
+// branch grows out of a tree, it is not nailed to it. The surface (the
+// collision top, the sprite's anchor) is row BRANCH.surf, and the limb's top
+// is flat on that row for nearly all of its length, so that he stands on
+// what one sees. Its underside does the tapering: thick at the trunk, thin
+// at the tip. Lit from above: a line of light along the top, the bark's
+// tones down to the underside in shade, furrows running along it.
+// The left tree's branches are these, mirrored as they are drawn (world.js):
+// there is one drawing for both sides. Features sit relative to the tip and
+// the root, never stretched.
+const BRANCH = { root: 5, h: 26, surf: 10 };
+
+// The limb itself in the tones `T` (dark to light, six of them). Returns
+// { at, under }: x at a fraction of the length (0 the tip), and the
+// underside's row at x.
+function limb(t, T, L, rng, opts = {}) {
+  const { p } = t;
+  const S = BRANCH.surf, R = L - 1, X1 = R + BRANCH.root, stub = L <= 24;
+  const at = (f) => Math.round(3 + (R - 3) * f);
+  const frac = (x) => Math.max(0, Math.min(1.25, (x - 3) / (R - 3)));
+  const ease = (u) => { const k = Math.max(0, Math.min(1, u)); return k * k * (3 - 2 * k); };
+  // the top: flat on the surface, rising a little into the collar; the underside: the taper, a slight belly, the collar's swell
+  const top = (x) => S - Math.round(ease((frac(x) - 0.92) / 0.08)) - (x > R + 2 ? 1 : 0);
+  const thick = (x) => { const f = frac(x); return 5 + (stub ? 2 : 3.2) * Math.min(1, f) + 2.6 * ease((f - 0.78) / 0.22) + (x > R ? (x - R) * 0.45 : 0) + (opts.hump && !stub ? 1.6 * Math.exp(-(((f - 0.45) / 0.12) ** 2)) : 0); };
+  const under = (x) => S + Math.round(thick(x));
+  for (let x = 3; x <= X1; x++) {
+    let y0 = top(x), y1 = under(x);
+    if (x < 5 && !opts.snapped) { y0 += 5 - x > 1 ? 1 : 0; y1 -= 5 - x; }           // a rounded tip
+    const h = y1 - y0;
+    for (let y = y0; y < y1; y++) {
+      const k = (y - y0) / Math.max(1, h - 1);
+      p(x, y, 1, 1, y === y0 ? T[5] : k < 0.26 ? T[4] : k < 0.6 ? T[3] : k < 0.86 ? T[2] : T[1]);
     }
+  }
+  // furrows along the limb, in dashes, following its underside; and the gaps between the bark's plates on its lit top
+  for (const depth of [0.45, 0.72]) {
+    for (let x = 6 + rng.int(0, 3); x < R; ) {
+      const len = rng.int(4, 9);
+      for (let i = 0; i < len && x + i < X1 - 1; i++) { const xx = x + i, y = top(xx) + Math.round((under(xx) - top(xx)) * depth); if (under(xx) - top(xx) >= 5) p(xx, y, 1, 1, depth > 0.6 ? T[0] : T[1]); }
+      x += len + rng.int(2, 5);
+    }
+  }
+  for (let x = 8 + rng.int(0, 4); x < R - 2; x += rng.int(7, 12)) { p(x, top(x) + 1, 1, 2, T[2]); p(x + 1, top(x), 1, 1, T[4]); }
+  // where it joins the trunk: the collar's edge, and the shade it casts on the bark below
+  for (let y = top(X1); y < under(X1); y++) p(X1, y, 1, 1, T[y - top(X1) < 3 ? 3 : 1]);
+  for (let x = R - 1; x <= X1; x++) p(x, under(x), 1, 2, 'rgba(0,0,0,0.22)');
+  return { at, under, top };
+}
+// Leaves in a round mass, lit on the upper left, in shade underneath (the style's four greens).
+function leaves(t, cx, cy, r, G) {
+  const { p } = t;
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    if (x * x + y * y > r * r + r * 0.5) continue;
+    const lit = x + y * 1.4 < -r * 0.7, under = y > r * 0.5 || x + y > r * 1.15;
+    p(cx + x, cy + y, 1, 1, under ? G.dark : lit ? G.b : G.a);
+  }
+  p(cx - Math.round(r * 0.4), cy - Math.round(r * 0.5), 1, 1, G.c); if (r >= 3) p(cx - r + 1, cy - 1, 1, 1, G.c);
+}
+
+function drawBranch(t, style, variant, rng, L = 50) {
+  const { p, line, disc } = t;
+  const B = style.branchBark || style.bark, G = style.leaf, T = barkTones(B);
+  const S = BRANCH.surf, R = L - 1, stub = L <= 24;
+  const { at, under, top } = limb(t, T, L, rng, { hump: variant === 1, snapped: stub && variant === 1 });
+  if (stub) {
+    if (variant === 1) {
+      // a snapped stump: the break is pale wood, splintered
+      for (const [dx, dy, h] of [[0, 1, 3], [1, 0, 6], [2, 2, 3]]) p(3 + dx, S + dy, 1, h, B.light);
+      p(2, S + 2, 1, 2, B.light); p(4, S - 1, 1, 2, T[4]); p(5, S + 3, 2, 1, B.deep); p(6, S + 1, 1, 1, B.deep);
+      if (G) leaves(t, 9, S - 2, 2, G);
+    } else if (G) { leaves(t, 6, S - 1, 5, G); leaves(t, 3, S - 4, 3, G); leaves(t, 10, S - 4, 3, G); }
+    else { line(6, S, 2, S - 5, B.dark); line(4, S - 2, 1, S - 2, B.dark); line(5, S + 1, 2, S + 4, B.dark); }
     return;
   }
-  if (variant === 1) { disc(at(0.68), 12, 2, B.dark); p(at(0.68) - 1, 11, 2, 1, B.light); }                     // gnarled: a knob below
-  if (variant === 2) { const x = at(0.28); line(x, 7, x - 7, 1, B.mid, 2); line(x - 6, 2, x - 8, 1, B.light); } // forked: a twig up
-  if (variant === 3) {                                                                                             // knobby, rings
-    disc(at(0.24), 13, 2, B.dark); disc(at(0.58), 14, 2, B.dark); p(at(0.24) - 1, 12, 2, 1, B.light); p(at(0.58) - 1, 13, 2, 1, B.light);
-    line(at(0.36), 6, at(0.36), 12, B.dark); line(at(0.75), 5, at(0.75), 13, B.dark);
+  if (variant === 1) { const x = at(0.68); disc(x, under(x) - 1, 2, T[1]); p(x - 1, under(x) - 3, 2, 1, T[4]); }                        // gnarled: a knob below (and a hump, see limb)
+  if (variant === 2) { const x = at(0.3); line(x, S, x - 5, S - 5, T[3], 2); line(x - 4, S - 5, x - 6, S - 7, T[4]); }                     // forked: a twig up
+  if (variant === 3) {                                                                                                                   // knobby, ringed
+    for (const f of [0.24, 0.58]) { const x = at(f); disc(x, under(x) - 1, 2, T[1]); p(x - 1, under(x) - 3, 2, 1, T[4]); }
+    for (const f of [0.38, 0.76]) { const x = at(f); for (let y = top(x) + 1; y < under(x) - 1; y++) p(x, y, 1, 1, T[1]); p(x + 1, top(x), 1, 2, T[4]); }
   }
-  if (variant === 4) {                                                                                             // mossy with a mushroom shelf
-    p(6, 8, Math.round(L * 0.28), 1, C.moss); p(at(0.45), 7, Math.round(L * 0.24), 1, C.moss); p(at(0.76), 6, Math.round(L * 0.18), 1, C.moss);
-    p(at(0.2), 9, 3, 1, C.mossDark); p(at(0.6), 8, 3, 1, C.mossDark);
-    const sx = at(0.36); p(sx, 13, 7, 2, '#c9b35a'); p(sx, 13, 7, 1, '#e8d890'); p(sx + 1, 15, 5, 1, C.acorn);
+  if (variant === 4) {                                                                                                                   // mossy, with a mushroom shelf
+    for (const [f, w] of [[0.1, 0.26], [0.46, 0.22], [0.76, 0.16]]) { const x = at(f), n = Math.round(L * w); p(x, S, n, 1, C.moss); p(x + 1, S + 1, n - 2, 1, C.mossDark); }
+    const sx = at(0.36), sy = under(sx + 3) - 3; p(sx, sy, 7, 2, '#c9b35a'); p(sx, sy, 7, 1, '#e8d890'); p(sx + 1, sy + 2, 5, 1, C.acorn);
   }
-  if (variant === 5) {                                                                                             // nest with eggs
+  if (variant === 5) {                                                                                                                   // a nest with eggs
     const nx = at(0.45);
-    poly([[nx, 7], [nx + 12, 7], [nx + 10, 3], [nx + 2, 3]], C.acorn); p(nx + 2, 3, 8, 1, '#c9b35a'); line(nx + 1, 5, nx + 11, 5, '#b48a52'); line(nx + 3, 6, nx + 9, 6, C.acornCap);
-    p(nx + 4, 2, 2, 1, '#eef2e0'); p(nx + 7, 2, 2, 1, '#eef2e0');
+    p(nx + 1, S - 3, 10, 3, C.acorn); p(nx, S - 4, 12, 1, '#c9b35a'); p(nx + 2, S - 1, 8, 1, C.acornCap); line(nx + 1, S - 2, nx + 10, S - 2, '#b48a52');
+    p(nx + 3, S - 5, 2, 1, '#eef2e0'); p(nx + 6, S - 5, 2, 1, '#eef2e0'); p(nx + 3, S - 6, 1, 1, '#ffffff');
   }
-  // leaves by style
+  const clear = (x) => !(variant === 5 && Math.abs(x - at(0.45) - 6) < 10);            // no leaves on the nest
   if (style.leaves === 'round') {
-    disc(5, 7, 4, L_.a); disc(3, 5, 3, L_.b); disc(7, 4, 2, L_.c); p(1, 9, 3, 2, L_.dark); p(0, 7, 2, 2, L_.a);
-    for (let f = 0.4; f < 0.95; f += 0.36) { const x = at(f); if (variant === 5 && Math.abs(x - at(0.45)) < 8) continue; disc(x, 4, 3, L_.a); disc(x + 2, 3, 2, L_.b); p(x - 2, 6, 2, 1, L_.dark); p(x + 3, 2, 1, 1, L_.c); }
-    if (variant === 2) { const x = at(0.28) - 8; disc(x, 1, 2, L_.a); p(x, 0, 1, 1, L_.c); }
+    leaves(t, 5, S - 1, 5, G); leaves(t, 2, S - 5, 3, G); leaves(t, 9, S - 5, 3, G);
+    for (const f of [0.42, 0.78]) { const x = at(f); if (clear(x)) { leaves(t, x, S - 3, 4, G); leaves(t, x + 4, S - 2, 2, G); leaves(t, x - 3, S - 1, 2, G); } }
+    if (variant === 2) leaves(t, at(0.3) - 6, S - 7, 3, G);
   } else if (style.leaves === 'droop') {
-    disc(5, 7, 4, L_.a); disc(4, 5, 3, L_.b); p(6, 4, 2, 1, L_.c); p(1, 9, 3, 2, L_.dark);
-    for (let f = 0.4; f < 0.95; f += 0.36) { const x = at(f); if (variant === 5 && Math.abs(x - at(0.45)) < 8) continue; disc(x, 5, 3, L_.a); p(x + 1, 3, 2, 1, L_.b); }
-    line(2, 11, 2, 16, L_.dark); line(6, 11, 6, 17, L_.a); line(9, 10, 9, 14, L_.dark);   // hanging moss
-    for (let f = 0.4; f < 0.95; f += 0.36) { const x = at(f); line(x, 8, x, 13, L_.dark); }
-    p(2, 16, 1, 1, L_.c); p(6, 17, 1, 1, L_.c);
-    for (let i = 0; i < L / 8; i++) p(10 + rng.int(0, R - 14), 8 - rng.int(0, 2), 1, 1, C.moss);
+    leaves(t, 5, S - 1, 5, G); leaves(t, 3, S - 5, 3, G);
+    for (const f of [0.42, 0.78]) { const x = at(f); if (clear(x)) { leaves(t, x, S - 2, 4, G); leaves(t, x + 4, S - 1, 2, G); } }
+    if (variant === 2) leaves(t, at(0.3) - 6, S - 8, 2, G);
+    // moss hanging from the underside, a pale tip on the longest strands
+    for (const [f, n] of [[0.02, 5], [0.1, 8], [0.2, 4], [0.42, 6], [0.6, 3], [0.78, 7]]) { const x = at(f) - 1, y = under(x); line(x, y, x, y + n, n > 5 ? G.a : G.dark); if (n > 5) p(x, y + n, 1, 1, G.c); }
+    for (let i = 0; i < L / 8; i++) p(10 + rng.int(0, R - 14), S - rng.int(0, 1), 1, 1, C.moss);
   } else if (style.leaves === 'sparse') {
-    for (let i = 0; i < 9; i++) { const x = rng.int(0, Math.min(22, R - 6)), y = rng.int(1, 9); p(x, y, 1, 1, rng.chance(0.5) ? L_.b : L_.c); }
-    line(6, 7, 1, 3, B.dark); line(4, 6, 2, 9, B.dark); p(1, 2, 1, 1, L_.c); p(2, 10, 1, 1, L_.b);
-    for (let i = 0; i < L / 12; i++) p(rng.int(14, R - 4), rng.int(3, 6), 1, 1, L_.b);
+    // a birch: thin twigs with leaves in pairs, a catkin or two
+    for (const [f, len, dir] of [[0.0, 5, -1], [0.16, 6, 1], [0.44, 5, -1], [0.72, 4, 1]]) {
+      const x = at(f) + 2; if (!clear(x)) continue;
+      for (let i = 1; i <= len; i++) p(x + dir * Math.round(i * 0.5), S - i, 1, 1, T[2]);
+      const tx = x + dir * Math.round(len * 0.5), ty = S - len;
+      p(tx - 2, ty, 2, 1, G.b); p(tx + 1, ty - 1, 2, 1, G.c); p(tx - 1, ty + 2, 2, 1, G.a); p(tx + 2, ty + 1, 1, 1, G.b);
+    }
+    p(1, S - 1, 2, 1, G.b); p(0, S + 1, 2, 1, G.a); p(2, S - 3, 1, 1, G.c);
+    for (const f of [0.3, 0.62]) { const x = at(f); p(x, under(x), 1, 3, G.b); p(x, under(x) + 3, 1, 1, G.a); }                       // catkins
   } else {
-    line(6, 8, 1, 3, B.dark); line(3, 5, 0, 6, B.dark); line(5, 9, 2, 12, B.dark);
-    for (let f = 0.3; f < 0.95; f += 0.3) { const x = at(f); line(x, 7, x - 3, 2, B.dark); line(x - 2, 4, x - 5, 3, B.dark); }
+    // bare: twigs only
+    line(5, S, 1, S - 5, B.dark); line(3, S - 2, 0, S - 2, B.dark); line(5, S + 3, 2, S + 6, B.dark);
+    for (const f of [0.3, 0.6, 0.86]) { const x = at(f); line(x, S, x - 3, S - 6, B.dark); line(x - 2, S - 4, x - 5, S - 5, B.dark); }
   }
 }
 
-// Dry (crumbling) branch: the same silhouette in dead-wood greys, cracked.
+// Dry (crumbling) branch: the same limb in dead-wood greys, cracked through
+// in two places, its bark gone, a few splinters: it reads as about to go.
 function drawDryBranch(t, L = 50) {
-  const { p, poly, line } = t;
-  const R = L - 1;
-  const at = (f) => Math.round(3 + (R - 3) * f);
-  poly([[3, 8], [R, 5], [R, 16], [3, 12]], C.dry);
-  poly([[3, 8], [R, 5], [R, 7], [3, 9]], C.dryLight);
-  poly([[3, 11], [R, 13], [R, 16], [3, 12]], C.dryDark);
-  for (let x = 6; x < R - 6; x += 10) line(x, 10, Math.min(R - 4, x + 8), 9 + (x % 20 ? 1 : 0), C.dryDark);
-  for (let x = 10; x < R - 8; x += 14) line(x, 8, Math.min(R - 4, x + 6), 7, C.dryLight);
-  for (let f = 0.3; f < 0.95; f += 0.3) { const x = at(f); line(x, 8, x + 2, 12, C.barkShadow); p(x - 3, 13, 1, 2, C.dryDark); }
-  line(6, 7, 3, 3, C.dryDark); line(4, 4, 1, 4, C.dryDark);
-  for (let f = 0.5; f < 0.95; f += 0.4) { const x = at(f); line(x, 6, x + 2, 2, C.dryDark); line(x + 2, 3, x + 5, 1, C.dryDark); }
+  const { p, line } = t;
+  const T = [C.barkShadow, C.dryDark, mixHex(C.dryDark, C.dry, 0.5), C.dry, mixHex(C.dry, C.dryLight, 0.5), C.dryLight];
+  const S = BRANCH.surf;
+  const { at, under, top } = limb(t, T, L, new RNG(5 + L));
+  for (const f of [0.34, 0.66]) {                                                    // cracks right through it
+    const x = at(f);
+    for (let y = top(x); y < under(x); y++) p(x + ((y - top(x)) % 4 === 3 ? 1 : 0), y, 1, 1, C.barkShadow);
+    p(x + 1, top(x), 1, 2, C.dryLight); p(x - 2, under(x), 1, 2, C.dryDark);
+  }
+  for (const f of [0.18, 0.5, 0.82]) { const x = at(f); line(x, top(x) + 2, x + 3, top(x) + 3, C.barkShadow); }
+  line(6, S, 3, S - 4, C.dryDark); line(4, S - 3, 1, S - 3, C.dryDark);            // dead twigs
+  for (const f of [0.5, 0.9]) { const x = at(f); line(x, S, x + 2, S - 4, C.dryDark); line(x + 2, S - 3, x + 5, S - 5, C.dryDark); }
 }
 
 // --- trunks -----------------------------------------------------------------
@@ -260,17 +314,15 @@ function drawRoots(t) {
 
 export function buildTrees() {
   const rng = new RNG(2024);
-  const branch = (L, v, draw) => makeSprite(L, 18, draw, undefined, { axPx: L * 2, ayPx: 7 * 4 });
+  const branch = (L, v, draw) => makeSprite(L + BRANCH.root, BRANCH.h, draw, undefined, { axPx: L * 2, ayPx: BRANCH.surf * 4 });
   const styles = TREE_STYLES.map((style, si) => {
     const branchR = {};
     for (const [len, { art }] of Object.entries(BRANCH_LEN)) {
       const variants = len === 'stub' ? [0, 1] : [0, 1, 2, 3, 4, 5];
       branchR[len] = variants.map((v) => branch(art, v, (t) => drawBranch(t, style, v, rng, art)));
     }
-    const branchL = Object.fromEntries(Object.entries(branchR).map(([len, arr]) => [len, arr.map(flipH)]));
     const trunkL = [0, 1, 2, 3].map((v) => makeSprite(25, 48, (t) => drawTrunk(t, style, v, new RNG(100 + si * 10 + v)), { ax: 0, ay: 1 }));
-    const trunkR = trunkL.map(flipH);
-    return { ...style, branchR, branchL, trunkL, trunkR };
+    return { ...style, branchR, trunkL };       // (the right trunk and the left tree's branches are these, mirrored when drawn)
   });
   const branchRDry = { normal: branch(50, 0, (t) => drawDryBranch(t, 50)), long: branch(76, 0, (t) => drawDryBranch(t, 76)) };
   const burlL = makeSprite(6, 9, (t) => drawBurl(t), { ax: 0, ay: 0.5 });
@@ -282,8 +334,8 @@ export function buildTrees() {
     fungus: [0, 1].map((b) => makeSprite(b ? 10 : 6, 5, (t) => drawFungus(t, b), { ax: 0.5, ay: 0.5 })),
     lichen: makeSprite(7, 5, (t) => drawLichen(t), { ax: 0.5, ay: 0.5 }),
     burlL, burlR: flipH(burlL),
-    rootsL, rootsR: flipH(rootsL),
+    rootsL,
   };
   const crownL = makeSprite(25, 48, (t) => drawCrown(t, TREE_STYLES[3]), { ax: 0, ay: 1 });
-  return { styles, branchRDry, branchLDry: { normal: flipH(branchRDry.normal), long: flipH(branchRDry.long) }, overlays, crownL, crownR: flipH(crownL) };
+  return { styles, branchRDry, overlays, crownL };
 }

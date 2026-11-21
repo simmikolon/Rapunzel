@@ -769,6 +769,18 @@ is a pool to draw from, not a promise.
   branches were (birch), or dead wood with long cracks and bare
   patches (above the trees). At the lawn a trunk flares out into a
   buttress root.
+- ✅ branches grow out of the tree (`art/trees.js` limb): a limb swells
+  into a collar where it joins the trunk (the collar lies over the
+  trunk's bark and casts a little shade on it), its top is flat on the
+  row one stands on for nearly its whole length, and its underside
+  does the tapering. Lit from above, furrows along it, the bark's
+  plates on its top. Leaves in round masses lit on their upper left
+  (oak), darker with moss hanging from the underside (the giants),
+  thin twigs with leaves in pairs and catkins (birch), bare twigs
+  above the trees. The six kinds are as before (plain, gnarled,
+  forked, knobby, mossy with a mushroom, a nest with eggs), the stubs
+  a tuft or a snapped stump. A dry one is the same limb in dead-wood
+  greys, cracked through in two places, leafless.
 - ✅ trunk life: moss, cracks, woodpecker holes, fungus shelves, lichen
   and burls scattered per tile; roots at the lawn; climbing vines (ivy,
   thorny tendrils with red barbs, flowering creepers) winding across tile
@@ -2013,3 +2025,26 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   buttress now, 136 px into the lawn, instead of a low wedge. For the
   eye only: `tools/checks/identity.sh` reports all five the same. The
   atlas is 4096 x 3460.
+- 2026-11-21: The branches (`element/branches`). A branch was a
+  straight log, thicker at the trunk, its top sloping across the row
+  one stands on (two pixels over it at the trunk, one under it at the
+  tip), stuck against the trunk. Decisions:
+  - A branch grows out of the tree: the sprite reaches 5 art px further
+    into the trunk than before and swells into a collar there.
+  - The top is flat on the row he stands on. He stands on what one
+    sees; the taper is the underside's.
+  - The first collar was a funnel (the limb doubled its thickness in
+    its last sixth) and the first limbs were sticks next to the new
+    trunks; the limb is 5 art px at the tip and 11 at the trunk now.
+  - Only the drawing changed: the box one lands on, the lengths and
+    the six kinds are the same, and a dry branch is still told from a
+    healthy one at a glance (grey, cracked, no leaves).
+  - One drawing for both sides. The bigger canvases of the new limbs
+    took the atlas to 4096 x 3936, with 4096 the limit, because every
+    branch, ledge and trunk was in it twice, once mirrored. The
+    renderer can mirror as it draws, so the mirrored copies are gone
+    (the left tree's branches, the left pillar's ledges, the right
+    trunk, its top and its root): the atlas is 4096 x 3084, less than
+    before the outside was touched.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same.
