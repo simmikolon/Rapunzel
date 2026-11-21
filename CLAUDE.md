@@ -61,6 +61,12 @@ which only copies the two folders together). The design document
   treasuries: `... inside off off` is the inside's baseline). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.
+- Checks before a push: `tools/checks/` (its README says what each does).
+  `tools/checks/identity.sh` runs the simulator on fixed seeds against the
+  reports in `tools/checks/baseline/`: a change that is only for the eye
+  must leave them exactly as they are. `flow.mjs` plays through the
+  browser flow and the landing page, `shots.mjs outside 20,180,420` takes
+  pictures at heights.
 - Headless browser checks need Playwright (on this machine:
   `/opt/node-tools/node_modules/playwright`, Chromium with
   `--enable-unsafe-swiftshader` for WebGL). Software WebGL is slow, so

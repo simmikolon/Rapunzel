@@ -901,8 +901,12 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 
 ## 11. Tools
 
-- Climb bot and phone-flow checks (Playwright, headless Chromium): run
-  before every push; catch exceptions and regressions, not feel.
+- Checks in `tools/checks/` (Playwright, headless Chromium), run before
+  every push: the browser flow and the landing page, the atlas's size,
+  pictures at heights, the treasury's camera and way out, and
+  `identity.sh`, which compares the simulator's reports on fixed seeds
+  with the ones kept in `tools/checks/baseline/`. They catch exceptions
+  and regressions, not feel.
 - Gameplay simulator (`web/dev/sim.html`, `tools/analyze.mjs`): real game
   logic, scripted players (kid / good, bold / cautious), heights, deaths,
   hits per 100 m by band. See `docs/ANALYSIS-phase1.md`. A seed replays
@@ -1902,3 +1906,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   outside are identical to the reports before. In the browser the
   camera stops exactly under the ceiling and the door out hangs where
   it was planned. The atlas is 4096 x 3242.
+- 2026-11-21: The checks are in the repository (`tools/checks`). The
+  scripts that every branch of the tower's inside was checked with (the
+  browser flow, the atlas, pictures at heights, the treasury's camera)
+  and the simulator's reports that a change for the eye must leave
+  untouched lived in one session's scratch folder. They are in
+  `tools/checks/` now with a page that says what each does, so that a
+  change can be checked the same way whoever makes it and wherever.
+  `identity.sh` on master: all five reports the same.

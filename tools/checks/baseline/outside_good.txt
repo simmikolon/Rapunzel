@@ -1,0 +1,12 @@
+config: {"runs":40,"skill":"good","policy":"bold","cap":1500,"startM":0}
+height: median 447 m, mean 526 m, max 1492 m
+reached: 100 m 100%, 200 m 93%, 300 m 85%, 500 m 45%, 800 m 15%
+deaths: {"caught":21,"fell":19}  falls: 47% of deaths, by band {"100":2,"200":2,"300":3,"400":3,"500":4,"600":1,"700":1,"1100":1,"1200":1,"1400":1}
+hits per 100 m: 0.98  by enemy: {"crow":60,"grabber":23,"witch":41,"guard":10,"squirrel":34,"bat":23,"pot":5,"spider":8,"scissors":3}
+hits per 100 m by band: {"0":0.07,"100":0.81,"200":1.35,"300":1.33,"400":1.3,"500":1.55,"600":0.99,"700":1.13,"800":1.64,"900":0.25,"1000":2.05,"1100":0.41,"1200":2.33,"1300":2,"1400":1.09}
+hits by band and enemy: {"0":{"crow":3},"100":{"squirrel":12,"bat":8,"crow":8,"witch":3},"200":{"crow":8,"grabber":5,"witch":11,"squirrel":13,"bat":8,"spider":3},"300":{"crow":9,"spider":4,"squirrel":8,"scissors":1,"bat":7,"grabber":5,"witch":5},"400":{"witch":4,"crow":13,"grabber":3,"pot":2,"guard":2,"spider":1,"squirrel":1},"500":{"crow":5,"witch":6,"grabber":6,"pot":1,"guard":2},"600":{"crow":4,"witch":3,"scissors":1,"guard":1},"700":{"grabber":2,"guard":2,"crow":3,"witch":1},"800":{"crow":2,"guard":1,"witch":3,"scissors":1,"grabber":1},"900":{"pot":1},"1000":{"crow":4,"witch":2,"grabber":1},"1100":{"guard":1},"1200":{"witch":2,"guard":1},"1300":{"crow":1,"witch":1},"1400":{"pot":1}}
+hearts 86, lanterns 390, boosts 970, stomps 120, boost-punches 544, witch events 198
+scissors events 56, braid cuts 51, falls within 15 m above a cut 1
+power-ups: {"magnet":53,"star":27,"feather":38,"spring":45,"cloak":21} of 256 passed, active 39% of the time; deaths by running power-up {"spring":4,"feather":4,"none":29,"magnet":3}
+suns 6341, climb speed 4.36 m/s
+flocks 53: burst through 39 times, turned back 4 times, falls at a flock 0

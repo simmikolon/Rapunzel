@@ -1,0 +1,14 @@
+config: {"runs":120,"skill":"kid","policy":"bold","cap":1500,"startM":0,"place":"inside","gates":false}
+height: median 74 m, mean 87 m, max 263 m
+reached: 100 m 35%, 200 m 4%, 300 m 0%, 500 m 0%, 800 m 0%
+deaths: {"fell":117,"caught":3}  falls: 97% of deaths, by band {"0":78,"100":35,"200":4}
+hits per 100 m: 0.5  by enemy: {"guard":20,"bat":20,"ghost":5,"cat":3,"grabber":4}
+hits per 100 m by band: {"0":0.12,"100":1.68,"200":3.13}
+hits by band and enemy: {"0":{"guard":4,"bat":6},"100":{"bat":12,"guard":16,"ghost":3,"cat":3,"grabber":4},"200":{"ghost":2,"bat":2}}
+hearts 15, lanterns 223, boosts 554, stomps 32, boost-punches 35, witch events 0
+scissors events 0, braid cuts 0, falls within 15 m above a cut 0
+power-ups: {"magnet":40,"star":8,"feather":42,"cloak":5,"spring":22} of 174 passed, active 33% of the time; deaths by running power-up {"none":105,"magnet":9,"cloak":2,"spring":3,"star":1}
+suns 3793, climb speed 3.08 m/s
+flocks 2: burst through 2 times, turned back 0 times, falls at a flock 0
+dark stretches entered: 14
+webs: caught 14 times (torn free 11, bitten 0), boosted through 1
