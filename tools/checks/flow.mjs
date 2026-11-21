@@ -44,14 +44,23 @@ const open = async (url) => {
   report('choice saved, back outside', saved === 'inside' && out.place === 'outside' && !out.kinds.includes('chandelier') && !page.errors.length, JSON.stringify({ saved, out, errors: page.errors }));
   await page.close();
 }
+// A helper needs a row that suits it (a bat a ledge with room for one), and a round's rows are random:
+// it gets up to three rounds before it counts as failed. An error in the page fails it at once.
 for (const el of ['bat', 'guard', 'grabber', 'web', 'ghost', 'star']) {
-  const page = await open(`${GAME}/?place=inside&at=320&spawn=${el}`);
-  await page.keyboard.press('Space');
-  await page.waitForFunction(() => window.game.mode === 'playing', null, { timeout: 15000 });
-  await page.waitForTimeout(1500);
-  const st = await page.evaluate((el) => { const w = window.game.world; return { enemies: w.enemies.filter((e) => e.kind === el).length, power: w.player.power, pickup: w.pickups.some((k) => k.power === el), on: (w.enemies.find((e) => e.kind === el) || {}).platform ? w.enemies.find((e) => e.kind === el).platform.kind : (w.enemies.find((e) => e.kind === el) || {}).win ? 'hatch f=' + w.enemies.find((e) => e.kind === el).win.f : '' }; }, el);
-  report(`inside spawn=${el}`, (st.enemies > 0 || st.power === el || st.pickup) && !page.errors.length, JSON.stringify({ st, errors: page.errors }));
-  await page.close();
+  let ok = false, last = '';
+  for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+    const page = await open(`${GAME}/?place=inside&at=320&spawn=${el}`);
+    await page.keyboard.press('Space');
+    await page.waitForFunction(() => window.game.mode === 'playing', null, { timeout: 15000 });
+    await page.waitForTimeout(1500);
+    const st = await page.evaluate((el) => { const w = window.game.world; return { enemies: w.enemies.filter((e) => e.kind === el).length, power: w.player.power, pickup: w.pickups.some((k) => k.power === el), on: (w.enemies.find((e) => e.kind === el) || {}).platform ? w.enemies.find((e) => e.kind === el).platform.kind : (w.enemies.find((e) => e.kind === el) || {}).win ? 'hatch f=' + w.enemies.find((e) => e.kind === el).win.f : '' }; }, el);
+    ok = (st.enemies > 0 || st.power === el || st.pickup) && !page.errors.length;
+    last = JSON.stringify({ st, errors: page.errors, attempt });
+    const broke = page.errors.length > 0;
+    await page.close();
+    if (broke) break;
+  }
+  report(`inside spawn=${el}`, ok, last);
 }
 {
   // the landing page still draws with the game's modules
