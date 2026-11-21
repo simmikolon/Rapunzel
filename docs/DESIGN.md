@@ -722,7 +722,16 @@ is a pool to draw from, not a promise.
 - ✅ gusts every 14–24 s: stronger wind on leaves and fog, boughs rock,
   motes speed up, the braid swings a little wider (ribbons move with it).
 - ✅ canopy dapple: soft dark blobs (multiply) scrolling with the bricks.
-- ✅ tower haze along the wall's edges; low mist on the lawn at the start.
+- ✅ the tower is round (`art/tiles.js` drawTower). Its wall is 440 px
+  wide and reads as a drum by two things a round wall does: its bricks
+  get narrower toward the edges (14 art px wide where they face us, 4
+  at the edge), and the light from the upper left lies on it in five
+  upright planes, each a mix of two or three steps of the brick ramp,
+  brightest left of the middle, in shade on the right. A string course
+  of dressed stone runs round it under every row of windows. Five
+  kinds of tile: plain, moss and a crack, weather, vines, an old repair
+  in stone. Windows, balconies and gates are where they were.
+- ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
   at a layer height, one per storey (440 layer px), left and right in
@@ -895,6 +904,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart) |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1914,3 +1924,25 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   `tools/checks/` now with a page that says what each does, so that a
   change can be checked the same way whoever makes it and wherever.
   `identity.sh` on master: all five reports the same.
+- 2026-11-21: The tower is round and wider (`element/round-tower`).
+  Simon, once the inside was done: next to it the outside looks simple;
+  the tower seems thin, and square where it should be round. Decisions:
+  - Wider, 380 to 440 px. More is not to be had: the trees leave 568 px
+    between them, and the strips beside the tower are where the sky and
+    the time of day show (64 px each now). The room inside is 568 px
+    between its pillars: a tower 380 wide could not have held it.
+  - Round by what a round wall does, not by a gradient: bricks
+    foreshortened toward the edges, and the light in upright planes of
+    flat colour. One small picture of the drum says where a point at an
+    angle round it stands and how squarely it faces the light; the
+    bricks, the string course and the vines all ask it. Where two
+    planes meet, the bricks' offset from course to course toothes the
+    border. The haze that used to lighten both edges is gone: it made a
+    flat wall with soft edges.
+  - A string course under every row of windows gives the tower storeys.
+  - Nothing one plays on moved (windows at 114, balconies at 210, gates
+    at 134 from the middle), so the change is for the eye only:
+    `tools/checks/identity.sh` reports all five the same.
+  - The landing page draws the tower with the game's tiles; its width
+    follows them now, and the roof at the top is a little wider.
+  The atlas is 4096 x 3254.

@@ -1,5 +1,6 @@
 import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
+import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
@@ -63,6 +64,9 @@ export function lightAt(y) {
   const t = smoothstep(invLerp(next.y - TRANSITION, next.y, y));
   return { color: mixHex(LIGHT[i].color, next.color, t), alpha: lerp(LIGHT[i].alpha, next.alpha, t) };
 }
+
+// The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
+const STRING_COURSE = 4;
 
 export class Background {
   constructor(art) {
@@ -147,17 +151,18 @@ export class Background {
     for (let k = first; k <= last; k++) {
       const h = hash(k + 7);
       let v = 0;
-      if (k > 0) { const r = h % 100; v = r < 62 ? 0 : r < 80 ? 1 : r < 92 ? 2 : 3; }
+      if (k > 0) { const r = h % 100; v = r < 56 ? 0 : r < 70 ? 1 : r < 82 ? 2 : r < 92 ? 3 : 4; }
       g.blit(t.tower[v], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
     }
+    // a string course runs round the tower under every row of windows
+    for (let i = Math.max(0, Math.floor((camF - STRING_COURSE - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+      const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
+      if (ly > camF + H + 30) break;
+      g.blit(t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
+    }
     this.drawWindows(g, cam, camF, time, world);
-    // push the wall back a little and let the trees cast a shadow on it
-    g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, 'rgba(10,24,30,0.14)');
-    g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
-    g.rect(W / 2 + TOWER_W / 2 - 16 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
-    // atmospheric haze toward the wall's receding edges
-    g.puff(W / 2 - TOWER_W / 2 + 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
-    g.puff(W / 2 + TOWER_W / 2 - 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
+    // push the wall back a little (its roundness and its shade are in the tiles)
+    g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, 'rgba(10,24,30,0.12)');
   }
 
   // Windows left and right of the braid in their storey rhythm (windows.js
