@@ -132,7 +132,7 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
 - Three hearts; game over on zero hearts or falling off the bottom.
 - Procedural level in rows (the original's beats) with difficulty by
   altitude and a stress-tested reachability guarantee.
-- Parallax layers like the SpriteKit prototype: sky, distant forest, tower
+- Parallax layers like the SpriteKit prototype: sky, the forest behind, tower
   with windows, braid and ribbons (0.9x), trees with branches and swings
   and the prince (1.0x), fireflies, vignette. Altitude-graded sky and
   lighting (forest, open sky, sunset, night). Squash and stretch,
@@ -716,6 +716,19 @@ is a pool to draw from, not a promise.
   thins in a gust; mist near the shafts glows a little; a front wisp the
   prince passes through is pushed aside and thins out (wake). Only in the
   deep forest band; the far clouds stay for the sky zones.
+- ✅ the forest behind the tower (`art/backdrop.js`, `background.js`
+  drawForest): two layers at two speeds (0.42 and 0.62 of the prince's),
+  the air between them taking the far one back. In the strips between
+  the tower and the trees in front, tall trunks go by with a branch
+  here, a clump of leaves there, moss hanging; the trunks of a layer
+  stand in the same columns in every tile, so a tree goes on however
+  the tiles are picked. By zone: on the forest floor and in the deep
+  forest dark silhouettes tinted with that zone's air, at the windows
+  pale birches in the dawn. Where the trees in front end (460 m) the
+  forest has a roof: for the last 25 to 35 m one climbs through the
+  mass of its leaves, then the picture opens at both sides and the
+  canopy lies below, the nearer one green, the far one pale, each
+  sinking more slowly than the trees in front did.
 - ✅ falling leaves on a depth continuum (parallax 0.85 to 1.35, size and
   opacity by depth) with a shared slow wind, flutter, and staggered
   re-entry above the view. 💡 autumn colours by season.
@@ -905,6 +918,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
 | The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart) |
+| The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
@@ -1946,3 +1960,30 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   - The landing page draws the tower with the game's tiles; its width
     follows them now, and the roof at the top is a little wider.
   The atlas is 4096 x 3254.
+- 2026-11-21: The forest behind the tower (`element/forest-backdrop`).
+  What stood there was the prototype's tile: upright bands of dark
+  colours, the part of the outside that looked most like a placeholder.
+  Decisions:
+  - One sees the forest behind in two places only: in the strips between
+    the tower and the trees in front, 64 px a side, and at the top,
+    where the trees in front end. So it is drawn for those two places
+    and not as a picture across the screen: narrow strips of trunks all
+    the way up, and a roof of leaves across each side for the top.
+  - Depth by two layers at two speeds and by their tones, the far one
+    nearer the colour of the air, with a veil of that air drawn between
+    them. No detail to speak of: after the library the rule is that
+    what is behind the play is calm. A strip holds two trunks, a
+    branch, a few clumps of leaves.
+  - The dark forest's tiles are drawn in greys and tinted by the
+    painter, so the forest floor and the deep forest share them; the
+    birches and the canopies have their own colours.
+  - The treeline is a place now. The forest's roof is set so that it
+    comes into view as the tops of the trees in front sink: one climbs
+    through leaves, then stands above them, and the forest stays below
+    for another 20 to 35 m of climb. The old tile faded out between 270
+    and 400 m instead.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same. The landing page keeps the old tile for the texture at its
+  lower end. Inside the
+  tower the two columns stand in the middle, behind the windows. The
+  atlas is 4096 x 3422.

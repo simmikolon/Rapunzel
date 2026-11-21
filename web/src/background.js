@@ -1,4 +1,5 @@
-import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js';
+import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js';
+import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
@@ -13,7 +14,7 @@ import { fallDist, fallSwing } from './platforms.js';
 
 // Parallax environment. Layers from back to front:
 //   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
-//   -> distant forest (PARALLAX_FOREST, fades out above the canopy)
+//   -> the forest behind the tower, in two layers at two speeds (FOREST), up to its roof
 //   -> tower bricks with Rapunzel's braid and its ribbons (PARALLAX_TOWER)
 //   -> tree trunks with the deep forest's string lights between them,
 //      branches, swings, prince (1.0, the gameplay plane)
@@ -64,6 +65,26 @@ export function lightAt(y) {
   const t = smoothstep(invLerp(next.y - TRANSITION, next.y, y));
   return { color: mixHex(LIGHT[i].color, next.color, t), alpha: lerp(LIGHT[i].alpha, next.alpha, t) };
 }
+
+// The forest behind the tower: its two layers, far to near. `f` is how fast
+// a layer goes by (the tower's is 0.9), `topAt` the height the prince is at
+// when the layer's roof is in the middle of the picture (the trees in front
+// end at 460 m: as their tops sink, the forest's roof comes into view at
+// either side and sinks more slowly, the far one last). `tint`: what the
+// dark forest's grey tiles are coloured with on the forest floor and in the
+// deep forest.
+const FOREST = [
+  { f: 0.42, topAt: 47500, strips: 'far', birch: 'farBirch', top: 'farTop', body: 'farBody', tint: ['#33686a', '#1f4c42'] },
+  { f: 0.62, topAt: 46500, strips: 'near', birch: 'nearBirch', top: 'nearTop', body: 'nearBody', tint: ['#1c423e', '#143630'] },
+];
+const CANOPY_TILES = 4;            // the roof and the leaves under it: enough tiles to fill the picture below its outline
+// The air between the two layers, by zone (forest floor, deep forest, none from the dawn zone up): a colour and how much of it.
+const FOREST_HAZE = [['#4a8082', 0.34], ['#2f6a58', 0.25], ['#a7c6d8', 0]];
+const FOREST_EYE = 400;            // the prince is about this far above the picture's bottom edge
+// The layer height that is in the middle of the picture when the prince is at world height y, and the other way round
+// (for the picture's design height, so that the forest is the same on every screen).
+const forestLy = (y, f) => CAMERA_START_Y + (y - FOREST_EYE - CAMERA_START_Y) * f + 682;
+const forestY = (ly, f) => (ly - 682 - CAMERA_START_Y) / f + CAMERA_START_Y + FOREST_EYE;
 
 // The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
 const STRING_COURSE = 4;
@@ -131,16 +152,42 @@ export class Background {
     }
   }
 
-  drawForest(g, cam) {
-    const a = forestAlpha(cam.y);
-    if (a <= 0) return;
-    const camF = cam.layerY(PARALLAX_FOREST);
-    const first = Math.floor(camF / TILE_H), last = Math.ceil((camF + H) / TILE_H);
-    const o = a < 1 ? { alpha: a } : undefined;
-    for (let k = first; k <= last; k++) {
-      const s = this.art.tiles.forest[Math.abs(k) % 2];
-      g.blit(s, W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy, o);
-    }
+  // The forest behind the tower (art/backdrop.js): a far layer, the air
+  // between, a nearer layer. Each is a column of tiles down either side,
+  // counted from its top: the forest's roof and the leaves under it, then
+  // strips of trunks in the look of the zone they pass at (the forest
+  // floor's and the deep forest's tinted with their air, the dawn zone's
+  // birches as they are), one look fading into the next as the trees in
+  // front do. Seen from inside the tower (`middle`), where the windows are
+  // in the middle of the wall, the two columns stand side by side there.
+  drawForest(g, cam, middle = false) {
+    const A = this.art.backdrop, TH = BACKDROP.tileH * 4;
+    const st = treeStyleAt(cam.y + FOREST_EYE);
+    const haze = (k) => FOREST_HAZE[Math.min(k, FOREST_HAZE.length - 1)];
+    const hazeColor = mixHex(haze(st.a)[0], haze(st.b)[0], st.t), hazeAlpha = lerp(haze(st.a)[1], haze(st.b)[1], st.t);
+    FOREST.forEach((L, li) => {
+      const camF = cam.layerY(L.f), top = forestLy(L.topAt, L.f);
+      const n0 = Math.max(0, Math.floor((top - (camF + H)) / TH)), n1 = Math.floor((top - camF) / TH);
+      for (let n = n0; n <= n1; n++) {
+        const lyBottom = top - (n + 1) * TH, sy = H - (lyBottom - camF) + cam.oy;
+        for (const side of [0, 1]) {
+          const flip = side === 1;
+          if (n < CANOPY_TILES) { const cw = BACKDROP.canopyW * 4, cx = middle ? W / 2 + (flip ? cw : -cw) : flip ? W : 0; g.blit(A[n === 0 ? L.top : L.body], cx + cam.ox, sy, flip ? { flip } : undefined); continue; }
+          const sw = BACKDROP.stripW * 4;
+          const x = (middle ? W / 2 + (flip ? sw : -sw) : flip ? W - BACKDROP.stripX : BACKDROP.stripX) + cam.ox;
+          const z = treeStyleAt(forestY(lyBottom + TH / 2, L.f)), h = hash(n * 7 + side * 3 + li * 11);
+          const one = (k, alpha) => {
+            const birch = k >= 2, set = A[birch ? L.birch : L.strips];
+            const o = { flip }; if (!birch) o.tint = L.tint[k]; if (alpha < 1) o.alpha = alpha;
+            g.blit(set[h % set.length], x, sy, o);
+          };
+          one(z.a, 1);
+          if (z.t > 0 && Math.min(z.a, 2) !== Math.min(z.b, 2)) one(z.b, z.t);
+        }
+      }
+      // the air between the layers: it takes the far one back
+      if (li === 0 && hazeAlpha > 0.005) g.rect(0, 0, W, H, hazeColor, hazeAlpha);
+    });
   }
 
   // The tower scrolls slower than the prince: it stands behind the trees.

@@ -118,8 +118,10 @@ function drawTowerBand(t) {
   p(TOWER_A - 1, 0, 1, 5, C.mortar);
 }
 
-// Distant forest, 192 x 48 art px: tall thin trunks and leaf streaks in the
-// teal palette of bg.png. Drawn darker and desaturated so it recedes.
+// The prototype's distant forest, 192 x 48 art px: tall thin trunks and leaf
+// streaks in the teal palette of bg.png. The game's forest behind the tower
+// is art/backdrop.js now; this tile is still the texture of the landing
+// page's lower end (site/landing.js).
 function drawForest(t, variant) {
   const { p, line } = t;
   const W = 192, H = 48;

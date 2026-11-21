@@ -77,7 +77,7 @@ export const CAMERA_START_Y = -100;       // view bottom at the start (shows the
 // ribbons tied to it) scroll slower, the trees with their branches and
 // swings are in front and share the prince's plane.
 export const PARALLAX_FAR = 0.3;
-export const PARALLAX_FOREST = 0.55;
+// (the forest behind the tower has two layers of its own, 0.42 and 0.62: background.js FOREST)
 export const PARALLAX_TOWER = 0.9;
 // A ribbon on the tower layer drifts upward relative to the prince as the
 // camera climbs, so a gap from a front-plane platform up to a row with only
