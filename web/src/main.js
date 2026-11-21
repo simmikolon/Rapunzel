@@ -41,6 +41,7 @@ class Game {
     this.fxPick = null;       // the preset the player chose (F, the title's button); null: the default
     this.dev = devParams();
     if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
+    if (this.dev.veil != null && this.dev.veil !== '' && isFinite(+this.dev.veil)) this.world.bg.towerVeil.alpha = Math.max(0, Math.min(0.9, +this.dev.veil));   // ?veil= for this visit
     this.loadSave();
     if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit
     if (this.round.place !== this.world.placeName) this.world.reset(undefined, this.round.place);

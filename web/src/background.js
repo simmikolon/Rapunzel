@@ -86,12 +86,23 @@ const FOREST_EYE = 400;            // the prince is about this far above the pic
 const forestLy = (y, f) => CAMERA_START_Y + (y - FOREST_EYE - CAMERA_START_Y) * f + 682;
 const forestY = (ly, f) => (ly - 682 - CAMERA_START_Y) / f + CAMERA_START_Y + FOREST_EYE;
 
+// How far back the tower stands. Its wall is drawn in the brick ramp's own
+// colours (light, so that its roundness shows in the tiles), and then a
+// veil of this colour is laid over it, this strong: that darkens it and
+// draws its lights and darks together, so that the wall is one quiet plane
+// behind the play and the prince, the platforms and what one collects are
+// the brightest and most coloured things in the picture. Windows and the
+// string course lie under the veil; balconies, gates, the braid and its
+// ribbons are drawn after it. (`?veil=0.5` tries another strength.)
+const TOWER_VEIL = { color: '#14242b', alpha: 0.45 };
+
 // The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
 const STRING_COURSE = 4;
 
 export class Background {
   constructor(art) {
     this.art = art;
+    this.towerVeil = { ...TOWER_VEIL };
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
@@ -208,8 +219,8 @@ export class Background {
       g.blit(t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
     }
     this.drawWindows(g, cam, camF, time, world);
-    // push the wall back a little (its roundness and its shade are in the tiles)
-    g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, 'rgba(10,24,30,0.12)');
+    // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
+    if (this.towerVeil.alpha > 0) g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, this.towerVeil.color, this.towerVeil.alpha);
   }
 
   // Windows left and right of the braid in their storey rhythm (windows.js

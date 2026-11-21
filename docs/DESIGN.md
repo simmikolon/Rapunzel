@@ -743,7 +743,13 @@ is a pool to draw from, not a promise.
   brightest left of the middle, in shade on the right. A string course
   of dressed stone runs round it under every row of windows. Five
   kinds of tile: plain, moss and a crack, weather, vines, an old repair
-  in stone. Windows, balconies and gates are where they were.
+  in stone. Windows, balconies and gates are where they were. The wall
+  stands back: a veil of dark teal, 45 % strong, lies over it (and over
+  its windows and string courses), which darkens it and draws its
+  lights and darks together, so that it is one quiet plane behind the
+  play. Balconies, gates, the braid and its ribbons are drawn after the
+  veil and keep their colours: what one stands on is lighter than the
+  wall it is on.
 - ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
@@ -938,7 +944,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart) |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 45 % over the wall (`?veil=` tries another strength) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -2048,3 +2054,21 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     before the outside was touched.
   For the eye only: `tools/checks/identity.sh` reports all five the
   same.
+- 2026-11-21: The tower stands back (`element/tower-back`). Simon,
+  after playing the new outside: much better, but the tower is very
+  bright; everything seems to be in the foreground, the colours lie on
+  top of one another and one does not know at once where the player
+  is. The round wall had been drawn in the brick ramp's light colours
+  with only a 12 % veil over it, so it was as light and as contrasty as
+  what is played in front of it. The inside's lesson again: what is
+  behind the play is dark and calm. Tried at 12, 30, 42 and 55 % on
+  the forest floor, among the birches and above the trees: from about
+  42 % on the prince, the leaves, the ribbons and the suns come
+  forward; at 55 % crows and spiders begin to sink into the wall. It
+  is 45 %. A veil of one colour rather than a darker palette, because
+  it also draws the wall's lights and darks together, which is half of
+  what sets it back, and because the balconies and gates, which are
+  drawn in the brick palette and after the veil, stay light: one sees
+  what one can stand on. `?veil=0.3` (0 to 0.9) tries another strength
+  on any build. For the eye only: `tools/checks/identity.sh` reports
+  all five the same.

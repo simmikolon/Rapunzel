@@ -66,10 +66,14 @@ for (const el of ['bat', 'guard', 'grabber', 'web', 'ghost', 'star']) {
   // the landing page still draws with the game's modules
   const page = await browser.newPage({ viewport: { width: 1000, height: 800 } });
   const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  await page.goto(SITE + '/');
-  await page.waitForTimeout(2500);
-  const n = await page.evaluate(() => document.querySelectorAll('canvas').length);
-  report('landing page', n > 0 && !errors.length, JSON.stringify({ canvases: n, errors }));
+  // (a missing server is a failure with a reason, not a crash of the check)
+  const up = await page.goto(SITE + '/').then(() => true, () => false);
+  if (!up) report('landing page', false, `no server at ${SITE}: python3 tools/serve.py --site 8002`);
+  else {
+    await page.waitForTimeout(2500);
+    const n = await page.evaluate(() => document.querySelectorAll('canvas').length);
+    report('landing page', n > 0 && !errors.length, JSON.stringify({ canvases: n, errors }));
+  }
   await page.close();
 }
 await browser.close();
