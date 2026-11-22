@@ -8,25 +8,26 @@ import { PARALLAX_TOWER } from './config.js';
 // plan, the same in every round, so the tower is a place one gets to know:
 // its foot is of old big stones; from there up, stretches of plain wall
 // (GAP tiles) take turns with areas, each one of the looks, chosen by what
-// suits the height (WEIGHTS: ivy and moss down in the forest, crumbling
-// walls, repairs and old stone higher up, nothing that grows above the
-// trees) and never the look of the area before. An area is its `enter` tile, its loop
+// suits the height (WEIGHTS: ivy, briar roses and moss down in the forest,
+// crumbling walls, repairs and old stone higher up; above the trees nothing
+// grows that wants shade and damp, only the roses climb on into the sun) and
+// never the look of the area before. An area is its `enter` tile, its loop
 // once or more, and its `leave` tile (art/tower.js TOWER_AREAS).
 const GAP = [6, 14];                // tiles of plain wall between two areas (a tile is about 2.1 m of climb)
 const WEIGHTS = [
-  { below: 12000, w: { ivy: 6, moss: 3, worn: 1, stone: 1, mended: 2 } },      // the forest floor
-  { below: 25000, w: { ivy: 6, moss: 3, worn: 2, stone: 1, mended: 2 } },      // the deep forest
-  { below: 40000, w: { ivy: 3, moss: 1, worn: 3, stone: 3, mended: 3 } },      // the windows
-  { below: Infinity, w: { ivy: 0, moss: 0, worn: 4, stone: 3, mended: 3 } },   // above the trees
+  { below: 12000, w: { ivy: 5, moss: 3, worn: 1, stone: 1, mended: 2, briar: 5 } },      // the forest floor
+  { below: 25000, w: { ivy: 5, moss: 3, worn: 2, stone: 1, mended: 2, briar: 4 } },      // the deep forest
+  { below: 40000, w: { ivy: 3, moss: 1, worn: 3, stone: 3, mended: 3, briar: 3 } },      // the windows
+  { below: Infinity, w: { ivy: 0, moss: 0, worn: 4, stone: 3, mended: 3, briar: 2 } },   // above the trees
 ];
-const LOOPS = { ivy: [1, 2], worn: [2, 3], stone: [2, 4], moss: [2, 4], mended: [1, 2] };   // how often an area's loop is laid, at the least and at the most
-const FOOT = { kind: 'stone', from: 0, tiles: [0, 1, 2, 'leave'] };         // the tower's foot: old stone from the lawn up
-// Which of all the plans these rules allow this tower has. Chosen by looking: ivy is the first thing one meets
-// (from 26 m) and the masons' site the second (from 55 m), so the youngest see both; all five looks come before
-// the trees end, and all three of those that go on above them before 700 m.
-const PLAN = 314;
+const LOOPS = { ivy: [1, 2], worn: [2, 3], stone: [2, 4], moss: [2, 4], mended: [1, 2], briar: [1, 2] };   // how often an area's loop is laid, at the least and at the most
+const FOOT = { kind: 'stone', from: 0, tiles: [0, 1, 2, 'leave'], n: 0 };         // the tower's foot: old stone from the lawn up
+// Which of all the plans these rules allow this tower has. Chosen by looking: roses are the first thing one meets
+// (from 26 m) and the masons' site the second (from 60 m), so the youngest see both; all six looks come before
+// the trees end, roses twice, and all four of those that go on above them before 600 m.
+const PLAN = 3068;
 
-// The areas found so far, bottom to top: { kind, from, tiles } with `tiles` the tile of the look for from, from + 1, ...
+// The areas found so far, bottom to top: { kind, from, tiles, n } with `tiles` the tile of the look for from, from + 1, ...
 const areas = [FOOT];
 let planned = FOOT.tiles.length;    // every tile below this one is planned
 function planUpTo(k) {
@@ -42,20 +43,21 @@ function planUpTo(k) {
     const tiles = ['enter'];
     for (let n = 0; n < loops * M; n++) tiles.push(n % M);
     tiles.push('leave');
-    areas.push({ kind, from, tiles });
+    areas.push({ kind, from, tiles, n: areas.filter((q) => q.kind === kind).length });
     planned = from + tiles.length;
   }
 }
 
-// The wall at tile k: null where it is plain, else { kind, tile } with `tile` 'enter', 'leave' or the loop's index.
+// The wall at tile k: null where it is plain, else { kind, tile, n } with `tile` 'enter', 'leave' or the loop's index
+// and `n` which of the areas of its look it is, counted from the foot (the first briar has red roses, the next white ones).
 export function towerAreaAt(k) {
   if (k < 0) return null;
   planUpTo(k);
   for (let i = areas.length - 1; i >= 0; i--) {
     const a = areas[i];
-    if (k >= a.from) return k < a.from + a.tiles.length ? { kind: a.kind, tile: a.tiles[k - a.from] } : null;
+    if (k >= a.from) return k < a.from + a.tiles.length ? { kind: a.kind, tile: a.tiles[k - a.from], n: a.n } : null;
   }
   return null;
 }
 // A look all the way up (dev: ?wall=ivy): the loop's tiles in turn.
-export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop });
+export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop, n: Math.max(0, Math.floor(k / TOWER_AREAS[kind].loop)) });

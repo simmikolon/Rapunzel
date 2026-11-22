@@ -5,8 +5,9 @@ import { RNG } from '../util.js';
 
 // The tower's wall, outside: its plain tiles, the string course, and the
 // areas that take turns with the plain wall on the way up (overgrown with
-// ivy, crumbling, built of old big stones, mossy, under repair), with the
-// things that hang on the wall there (boards, signs, a bucket on its rope).
+// ivy or with briar roses, crumbling, built of old big stones, mossy, under
+// repair), with the things that hang on the wall there (boards, signs, a
+// bucket on its rope, the roses).
 // art/tiles.js hands the plain tiles and the course on under their old
 // names; which area is where is src/towerwall.js; background.js draws them.
 
@@ -149,6 +150,7 @@ export const TOWER_AREAS = {
   stone: { loop: 3, overlay: false },
   moss: { loop: 3, overlay: true },
   mended: { loop: 4, overlay: false, band: 'worn' },
+  briar: { loop: 5, overlay: true },
 };
 const DEEP = 'wallDeep';                // an opening into the wall, a crack: darker than any joint
 const OLD = ['oldHi', 'oldLight', 'oldMid', 'oldDark', 'oldShade'];        // the old stones' ramp, by plane as STONE_PLANES
@@ -314,6 +316,135 @@ function drawIvy(t, j) {
   for (const l of plan.leaves) for (const wrap of [-IVY_H, 0, IVY_H]) one(l.a, l.y + wrap, l.layer);
   if (typeof j !== 'number') for (const l of plan.ends[j].slice().sort((p1, p2) => p1.layer - p2.layer)) one(l.a, l.y, l.layer);
   if (typeof j === 'number') for (const b of plan.blooms) { const x = Math.round(xOf(b.a)), yy = Math.round(b.y) - y0; if (yy > 1 && yy < 45 && Math.cos(b.a) > 0.5) { p(x, yy, 2, 2, IVY.bloom); p(x, yy, 1, 1, C.white); } }
+}
+
+// --- briar roses -------------------------------------------------------------------------
+// A briar has climbed the wall: three old canes as thick as a thumb that
+// swing wide across it and cross each other, thorns all along them, young
+// green shoots that leave a cane, arch over and hang, small dark leaves in
+// twos and threes, and roses: one at the end of most shoots, a few sitting
+// on the canes, buds beside them. Like the ivy it is planned once as one
+// tall strip, so the loop closes and a shoot goes across the tiles' edges,
+// and everything stands at its place on the round wall in the tones of the
+// plane of light it is in.
+// The roses are not in the tiles: they hang on the wall as the signs do
+// (each whole or not at all beside a window), and background.js gives every
+// stretch of briar roses of one colour (ROSES), another in the next.
+const BRIAR = {
+  cane: [{ hi: '#94835a', base: '#5f5339', dark: '#3a3227' }, { hi: '#716546', base: '#4a412f', dark: '#2e2820' }, { hi: '#564c39', base: '#383228', dark: '#24201b' }],      // lit, between, in shade
+  shoot: [{ hi: '#9cba5e', base: '#628a42', dark: '#3b5c31' }, { hi: '#76984c', base: '#4a6e38', dark: '#2d4829' }, { hi: '#567839', base: '#36552e', dark: '#223824' }],
+  leaf: [{ hi: '#8fb650', base: '#538338', dark: '#2e5729' }, { hi: '#6a9942', base: '#3e6b30', dark: '#244525' }, { hi: '#4d7836', base: '#2d522a', dark: '#1a3520' }],
+  thorn: ['#f3cdac', '#cc9f86', '#987462'],
+  tip: '#c56f4c',
+};
+export const ROSES = [
+  { hi: '#ff8494', base: '#dc3550', shade: '#a2233e', deep: '#66172c' },      // red (deeper than the hearts one collects)
+  { hi: '#fffdf6', base: '#f4eadc', shade: '#d6c4c0', deep: '#e6bd5c' },      // white, its heart golden
+  { hi: '#ffe0d8', base: '#f0a4a6', shade: '#c9727e', deep: '#8f475a' },      // old rose (paler and more to salmon than the bows on the braid)
+];
+const ROSE_FORMS = [
+  // open
+  ['..hhb..', '.hhbbb.', 'hhbdsbb', 'hbdsdbs', 'bbsdbss', '.bbsss.', '..sss..'],
+  // open, and losing its petals
+  ['..hhb..', '.hhbbb.', 'hhbdsbb', 'hbdsdbs', 'bbsdbss', '.bbsss.', '..sss..', '.......', '.....b.', '.......', '..h....'],
+  // half open
+  ['.hhb.', 'hhdbb', 'hbdss', 'bbsss', '.gsG.'],
+  // a bud in its sepals
+  ['.h.', 'hbs', 'bbs', 'gbG', '.g.'],
+  // full blown
+  ['...hhb...', '.hhhbbbs.', '.hhbddbbs', 'hhbdsbdbs', 'hbbdbsdss', 'bbsbddsss', '.bbssssb.', '.sbbbsss.', '...sss...'],
+];
+const BRIAR_H = TOWER_AREAS.briar.loop * 48;
+let briarPlanned = null;
+function briarPlan() {
+  if (briarPlanned) return briarPlanned;
+  const r = new RNG(4700), E = ROUND.edge, TAU = Math.PI * 2, H = BRIAR_H;
+  const wrap = (y) => ((y % H) + H) % H;
+  // the old canes: a wide swing across the wall and a smaller one on top of it (both whole numbers of turns, so the loop closes)
+  // (placed by hand: none the mirror of another, and no two crossings at one height)
+  const canes = [
+    { a0: -0.5 * E, amp: 0.25 * E, n: 1, ph: 0.4, amp2: 0.07 * E, n2: 3, ph2: 1.3, down: 38, up: 24 },
+    { a0: 0.06 * E, amp: 0.15 * E, n: 2, ph: 2.3, amp2: 0.05 * E, n2: 3, ph2: 4.0, down: 20, up: 42 },
+    { a0: 0.56 * E, amp: 0.19 * E, n: 1, ph: 1.9, amp2: 0.08 * E, n2: 2, ph2: 5.2, down: 30, up: 32 },
+  ];
+  const angle = (c, y) => c.a0 + c.amp * Math.sin((y / H) * TAU * c.n + c.ph) + c.amp2 * Math.sin((y / H) * TAU * c.n2 + c.ph2);
+  const shoots = [], leaves = [], roses = [];
+  const leaf = (a, y, layer) => { if (Math.abs(a) < E * 0.97) leaves.push({ a, y: wrap(y), layer }); };
+  const rose = (a, y, form) => { if (Math.abs(a) < E * 0.8) roses.push({ a, y: wrap(y), form }); };
+  for (const c of canes) {
+    // young shoots: out from the cane and up, over, and down again to where the rose hangs
+    for (let y = r.int(3, 12); y < H - 6; y += r.int(13, 22)) {
+      const dir = r.chance(0.5) ? 1 : -1, len = r.range(0.13, 0.25) * E, rise = r.range(5, 12), droop = r.range(3, 11), pts = [];
+      for (let k = 0; k <= 24; k++) { const f = k / 24; pts.push({ a: angle(c, y) + dir * len * f, y: y - rise * 4 * f * (1 - f) + droop * f * f }); }
+      shoots.push(pts);
+      for (const k of [4, 7, 10, 13, 16, 19, 22]) if (r.chance(0.85)) leaf(pts[k].a + (r.next() - 0.5) * 0.02, pts[k].y + (k % 2 ? -2 : 2), r.int(0, 2));
+      const end = pts[24], form = r.chance(0.55) ? (r.chance(0.3) ? 1 : 0) : r.chance(0.6) ? 2 : 3;
+      rose(end.a, end.y, form);
+      leaf(end.a - 0.05, end.y - 3, 1); leaf(end.a + 0.06, end.y - 1, 0); leaf(end.a + 0.03, end.y + 3, 0); if (r.chance(0.7)) leaf(end.a - 0.04, end.y + 3, 2);       // the leaves a rose sits in
+      if (r.chance(0.45)) rose(pts[17].a, pts[17].y + 3, 3);                                                                       // a bud further back on it
+    }
+    // on the cane itself: leaves in twos, and here and there a rose with a bud beside it
+    for (let y = r.int(0, 4); y < H; y += r.int(4, 8)) { const side = r.chance(0.5) ? 1 : -1; leaf(angle(c, y) + side * 0.035, y, r.int(0, 2)); if (r.chance(0.6)) leaf(angle(c, y) - side * 0.04, y + 2, r.int(0, 1)); if (r.chance(0.25)) leaf(angle(c, y) + side * 0.08, y - 2, r.int(1, 2)); }
+    for (let y = r.int(10, 30); y < H; y += r.int(44, 70)) { rose(angle(c, y) + 0.02, y, r.chance(0.7) ? 4 : 0); rose(angle(c, y) - 0.08, y + 6, 3); leaf(angle(c, y) + 0.08, y + 3, 1); leaf(angle(c, y) - 0.07, y - 4, 2); leaf(angle(c, y) + 0.05, y - 5, 0); }
+  }
+  leaves.sort((p, q) => p.layer - q.layer);
+  return (briarPlanned = { canes, angle, shoots, leaves, roses });
+}
+function drawBriar(t, j, fix) {
+  const { p } = t;
+  const plan = briarPlan(), H = BRIAR_H, loop = typeof j === 'number';
+  const y0 = j === 'enter' ? H : j === 'leave' ? -48 : H - (j + 1) * 48;        // the tile's rows of the strip, as the ivy's
+  const tone = (set, a) => set[Math.min(2, Math.max(0, planeAt(a) - 1))];
+  const wraps = loop ? [-H, 0, H] : [];
+  // the canes: two wide where they face us, lit along their left, a thorn every few rows on one side and then the other
+  for (const c of plan.canes) {
+    const from = j === 'enter' ? H : j === 'leave' ? -c.up : y0, to = j === 'enter' ? H + c.down : j === 'leave' ? 0 : y0 + 48;
+    let n = 0;
+    for (let y = from; y < to; y += 0.25) {
+      const a = plan.angle(c, y), x = Math.round(xOf(a)), yy = Math.floor(y) - y0, g = tone(BRIAR.cane, a), wide = Math.cos(a) > 0.5;
+      const young = j === 'leave' && y < -c.up + 11;                                     // its upper end: this year's growth, green, the very tip red
+      if (j === 'enter' && y > H + c.down - 2) { p(x - 1, yy, 3, 1, C[DEEP]); continue; }       // its lower end: the joint it comes out of
+      const k = young ? tone(BRIAR.shoot, a) : g;
+      if (wide && !young) { p(x, yy, 1, 1, k.hi); p(x + 1, yy, 1, 1, k.base); } else p(x, yy, 1, 1, young ? k.base : k.base);
+      if (young && y < -c.up + 2) p(x, yy, 1, 1, BRIAR.tip);
+      if (y === Math.floor(y) && (Math.floor(y) + 300) % 3 === 0 && !young) { n++; const th = BRIAR.thorn[Math.min(2, Math.max(0, planeAt(a) - 1))]; if (n % 2) p(x - 1, yy - 1, 1, 1, th); else p(x + (wide ? 2 : 1), yy - 1, 1, 1, th); }
+      if (y === Math.floor(y) && (Math.floor(y) + 300) % 7 === 3 && wide && !young) p(x + 1, yy, 1, 1, g.dark);
+    }
+  }
+  // the shoots, one pixel wide, with their own smaller thorns
+  for (const pts of plan.shoots) for (const w of wraps) {
+    for (let i = 0; i < pts.length - 1; i++) for (let f = 0; f < 1; f += 0.2) {
+      const a = pts[i].a + (pts[i + 1].a - pts[i].a) * f, y = pts[i].y + (pts[i + 1].y - pts[i].y) * f + w, yy = Math.round(y) - y0;
+      if (yy < -1 || yy > 48 || Math.abs(a) > ROUND.edge * 0.98) continue;
+      const g = tone(BRIAR.shoot, a), x = Math.round(xOf(a));
+      p(x, yy, 1, 1, i < 5 ? g.dark : g.base); if (i > 4 && i % 4 === 0 && f === 0) p(x, yy - 1, 1, 1, g.hi);
+      if (i % 5 === 2 && f === 0) p(x + (i % 2 ? 1 : -1), yy + (i % 2 ? -1 : 1), 1, 1, BRIAR.thorn[Math.min(2, Math.max(0, planeAt(a)))]);
+    }
+  }
+  // the leaves: small, dark and glossy, a point of light on the lit ones
+  const one = (a, y, layer) => {
+    const x = Math.round(xOf(a)), yy = Math.round(y) - y0;
+    if (yy < -2 || yy > 49) return;
+    const g = tone(BRIAR.leaf, a), col = layer === 0 ? g.dark : layer === 1 ? g.base : g.hi, face = Math.cos(a);
+    if (face > 0.6) { p(x, yy, 3, 2, col); p(x + 1, yy - 1, 2, 1, col); p(x + 3, yy + 1, 1, 1, col); if (layer > 0) p(x, yy, 1, 1, g.hi); if (layer === 2) p(x + 1, yy - 1, 1, 1, '#b9d67a'); p(x + 1, yy + 1, 2, 1, layer === 0 ? g.dark : BRIAR.leaf[2].base); }
+    else if (face > 0.4) { p(x, yy, 2, 2, col); if (layer === 2) p(x, yy, 1, 1, g.hi); }
+    else p(x, yy, 1, 2, col);
+  };
+  for (const l of plan.leaves) for (const w of wraps) one(l.a, l.y + w, l.layer);
+  if (!loop) for (const c of plan.canes) {
+    // an end has a few leaves on what there is of the canes, and a bud beside a tip that got far enough
+    const from = j === 'enter' ? H : -c.up, to = j === 'enter' ? H + c.down : 0, r = new RNG(4750 + Math.round(c.a0 * 100) + (j === 'enter' ? 0 : 7));
+    for (let y = from + 3; y < to - 4; y += r.int(6, 10)) { const side = r.chance(0.5) ? 1 : -1; one(plan.angle(c, y) + side * 0.035, y, r.int(0, 2)); }
+    const a = plan.angle(c, from + 4);
+    if (j === 'leave' && c.up > 28 && Math.abs(a) < ROUND.edge * 0.8) fix.push({ what: 'rose', form: 3, x: Math.round(xOf(a)) + 1, y: Math.max(0, Math.min(43, from + 3 - y0)), plane: planeAt(a) });      // a bud beside the tip
+  }
+  // the roses of this tile (those of the strip whose middle is in it), each kept inside it
+  if (loop) for (const q of plan.roses) {
+    const yy = Math.round(q.y) - y0;
+    if (yy < 0 || yy >= 48 || Math.cos(q.a) < 0.45) continue;
+    const rows = ROSE_FORMS[q.form], w = rows[0].length, h = rows.length, top = q.form === 4 ? 4 : q.form < 2 ? 3 : 2;
+    fix.push({ what: 'rose', form: q.form, x: Math.round(xOf(q.a)) - Math.floor(w / 2), y: Math.max(0, Math.min(48 - h, yy - top)), plane: planeAt(q.a) });
+  }
 }
 
 // --- moss -----------------------------------------------------------------------------
@@ -518,7 +649,9 @@ function buildThings() {
     p(6, 11, 1, 3, WOOD.grey.dark); p(7, 10, 1, 2, WOOD.grey.base);                                                  // the trowel's handle sticking out of it
     p(2, 24, 6, 1, CAST);
   }, { ax: 0.5, ay: 0 }, { axPx: 4.5 * PX, ayPx: 0 });
-  return { boards, signs, ladder, hoist, bucket };
+  // the briar's roses: every form in every colour, [colour][form]
+  const roses = ROSES.map((R) => ROSE_FORMS.map((rows) => makeSprite(rows[0].length, rows.length, (t) => stamp(t, 0, 0, rows, { h: R.hi, b: R.base, s: R.shade, d: R.deep, g: BRIAR.leaf[0].base, G: BRIAR.leaf[1].dark }), at)));
+  return { boards, signs, ladder, hoist, bucket, roses };
 }
 
 // --- under repair ------------------------------------------------------------------------
@@ -585,12 +718,13 @@ function drawMended(t, j, fix) {
   for (const [x, y, which] of S.signs) fix.push({ what: 'sign', sign: which, x, y, plane: planeOf(x + 7) });      // (null: whichever sign this place on the tower gets)
 }
 
-const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss, mended: drawMended };
+const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss, mended: drawMended, briar: drawBriar };
 
 // The wall's sprites: its plain tiles, the string courses (`bands`: the
 // plain one and the others by name), and every area's tiles with what hangs
 // on each (`fix`, shaped like the tiles: enter, leave, loop[]): { s } or
-// { signs, sign } (one of the signs: that one, or any where `sign` is null),
+// { signs, sign } (one of the signs: that one, or any where `sign` is null)
+// or { roses, form } (a rose of that form, roses[colour][form]),
 // `dx`, `dy` from the tile's anchor (its foot, in the middle) right and up to
 // the thing's own anchor in layer px, `tint`, and `swing` where it does.
 export function buildTower() {
@@ -600,9 +734,9 @@ export function buildTower() {
   const bandWorn = makeSprite(TOWER_A, 6, (t) => drawTowerBandWorn(t), { ax: 0.5, ay: 0 });
   const things = buildThings();
   const hung = (f) => {
-    const s = f.what === 'sign' ? null : things.boards[f.what] || things[f.what];
+    const s = f.what === 'sign' || f.what === 'rose' ? null : things.boards[f.what] || things[f.what];
     const out = { dx: (f.x - TOWER_A / 2) * PX + (s ? s.ax : 0), dy: (48 - f.y) * PX, tint: THING_TINT[f.plane] };
-    if (s) out.s = s; else { out.signs = things.signs; out.sign = f.sign; }
+    if (s) out.s = s; else if (f.what === 'rose') { out.roses = things.roses; out.form = f.form; } else { out.signs = things.signs; out.sign = f.sign; }
     if (f.what === 'bucket') out.swing = true;
     return out;
   };

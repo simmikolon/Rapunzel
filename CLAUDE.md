@@ -40,7 +40,7 @@ which only copies the two folders together). The design document
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude and zone, `?fx=off|bloom|full`, `?veil=0.3` sets how strongly the
-  tower's wall is set back outside (0 to 0.9), `?wall=ivy|worn|stone|moss|mended|plain`
+  tower's wall is set back outside (0 to 0.9), `?wall=ivy|worn|stone|moss|mended|briar|plain`
   shows one look of the tower's wall all the way up, `?place=inside|outside` picks
   where the round is climbed whatever the title's selector says (inside,
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the

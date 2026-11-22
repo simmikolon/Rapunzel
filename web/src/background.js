@@ -2,7 +2,7 @@ import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js'
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
-import { TOWER_AREAS } from './art/tower.js';
+import { TOWER_AREAS, ROSES } from './art/tower.js';
 import { towerAreaAt, towerAreaForced } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
@@ -102,6 +102,8 @@ const TOWER_VEIL = { color: '#14242b', alpha: 0.3 };
 const STRING_COURSE = 4;
 // What hangs on the wall keeps this far from a window's frame (layer px), or is not hung.
 const HUNG_CLEAR = 8;
+// Petals falling from the briar's roses: how many to a tile, how far each falls (layer px), how long that takes (s, from .. to).
+const PETALS = { each: 2, fall: 300, time: [6, 10] };
 
 export class Background {
   constructor(art) {
@@ -237,7 +239,8 @@ export class Background {
     // what hangs on the wall (art/tower.js): each thing whole or not at all, so none where a window is
     for (const [f, k, sy, a] of hung) {
       const j = typeof a.tile === 'number' ? a.tile : 0;
-      const s = f.s || f.signs[f.sign == null ? (j + hash(k - j)) % f.signs.length : f.sign];      // (a sign of its own for each place in one round of the loop, other ones in the next)
+      const s = f.s || (f.roses ? f.roses[a.n % f.roses.length][f.form]                             // (a stretch of briar has roses of one colour)
+        : f.signs[f.sign == null ? (j + hash(k - j)) % f.signs.length : f.sign]);                  // (a sign of its own for each place in one round of the loop, other ones in the next)
       const left = f.dx - s.ax, top = k * TILE_H + f.dy + s.ay;
       if (windowsBetween(top - s.h - WINDOW_H - HUNG_CLEAR, top + HUNG_CLEAR).some((w) => left < w.x + WINDOW_W / 2 + HUNG_CLEAR && left + s.w > w.x - WINDOW_W / 2 - HUNG_CLEAR)) continue;
       const o = f.tint ? { tint: f.tint } : {};
@@ -245,6 +248,18 @@ export class Background {
       g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy, o);
     }
     this.drawWindows(g, cam, camF, time, world);
+    // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again
+    for (let k = first; k <= last + 2; k++) {
+      const a = areaAt(k);
+      if (!a || a.kind !== 'briar' || typeof a.tile !== 'number') continue;
+      const R = ROSES[a.n % ROSES.length], top = H - ((k + 1) * TILE_H - camF) + cam.oy;
+      for (let i = 0; i < PETALS.each; i++) {
+        const h = hash(k * 7 + i * 3 + 1), period = PETALS.time[0] + (h % 1000) / 1000 * (PETALS.time[1] - PETALS.time[0]);
+        const f = ((time + ((h >>> 10) % 1000) / 1000 * period) % period) / period;                           // 0 as it lets go .. 1 where it is gone
+        const x = W / 2 - TOWER_W / 2 + 36 + ((h >>> 4) % (TOWER_W - 72)) + Math.sin(time * 1.1 + h) * 12 + f * 26 + cam.ox, flat = Math.sin(time * 3.1 + h) > 0;
+        g.rect(x, top + (h % TILE_H) + f * PETALS.fall, flat ? 8 : 4, flat ? 4 : 8, i % 2 ? R.hi : R.base, Math.min(1, f * 8, (1 - f) * 4));
+      }
+    }
     // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
     if (this.towerVeil.alpha > 0) g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, this.towerVeil.color, this.towerVeil.alpha);
   }

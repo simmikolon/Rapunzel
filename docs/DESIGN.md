@@ -761,7 +761,8 @@ is a pool to draw from, not a promise.
   broken), old big stones (rough blocks two courses high), and mossy
   (moss in the joints in patches, cushions, water marks). Down in the
   forest it is mostly ivy and moss, higher up crumbling wall and old
-  stone, and nothing grows above the trees. The plan is fixed, like
+  stone, and above the trees only the roses (below) still grow. The
+  plan is fixed, like
   the windows: the tower is the same in every round. An area thins out
   into the plain wall at both ends; ivy and moss lie over the plain
   tiles, and the windows are cut into them.
@@ -784,6 +785,22 @@ is a pool to draw from, not a promise.
   left out whole, each takes one flat tone from the plane of light it
   hangs in, and which sign hangs in a place changes from one round of
   the loop to the next.
+- ✅ briar roses, a sixth look of the wall (`briar`): three old canes
+  that swing wide across the wall and cross each other, thorns all
+  along them, young green shoots that leave a cane, arch over and
+  hang, small dark glossy leaves, and roses: one at the end of most
+  shoots, full-blown ones sitting on the canes, half-open ones, buds
+  in their sepals, one that is losing its petals. The canes come out
+  of a joint at the lower end and end in this year's green growth
+  with a red tip at the upper one. Every stretch of briar has roses of
+  one colour, the next stretch another: red first (from 26 m, the
+  first thing on the wall one meets), then white with golden hearts
+  (198 m), then old rose (544 m, above the trees, where the roses are
+  the only thing that still grows). Petals fall down the wall in front
+  of it, two to a tile, turning as they go. The roses hang on the wall
+  as the signs do (none where a window is); the canes and leaves lie
+  over the plain tiles like the ivy. Purely for the eye: nothing in
+  the simulator.
 - ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
@@ -978,7 +995,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times); the masons' site 4, 1–2 times; what hangs on the wall keeps 8 px from a window's frame; `?wall=ivy|worn|stone|moss|mended|plain` shows one look all the way up |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -2174,3 +2191,41 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   For the eye only: `tools/checks/identity.sh` reports all five the
   same; the tiles of the four older looks are pixel for pixel what
   they were. The atlas is 4096 x 3772 (679 sprites).
+- 2026-11-22: Briar roses (`element/tower-roses`). Simon: thorny
+  tendrils with flowers or roses on them, so that it looks pretty,
+  with love for the detail. Decisions:
+  - A briar, not flowers in the ivy: thick canes and thorns are what
+    sets it apart from the ivy's masses of leaves at a glance, and the
+    tower of a girl shut in by a witch may well have a rose hedge
+    climbing it.
+  - The canes are placed by hand (three, none the mirror of another,
+    no two crossings at one height). The first try rolled them and
+    they came out as a regular plait.
+  - A stretch of briar has one colour of roses and the next stretch
+    another: the tiles are the same, the roses are sprites laid on
+    them, so three colours cost nine small sprites more and not two
+    more sets of tiles. Red is deeper than the hearts one collects;
+    the white rose's heart is golden, since a grey one made it a grey
+    ring under the veil; the third colour is old rose, paler and more
+    to salmon than the bows on the braid, which are what one bounces
+    on and must stay the only pink of their kind. No yellow roses:
+    yellow on the wall is a sun to collect.
+  - Roses climb on above the trees (weight 2 there), where the rule
+    was that nothing grows: ivy and moss want shade and damp, a rose
+    wants sun, and against the morning sky it is the prettiest place
+    for them. Up there the wall now has four looks in turn.
+  - The plan was chosen again: roses first (26 to 41 m), the masons'
+    site second (60 to 81 m), so the youngest see both new things;
+    moss 107, ivy 143, white roses 198, crumbling 245, ivy 297, old
+    stone 346, ivy 388; above the trees old stone, the site, old rose
+    briar at 544 m, and so on. The colour goes by how many stretches
+    of briar came before, not by the area's number, so the first is
+    red whatever lies between.
+  - Petals fall from the roses (two to a tile, stateless: where a
+    petal is follows from the time alone). They are drawn under the
+    veil like the wall, so they never look like something to collect.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same; the tiles of the five older looks are pixel for pixel what
+  they were. The atlas is 4096 x 3922 (701 sprites): 174 px under the
+  4096 that older phones can take, so the next thing on the wall
+  needs the atlas made smaller first.
