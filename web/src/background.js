@@ -2,7 +2,7 @@ import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js'
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
-import { TOWER_AREAS, ROSES } from './art/tower.js';
+import { TOWER_AREAS, ROSES, COURSE } from './art/tower.js';
 import { towerAreaAt, towerAreaForced } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
@@ -100,8 +100,9 @@ const TOWER_VEIL = { color: '#14242b', alpha: 0.3 };
 
 // The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
 const STRING_COURSE = 4;
-// What hangs on the wall keeps this far from a window's frame (layer px), or is not hung.
-const HUNG_CLEAR = 8;
+// What hangs on the wall keeps this far from a window's frame at its sides and above it (layer px), and this far below its
+// sill, which clears the string course under it too.
+const HUNG_CLEAR = 8, HUNG_BELOW = 32;
 // Petals falling from the briar's roses: how many to a tile, how far each falls (layer px), how long that takes (s, from .. to).
 const PETALS = { each: 2, fall: 300, time: [6, 10] };
 
@@ -218,7 +219,7 @@ export class Background {
     const of = (A, a) => (typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]);
     const spriteOf = (a) => of(t.towerAreas[a.kind], a);
     const grown = [], hung = [];
-    for (let k = first; k <= last; k++) {
+    for (let k = Math.max(0, first - 1); k <= last + 1; k++) {      // (a tile more at each end: a thing that hangs on it may reach into the picture)
       const h = hash(k + 7), a = areaAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
       let v = 0;
       if (k > 0) { const r = h % 100; v = r < 56 ? 0 : r < 70 ? 1 : r < 82 ? 2 : r < 92 ? 3 : 4; }
@@ -236,16 +237,23 @@ export class Background {
     }
     // what grows on the wall, over its bricks and its string courses; the windows are cut into it
     for (const [sprite, sy] of grown) g.blit(sprite, W / 2 + cam.ox, sy);
-    // what hangs on the wall (art/tower.js): each thing whole or not at all, so none where a window is
+    // what hangs on the wall (art/tower.js): each thing whole, so one that would meet a window (or the string course under
+    // its sill) gets out of its way, up or down the wall, whichever is nearer, by whole courses (a rose is left out instead)
     for (const [f, k, sy, a] of hung) {
-      const j = typeof a.tile === 'number' ? a.tile : 0;
+      const round = Math.max(0, Math.floor((a.i - 1) / TOWER_AREAS[a.kind].loop));                 // which round of the area's loop this tile is in
       const s = f.s || (f.roses ? f.roses[a.n % f.roses.length][f.form]                             // (a stretch of briar has roses of one colour)
-        : f.signs[f.sign == null ? (j + hash(k - j)) % f.signs.length : f.sign]);                  // (a sign of its own for each place in one round of the loop, other ones in the next)
+        : f.signs[f.sign == null ? (1 + f.slot + f.slots * round) % f.signs.length : f.sign]);     // (the signs in turn up the wall, so no two alike follow each other)
       const left = f.dx - s.ax, top = k * TILE_H + f.dy + s.ay;
-      if (windowsBetween(top - s.h - WINDOW_H - HUNG_CLEAR, top + HUNG_CLEAR).some((w) => left < w.x + WINDOW_W / 2 + HUNG_CLEAR && left + s.w > w.x - WINDOW_W / 2 - HUNG_CLEAR)) continue;
+      const w = windowsBetween(top - s.h - WINDOW_H - HUNG_CLEAR, top + HUNG_BELOW).find((q) => left < q.x + WINDOW_W / 2 + HUNG_CLEAR && left + s.w > q.x - WINDOW_W / 2 - HUNG_CLEAR);
+      let up = 0;
+      if (w) {
+        if (!f.slide) continue;
+        const above = Math.ceil((w.ly + WINDOW_H + HUNG_CLEAR - (top - s.h)) / COURSE) * COURSE, below = Math.ceil((top - (w.ly - HUNG_BELOW)) / COURSE) * COURSE;
+        up = above <= below ? above : -below;
+      }
       const o = f.tint ? { tint: f.tint } : {};
       if (f.swing) o.rot = 0.05 * Math.sin(time * 1.3 + k) + 0.02 * Math.sin(time * 2.9 + k * 2);
-      g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy, o);
+      g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy - up, o);
     }
     this.drawWindows(g, cam, camF, time, world);
     // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again

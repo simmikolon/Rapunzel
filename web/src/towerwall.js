@@ -48,16 +48,17 @@ function planUpTo(k) {
   }
 }
 
-// The wall at tile k: null where it is plain, else { kind, tile, n } with `tile` 'enter', 'leave' or the loop's index
-// and `n` which of the areas of its look it is, counted from the foot (the first briar has red roses, the next white ones).
+// The wall at tile k: null where it is plain, else { kind, tile, i, n } with `tile` 'enter', 'leave' or the loop's index,
+// `i` the tile's number in its area (0 is `enter`) and `n` which of the areas of its look it is, counted from the foot
+// (the first briar has red roses, the next white ones).
 export function towerAreaAt(k) {
   if (k < 0) return null;
   planUpTo(k);
   for (let i = areas.length - 1; i >= 0; i--) {
     const a = areas[i];
-    if (k >= a.from) return k < a.from + a.tiles.length ? { kind: a.kind, tile: a.tiles[k - a.from], n: a.n } : null;
+    if (k >= a.from) return k < a.from + a.tiles.length ? { kind: a.kind, tile: a.tiles[k - a.from], i: k - a.from, n: a.n } : null;
   }
   return null;
 }
 // A look all the way up (dev: ?wall=ivy): the loop's tiles in turn.
-export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop, n: Math.max(0, Math.floor(k / TOWER_AREAS[kind].loop)) });
+export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop, i: k + 1, n: Math.max(0, Math.floor(k / TOWER_AREAS[kind].loop)) });
