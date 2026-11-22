@@ -744,12 +744,27 @@ is a pool to draw from, not a promise.
   of dressed stone runs round it under every row of windows. Five
   kinds of tile: plain, moss and a crack, weather, vines, an old repair
   in stone. Windows, balconies and gates are where they were. The wall
-  stands back: a veil of dark teal, 45 % strong, lies over it (and over
+  stands back: a veil of dark teal, 30 % strong, lies over it (and over
   its windows and string courses), which darkens it and draws its
   lights and darks together, so that it is one quiet plane behind the
   play. Balconies, gates, the braid and its ribbons are drawn after the
   veil and keep their colours: what one stands on is lighter than the
   wall it is on.
+- ✅ the tower's wall has areas (`art/tower.js`, `src/towerwall.js`): it
+  is not the same all the way up. Its foot is of old big stones; from
+  there, stretches of plain wall (13 to 30 m) take turns with areas of
+  17 to 30 m, each in one of four looks: overgrown (ivy: stems
+  wandering up the wall and masses of leaves that cover the bricks,
+  duller and bluer than the leaves on the branches in front),
+  crumbling (bricks chipped, sunk and gone, a wound where the facing
+  has come away and the core's rubble shows, cracks, the string course
+  broken), old big stones (rough blocks two courses high), and mossy
+  (moss in the joints in patches, cushions, water marks). Down in the
+  forest it is mostly ivy and moss, higher up crumbling wall and old
+  stone, and nothing grows above the trees. The plan is fixed, like
+  the windows: the tower is the same in every round. An area thins out
+  into the plain wall at both ends; ivy and moss lie over the plain
+  tiles, and the windows are cut into them.
 - ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
@@ -944,7 +959,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 45 % over the wall (`?veil=` tries another strength) |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times); `?wall=ivy|worn|stone|moss|plain` shows one look all the way up |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -2072,3 +2087,34 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   what one can stand on. `?veil=0.3` (0 to 0.9) tries another strength
   on any build. For the eye only: `tools/checks/identity.sh` reports
   all five the same.
+- 2026-11-22: The veil is 30 %, and the wall has areas
+  (`element/tower-areas`). Simon tried the veil on the preview: at 30 %
+  the tower sits right, at 45 % it was too far back. Then: the tower
+  looks the same all the way up; parts of it could be old and
+  crumbling, parts overgrown. Decisions:
+  - Four looks to begin with: ivy, crumbling, old big stones, moss.
+    They take turns with plain wall, so that each is a place one comes
+    to and leaves again, and the plain wall stays the rule.
+  - The plan is fixed, not rolled per round, as the windows are: a
+    tower one climbs often should be a place one gets to know ("the ivy
+    after the first branches"). Which of the plans the rules allow was
+    chosen by looking: ivy comes first, from 21 m, and all four looks
+    come before the trees end.
+  - An area is a column of tiles of its own: two end tiles and a loop
+    that closes on itself. The ivy is planned once as one strip six
+    tiles high, so its masses of leaves go across the tiles' edges; a
+    crack reaches a tile's edge in a fixed column and runs on.
+  - Everything follows the round wall: leaves and stones get narrower
+    toward the edges and take the tones of the plane of light they are
+    in. The ivy's greens are duller and bluer than the leaves on the
+    branches, after the first try, in which the two could be taken for
+    each other. The old stone's ramp was taken a step darker after the
+    first try for the same reason the veil exists.
+  - What grows lies over the bricks and the string courses, and the
+    windows are drawn after it: an ivy that hid a window would hide a
+    guard's warning.
+  - The wall's code moved out of `art/tiles.js` into `art/tower.js`.
+  Above the trees there are only two looks so far (crumbling, old
+  stone), which therefore alternate; more for up there are to come.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same. The atlas is 4096 x 3594.

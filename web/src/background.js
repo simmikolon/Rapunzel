@@ -2,6 +2,8 @@ import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js'
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
+import { TOWER_AREAS } from './art/tower.js';
+import { towerAreaAt, towerAreaForced } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
@@ -94,7 +96,7 @@ const forestY = (ly, f) => (ly - 682 - CAMERA_START_Y) / f + CAMERA_START_Y + FO
 // the brightest and most coloured things in the picture. Windows and the
 // string course lie under the veil; balconies, gates, the braid and its
 // ribbons are drawn after it. (`?veil=0.5` tries another strength.)
-const TOWER_VEIL = { color: '#14242b', alpha: 0.45 };
+const TOWER_VEIL = { color: '#14242b', alpha: 0.3 };
 
 // The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
 const STRING_COURSE = 4;
@@ -103,6 +105,7 @@ export class Background {
   constructor(art) {
     this.art = art;
     this.towerVeil = { ...TOWER_VEIL };
+    this.forceWall = null;       // dev (?wall=): one look of the wall all the way up, or 'plain' for none
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
@@ -206,18 +209,27 @@ export class Background {
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     const t = this.art.tiles;
+    // the wall, tile by tile: plain, or the look of the area it is in (towerwall.js); what grows on it is laid over it below
+    const areaAt = (k) => (this.forceWall && TOWER_AREAS[this.forceWall] ? towerAreaForced(this.forceWall, k) : this.forceWall ? null : towerAreaAt(k));
+    const spriteOf = (a) => { const A = t.towerAreas[a.kind]; return typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]; };
+    const grown = [];
     for (let k = first; k <= last; k++) {
-      const h = hash(k + 7);
+      const h = hash(k + 7), a = areaAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
       let v = 0;
       if (k > 0) { const r = h % 100; v = r < 56 ? 0 : r < 70 ? 1 : r < 82 ? 2 : r < 92 ? 3 : 4; }
-      g.blit(t.tower[v], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
+      if (a && !TOWER_AREAS[a.kind].overlay) g.blit(spriteOf(a), W / 2 + cam.ox, sy);
+      else g.blit(t.tower[v], W / 2 + cam.ox, sy);
+      if (a && TOWER_AREAS[a.kind].overlay) grown.push([spriteOf(a), sy]);
     }
-    // a string course runs round the tower under every row of windows
+    // a string course runs round the tower under every row of windows (broken where the wall is crumbling)
     for (let i = Math.max(0, Math.floor((camF - STRING_COURSE - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
       if (ly > camF + H + 30) break;
-      g.blit(t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
+      const a = areaAt(Math.floor((ly - 12) / TILE_H));
+      g.blit(a && a.kind === 'worn' ? t.towerBandWorn : t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
     }
+    // what grows on the wall, over its bricks and its string courses; the windows are cut into it
+    for (const [sprite, sy] of grown) g.blit(sprite, W / 2 + cam.ox, sy);
     this.drawWindows(g, cam, camF, time, world);
     // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
     if (this.towerVeil.alpha > 0) g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, this.towerVeil.color, this.towerVeil.alpha);

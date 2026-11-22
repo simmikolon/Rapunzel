@@ -6,6 +6,8 @@ export const PAL = {
   teal: '#1b617c', tealDark: '#1c4a5b', tealMid: '#254e4a', tealGrey: '#27464e', mortar: '#2e3f44',
   // tower bricks
   brickHi: '#c4e2d3', brickLight: '#a5cbbb', brickMid: '#79a1ae', brickDark: '#5e8491', brickShade: '#465e66',
+  // the tower's older, bigger stones (greyer and a step darker than its bricks), and an opening into the wall
+  oldHi: '#93a39d', oldLight: '#7c8f8b', oldMid: '#657977', oldDark: '#506462', oldShade: '#3c4d4b', wallDeep: '#17242a',
   // bark
   barkLight: '#9c8566', barkMid: '#786b5a', barkDark: '#625243', barkDeep: '#4c3637', barkShadow: '#302820',
   // greens

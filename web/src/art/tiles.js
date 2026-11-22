@@ -2,121 +2,14 @@ import { makeSprite, flipH } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { PX } from '../config.js';
 import { RNG } from '../util.js';
+import { TOWER_W, buildTower } from './tower.js';
 
 // Environment tiles. The world is 768 logical px wide (192 art px).
 // Vertical tiles are 192 logical px tall (48 art px), the original tile height.
 
 export const TILE_H = 192;
-export const TOWER_W = 440;   // tower spans x = -220 .. 220
+export { TOWER_W };              // the tower's wall is art/tower.js
 export const TRUNK_W = 100;   // trunks span |x| = 284 .. 384
-
-const rng = new RNG(1337);
-
-// --- the tower's wall -------------------------------------------------------------
-// The tower is round. Its wall is TOWER_A x 48 art px, and what makes it a
-// drum and not a plank is two things a round wall does: its bricks get
-// narrower toward the edges (one sees them more and more from the side),
-// and the light, which comes from the upper left as everywhere, lies on it
-// in upright bands, brightest left of the middle, in shade on the right.
-// Both come from one picture of it: a point of the wall at angle `a` round
-// the tower (0 faces us, ROUND.edge is as far round as one sees) stands at
-// xOf(a), and is lit by how squarely it faces the light (planeAt).
-// The bands are flat planes, as the style asks: each is a mix of two or
-// three steps of the brick ramp, a brick takes one of them, and where two
-// planes meet the bricks' own offset from course to course toothes the
-// border. Nothing is graded and nothing is dithered.
-const TOWER_A = TOWER_W / PX;
-const ROUND = { edge: 72 * Math.PI / 180, light: -36 * Math.PI / 180, brick: 14 };
-const xOf = (a) => TOWER_A / 2 * (1 + Math.sin(a) / Math.sin(ROUND.edge));
-const BRICK_ANGLE = ROUND.brick * Math.sin(ROUND.edge) / (TOWER_A / 2);        // a brick's angle, so that one facing us is ROUND.brick wide
-// The planes, from the lit one to the one in shade: how squarely a brick
-// must face the light to belong to it, what its bricks are made of (steps
-// of the brick ramp and their shares), and the line of light along a
-// brick's top edge.
-const PLANES = [
-  { from: 0.93, mix: [['brickLight', 0.72], ['brickMid', 0.28]], top: 'brickHi' },
-  { from: 0.74, mix: [['brickLight', 0.34], ['brickMid', 0.6], ['brickDark', 0.06]], top: 'brickLight' },
-  { from: 0.44, mix: [['brickLight', 0.08], ['brickMid', 0.6], ['brickDark', 0.32]], top: 'brickLight' },
-  { from: 0.14, mix: [['brickMid', 0.24], ['brickDark', 0.6], ['brickShade', 0.16]], top: 'brickMid' },
-  { from: -2, mix: [['brickDark', 0.36], ['brickShade', 0.64]], top: 'brickDark' },
-];
-// The same planes for dressed stone (the string course).
-const STONE_PLANES = ['stoneHi', 'stoneLight', 'stone', 'stoneDark', 'stoneShade'];
-const planeAt = (a) => { const l = Math.cos(a - ROUND.light); return PLANES.findIndex((q) => l >= q.from); };
-// The upright joints of a course: where they stand and which plane the brick to the right of each is in.
-function joints(odd) {
-  const out = [], n = Math.ceil(ROUND.edge / BRICK_ANGLE) + 1;
-  for (let j = -n; j <= n; j++) {
-    const a0 = (j + (odd ? 0.5 : 0)) * BRICK_ANGLE, a1 = a0 + BRICK_ANGLE;
-    if (a1 <= -ROUND.edge || a0 >= ROUND.edge) continue;
-    const x0 = Math.round(xOf(Math.max(a0, -ROUND.edge))), x1 = Math.round(xOf(Math.min(a1, ROUND.edge)));
-    if (x1 - x0 >= 1) out.push({ x0, x1, plane: planeAt((Math.max(a0, -ROUND.edge) + Math.min(a1, ROUND.edge)) / 2) });
-  }
-  return out;
-}
-const pickStep = (mix, r) => { let k = r; for (const [name, share] of mix) { if (k < share) return name; k -= share; } return mix[mix.length - 1][0]; };
-
-function drawTower(t, variant) {
-  const { p, line } = t;
-  const W = TOWER_A, H = 48, rowH = 6;
-  p(0, 0, W, H, C.brickMid);
-  const cells = [];                                     // every brick: { x, y, w, plane }, for what the variants do to some of them
-  for (let y = 0; y < H; y += rowH) {
-    for (const { x0, x1, plane } of joints((y / rowH) % 2 === 1)) {
-      const q = PLANES[plane], w = x1 - x0, col = C[pickStep(q.mix, rng.next())];
-      // a brick, the line of light along its top, the joint at its left (softer where the bricks are too narrow for a dark one)
-      p(x0, y, w, rowH - 1, col);
-      if (w > 1) p(x0 + 1, y, w - 1, 1, C[q.top]);
-      p(x0, y, 1, rowH - 1, w >= 6 ? C.mortar : plane >= 3 ? C.brickShade : C.brickDark);
-      cells.push({ x: x0 + 1, y, w: w - 1, plane });
-    }
-    p(0, y + rowH - 1, W, 1, C.mortar);
-  }
-  // the wall's edges: the lit one a line of the wall's own shade, the far one dark, with a breath of light thrown back just inside it
-  p(0, 0, 1, H, C.brickDark); p(W - 1, 0, 1, H, C.mortar);
-  for (let y = 0; y < H; y += rowH) p(W - 3, y, 2, rowH - 1, C.brickDark);
-  const wide = cells.filter((c) => c.w >= 8);
-  // every wall has a few bricks that are not like the rest: a chipped corner, one that was replaced in stone
-  for (let i = 0; i < 4; i++) { const c = rng.pick(wide); p(c.x + (rng.chance(0.5) ? 0 : c.w - 1), c.y + rowH - 2, 1, 1, C.mortar); }
-  { const c = rng.pick(wide); p(c.x, c.y, c.w, rowH - 1, C[STONE_PLANES[Math.min(4, c.plane + 1)]]); p(c.x, c.y, c.w, 1, C[STONE_PLANES[c.plane]]); }
-  if (variant === 1) {
-    // moss in the joints, more of it on the side the sun does not reach, and a crack
-    for (let i = 0; i < 34; i++) { const x = Math.round(xOf((rng.next() * rng.next() * 1.9 - 0.55) * ROUND.edge)), y = rng.int(0, H / rowH - 1) * rowH + rowH - 2; if (x > 2 && x < W - 3) p(x, y, rng.int(1, 3), rng.chance(0.3) ? 2 : 1, rng.chance(0.5) ? C.mossDark : C.leafDark); }
-    const cx = Math.round(W * 0.58);
-    line(cx, 2, cx + 4, 14, C.mortar); line(cx + 4, 14, cx + 1, 22, C.mortar); line(cx + 1, 22, cx + 6, 30, C.mortar); line(cx + 6, 30, cx + 4, 37, C.mortar);
-  } else if (variant === 2) {
-    // weather: damp runs down from the joints, and pale lichen where the sun gets at it
-    for (let i = 0; i < 12; i++) { const c = rng.pick(cells.filter((q) => q.plane >= 2 && q.w >= 3)); const len = rng.int(3, 10); p(c.x + rng.int(0, c.w - 1), c.y + rowH - 1, 1, len, C.brickShade); }
-    for (let i = 0; i < 9; i++) { const c = rng.pick(cells.filter((q) => q.plane <= 1 && q.w >= 6)); const x = c.x + rng.int(0, c.w - 3), y = c.y + rng.int(1, 3); p(x, y, 2, 1, C.stoneLight); if (rng.chance(0.5)) p(x + 1, y + 1, 2, 1, C.stoneLight); }
-  } else if (variant === 3) {
-    // vines hanging across, closer together toward the edges as everything is
-    for (let a = -0.86; a < 0.9; a += 0.17) { const x = Math.round(xOf(a * ROUND.edge)), len = rng.int(6, 22); line(x, 0, x + rng.int(-2, 2), len, C.leafDark); p(x + 1, len - 2, 2, 2, planeAt(a * ROUND.edge) >= 3 ? C.leafDark : C.leaf); p(x - 1, Math.floor(len / 2), 2, 2, planeAt(a * ROUND.edge) >= 3 ? C.leaf : C.grass); }
-  } else if (variant === 4) {
-    // an old repair: a patch of the wall made up in stone
-    const c0 = rng.pick(cells.filter((q) => q.plane >= 1 && q.plane <= 3 && q.w >= 9));
-    for (const c of cells) {
-      if (Math.abs(c.y - c0.y) > rowH * 1.5 || Math.abs(c.x + c.w / 2 - (c0.x + c0.w / 2)) > 17 || (Math.abs(c.y - c0.y) > rowH && rng.chance(0.4))) continue;
-      p(c.x, c.y, c.w, rowH - 1, C[STONE_PLANES[Math.min(4, c.plane + 1)]]); p(c.x, c.y, c.w, 1, C[STONE_PLANES[c.plane]]);
-    }
-  }
-}
-
-// The string course that runs round the tower under every row of windows
-// (background.js lays it at the storeys' rhythm): TOWER_A x 6 art px of
-// dressed stone, the anchor its top middle. Lit and jointed like the wall,
-// a line of shadow under it.
-function drawTowerBand(t) {
-  const { p } = t;
-  for (const { x0, x1, plane } of joints(false)) {
-    const w = x1 - x0;
-    p(x0, 0, w, 1, C[STONE_PLANES[Math.max(0, plane - 1)]]);
-    p(x0, 1, w, 3, C[STONE_PLANES[plane]]);
-    p(x0, 4, w, 1, C[STONE_PLANES[Math.min(4, plane + 1)]]);
-    if (w >= 6) p(x0, 1, 1, 3, C[STONE_PLANES[Math.min(4, plane + 1)]]);
-    p(x0, 5, w, 1, plane >= 3 ? C.mortar : C.brickShade);
-  }
-  p(TOWER_A - 1, 0, 1, 5, C.mortar);
-}
 
 // The prototype's distant forest, 192 x 48 art px: tall thin trunks and leaf
 // streaks in the teal palette of bg.png. The game's forest behind the tower
@@ -262,8 +155,8 @@ function drawMoon(t) {
 }
 
 export function buildTiles() {
-  const tower = [0, 1, 2, 3, 4].map((v) => makeSprite(TOWER_A, 48, (t) => drawTower(t, v), { ax: 0.5, ay: 1 }));
-  const towerBand = makeSprite(TOWER_A, 6, (t) => drawTowerBand(t), { ax: 0.5, ay: 0 });
+  // the tower's wall (art/tower.js): its plain tiles and string course under their old names, its areas beside them
+  const wall = buildTower(), tower = wall.plain, towerBand = wall.band;
   const forest = [0, 1].map((v) => makeSprite(192, 48, (t) => drawForest(t, v), { ax: 0.5, ay: 1 }));
   const ground = makeSprite(192, 36, (t) => drawGround(t), { ax: 0.5, ay: 0 }, { ayPx: 4 * PX });
   const braid = makeSprite(14, 12, (t) => drawBraidSegment(t), { ax: 0.5, ay: 0 });
@@ -278,5 +171,5 @@ export function buildTiles() {
   const birdL = birdR.map(flipH);
   const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
   const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
-  return { tower, towerBand, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
+  return { tower, towerBand, towerBandWorn: wall.bandWorn, towerAreas: wall.areas, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }
