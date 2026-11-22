@@ -1062,8 +1062,7 @@ export function buildInterior() {
     branchR[len] = variants.map((v) => ledge(art, (t) => drawLedge(t, v, art)));
   }
   const dryR = { normal: ledge(BRANCH_LEN.normal.art, (t) => drawLedge(t, 0, BRANCH_LEN.normal.art, true)), long: ledge(BRANCH_LEN.long.art, (t) => drawLedge(t, 0, BRANCH_LEN.long.art, true)) };
-  const flipAll = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? v.map(flipH) : flipH(v)]));
-  const stone = { name: 'stone', branchR, branchL: flipAll(branchR), dryR, dryL: flipAll(dryR) };
+  const stone = { name: 'stone', branchR, dryR };        // (a ledge on the left pillar is one of these, mirrored when drawn: world.js)
   const galleryL = [0, 1].map((v) => makeSprite(56, 72, (t) => drawGallery(t, v), undefined, { axPx: 36 * 4, ayPx: 56 * 4 }));
   const art = {
     wall, pillarL, pillarR: pillarL.map(flipH), torch, floor, stone,

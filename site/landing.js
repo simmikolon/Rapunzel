@@ -255,13 +255,16 @@ function scene({ art, C }) {
   }));
 
   // the tower: twelve courses of bricks, windows left and right of the braid
-  const COURSES = 12, TW = 95, TH = 48;
+  // (the wall's width is the game's: landing.css has it as --tower-w)
+  const COURSES = 12, TW = tiles.tower[0].w / A, TH = 48;
   set('--tower', bake(TW, TH * COURSES, (g) => {
     for (let i = 0; i < COURSES; i++) {
       const s = tiles.tower[Math.floor(r() * tiles.tower.length)];
       g.blit(s, s.ax, (i + 1) * TH * A);
     }
     const slots = [[1, -1, 0], [3, 1, 3], [5, -1, 4], [7, 1, 1], [9, -1, 3], [11, 1, 0]];
+    // the string course under every window, as in the game (background.js)
+    for (const [course] of slots) g.blit(tiles.towerBand, (TW / 2) * A, (course * TH + 35) * A);
     for (const [course, side, v] of slots) {
       const w = (side < 0 ? windows.L : windows.R)[v];
       g.blit(w, (TW / 2 + side * 27) * A, (course * TH + 36) * A);
@@ -440,7 +443,7 @@ function towerTop(plane, art, C) {
     flag.forEach((len, i) => { R(CX + 1, 7 + i, len, 1, i < 2 ? C.bowHi : C.bow); R(CX + len, 7 + i, 1, 1, C.bowDark); });
     // the roof, row by row: lit on the left, in shade on the right, rows of tiles
     for (let y = TIP; y < E; y++) {
-      const hw = Math.round(2 + ((y - TIP) / (E - TIP)) * 60), x0 = CX - hw;
+      const hw = Math.round(2 + ((y - TIP) / (E - TIP)) * 68), x0 = CX - hw;
       R(x0, y, 2 * hw, 1, ROOF.mid);
       R(x0, y, Math.max(1, Math.round(hw * 0.4)), 1, ROOF.hi);
       R(CX + Math.round(hw * 0.4), y, hw - Math.round(hw * 0.4), 1, ROOF.lo);
@@ -448,8 +451,8 @@ function towerTop(plane, art, C) {
       R(x0 - 1, y, 1, 1, ROOF.edge); R(CX + hw, y, 1, 1, ROOF.edge);
     }
     // the eaves: a stone band with corbels under it
-    R(9, E, SUMMIT.w - 18, 6, C.stoneDark); R(9, E, SUMMIT.w - 18, 2, C.stoneLight); R(9, E + 4, SUMMIT.w - 18, 2, C.stoneShade);
-    for (let x = 16; x < SUMMIT.w - 16; x += 10) { R(x, E + 6, 4, 3, C.stoneDark); R(x, E + 6, 4, 1, C.stone); }
+    R(3, E, SUMMIT.w - 6, 6, C.stoneDark); R(3, E, SUMMIT.w - 6, 2, C.stoneLight); R(3, E + 4, SUMMIT.w - 6, 2, C.stoneShade);
+    for (let x = 8; x < SUMMIT.w - 8; x += 10) { R(x, E + 6, 4, 3, C.stoneDark); R(x, E + 6, 4, 1, C.stone); }
     // Rapunzel's window: warm light, a stone frame, her braid behind her
     arch(CX, S - 22, 26, S + 6, C.lanternGlow, 0.08);
     arch(CX, S - 24, 20, S + 2, C.stoneShade);
@@ -584,8 +587,9 @@ function woodenSign(el, above, { art, sign, C }) {
         g.rect(x0, 16, x1 - x0, 4, C.barkShadow);
         g.rect(x0, 0, 4, 20, C.barkShadow); g.rect(x1 - 4, 0, 4, 20, C.barkShadow);
         for (let x = x0 + 40; x < x1 - 40; x += 96) g.rect(x, 8, 24, 4, C.barkMid);
-        // iron bands where it lies across the tower's edges (the tower is 95 art px wide)
-        for (const ex of [b.x + b.w / 2 - 190, b.x + b.w / 2 + 190]) {
+        // iron bands where it lies across the tower's edges
+        const half = art.tiles.tower[0].w / 2;
+        for (const ex of [b.x + b.w / 2 - half, b.x + b.w / 2 + half]) {
           g.rect(ex - 6, 0, 12, 20, C.grip); g.rect(ex - 6, 0, 12, 4, C.poleHi); g.rect(ex - 2, 8, 4, 4, C.pole);
         }
         for (const rx of [b.x + sign.ROPE_IN, b.x + b.w - sign.ROPE_IN - 8]) {

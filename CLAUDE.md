@@ -39,7 +39,9 @@ which only copies the two folders together). The design document
   `?spawn=bat` hangs a bat under the next branch, `?at=170&spawn=flock` builds a
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
-  altitude and zone, `?fx=off|bloom|full`, `?place=inside|outside` picks
+  altitude and zone, `?fx=off|bloom|full`, `?veil=0.3` sets how strongly the
+  tower's wall is set back outside (0 to 0.9), `?wall=ivy|worn|stone|moss|mended|briar|plain`
+  shows one look of the tower's wall all the way up, `?place=inside|outside` picks
   where the round is climbed whatever the title's selector says (inside,
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
   nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,
@@ -61,6 +63,12 @@ which only copies the two folders together). The design document
   treasuries: `... inside off off` is the inside's baseline). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.
+- Checks before a push: `tools/checks/` (its README says what each does).
+  `tools/checks/identity.sh` runs the simulator on fixed seeds against the
+  reports in `tools/checks/baseline/`: a change that is only for the eye
+  must leave them exactly as they are. `flow.mjs` plays through the
+  browser flow and the landing page, `shots.mjs outside 20,180,420` takes
+  pictures at heights.
 - Headless browser checks need Playwright (on this machine:
   `/opt/node-tools/node_modules/playwright`, Chromium with
   `--enable-unsafe-swiftshader` for WebGL). Software WebGL is slow, so

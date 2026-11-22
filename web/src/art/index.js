@@ -15,6 +15,7 @@ import { buildLights } from './lights.js';
 import { buildInterior } from './interior.js';
 import { buildCat } from './cat.js';
 import { buildVault } from './vault.js';
+import { buildBackdrop } from './backdrop.js';
 
 export function buildAllArt() {
   return {
@@ -35,5 +36,6 @@ export function buildAllArt() {
     interior: buildInterior(),
     cat: buildCat(),
     vault: buildVault(),
+    backdrop: buildBackdrop(),
   };
 }

@@ -1,5 +1,9 @@
-import { W, H, PARALLAX_FAR, PARALLAX_FOREST, PARALLAX_TOWER } from './config.js';
+import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js';
+import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
+import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
+import { TOWER_AREAS, ROSES, COURSE } from './art/tower.js';
+import { towerAreaAt, towerAreaForced } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
@@ -12,7 +16,7 @@ import { fallDist, fallSwing } from './platforms.js';
 
 // Parallax environment. Layers from back to front:
 //   sky gradient (altitude graded) -> stars / moon / clouds (PARALLAX_FAR)
-//   -> distant forest (PARALLAX_FOREST, fades out above the canopy)
+//   -> the forest behind the tower, in two layers at two speeds (FOREST), up to its roof
 //   -> tower bricks with Rapunzel's braid and its ribbons (PARALLAX_TOWER)
 //   -> tree trunks with the deep forest's string lights between them,
 //      branches, swings, prince (1.0, the gameplay plane)
@@ -64,9 +68,49 @@ export function lightAt(y) {
   return { color: mixHex(LIGHT[i].color, next.color, t), alpha: lerp(LIGHT[i].alpha, next.alpha, t) };
 }
 
+// The forest behind the tower: its two layers, far to near. `f` is how fast
+// a layer goes by (the tower's is 0.9), `topAt` the height the prince is at
+// when the layer's roof is in the middle of the picture (the trees in front
+// end at 460 m: as their tops sink, the forest's roof comes into view at
+// either side and sinks more slowly, the far one last). `tint`: what the
+// dark forest's grey tiles are coloured with on the forest floor and in the
+// deep forest.
+const FOREST = [
+  { f: 0.42, topAt: 47500, strips: 'far', birch: 'farBirch', top: 'farTop', body: 'farBody', tint: ['#33686a', '#1f4c42'] },
+  { f: 0.62, topAt: 46500, strips: 'near', birch: 'nearBirch', top: 'nearTop', body: 'nearBody', tint: ['#1c423e', '#143630'] },
+];
+const CANOPY_TILES = 4;            // the roof and the leaves under it: enough tiles to fill the picture below its outline
+// The air between the two layers, by zone (forest floor, deep forest, none from the dawn zone up): a colour and how much of it.
+const FOREST_HAZE = [['#4a8082', 0.34], ['#2f6a58', 0.25], ['#a7c6d8', 0]];
+const FOREST_EYE = 400;            // the prince is about this far above the picture's bottom edge
+// The layer height that is in the middle of the picture when the prince is at world height y, and the other way round
+// (for the picture's design height, so that the forest is the same on every screen).
+const forestLy = (y, f) => CAMERA_START_Y + (y - FOREST_EYE - CAMERA_START_Y) * f + 682;
+const forestY = (ly, f) => (ly - 682 - CAMERA_START_Y) / f + CAMERA_START_Y + FOREST_EYE;
+
+// How far back the tower stands. Its wall is drawn in the brick ramp's own
+// colours (light, so that its roundness shows in the tiles), and then a
+// veil of this colour is laid over it, this strong: that darkens it and
+// draws its lights and darks together, so that the wall is one quiet plane
+// behind the play and the prince, the platforms and what one collects are
+// the brightest and most coloured things in the picture. Windows and the
+// string course lie under the veil; balconies, gates, the braid and its
+// ribbons are drawn after it. (`?veil=0.5` tries another strength.)
+const TOWER_VEIL = { color: '#14242b', alpha: 0.3 };
+
+// The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
+const STRING_COURSE = 4;
+// What hangs on the wall keeps this far from a window's frame at its sides and above it (layer px), and this far below its
+// sill, which clears the string course under it too.
+const HUNG_CLEAR = 8, HUNG_BELOW = 32;
+// Petals falling from the briar's roses: how many to a tile, how far each falls (layer px), how long that takes (s, from .. to).
+const PETALS = { each: 2, fall: 300, time: [6, 10] };
+
 export class Background {
   constructor(art) {
     this.art = art;
+    this.towerVeil = { ...TOWER_VEIL };
+    this.forceWall = null;       // dev (?wall=): one look of the wall all the way up, or 'plain' for none
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
@@ -127,16 +171,42 @@ export class Background {
     }
   }
 
-  drawForest(g, cam) {
-    const a = forestAlpha(cam.y);
-    if (a <= 0) return;
-    const camF = cam.layerY(PARALLAX_FOREST);
-    const first = Math.floor(camF / TILE_H), last = Math.ceil((camF + H) / TILE_H);
-    const o = a < 1 ? { alpha: a } : undefined;
-    for (let k = first; k <= last; k++) {
-      const s = this.art.tiles.forest[Math.abs(k) % 2];
-      g.blit(s, W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy, o);
-    }
+  // The forest behind the tower (art/backdrop.js): a far layer, the air
+  // between, a nearer layer. Each is a column of tiles down either side,
+  // counted from its top: the forest's roof and the leaves under it, then
+  // strips of trunks in the look of the zone they pass at (the forest
+  // floor's and the deep forest's tinted with their air, the dawn zone's
+  // birches as they are), one look fading into the next as the trees in
+  // front do. Seen from inside the tower (`middle`), where the windows are
+  // in the middle of the wall, the two columns stand side by side there.
+  drawForest(g, cam, middle = false) {
+    const A = this.art.backdrop, TH = BACKDROP.tileH * 4;
+    const st = treeStyleAt(cam.y + FOREST_EYE);
+    const haze = (k) => FOREST_HAZE[Math.min(k, FOREST_HAZE.length - 1)];
+    const hazeColor = mixHex(haze(st.a)[0], haze(st.b)[0], st.t), hazeAlpha = lerp(haze(st.a)[1], haze(st.b)[1], st.t);
+    FOREST.forEach((L, li) => {
+      const camF = cam.layerY(L.f), top = forestLy(L.topAt, L.f);
+      const n0 = Math.max(0, Math.floor((top - (camF + H)) / TH)), n1 = Math.floor((top - camF) / TH);
+      for (let n = n0; n <= n1; n++) {
+        const lyBottom = top - (n + 1) * TH, sy = H - (lyBottom - camF) + cam.oy;
+        for (const side of [0, 1]) {
+          const flip = side === 1;
+          if (n < CANOPY_TILES) { const cw = BACKDROP.canopyW * 4, cx = middle ? W / 2 + (flip ? cw : -cw) : flip ? W : 0; g.blit(A[n === 0 ? L.top : L.body], cx + cam.ox, sy, flip ? { flip } : undefined); continue; }
+          const sw = BACKDROP.stripW * 4;
+          const x = (middle ? W / 2 + (flip ? sw : -sw) : flip ? W - BACKDROP.stripX : BACKDROP.stripX) + cam.ox;
+          const z = treeStyleAt(forestY(lyBottom + TH / 2, L.f)), h = hash(n * 7 + side * 3 + li * 11);
+          const one = (k, alpha) => {
+            const birch = k >= 2, set = A[birch ? L.birch : L.strips];
+            const o = { flip }; if (!birch) o.tint = L.tint[k]; if (alpha < 1) o.alpha = alpha;
+            g.blit(set[h % set.length], x, sy, o);
+          };
+          one(z.a, 1);
+          if (z.t > 0 && Math.min(z.a, 2) !== Math.min(z.b, 2)) one(z.b, z.t);
+        }
+      }
+      // the air between the layers: it takes the far one back
+      if (li === 0 && hazeAlpha > 0.005) g.rect(0, 0, W, H, hazeColor, hazeAlpha);
+    });
   }
 
   // The tower scrolls slower than the prince: it stands behind the trees.
@@ -144,20 +214,62 @@ export class Background {
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     const t = this.art.tiles;
-    for (let k = first; k <= last; k++) {
-      const h = hash(k + 7);
+    // the wall, tile by tile: plain, or the look of the area it is in (towerwall.js); what grows on it is laid over it below
+    const areaAt = (k) => (this.forceWall && TOWER_AREAS[this.forceWall] ? towerAreaForced(this.forceWall, k) : this.forceWall ? null : towerAreaAt(k));
+    const of = (A, a) => (typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]);
+    const spriteOf = (a) => of(t.towerAreas[a.kind], a);
+    const grown = [], hung = [];
+    for (let k = Math.max(0, first - 1); k <= last + 1; k++) {      // (a tile more at each end: a thing that hangs on it may reach into the picture)
+      const h = hash(k + 7), a = areaAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
       let v = 0;
-      if (k > 0) { const r = h % 100; v = r < 62 ? 0 : r < 80 ? 1 : r < 92 ? 2 : 3; }
-      g.blit(t.tower[v], W / 2 + cam.ox, H - (k * TILE_H - camF) + cam.oy);
+      if (k > 0) { const r = h % 100; v = r < 56 ? 0 : r < 70 ? 1 : r < 82 ? 2 : r < 92 ? 3 : 4; }
+      if (a && !TOWER_AREAS[a.kind].overlay) g.blit(spriteOf(a), W / 2 + cam.ox, sy);
+      else g.blit(t.tower[v], W / 2 + cam.ox, sy);
+      if (a && TOWER_AREAS[a.kind].overlay) grown.push([spriteOf(a), sy]);
+      if (a) for (const f of of(t.towerAreas[a.kind].fix, a)) hung.push([f, k, sy, a]);
+    }
+    // a string course runs round the tower under every row of windows (broken where the wall is crumbling or being mended)
+    for (let i = Math.max(0, Math.floor((camF - STRING_COURSE - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+      const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
+      if (ly > camF + H + 30) break;
+      const a = areaAt(Math.floor((ly - 12) / TILE_H));
+      g.blit((a && t.towerBands[TOWER_AREAS[a.kind].band]) || t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
+    }
+    // what grows on the wall, over its bricks and its string courses; the windows are cut into it
+    for (const [sprite, sy] of grown) g.blit(sprite, W / 2 + cam.ox, sy);
+    // what hangs on the wall (art/tower.js): each thing whole, so one that would meet a window (or the string course under
+    // its sill) gets out of its way, up or down the wall, whichever is nearer, by whole courses (a rose is left out instead)
+    for (const [f, k, sy, a] of hung) {
+      const round = Math.max(0, Math.floor((a.i - 1) / TOWER_AREAS[a.kind].loop));                 // which round of the area's loop this tile is in
+      const s = f.s || (f.roses ? f.roses[a.n % f.roses.length][f.form]                             // (a stretch of briar has roses of one colour)
+        : f.signs[f.sign == null ? (1 + f.slot + f.slots * round) % f.signs.length : f.sign]);     // (the signs in turn up the wall, so no two alike follow each other)
+      const left = f.dx - s.ax, top = k * TILE_H + f.dy + s.ay;
+      const w = windowsBetween(top - s.h - WINDOW_H - HUNG_CLEAR, top + HUNG_BELOW).find((q) => left < q.x + WINDOW_W / 2 + HUNG_CLEAR && left + s.w > q.x - WINDOW_W / 2 - HUNG_CLEAR);
+      let up = 0;
+      if (w) {
+        if (!f.slide) continue;
+        const above = Math.ceil((w.ly + WINDOW_H + HUNG_CLEAR - (top - s.h)) / COURSE) * COURSE, below = Math.ceil((top - (w.ly - HUNG_BELOW)) / COURSE) * COURSE;
+        up = above <= below ? above : -below;
+      }
+      const o = f.tint ? { tint: f.tint } : {};
+      if (f.swing) o.rot = 0.05 * Math.sin(time * 1.3 + k) + 0.02 * Math.sin(time * 2.9 + k * 2);
+      g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy - up, o);
     }
     this.drawWindows(g, cam, camF, time, world);
-    // push the wall back a little and let the trees cast a shadow on it
-    g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, 'rgba(10,24,30,0.14)');
-    g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
-    g.rect(W / 2 + TOWER_W / 2 - 16 + cam.ox, 0, 16, H, 'rgba(0,0,0,0.16)');
-    // atmospheric haze toward the wall's receding edges
-    g.puff(W / 2 - TOWER_W / 2 + 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
-    g.puff(W / 2 + TOWER_W / 2 - 18 + cam.ox, H / 2, 70, H * 0.9, '#8fb8cc', 0.16, { soft: true });
+    // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again
+    for (let k = first; k <= last + 2; k++) {
+      const a = areaAt(k);
+      if (!a || a.kind !== 'briar' || typeof a.tile !== 'number') continue;
+      const R = ROSES[a.n % ROSES.length], top = H - ((k + 1) * TILE_H - camF) + cam.oy;
+      for (let i = 0; i < PETALS.each; i++) {
+        const h = hash(k * 7 + i * 3 + 1), period = PETALS.time[0] + (h % 1000) / 1000 * (PETALS.time[1] - PETALS.time[0]);
+        const f = ((time + ((h >>> 10) % 1000) / 1000 * period) % period) / period;                           // 0 as it lets go .. 1 where it is gone
+        const x = W / 2 - TOWER_W / 2 + 36 + ((h >>> 4) % (TOWER_W - 72)) + Math.sin(time * 1.1 + h) * 12 + f * 26 + cam.ox, flat = Math.sin(time * 3.1 + h) > 0;
+        g.rect(x, top + (h % TILE_H) + f * PETALS.fall, flat ? 8 : 4, flat ? 4 : 8, i % 2 ? R.hi : R.base, Math.min(1, f * 8, (1 - f) * 4));
+      }
+    }
+    // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
+    if (this.towerVeil.alpha > 0) g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, this.towerVeil.color, this.towerVeil.alpha);
   }
 
   // Windows left and right of the braid in their storey rhythm (windows.js
@@ -194,15 +306,15 @@ export class Background {
     const gust = this.atmo.gustEnv();
     for (let k = first; k <= last; k++) {
       const sy = cam.sy(k * TILE_H);
-      if (k === crownTile) { g.blit(T.crownL, cam.ox, sy); g.blit(T.crownR, W + cam.ox, sy); continue; }
+      if (k === crownTile) { g.blit(T.crownL, cam.ox, sy); g.blit(T.crownL, W + cam.ox, sy, { flip: true }); continue; }      // (the right tree is the left one, mirrored)
       const st = treeStyleAt(k * TILE_H);
       const vL = this.trunkVariant(k, 'L'), vR = this.trunkVariant(k, 'R');
       g.blit(T.styles[st.a].trunkL[vL], cam.ox, sy);
-      g.blit(T.styles[st.a].trunkR[vR], W + cam.ox, sy);
-      if (st.t > 0) { g.blit(T.styles[st.b].trunkL[vL], cam.ox, sy, { alpha: st.t }); g.blit(T.styles[st.b].trunkR[vR], W + cam.ox, sy, { alpha: st.t }); }
+      g.blit(T.styles[st.a].trunkL[vR], W + cam.ox, sy, { flip: true });
+      if (st.t > 0) { g.blit(T.styles[st.b].trunkL[vL], cam.ox, sy, { alpha: st.t }); g.blit(T.styles[st.b].trunkL[vR], W + cam.ox, sy, { alpha: st.t, flip: true }); }
       this.drawTrunkOverlays(g, cam, k, st.t < 0.5 ? st.a : st.b, sy);
     }
-    if (first === 0) { g.blit(T.overlays.rootsL, TRUNK_W - 10 + cam.ox, cam.sy(-2)); g.blit(T.overlays.rootsR, W - TRUNK_W + 10 + cam.ox, cam.sy(-2)); }
+    if (first === 0) { g.blit(T.overlays.rootsL, TRUNK_W - 10 + cam.ox, cam.sy(-2)); g.blit(T.overlays.rootsL, W - TRUNK_W + 10 + cam.ox, cam.sy(-2), { flip: true }); }
     this.drawVines(g, cam, time, gust, first, last);
     this.drawLianas(g, cam, time, gust, first, last);
   }

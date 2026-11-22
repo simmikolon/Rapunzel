@@ -132,7 +132,7 @@ presets full / bloom / off (F key, title button, `?fx=`), off by default.
 - Three hearts; game over on zero hearts or falling off the bottom.
 - Procedural level in rows (the original's beats) with difficulty by
   altitude and a stress-tested reachability guarantee.
-- Parallax layers like the SpriteKit prototype: sky, distant forest, tower
+- Parallax layers like the SpriteKit prototype: sky, the forest behind, tower
   with windows, braid and ribbons (0.9x), trees with branches and swings
   and the prince (1.0x), fireflies, vignette. Altitude-graded sky and
   lighting (forest, open sky, sunset, night). Squash and stretch,
@@ -716,13 +716,94 @@ is a pool to draw from, not a promise.
   thins in a gust; mist near the shafts glows a little; a front wisp the
   prince passes through is pushed aside and thins out (wake). Only in the
   deep forest band; the far clouds stay for the sky zones.
+- ✅ the forest behind the tower (`art/backdrop.js`, `background.js`
+  drawForest): two layers at two speeds (0.42 and 0.62 of the prince's),
+  the air between them taking the far one back. In the strips between
+  the tower and the trees in front, tall trunks go by with a branch
+  here, a clump of leaves there, moss hanging; the trunks of a layer
+  stand in the same columns in every tile, so a tree goes on however
+  the tiles are picked. By zone: on the forest floor and in the deep
+  forest dark silhouettes tinted with that zone's air, at the windows
+  pale birches in the dawn. Where the trees in front end (460 m) the
+  forest has a roof: for the last 25 to 35 m one climbs through the
+  mass of its leaves, then the picture opens at both sides and the
+  canopy lies below, the nearer one green, the far one pale, each
+  sinking more slowly than the trees in front did.
 - ✅ falling leaves on a depth continuum (parallax 0.85 to 1.35, size and
   opacity by depth) with a shared slow wind, flutter, and staggered
   re-entry above the view. 💡 autumn colours by season.
 - ✅ gusts every 14–24 s: stronger wind on leaves and fog, boughs rock,
   motes speed up, the braid swings a little wider (ribbons move with it).
 - ✅ canopy dapple: soft dark blobs (multiply) scrolling with the bricks.
-- ✅ tower haze along the wall's edges; low mist on the lawn at the start.
+- ✅ the tower is round (`art/tiles.js` drawTower). Its wall is 440 px
+  wide and reads as a drum by two things a round wall does: its bricks
+  get narrower toward the edges (14 art px wide where they face us, 4
+  at the edge), and the light from the upper left lies on it in five
+  upright planes, each a mix of two or three steps of the brick ramp,
+  brightest left of the middle, in shade on the right. A string course
+  of dressed stone runs round it under every row of windows. Five
+  kinds of tile: plain, moss and a crack, weather, vines, an old repair
+  in stone. Windows, balconies and gates are where they were. The wall
+  stands back: a veil of dark teal, 30 % strong, lies over it (and over
+  its windows and string courses), which darkens it and draws its
+  lights and darks together, so that it is one quiet plane behind the
+  play. Balconies, gates, the braid and its ribbons are drawn after the
+  veil and keep their colours: what one stands on is lighter than the
+  wall it is on.
+- ✅ the tower's wall has areas (`art/tower.js`, `src/towerwall.js`): it
+  is not the same all the way up. Its foot is of old big stones; from
+  there, stretches of plain wall (13 to 30 m) take turns with areas of
+  17 to 30 m, each in one of four looks: overgrown (ivy: stems
+  wandering up the wall and masses of leaves that cover the bricks,
+  duller and bluer than the leaves on the branches in front),
+  crumbling (bricks chipped, sunk and gone, a wound where the facing
+  has come away and the core's rubble shows, cracks, the string course
+  broken), old big stones (rough blocks two courses high), and mossy
+  (moss in the joints in patches, cushions, water marks). Down in the
+  forest it is mostly ivy and moss, higher up crumbling wall and old
+  stone, and above the trees only the roses (below) still grow. The
+  plan is fixed, like
+  the windows: the tower is the same in every round. An area thins out
+  into the plain wall at both ends; ivy and moss lie over the plain
+  tiles, and the windows are cut into them.
+- ✅ the masons' site, a fifth look of the wall (`mended`): somebody is
+  mending the tower, or was. Holes where the facing has come away with
+  boards nailed over them (two crossed, three that are none of them
+  level, one that has come off at one end and hangs, and over the
+  worst the red and white board of a barrier), patches already made up
+  in new brick, paler and warmer than the old and bedded in fresh
+  mortar that has run down the wall, the mason's chalk crosses on the
+  bricks that come out next, the sawn-off ends of the beams a scaffold
+  stood on, a ladder with a broken rung, a bucket of mortar that
+  swings a little on its hoist, and signs: stones may fall (the yellow
+  triangle, always the first thing at the site's lower end), no
+  witches (her hat in the red ring, struck through), the master
+  mason's notice with his seal, and an arrow board pointing up. Purely
+  for the eye: nothing in the simulator.
+  What hangs on the wall (the boards with their holes, signs, ladder,
+  bucket) is sprites of its own, not part of the tiles: a thing that
+  would meet a window slides up or down the wall until it is clear of
+  it, each takes one flat tone from the plane of light it hangs in,
+  and the signs hang in turn up the wall, so no two alike follow each
+  other.
+- ✅ briar roses, a sixth look of the wall (`briar`): three old canes
+  that swing wide across the wall and cross each other, thorns all
+  along them, young green shoots that leave a cane, arch over and
+  hang, small dark glossy leaves, and roses: one at the end of most
+  shoots, full-blown ones sitting on the canes, half-open ones, buds
+  in their sepals, one that is losing its petals. The canes come out
+  of a joint at the lower end and end in this year's green growth
+  with a red tip at the upper one. Every stretch of briar has roses of
+  one colour, the next stretch another: red first (from 26 m, the
+  first thing on the wall one meets), then white with golden hearts
+  (198 m), then old rose (544 m, above the trees, where the roses are
+  the only thing that still grows). Petals fall down the wall in front
+  of it, two to a tile, turning as they go. The roses are sprites laid
+  on the wall like the signs, but a rose belongs where its shoot ends:
+  beside a window it is left out, not moved. The canes and leaves lie
+  over the plain tiles like the ivy. Purely for the eye: nothing in
+  the simulator.
+- ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
   at a layer height, one per storey (440 layer px), left and right in
@@ -738,6 +819,27 @@ is a pool to draw from, not a promise.
 - ✅ a tree per zone (`treeStyleAt`): oak on the forest floor, mossy
   giants in the deep forest, birch-like trunks at the windows, bare tops
   above the trees; trunk tiles crossfade over 30 m at each boundary.
+  A trunk is round the way the tower is: what one sees is the inner
+  flank of a tree far thicker than the strip of it in the picture, so
+  its bark's ridges get narrower toward the inner edge, and the light,
+  which for a trunk comes from that edge, lies on it in upright planes.
+  The bark is ridges between furrows, broken into plates (oak; wider
+  and darker on the giants), smooth with dark marks and the eyes where
+  branches were (birch), or dead wood with long cracks and bare
+  patches (above the trees). At the lawn a trunk flares out into a
+  buttress root.
+- ✅ branches grow out of the tree (`art/trees.js` limb): a limb swells
+  into a collar where it joins the trunk (the collar lies over the
+  trunk's bark and casts a little shade on it), its top is flat on the
+  row one stands on for nearly its whole length, and its underside
+  does the tapering. Lit from above, furrows along it, the bark's
+  plates on its top. Leaves in round masses lit on their upper left
+  (oak), darker with moss hanging from the underside (the giants),
+  thin twigs with leaves in pairs and catkins (birch), bare twigs
+  above the trees. The six kinds are as before (plain, gnarled,
+  forked, knobby, mossy with a mushroom, a nest with eggs), the stubs
+  a tuft or a snapped stump. A dry one is the same limb in dead-wood
+  greys, cracked through in two places, leafless.
 - ✅ trunk life: moss, cracks, woodpecker holes, fungus shelves, lichen
   and burls scattered per tile; roots at the lawn; climbing vines (ivy,
   thorny tendrils with red barbs, flowering creepers) winding across tile
@@ -895,14 +997,20 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
+| The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
 | 1 m | 100 px |
 
 ## 11. Tools
 
-- Climb bot and phone-flow checks (Playwright, headless Chromium): run
-  before every push; catch exceptions and regressions, not feel.
+- Checks in `tools/checks/` (Playwright, headless Chromium), run before
+  every push: the browser flow and the landing page, the atlas's size,
+  pictures at heights, the treasury's camera and way out, and
+  `identity.sh`, which compares the simulator's reports on fixed seeds
+  with the ones kept in `tools/checks/baseline/`. They catch exceptions
+  and regressions, not feel.
 - Gameplay simulator (`web/dev/sim.html`, `tools/analyze.mjs`): real game
   logic, scripted players (kid / good, bold / cautious), heights, deaths,
   hits per 100 m by band. See `docs/ANALYSIS-phase1.md`. A seed replays
@@ -1902,3 +2010,252 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   outside are identical to the reports before. In the browser the
   camera stops exactly under the ceiling and the door out hangs where
   it was planned. The atlas is 4096 x 3242.
+- 2026-11-21: The checks are in the repository (`tools/checks`). The
+  scripts that every branch of the tower's inside was checked with (the
+  browser flow, the atlas, pictures at heights, the treasury's camera)
+  and the simulator's reports that a change for the eye must leave
+  untouched lived in one session's scratch folder. They are in
+  `tools/checks/` now with a page that says what each does, so that a
+  change can be checked the same way whoever makes it and wherever.
+  `identity.sh` on master: all five reports the same.
+- 2026-11-21: The tower is round and wider (`element/round-tower`).
+  Simon, once the inside was done: next to it the outside looks simple;
+  the tower seems thin, and square where it should be round. Decisions:
+  - Wider, 380 to 440 px. More is not to be had: the trees leave 568 px
+    between them, and the strips beside the tower are where the sky and
+    the time of day show (64 px each now). The room inside is 568 px
+    between its pillars: a tower 380 wide could not have held it.
+  - Round by what a round wall does, not by a gradient: bricks
+    foreshortened toward the edges, and the light in upright planes of
+    flat colour. One small picture of the drum says where a point at an
+    angle round it stands and how squarely it faces the light; the
+    bricks, the string course and the vines all ask it. Where two
+    planes meet, the bricks' offset from course to course toothes the
+    border. The haze that used to lighten both edges is gone: it made a
+    flat wall with soft edges.
+  - A string course under every row of windows gives the tower storeys.
+  - Nothing one plays on moved (windows at 114, balconies at 210, gates
+    at 134 from the middle), so the change is for the eye only:
+    `tools/checks/identity.sh` reports all five the same.
+  - The landing page draws the tower with the game's tiles; its width
+    follows them now, and the roof at the top is a little wider.
+  The atlas is 4096 x 3254.
+- 2026-11-21: The forest behind the tower (`element/forest-backdrop`).
+  What stood there was the prototype's tile: upright bands of dark
+  colours, the part of the outside that looked most like a placeholder.
+  Decisions:
+  - One sees the forest behind in two places only: in the strips between
+    the tower and the trees in front, 64 px a side, and at the top,
+    where the trees in front end. So it is drawn for those two places
+    and not as a picture across the screen: narrow strips of trunks all
+    the way up, and a roof of leaves across each side for the top.
+  - Depth by two layers at two speeds and by their tones, the far one
+    nearer the colour of the air, with a veil of that air drawn between
+    them. No detail to speak of: after the library the rule is that
+    what is behind the play is calm. A strip holds two trunks, a
+    branch, a few clumps of leaves.
+  - The dark forest's tiles are drawn in greys and tinted by the
+    painter, so the forest floor and the deep forest share them; the
+    birches and the canopies have their own colours.
+  - The treeline is a place now. The forest's roof is set so that it
+    comes into view as the tops of the trees in front sink: one climbs
+    through leaves, then stands above them, and the forest stays below
+    for another 20 to 35 m of climb. The old tile faded out between 270
+    and 400 m instead.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same. The landing page keeps the old tile for the texture at its
+  lower end. Inside the
+  tower the two columns stand in the middle, behind the windows. The
+  atlas is 4096 x 3422.
+- 2026-11-21: The trunks (`element/tree-trunks`). They were a brown
+  band with a light strip at the inner edge and some twenty thin lines
+  of two colours thrown down it at random: the "thin lines carrying
+  the shape" the style warns of. Redrawn on the tower's idea of
+  roundness, with the trunk's middle 16 art px outside the picture: one
+  sees its flank from 24° round to its edge. The furrows stand where
+  ridges 9° wide (12° on the giants, 7.5° on dead wood) put them, 6 px
+  apart at the picture's border and 1 px at the inner edge, and five
+  planes of the bark's ramp (with a half step either side of its
+  middle) go from the lit edge to the border. Furrows stray a pixel on
+  their way and are back in their columns where a tile ends, so the
+  bark runs on. A lit top edge on every plate was tried and was too
+  much. The birch keeps what it had (pale, marks across), now round;
+  its marks get shorter toward the edge. The roots at the lawn are a
+  buttress now, 136 px into the lawn, instead of a low wedge. For the
+  eye only: `tools/checks/identity.sh` reports all five the same. The
+  atlas is 4096 x 3460.
+- 2026-11-21: The branches (`element/branches`). A branch was a
+  straight log, thicker at the trunk, its top sloping across the row
+  one stands on (two pixels over it at the trunk, one under it at the
+  tip), stuck against the trunk. Decisions:
+  - A branch grows out of the tree: the sprite reaches 5 art px further
+    into the trunk than before and swells into a collar there.
+  - The top is flat on the row he stands on. He stands on what one
+    sees; the taper is the underside's.
+  - The first collar was a funnel (the limb doubled its thickness in
+    its last sixth) and the first limbs were sticks next to the new
+    trunks; the limb is 5 art px at the tip and 11 at the trunk now.
+  - Only the drawing changed: the box one lands on, the lengths and
+    the six kinds are the same, and a dry branch is still told from a
+    healthy one at a glance (grey, cracked, no leaves).
+  - One drawing for both sides. The bigger canvases of the new limbs
+    took the atlas to 4096 x 3936, with 4096 the limit, because every
+    branch, ledge and trunk was in it twice, once mirrored. The
+    renderer can mirror as it draws, so the mirrored copies are gone
+    (the left tree's branches, the left pillar's ledges, the right
+    trunk, its top and its root): the atlas is 4096 x 3084, less than
+    before the outside was touched.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same.
+- 2026-11-21: The tower stands back (`element/tower-back`). Simon,
+  after playing the new outside: much better, but the tower is very
+  bright; everything seems to be in the foreground, the colours lie on
+  top of one another and one does not know at once where the player
+  is. The round wall had been drawn in the brick ramp's light colours
+  with only a 12 % veil over it, so it was as light and as contrasty as
+  what is played in front of it. The inside's lesson again: what is
+  behind the play is dark and calm. Tried at 12, 30, 42 and 55 % on
+  the forest floor, among the birches and above the trees: from about
+  42 % on the prince, the leaves, the ribbons and the suns come
+  forward; at 55 % crows and spiders begin to sink into the wall. It
+  is 45 %. A veil of one colour rather than a darker palette, because
+  it also draws the wall's lights and darks together, which is half of
+  what sets it back, and because the balconies and gates, which are
+  drawn in the brick palette and after the veil, stay light: one sees
+  what one can stand on. `?veil=0.3` (0 to 0.9) tries another strength
+  on any build. For the eye only: `tools/checks/identity.sh` reports
+  all five the same.
+- 2026-11-22: The veil is 30 %, and the wall has areas
+  (`element/tower-areas`). Simon tried the veil on the preview: at 30 %
+  the tower sits right, at 45 % it was too far back. Then: the tower
+  looks the same all the way up; parts of it could be old and
+  crumbling, parts overgrown. Decisions:
+  - Four looks to begin with: ivy, crumbling, old big stones, moss.
+    They take turns with plain wall, so that each is a place one comes
+    to and leaves again, and the plain wall stays the rule.
+  - The plan is fixed, not rolled per round, as the windows are: a
+    tower one climbs often should be a place one gets to know ("the ivy
+    after the first branches"). Which of the plans the rules allow was
+    chosen by looking: ivy comes first, from 21 m, and all four looks
+    come before the trees end.
+  - An area is a column of tiles of its own: two end tiles and a loop
+    that closes on itself. The ivy is planned once as one strip six
+    tiles high, so its masses of leaves go across the tiles' edges; a
+    crack reaches a tile's edge in a fixed column and runs on.
+  - Everything follows the round wall: leaves and stones get narrower
+    toward the edges and take the tones of the plane of light they are
+    in. The ivy's greens are duller and bluer than the leaves on the
+    branches, after the first try, in which the two could be taken for
+    each other. The old stone's ramp was taken a step darker after the
+    first try for the same reason the veil exists.
+  - What grows lies over the bricks and the string courses, and the
+    windows are drawn after it: an ivy that hid a window would hide a
+    guard's warning.
+  - The wall's code moved out of `art/tiles.js` into `art/tower.js`.
+  Above the trees there are only two looks so far (crumbling, old
+  stone), which therefore alternate; more for up there are to come.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same. The atlas is 4096 x 3594.
+- 2026-11-22: The masons' site (`element/tower-repairs`). Simon: where
+  the wall is broken, boards in front of it, as if somebody had tried
+  to repair it, and signs as on a building site. Decisions:
+  - A look of its own beside the crumbling wall, not boards added to
+    that one: the crumbling wall is the tower left alone, the site is
+    the tower looked after, and the two tell more apart than together.
+  - Building-site signs in a fairy tale are a joke the game can afford
+    (it has a prince on a pogo stick): a red and white barrier and a
+    yellow triangle are read at once as "work going on" by anyone who
+    has passed a road works, which no medieval sign would be.
+  - No exclamation mark on any sign: `!` is what the game shows before
+    an enemy does something, and the wall must not cry wolf. The signs
+    are pictures (falling stones, the witch's hat struck through, an
+    arrow) and a notice nobody can read.
+  - Nothing that looks as if one could stand on it: no scaffold
+    planks, no hanging platform (the plank swing is a platform of the
+    game). The ladder is the one thing that invites; it lies flat on
+    the wall under the veil, has a rung missing, and stands at the
+    wall's far edge.
+  - What hangs on the wall is sprites of its own that background.js
+    lays on the tiles. A tile cannot know where the windows are, and a
+    sign with a window cut into it looks like a mistake, so a thing
+    that would come within 8 px of a window's frame is left out whole
+    (the hole under missing boards is then simply a hole). It also
+    costs less of the atlas than baking each thing into tiles, and the
+    bucket can swing.
+  - The first sign tried for "this way" was a board with a pointed
+    top and an arrow on it; it looked like a gravestone with a cross.
+    It is now a board sawn into the shape of an arrow.
+  - The plan was chosen again (the rules have a look more): ivy from
+    26 m, the masons' site from 55 m, so the youngest see both; moss
+    92, ivy 122, old stone 156, ivy 203, crumbling 235, old stone 284,
+    crumbling 326, ivy 371, and above the trees three looks in turn
+    (crumbling, old stone, the site) where there were two.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same; the tiles of the four older looks are pixel for pixel what
+  they were. The atlas is 4096 x 3772 (679 sprites).
+- 2026-11-22: What hangs on the wall gets out of a window's way
+  (`element/tower-repairs`). The first rule was to leave a thing out
+  where it would meet a window. Counted on the plan, that took a third
+  to a half of every site's things, and at the first site both
+  barriers, the piece that says "building site" loudest: a window on
+  one side every 880 px and things 70 to 90 px high leave little
+  room. Decisions:
+  - A thing slides up or down the wall, whichever is nearer, until it
+    is 8 px clear of the window's frame, or 32 px under its sill and so
+    clear of the string course too. It may reach into the next tile,
+    so the wall is drawn a tile further at each end.
+  - For that the hole has to go with its boards: it is now in the
+    boards' sprite (dark, the core's rubble in it, its ends ragged),
+    not in the tile, and the sprite moves by whole courses, so the
+    hole's courses stay the wall's. A hole's end cuts whole bricks
+    wherever it comes to lie, which is what a hole does.
+  - Tried and dropped: mirroring a thing to the other side of the
+    wall (two things at one height then get in each other's way), and
+    choosing a plan in which the first site happens to be clear (none
+    of the plans that were otherwise good was).
+  - The signs go in turn up the wall (witches, notice, arrow,
+    triangle, ...), counted through the rounds of the loop: by a hash,
+    two alike had come to hang 270 px apart.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same. The atlas is unchanged (4096 x 3772).
+- 2026-11-22: Briar roses (`element/tower-roses`). Simon: thorny
+  tendrils with flowers or roses on them, so that it looks pretty,
+  with love for the detail. Decisions:
+  - A briar, not flowers in the ivy: thick canes and thorns are what
+    sets it apart from the ivy's masses of leaves at a glance, and the
+    tower of a girl shut in by a witch may well have a rose hedge
+    climbing it.
+  - The canes are placed by hand (three, none the mirror of another,
+    no two crossings at one height). The first try rolled them and
+    they came out as a regular plait.
+  - A stretch of briar has one colour of roses and the next stretch
+    another: the tiles are the same, the roses are sprites laid on
+    them, so three colours cost nine small sprites more and not two
+    more sets of tiles. Red is deeper than the hearts one collects;
+    the white rose's heart is golden, since a grey one made it a grey
+    ring under the veil; the third colour is old rose, paler and more
+    to salmon than the bows on the braid, which are what one bounces
+    on and must stay the only pink of their kind. No yellow roses:
+    yellow on the wall is a sun to collect.
+  - Roses climb on above the trees (weight 2 there), where the rule
+    was that nothing grows: ivy and moss want shade and damp, a rose
+    wants sun, and against the morning sky it is the prettiest place
+    for them. Up there the wall now has four looks in turn.
+  - The plan was chosen again: roses first (26 to 41 m), the masons'
+    site second (60 to 81 m), so the youngest see both new things;
+    moss 107, ivy 143, white roses 198, crumbling 245, ivy 297, old
+    stone 346, ivy 388; above the trees old stone, the site, old rose
+    briar at 544 m, and so on. The colour goes by how many stretches
+    of briar came before, not by the area's number, so the first is
+    red whatever lies between.
+  - A rose does not get out of a window's way as the masons' things
+    do: it belongs at the end of its shoot, so beside a window it is
+    left out.
+  - Petals fall from the roses (two to a tile, stateless: where a
+    petal is follows from the time alone). They are drawn under the
+    veil like the wall, so they never look like something to collect.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same; the tiles of the five older looks are pixel for pixel what
+  they were. The atlas is 4096 x 3922 (701 sprites): 174 px under the
+  4096 that older phones can take, so the next thing on the wall
+  needs the atlas made smaller first.

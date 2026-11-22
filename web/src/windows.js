@@ -9,11 +9,11 @@ import { WINDOW_VARIANTS, WINDOW_LIT } from './art/windows.js';
 // background draws them; the level reads them to put a grabber in one. A
 // window is 88 x 120 px with its sill at `ly` (layer height).
 
-export const WINDOW_X = 114;        // |x| of a window's centre; the wall's edge is at 190
+export const WINDOW_X = 114;        // |x| of a window's centre; the wall's edge is at 220
 export const WINDOW_W = 88;
 export const WINDOW_H = 120;
 export const WINDOW_STOREY = 440;   // layer px from one window's sill to the next (same side: twice that)
-const WINDOW_FIRST = 260;           // the first sill above the lawn
+export const WINDOW_FIRST = 260;    // the first sill above the lawn
 
 // The look of window i, never the same as the one below it.
 function variantOf(i) {

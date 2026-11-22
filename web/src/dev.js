@@ -20,6 +20,8 @@
 //   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
 //   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
 //   ?dev=1           show altitude and zone in the corner
+//   ?veil=0.5        how strongly the tower's wall is set back outside (0 not at all, up to 0.9; background.js TOWER_VEIL)
+//   ?wall=ivy        one look of the tower's wall all the way up (ivy|worn|stone|moss|mended|briar; plain: none of them)
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
@@ -34,7 +36,7 @@ import { POWERS } from './powerups.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
-  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '' };
+  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '' };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.

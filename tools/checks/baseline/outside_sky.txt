@@ -1,0 +1,12 @@
+config: {"runs":40,"skill":"good","policy":"bold","cap":1100,"startM":450}
+height: median 692 m, mean 725 m, max 1100 m (from 450 m, mean climb 275 m)
+reached: 100 m 100%, 200 m 100%, 300 m 100%, 500 m 95%, 800 m 28%
+deaths: {"fell":17,"caught":17,"cap":6}  falls: 50% of deaths, by band {"400":2,"500":8,"600":3,"700":3,"800":1}
+hits per 100 m: 1.19  by enemy: {"crow":51,"witch":35,"grabber":19,"pot":6,"guard":19,"scissors":1}
+hits per 100 m by band: {"400":0.76,"500":1.29,"600":1.15,"700":1.47,"800":1.31,"900":1.36,"1000":1.17}
+hits by band and enemy: {"400":{"crow":6,"grabber":3,"guard":4,"scissors":1,"witch":1},"500":{"crow":17,"witch":13,"grabber":4,"guard":4,"pot":1},"600":{"grabber":4,"witch":8,"crow":11,"guard":2},"700":{"grabber":5,"witch":6,"guard":3,"crow":8,"pot":1},"800":{"crow":4,"witch":3,"grabber":2,"pot":2,"guard":2},"900":{"crow":2,"witch":3,"pot":1,"guard":3},"1000":{"pot":1,"witch":1,"grabber":1,"crow":3,"guard":1}}
+hearts 44, lanterns 181, boosts 542, stomps 42, boost-punches 354, witch events 123
+scissors events 76, braid cuts 69, falls within 15 m above a cut 1
+power-ups: {"magnet":20,"feather":34,"spring":19,"star":24,"cloak":10} of 143 passed, active 43% of the time; deaths by running power-up {"magnet":3,"spring":4,"none":24,"feather":3}
+suns 3437, climb speed 4.45 m/s
+flocks 46: burst through 45 times, turned back 4 times, falls at a flock 0

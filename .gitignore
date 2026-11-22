@@ -11,3 +11,4 @@ dist/
 
 # Logs of the local test servers
 *.log
+check-out/

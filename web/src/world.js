@@ -718,8 +718,13 @@ export class World {
     // a ledge inside the tower is a branch in stone: the same lengths and variants
     const stone = p.style === STONE_STYLE;
     switch (p.kind) {
-      case 'branchL': { const dry = stone ? I.stone.dryL : T.branchLDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchL[p.len][p.variant]; break; }
-      case 'branchR': { const dry = stone ? I.stone.dryR : T.branchRDry; s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchR[p.len][p.variant]; break; }
+      case 'branchL': case 'branchR': {
+        // one drawing for both sides: what grows from the left tree (or pillar) is the right one's, mirrored
+        const dry = stone ? I.stone.dryR : T.branchRDry;
+        s = p.dry ? (dry[p.len] || dry.normal) : (stone ? I.stone : T.styles[p.style]).branchR[p.len][p.variant];
+        if (p.kind === 'branchL') opts.flip = true;
+        break;
+      }
       case 'chandelier': s = p.unlit ? I.chandelierOut : I.chandelier[Math.floor(this.time * 8 + p.id) % 2]; break;
       case 'bell': s = I.bell; break;
       case 'tome': s = I.tome[p.squash > 0.4 ? 1 : 0]; break;

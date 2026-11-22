@@ -433,7 +433,7 @@ export class Interior {
     if (this.vault) return drawVaultBack(this, g, cam, time, world);
     bg.drawSky(g, cam);
     bg.drawFar(g, cam, time);
-    bg.drawForest(g, cam);
+    bg.drawForest(g, cam, true);      // (in the middle, where the windows are)
     bg.drawSkyLanterns(g, cam, time, false);
     this.drawBraid(g, cam, time);
     bg.drawSkyLanterns(g, cam, time, true);

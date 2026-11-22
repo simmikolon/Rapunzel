@@ -2,58 +2,19 @@ import { makeSprite, flipH } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { PX } from '../config.js';
 import { RNG } from '../util.js';
+import { TOWER_W, buildTower } from './tower.js';
 
 // Environment tiles. The world is 768 logical px wide (192 art px).
 // Vertical tiles are 192 logical px tall (48 art px), the original tile height.
 
 export const TILE_H = 192;
-export const TOWER_W = 380;   // tower spans x = -190 .. 190
+export { TOWER_W };              // the tower's wall is art/tower.js
 export const TRUNK_W = 100;   // trunks span |x| = 284 .. 384
 
-const rng = new RNG(1337);
-
-// Brick wall of the tower, 95 x 48 art px.
-function drawTower(t, variant) {
-  const { p, line, disc } = t;
-  const W = 95, H = 48;
-  p(0, 0, W, H, C.brickMid);
-  // brick rows: 6 art px tall, staggered
-  const rowH = 6, brickW = 14;
-  for (let y = 0; y < H; y += rowH) {
-    const row = y / rowH;
-    const off = row % 2 ? 7 : 0;
-    for (let x = -brickW + off; x < W; x += brickW) {
-      const shade = rng.next();
-      const col = shade < 0.18 ? C.brickLight : shade < 0.75 ? C.brickMid : C.brickDark;
-      p(Math.max(0, x), y, Math.min(brickW - 1, x + brickW - 1 - Math.max(0, x) + 1), rowH - 1, col);
-      p(Math.max(0, x), y, Math.min(brickW - 1, W - Math.max(0, x)), 1, C.brickLight); // top highlight
-    }
-    p(0, y + rowH - 1, W, 1, C.mortar);
-  }
-  for (let y = 0; y < H; y += rowH) {
-    const off = (y / rowH) % 2 ? 7 : 0;
-    for (let x = off; x < W; x += brickW) line(x, y, x, y + rowH - 2, C.mortar);
-  }
-  // edges: lit left side, shadowed right side (light from the upper left)
-  p(0, 0, 2, H, C.brickLight); p(W - 3, 0, 3, H, C.brickShade); p(W - 1, 0, 1, H, C.mortar); p(0, 0, 1, H, C.mortar);
-  if (variant === 1) {
-    // moss and a crack
-    for (let i = 0; i < 26; i++) { const x = rng.int(4, W - 6), y = rng.int(0, H - 2); p(x, y, rng.int(1, 3), 1, rng.chance(0.5) ? C.mossDark : C.leafDark); }
-    line(60, 2, 64, 14, C.mortar); line(64, 14, 61, 22, C.mortar); line(61, 22, 66, 30, C.mortar);
-  } else if (variant === 2) {
-    // a stone string course across the wall with weathering streaks below
-    // (the windows themselves are placed by src/windows.js, left and right)
-    p(0, 20, W, 3, C.stoneLight); p(0, 23, W, 1, C.stone); p(0, 24, W, 1, C.stoneDark);
-    for (let x = 9; x < W; x += 16) line(x, 20, x, 23, C.stone);
-    for (let i = 0; i < 9; i++) { const x = rng.int(3, W - 5), len = rng.int(3, 9); p(x, 25, 1, len, C.brickShade); if (rng.chance(0.5)) p(x + 1, 25, 1, Math.max(1, len - 3), C.brickDark); }
-  } else if (variant === 3) {
-    // vines hanging across
-    for (let x = 10; x < W - 10; x += 9) { const len = rng.int(6, 22); line(x, 0, x + rng.int(-2, 2), len, C.leafDark); p(x + 1, len - 2, 2, 2, C.leaf); p(x - 1, Math.floor(len / 2), 2, 2, C.grass); }
-  }
-}
-
-// Distant forest, 192 x 48 art px: tall thin trunks and leaf streaks in the
-// teal palette of bg.png. Drawn darker and desaturated so it recedes.
+// The prototype's distant forest, 192 x 48 art px: tall thin trunks and leaf
+// streaks in the teal palette of bg.png. The game's forest behind the tower
+// is art/backdrop.js now; this tile is still the texture of the landing
+// page's lower end (site/landing.js).
 function drawForest(t, variant) {
   const { p, line } = t;
   const W = 192, H = 48;
@@ -194,7 +155,8 @@ function drawMoon(t) {
 }
 
 export function buildTiles() {
-  const tower = [0, 1, 2, 3].map((v) => makeSprite(95, 48, (t) => drawTower(t, v), { ax: 0.5, ay: 1 }));
+  // the tower's wall (art/tower.js): its plain tiles and string course under their old names, its areas beside them
+  const wall = buildTower(), tower = wall.plain, towerBand = wall.band;
   const forest = [0, 1].map((v) => makeSprite(192, 48, (t) => drawForest(t, v), { ax: 0.5, ay: 1 }));
   const ground = makeSprite(192, 36, (t) => drawGround(t), { ax: 0.5, ay: 0 }, { ayPx: 4 * PX });
   const braid = makeSprite(14, 12, (t) => drawBraidSegment(t), { ax: 0.5, ay: 0 });
@@ -209,5 +171,5 @@ export function buildTiles() {
   const birdL = birdR.map(flipH);
   const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
   const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
-  return { tower, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
+  return { tower, towerBand, towerBands: wall.bands, towerAreas: wall.areas, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }

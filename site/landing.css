@@ -153,17 +153,18 @@ html.parallax .scene__braid { bottom: 0; }      /* on down behind the lawn */
 }
 
 .scene__tower {
-  width: calc(var(--art) * 95);
-  background: var(--tower, linear-gradient(90deg, #465e66, #79a1ae 20%, #79a1ae 80%, #465e66));
+  width: calc(var(--art) * 110);    /* the game's wall (web/src/art/tiles.js TOWER_W, in art px) */
+  background: var(--tower, linear-gradient(90deg, #79a1ae, #a5cbbb 28%, #79a1ae 55%, #465e66));
   background-size: 100% auto;
 }
-/* night at the top, the forest's shade below, haze along the edges */
+/* night at the top, the forest's shade below; the wall is round by its own
+   light and shade, so only its far edge is pushed back a little */
 .scene__tower::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(16, 32, 36, 0.55), transparent 18%, transparent 82%, rgba(16, 32, 36, 0.55)),
+    linear-gradient(90deg, rgba(16, 32, 36, 0.18), transparent 12%, transparent 84%, rgba(16, 32, 36, 0.4)),
     linear-gradient(rgba(28, 24, 52, 0.62), rgba(28, 24, 52, 0.3) 30%, rgba(20, 50, 52, 0.2) 60%, rgba(10, 30, 28, 0.45));
 }
 

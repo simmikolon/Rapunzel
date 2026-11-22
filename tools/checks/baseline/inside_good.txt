@@ -1,0 +1,14 @@
+config: {"runs":120,"skill":"good","policy":"bold","cap":1500,"startM":0,"place":"inside","gates":false}
+height: median 500 m, mean 589 m, max 1500 m
+reached: 100 m 100%, 200 m 92%, 300 m 79%, 500 m 50%, 800 m 25%
+deaths: {"caught":88,"fell":28,"cap":4}  falls: 24% of deaths, by band {"100":1,"200":3,"300":8,"400":6,"500":5,"600":1,"800":1,"1000":2,"1400":1}
+hits per 100 m: 1.06  by enemy: {"cat":67,"guard":191,"bat":324,"ghost":70,"grabber":95}
+hits per 100 m by band: {"0":0.16,"100":1.15,"200":1.12,"300":1.19,"400":1.29,"500":1.09,"600":1.41,"700":1.61,"800":1.22,"900":1.59,"1000":1.4,"1100":1.25,"1200":1,"1300":1.42,"1400":1.96}
+hits by band and enemy: {"0":{"guard":3,"bat":16},"100":{"cat":11,"guard":62,"bat":47,"grabber":13,"ghost":2},"200":{"ghost":6,"guard":27,"bat":49,"cat":15,"grabber":17},"300":{"ghost":24,"bat":43,"cat":11,"guard":18,"grabber":6},"400":{"bat":43,"guard":19,"cat":9,"grabber":11,"ghost":7},"500":{"guard":10,"grabber":8,"ghost":7,"bat":31,"cat":4},"600":{"bat":28,"grabber":8,"ghost":3,"guard":10,"cat":6},"700":{"guard":17,"bat":17,"grabber":14,"ghost":5,"cat":2},"800":{"guard":8,"bat":13,"grabber":7,"ghost":2,"cat":2},"900":{"bat":10,"guard":10,"grabber":3,"cat":2,"ghost":6},"1000":{"ghost":4,"bat":8,"grabber":2,"guard":3},"1100":{"bat":6,"ghost":1,"grabber":3,"guard":1},"1200":{"guard":2,"bat":3,"grabber":1,"cat":1},"1300":{"cat":2,"bat":5,"ghost":1,"guard":1},"1400":{"ghost":2,"cat":2,"grabber":2,"bat":5}}
+hearts 312, lanterns 1682, boosts 2592, stomps 447, boost-punches 1312, witch events 0
+scissors events 0, braid cuts 0, falls within 15 m above a cut 0
+power-ups: {"magnet":183,"spring":143,"star":98,"feather":153,"cloak":91} of 860 passed, active 39% of the time; deaths by running power-up {"none":78,"magnet":12,"spring":13,"cloak":2,"feather":11}
+suns 21005, climb speed 4.09 m/s
+flocks 180: burst through 154 times, turned back 21 times, falls at a flock 0
+dark stretches entered: 279
+webs: caught 108 times (torn free 106, bitten 0), boosted through 123
