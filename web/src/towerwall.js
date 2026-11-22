@@ -47,15 +47,16 @@ function planUpTo(k) {
   }
 }
 
-// The wall at tile k: null where it is plain, else { kind, tile } with `tile` 'enter', 'leave' or the loop's index.
+// The wall at tile k: null where it is plain, else { kind, tile, i } with `tile` 'enter', 'leave' or the loop's index
+// and `i` the tile's number in its area (0 is `enter`).
 export function towerAreaAt(k) {
   if (k < 0) return null;
   planUpTo(k);
   for (let i = areas.length - 1; i >= 0; i--) {
     const a = areas[i];
-    if (k >= a.from) return k < a.from + a.tiles.length ? { kind: a.kind, tile: a.tiles[k - a.from] } : null;
+    if (k >= a.from) return k < a.from + a.tiles.length ? { kind: a.kind, tile: a.tiles[k - a.from], i: k - a.from } : null;
   }
   return null;
 }
 // A look all the way up (dev: ?wall=ivy): the loop's tiles in turn.
-export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop });
+export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop, i: k + 1 });
