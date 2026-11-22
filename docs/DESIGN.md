@@ -765,6 +765,25 @@ is a pool to draw from, not a promise.
   the windows: the tower is the same in every round. An area thins out
   into the plain wall at both ends; ivy and moss lie over the plain
   tiles, and the windows are cut into them.
+- ✅ the masons' site, a fifth look of the wall (`mended`): somebody is
+  mending the tower, or was. Holes where the facing has come away with
+  boards nailed over them (two crossed, three that are none of them
+  level, one that has come off at one end and hangs, and over the
+  worst the red and white board of a barrier), patches already made up
+  in new brick, paler and warmer than the old and bedded in fresh
+  mortar that has run down the wall, the mason's chalk crosses on the
+  bricks that come out next, the sawn-off ends of the beams a scaffold
+  stood on, a ladder with a broken rung, a bucket of mortar that
+  swings a little on its hoist, and signs: stones may fall (the yellow
+  triangle, always the first thing at the site's lower end), no
+  witches (her hat in the red ring, struck through), the master
+  mason's notice with his seal, and an arrow board pointing up. Purely
+  for the eye: nothing in the simulator.
+  What hangs on the wall (boards, signs, ladder, bucket) is sprites of
+  its own, not part of the tiles: a thing that would meet a window is
+  left out whole, each takes one flat tone from the plane of light it
+  hangs in, and which sign hangs in a place changes from one round of
+  the loop to the next.
 - ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
@@ -959,7 +978,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times); `?wall=ivy|worn|stone|moss|plain` shows one look all the way up |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times); the masons' site 4, 1–2 times; what hangs on the wall keeps 8 px from a window's frame; `?wall=ivy|worn|stone|moss|mended|plain` shows one look all the way up |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -2118,3 +2137,40 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   stone), which therefore alternate; more for up there are to come.
   For the eye only: `tools/checks/identity.sh` reports all five the
   same. The atlas is 4096 x 3594.
+- 2026-11-22: The masons' site (`element/tower-repairs`). Simon: where
+  the wall is broken, boards in front of it, as if somebody had tried
+  to repair it, and signs as on a building site. Decisions:
+  - A look of its own beside the crumbling wall, not boards added to
+    that one: the crumbling wall is the tower left alone, the site is
+    the tower looked after, and the two tell more apart than together.
+  - Building-site signs in a fairy tale are a joke the game can afford
+    (it has a prince on a pogo stick): a red and white barrier and a
+    yellow triangle are read at once as "work going on" by anyone who
+    has passed a road works, which no medieval sign would be.
+  - No exclamation mark on any sign: `!` is what the game shows before
+    an enemy does something, and the wall must not cry wolf. The signs
+    are pictures (falling stones, the witch's hat struck through, an
+    arrow) and a notice nobody can read.
+  - Nothing that looks as if one could stand on it: no scaffold
+    planks, no hanging platform (the plank swing is a platform of the
+    game). The ladder is the one thing that invites; it lies flat on
+    the wall under the veil, has a rung missing, and stands at the
+    wall's far edge.
+  - What hangs on the wall is sprites of its own that background.js
+    lays on the tiles. A tile cannot know where the windows are, and a
+    sign with a window cut into it looks like a mistake, so a thing
+    that would come within 8 px of a window's frame is left out whole
+    (the hole under missing boards is then simply a hole). It also
+    costs less of the atlas than baking each thing into tiles, and the
+    bucket can swing.
+  - The first sign tried for "this way" was a board with a pointed
+    top and an arrow on it; it looked like a gravestone with a cross.
+    It is now a board sawn into the shape of an arrow.
+  - The plan was chosen again (the rules have a look more): ivy from
+    26 m, the masons' site from 55 m, so the youngest see both; moss
+    92, ivy 122, old stone 156, ivy 203, crumbling 235, old stone 284,
+    crumbling 326, ivy 371, and above the trees three looks in turn
+    (crumbling, old stone, the site) where there were two.
+  For the eye only: `tools/checks/identity.sh` reports all five the
+  same; the tiles of the four older looks are pixel for pixel what
+  they were. The atlas is 4096 x 3772 (679 sprites).

@@ -9,21 +9,22 @@ import { PARALLAX_TOWER } from './config.js';
 // its foot is of old big stones; from there up, stretches of plain wall
 // (GAP tiles) take turns with areas, each one of the looks, chosen by what
 // suits the height (WEIGHTS: ivy and moss down in the forest, crumbling
-// walls and old stone higher up, nothing that grows above the trees) and
-// never the look of the area before. An area is its `enter` tile, its loop
+// walls, repairs and old stone higher up, nothing that grows above the
+// trees) and never the look of the area before. An area is its `enter` tile, its loop
 // once or more, and its `leave` tile (art/tower.js TOWER_AREAS).
 const GAP = [6, 14];                // tiles of plain wall between two areas (a tile is about 2.1 m of climb)
 const WEIGHTS = [
-  { below: 12000, w: { ivy: 6, moss: 3, worn: 1, stone: 1 } },      // the forest floor
-  { below: 25000, w: { ivy: 6, moss: 3, worn: 2, stone: 1 } },      // the deep forest
-  { below: 40000, w: { ivy: 3, moss: 1, worn: 3, stone: 3 } },      // the windows
-  { below: Infinity, w: { ivy: 0, moss: 0, worn: 4, stone: 3 } },   // above the trees
+  { below: 12000, w: { ivy: 6, moss: 3, worn: 1, stone: 1, mended: 2 } },      // the forest floor
+  { below: 25000, w: { ivy: 6, moss: 3, worn: 2, stone: 1, mended: 2 } },      // the deep forest
+  { below: 40000, w: { ivy: 3, moss: 1, worn: 3, stone: 3, mended: 3 } },      // the windows
+  { below: Infinity, w: { ivy: 0, moss: 0, worn: 4, stone: 3, mended: 3 } },   // above the trees
 ];
-const LOOPS = { ivy: [1, 2], worn: [2, 3], stone: [2, 4], moss: [2, 4] };   // how often an area's loop is laid, at the least and at the most
+const LOOPS = { ivy: [1, 2], worn: [2, 3], stone: [2, 4], moss: [2, 4], mended: [1, 2] };   // how often an area's loop is laid, at the least and at the most
 const FOOT = { kind: 'stone', from: 0, tiles: [0, 1, 2, 'leave'] };         // the tower's foot: old stone from the lawn up
 // Which of all the plans these rules allow this tower has. Chosen by looking: ivy is the first thing one meets
-// (from 21 m, so the youngest see it), and all four looks come before the trees end.
-const PLAN = 15;
+// (from 26 m) and the masons' site the second (from 55 m), so the youngest see both; all five looks come before
+// the trees end, and all three of those that go on above them before 700 m.
+const PLAN = 314;
 
 // The areas found so far, bottom to top: { kind, from, tiles } with `tiles` the tile of the look for from, from + 1, ...
 const areas = [FOOT];

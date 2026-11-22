@@ -171,5 +171,5 @@ export function buildTiles() {
   const birdL = birdR.map(flipH);
   const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
   const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
-  return { tower, towerBand, towerBandWorn: wall.bandWorn, towerAreas: wall.areas, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
+  return { tower, towerBand, towerBands: wall.bands, towerAreas: wall.areas, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }

@@ -5,9 +5,10 @@ import { RNG } from '../util.js';
 
 // The tower's wall, outside: its plain tiles, the string course, and the
 // areas that take turns with the plain wall on the way up (overgrown with
-// ivy, crumbling, built of old big stones, mossy). art/tiles.js hands the
-// plain tiles and the course on under their old names; which area is where
-// is src/towerwall.js; background.js draws them.
+// ivy, crumbling, built of old big stones, mossy, under repair), with the
+// things that hang on the wall there (boards, signs, a bucket on its rope).
+// art/tiles.js hands the plain tiles and the course on under their old
+// names; which area is where is src/towerwall.js; background.js draws them.
 
 const rng = new RNG(1337);
 
@@ -139,11 +140,15 @@ function drawTowerBand(t) {
 // upper end; both ends are the area thinning out into the plain wall.
 // `overlay` areas (what grows on the wall) are drawn over the plain tiles
 // and have nothing but their leaves in them; the others are the wall itself.
+// `band` is the string course an area has where it is not the plain one.
+// A tile can have things hanging on it that are sprites of their own (its
+// fixtures, see "what hangs on the wall" below).
 export const TOWER_AREAS = {
   ivy: { loop: 6, overlay: true },
-  worn: { loop: 4, overlay: false },
+  worn: { loop: 4, overlay: false, band: 'worn' },
   stone: { loop: 3, overlay: false },
   moss: { loop: 3, overlay: true },
+  mended: { loop: 4, overlay: false, band: 'worn' },
 };
 const DEEP = 'wallDeep';                // an opening into the wall, a crack: darker than any joint
 const OLD = ['oldHi', 'oldLight', 'oldMid', 'oldDark', 'oldShade'];        // the old stones' ramp, by plane as STONE_PLANES
@@ -350,17 +355,262 @@ function drawMoss(t, j) {
   for (let i = 0; i < (light ? 4 : 12); i++) { const a = angle(); if (ok(a)) p(Math.round(xOf(a)), r.int(0, 46), 1, 2, tone(a).base); }
 }
 
-const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss };
+// --- what hangs on the wall -----------------------------------------------------------------
+// Things on the wall that are not the wall: the boards over a hole, a sign,
+// a ladder, a bucket on its rope. They are sprites of their own, which
+// background.js lays on the tiles, for two reasons. A tile cannot know where
+// the windows are, and a sign with a window cut into it is worse than no
+// sign: so a thing that would meet a window is left out whole. And a tile
+// that comes round again need not be the same: which sign hangs in a place
+// is chosen by where on the tower it is.
+// A tile's draw function says what hangs on it: { what, x, y, plane } with
+// (x, y) the thing's upper left corner in the tile (art px) and `plane` the
+// plane of light it hangs in, which lies over all of it as one flat tone.
+// Nothing reaches out of its tile, so it comes and goes with it.
+const WOOD = {
+  fresh: { hi: '#e6cc98', base: '#c2a06c', shade: '#93744c', dark: '#5e4932' },   // newly sawn
+  grey: { hi: '#b9ad9a', base: '#8f8472', shade: '#665d50', dark: '#463f38' },    // been out in the weather
+};
+const PAINT = { red: '#c8372f', redHi: '#e8604e', redDark: '#8e2424', cream: '#f1e6cc', creamShade: '#cdbfa4', yellow: '#f0c23c', yellowShade: '#c08f24', ink: '#2a2230', hat: '#46306b', nail: '#dfe6e2', iron: '#59606a', rope: '#d8c38a', ropeDark: '#a68b55' };
+const CAST = 'rgba(16, 26, 31, 0.5)';        // the shadow a thing throws on the wall under it
+const THING_TINT = [null, null, '#dde3e4', '#b9c3c8', '#97a3ab'];   // by the plane of light a thing hangs in
 
+// A little picture from rows of letters, each letter a colour of `key` ('.' is nothing).
+function stamp(t, x, y, rows, key) {
+  rows.forEach((row, j) => { for (let i = 0; i < row.length; i++) if (key[row[i]]) t.p(x + i, y + j, 1, 1, key[row[i]]); });
+}
+// A board nailed to the wall, its upper edge from (x0, y0) to (x1, y1), `th`
+// thick: lit along the top, in shade along the bottom, some grain, its shadow
+// on the wall under it, a nail near each end (`loose`: only at its first
+// end, it hangs from that one). `paint(i, k)` gives a painted board its
+// colour at i along and k across. A steep board is laid in rows, a flat one
+// in columns, so neither breaks into single pixels.
+function board(t, r, x0, y0, x1, y1, th, wood, opts = {}) {
+  const { p } = t, steep = Math.abs(y1 - y0) > Math.abs(x1 - x0), n = Math.max(1, steep ? Math.abs(y1 - y0) : Math.abs(x1 - x0));
+  for (let i = 0; i <= n; i++) {
+    const f = i / n, a = Math.round(steep ? x0 + (x1 - x0) * f : y0 + (y1 - y0) * f), b = steep ? y0 + Math.sign(y1 - y0) * i : x0 + Math.sign(x1 - x0) * i;
+    for (let k = 0; k < th; k++) {
+      const col = opts.paint ? opts.paint(i, k) : k === 0 ? wood.hi : k === th - 1 ? wood.shade : wood.base;
+      if (steep) p(a + k, b, 1, 1, col); else p(b, a + k, 1, 1, col);
+    }
+    if (steep) p(a + th, b, 1, 1, CAST); else p(b, a + th, 1, 1, CAST);
+    if (!opts.paint && th > 2 && i > 1 && i < n - 3 && r.chance(0.16)) { const k = r.int(1, th - 2); for (let d = 0; d < 3; d++) { const f2 = (i + d) / n, a2 = Math.round(steep ? x0 + (x1 - x0) * f2 : y0 + (y1 - y0) * f2); if (steep) p(a2 + k, b + Math.sign(y1 - y0) * d, 1, 1, wood.shade); else p(b + Math.sign(x1 - x0) * d, a2 + k, 1, 1, wood.shade); } }
+  }
+  // its sawn ends (the far one in shade), and the nails
+  const end = (f, col) => { const a = Math.round(steep ? x0 + (x1 - x0) * f : y0 + (y1 - y0) * f), b = Math.round(steep ? y0 + (y1 - y0) * f : x0 + (x1 - x0) * f); if (steep) p(a, b, th, 1, col); else p(b, a + 1, 1, th - 1, col); };
+  end(1, wood.dark);
+  const nail = (i) => { const f = i / n, a = Math.round(steep ? x0 + (x1 - x0) * f : y0 + (y1 - y0) * f), b = steep ? y0 + Math.sign(y1 - y0) * i : x0 + Math.sign(x1 - x0) * i, k = Math.floor((th - 1) / 2); if (steep) { p(a + k, b, 1, 1, PAINT.nail); p(a + k + 1, b, 1, 1, wood.dark); } else { p(b, a + k, 1, 1, PAINT.nail); p(b, a + k + 1, 1, 1, wood.dark); } };
+  nail(Math.min(2, n)); if (!opts.loose) nail(Math.max(0, n - 2));
+}
+// The red and white of a barrier: slanting stripes three wide.
+const stripes = (i, k) => (Math.floor((i + k) / 3) % 2 ? (k === 0 ? PAINT.redHi : k >= 4 ? PAINT.redDark : PAINT.red) : (k >= 4 ? PAINT.creamShade : PAINT.cream));
+
+function buildThings() {
+  const at = { ax: 0, ay: 0 }, r = new RNG(3600);
+  const boards = {
+    // two boards crossed over a small hole
+    cross: makeSprite(22, 15, (t) => { board(t, r, 1, 1, 20, 8, 3, WOOD.grey); board(t, r, 1, 10, 20, 2, 3, WOOD.fresh); }, at),
+    // three boards over a bigger one, none of them level and none the same length
+    three: makeSprite(32, 20, (t) => { board(t, r, 2, 1, 29, 3, 4, WOOD.fresh); board(t, r, 0, 9, 26, 7, 3, WOOD.grey); board(t, r, 4, 13, 30, 15, 4, WOOD.fresh); }, at),
+    // two boards, and a third that has come off at one end and hangs from its other nail
+    hang: makeSprite(30, 26, (t) => { board(t, r, 1, 2, 28, 4, 4, WOOD.grey); board(t, r, 3, 11, 27, 9, 3, WOOD.fresh); board(t, r, 22, 14, 18, 24, 3, WOOD.grey, { loose: true }); }, at),
+    // the barrier: a red and white board across the hole, a plain one under it, an upright behind them
+    barrier: makeSprite(36, 22, (t) => { board(t, r, 17, 0, 16, 20, 3, WOOD.grey); board(t, r, 0, 4, 35, 2, 6, WOOD.fresh, { paint: stripes }); board(t, r, 2, 15, 33, 16, 3, WOOD.fresh); t.p(2, 6, 1, 1, PAINT.nail); t.p(33, 4, 1, 1, PAINT.nail); }, at),
+  };
+  const K = { R: PAINT.red, r: PAINT.redDark, h: PAINT.redHi, y: PAINT.yellow, Y: PAINT.yellowShade, k: PAINT.ink, c: PAINT.cream, s: PAINT.creamShade, n: PAINT.nail, d: CAST, W: WOOD.fresh.base, w: WOOD.fresh.hi, x: WOOD.fresh.shade, D: WOOD.fresh.dark, g: WOOD.grey.base, G: WOOD.grey.shade, v: PAINT.hat };
+  const signs = [
+    // stones may fall: the yellow triangle with its red rim
+    makeSprite(17, 16, (t) => stamp(t, 0, 0, [
+      '........n........',
+      '.......hhh.......',
+      '......hRyRR......',
+      '......RyyyR......',
+      '.....hRyyyRR.....',
+      '.....RyyyyyR.....',
+      '....hRyykyyRR....',
+      '....RyyyyyyyR....',
+      '...hRyykyyyyRR...',
+      '...RyyyyyykyyR...',
+      '..hRyyyyyyyyyRR..',
+      '..RyykkyykkykyR..',
+      '.hRYYYYYYYYYYYRR.',
+      '.RRRRRRRRRRRRRRr.',
+      '..ddddddddddddd..',
+    ], K), at),
+    // no witches: her hat in the red ring, struck through
+    makeSprite(17, 18, (t) => {
+      const { p, disc, ring, line } = t;
+      disc(8, 9, 8, CAST); disc(8, 8, 8, PAINT.red); disc(8, 8, 6, PAINT.cream);
+      p(3, 2, 3, 1, PAINT.redHi); p(2, 3, 2, 2, PAINT.redHi); p(1, 5, 1, 2, PAINT.redHi);     // the ring lit at its upper left
+      p(11, 14, 3, 1, PAINT.redDark); p(13, 12, 2, 2, PAINT.redDark);
+      p(3, 11, 11, 1, PAINT.ink); p(4, 12, 9, 1, PAINT.ink);                                  // the brim
+      p(6, 10, 6, 1, PAINT.hat); p(6, 9, 5, 1, PAINT.ink); p(7, 8, 4, 1, PAINT.ink); p(7, 7, 4, 1, PAINT.ink); p(8, 6, 3, 1, PAINT.ink); p(8, 5, 3, 1, PAINT.ink); p(9, 4, 2, 1, PAINT.ink); p(10, 3, 2, 1, PAINT.ink);
+      p(8, 10, 2, 1, PAINT.yellow);                                                           // its buckle
+      line(4, 4, 12, 12, PAINT.red, 1); line(3, 4, 4, 5, PAINT.red, 1); line(12, 11, 13, 12, PAINT.red, 1);
+      p(8, 0, 1, 1, PAINT.nail);
+    }, at),
+    // the master mason's notice: lines nobody can read from here, his seal, a corner curling
+    makeSprite(13, 16, (t) => stamp(t, 0, 0, [
+      '......n......',
+      '.ccccccccccc.',
+      '.ccccccccccc.',
+      '.ckkkkkckkcc.',
+      '.ccccccccccc.',
+      '.ckkckkkkkcc.',
+      '.ccccccccccc.',
+      '.ckkkkkkckkc.',
+      '.ccccccccccc.',
+      '.ckkkckkcccc.',
+      '.ccccccccccc.',
+      '.ccccccRRRcc.',
+      '.ccccccRhRcs.',
+      '.ccccccRRrss.',
+      '.sssssssss...',
+      '..ddddddd....',
+    ], { ...K, k: '#8b7c80' }), at),
+    // this way up: a board sawn into an arrow, its edge painted
+    makeSprite(13, 18, (t) => stamp(t, 0, 0, [
+      '......c......',
+      '.....cwc.....',
+      '....cwWWc....',
+      '...cwWWWWc...',
+      '..cwWWnWWWc..',
+      '.cwWWWWWWWxc.',
+      'cwwWWWWWWWxxc',
+      'cccccwWWxcccc',
+      '.dddcwWWxcdd.',
+      '....cwWWxc...',
+      '....cwWWxc...',
+      '....cwWWxc...',
+      '....cwWWxc...',
+      '....cwnWxc...',
+      '....cwWWxc...',
+      '....cxxxxc...',
+      '....cccccc...',
+      '.....dddd....',
+    ], K), at),
+  ];
+  // a ladder left standing against the wall, tied at the top, one rung gone
+  const ladder = makeSprite(11, 46, (t) => {
+    const { p } = t, G = WOOD.grey, F = WOOD.fresh;
+    const lean = (y) => (y < 23 ? 1 : 0);
+    for (let y = 1; y < 46; y++) { const x = lean(y); p(x, y, 2, 1, F.base); p(x, y, 1, 1, F.hi); p(x + 7, y, 2, 1, F.base); p(x + 8, y, 1, 1, F.shade); p(x + 9, y, 1, 1, CAST); }
+    for (let y = 5, i = 0; y < 44; y += 6, i++) {
+      const x = lean(y) + 2;
+      if (i === 3) { p(x, y, 2, 1, G.base); p(x, y + 1, 1, 1, G.shade); continue; }       // the rung that broke: a stump
+      p(x, y, 5, 1, i % 2 ? G.hi : F.hi); p(x, y + 1, 5, 1, i % 2 ? G.shade : F.shade); p(x, y + 2, 5, 1, CAST);
+    }
+    p(0, 2, 4, 2, PAINT.rope); p(0, 3, 4, 1, PAINT.ropeDark); p(7, 2, 4, 2, PAINT.rope); p(7, 3, 4, 1, PAINT.ropeDark);     // lashed to a hook at the top
+  }, at);
+  // the hoist: a beam let into the wall with a wheel on it (it stays), and the bucket of mortar on the rope (it swings a little: anchored where the rope leaves the wheel)
+  const hoist = makeSprite(9, 8, (t) => {
+    const { p } = t, G = WOOD.grey;
+    p(1, 0, 7, 3, G.base); p(1, 0, 7, 1, G.hi); p(1, 2, 7, 1, G.shade); p(7, 0, 1, 3, G.dark); p(1, 3, 7, 1, CAST);
+    p(3, 3, 3, 4, PAINT.iron); p(4, 4, 1, 2, PAINT.nail); p(3, 7, 3, 1, CAST);
+  }, at);
+  const bucket = makeSprite(9, 26, (t) => {
+    const { p } = t, F = WOOD.fresh;
+    p(4, 0, 1, 15, PAINT.rope); for (let y = 2; y < 15; y += 3) p(4, y, 1, 1, PAINT.ropeDark);
+    p(2, 13, 1, 3, PAINT.iron); p(6, 13, 1, 3, PAINT.iron); p(3, 12, 3, 1, PAINT.iron);                              // the handle
+    p(1, 16, 7, 7, F.base); p(2, 23, 5, 1, F.shade); p(1, 16, 1, 7, F.hi); p(7, 16, 1, 6, F.shade); p(3, 17, 1, 6, F.shade); p(5, 17, 1, 6, F.shade);   // staves
+    p(1, 18, 7, 1, PAINT.iron); p(2, 22, 5, 1, PAINT.iron);                                                          // hoops
+    p(2, 15, 5, 1, C.stoneLight); p(3, 14, 3, 1, C.stoneHi); p(6, 14, 1, 1, C.stoneLight);                           // heaped with mortar
+    p(6, 11, 1, 3, WOOD.grey.dark); p(7, 10, 1, 2, WOOD.grey.base);                                                  // the trowel's handle sticking out of it
+    p(2, 24, 6, 1, CAST);
+  }, { ax: 0.5, ay: 0 }, { axPx: 4.5 * PX, ayPx: 0 });
+  return { boards, signs, ladder, hoist, bucket };
+}
+
+// --- under repair ------------------------------------------------------------------------
+// Somebody is mending the wall, or was: holes where the facing has come away,
+// boards nailed over them (and the red and white of a barrier over the
+// worst), patches already made up in new brick that is paler and warmer than
+// the old and still has its fresh mortar round it, the ends of the beams a
+// scaffold stood on, a ladder, a bucket of mortar on a hoist, and signs.
+// SITE says what each tile has: holes [where round the wall (a share of
+// ROUND.edge), its course, how big, which boards], patches of new brick
+// [where, course, reach], things [what, x, y] and signs [x, y, which or any].
+const NEW = ['#f0dcc2', '#dcc3a6', '#c0a58c', '#9d8674', '#78685e'];       // new brick, by plane as STONE_PLANES
+const FRESH = ['#f8f1e2', '#e9e0cc', '#cdc2ae', '#a69c8c', '#837a70'];     // fresh mortar
+const CHALK = '#eef3ee';
+const HOLES = { small: { reach: 8, rows: 0, w: 22, h: 15 }, mid: { reach: 12, rows: 1, w: 32, h: 20 }, big: { reach: 16, rows: 1, w: 36, h: 22 } };
+const SITE = {
+  enter: { holes: [], patches: [[0.5, 1, 6]], signs: [[21, 14, 0]], things: [], putlogs: [] },
+  0: { holes: [[-0.4, 3, 'big', 'barrier']], patches: [], signs: [[75, 6, null]], things: [], putlogs: [[0.2, 42], [0.5, 42]] },
+  1: { holes: [[-0.1, 2, 'small', 'cross']], patches: [[0.34, 5, 13]], signs: [], things: [['hoist', 4, 3], ['bucket', 4, 10]], putlogs: [] },
+  2: { holes: [[0.36, 4, 'mid', 'hang']], patches: [[-0.08, 1, 7]], signs: [[20, 18, null]], things: [['ladder', 98, 1]], putlogs: [] },
+  3: { holes: [[0.52, 2, 'small', 'cross'], [-0.18, 5, 'mid', 'three']], patches: [[-0.4, 1, 12]], signs: [[66, 26, null]], things: [], putlogs: [[-0.66, 20], [0.16, 6], [0.44, 20]] },
+  leave: { holes: [], patches: [[-0.3, 6, 8]], signs: [], things: [], putlogs: [] },
+};
+function drawMended(t, j, fix) {
+  const { p } = t;
+  const r = new RNG(3500 + seedOf(j) * 19), cells = layWall(t, r), light = typeof j !== 'number', rowH = ROW, E = ROUND.edge, S = SITE[j];
+  const near = (c, x, y, reach, rows) => Math.abs(c.y - y) <= rows * rowH && Math.abs(c.x + c.w / 2 - x) < reach - (c.y === y ? 0 : 3);
+  // the wear of a wall that needed it: corners off, a few bricks sunk in their bed
+  for (let i = 0; i < (light ? 2 : 4); i++) { const c = r.pick(cells.filter((q) => q.w >= 7)); p(c.x, c.y, c.w, 1, C.mortar); p(c.x, c.y + rowH - 1, c.w, 1, C[c.col]); }
+  for (let i = 0; i < (light ? 6 : 12); i++) { const c = r.pick(cells.filter((q) => q.w >= 4)), right = r.chance(0.5), low = r.chance(0.5); p(c.x + (right ? c.w - 1 : 0), c.y + (low ? rowH - 2 : 0), 1, 1, C.mortar); }
+  // made up in new brick: the bricks of the patch, each lit along its top, fresh mortar in its joints and smeared a little over the old bricks round it
+  for (const [f, row, reach] of S.patches) {
+    const x = xOf(f * E), y = row * rowH, rows = reach > 9 ? 1 : 0;
+    const made = cells.filter((c) => near(c, x, y, reach, rows) && (c.y === y || r.chance(0.8)));
+    for (const c of made) {
+      const k = Math.min(4, c.plane + (r.chance(0.3) ? 1 : 0));
+      p(c.x - 1, c.y - 1, c.w + 2, rowH + 1, FRESH[Math.min(4, c.plane + 1)]);                 // bedded in fresh mortar, which shows all round it
+      p(c.x, c.y, c.w, rowH - 1, NEW[k]); p(c.x, c.y, c.w, 1, NEW[Math.max(0, k - 1)]); p(c.x, c.y + rowH - 2, c.w, 1, NEW[Math.min(4, k + 1)]);
+    }
+    for (const c of made) if (r.chance(0.6)) { const low = r.chance(0.5); p(c.x + r.int(0, c.w - 1), c.y + (low ? rowH : -2), r.int(1, 3), low ? r.int(1, 3) : 1, FRESH[Math.min(4, c.plane + 1)]); }   // and has run down the wall under it
+  }
+  // holes: the facing gone, the core's rubble in the dark, damp under it; and the boards somebody nailed over it
+  for (const [f, row, size, boards] of S.holes) {
+    const H = HOLES[size], x = xOf(f * E), y = row * rowH;
+    const gone = cells.filter((c) => near(c, x, y, H.reach, H.rows) && (c.y === y || r.chance(0.8)));
+    for (const c of gone) p(c.x - 1, c.y - 1, c.w + 1, rowH + 1, C[DEEP]);
+    for (const c of gone) for (let i = 0; i < Math.max(1, Math.round(c.w / 7)); i++) {
+      const rx = c.x + r.int(0, Math.max(0, c.w - 3)), ry = c.y + r.int(1, 3), w = r.int(2, 3);
+      p(rx, ry, w, 2, C[OLD[4]]); p(rx, ry, w, 1, C[OLD[Math.min(4, c.plane + 2)]]);
+    }
+    for (const c of gone) if (r.chance(0.6)) p(c.x + r.int(0, c.w - 1), c.y + rowH + r.int(0, 6), 1, r.int(2, 4), C.brickShade);
+    // the mason's chalk on a brick or two beside it: these come out next
+    for (const c of cells.filter((q) => !gone.includes(q) && q.w >= 7 && near(q, x, y, H.reach + 12, H.rows + 1) && !near(q, x, y, H.reach + 5, H.rows)).slice(0, 9)) if (r.chance(0.3)) { const cx = c.x + r.int(1, c.w - 4); p(cx, c.y + 1, 1, 1, CHALK); p(cx + 2, c.y + 1, 1, 1, CHALK); p(cx + 1, c.y + 2, 1, 1, CHALK); p(cx, c.y + 3, 1, 1, CHALK); p(cx + 2, c.y + 3, 1, 1, CHALK); }
+    const x0 = Math.min(...gone.map((c) => c.x)), x1 = Math.max(...gone.map((c) => c.x + c.w)), y0 = Math.min(...gone.map((c) => c.y)), y1 = Math.max(...gone.map((c) => c.y)) + rowH;
+    fix.push({ what: boards, x: Math.round((x0 + x1) / 2 - H.w / 2), y: Math.max(0, Math.min(48 - H.h, Math.round((y0 + y1) / 2 - H.h / 2))), plane: planeAt(f * E) });
+  }
+  // where the scaffold stood: the ends of its beams, sawn off at the wall
+  for (const [f, y] of S.putlogs) {
+    const x = Math.round(xOf(f * E)), k = planeAt(f * E) >= 3 ? WOOD.grey : WOOD.fresh;
+    p(x - 1, y - 1, 5, 5, C[DEEP]); p(x, y, 3, 3, k.base); p(x, y, 3, 1, k.hi); p(x + 2, y + 1, 1, 2, k.shade); p(x + 1, y + 1, 1, 1, k.dark);
+  }
+  const planeOf = (x) => planeAt(Math.asin(Math.max(-1, Math.min(1, (x / (TOWER_A / 2) - 1) * Math.sin(E)))));
+  for (const [what, x, y] of S.things) fix.push({ what, x, y, plane: planeOf(x + 4) });
+  for (const [x, y, which] of S.signs) fix.push({ what: 'sign', sign: which, x, y, plane: planeOf(x + 7) });      // (null: whichever sign this place on the tower gets)
+}
+
+const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss, mended: drawMended };
+
+// The wall's sprites: its plain tiles, the string courses (`bands`: the
+// plain one and the others by name), and every area's tiles with what hangs
+// on each (`fix`, shaped like the tiles: enter, leave, loop[]): { s } or
+// { signs, sign } (one of the signs: that one, or any where `sign` is null),
+// `dx`, `dy` from the tile's anchor (its foot, in the middle) right and up to
+// the thing's own anchor in layer px, `tint`, and `swing` where it does.
 export function buildTower() {
   const tile = (draw) => makeSprite(TOWER_A, 48, draw, { ax: 0.5, ay: 1 });
   const plain = [0, 1, 2, 3, 4].map((v) => tile((t) => drawTower(t, v)));
   const band = makeSprite(TOWER_A, 6, (t) => drawTowerBand(t), { ax: 0.5, ay: 0 });
   const bandWorn = makeSprite(TOWER_A, 6, (t) => drawTowerBandWorn(t), { ax: 0.5, ay: 0 });
+  const things = buildThings();
+  const hung = (f) => {
+    const s = f.what === 'sign' ? null : things.boards[f.what] || things[f.what];
+    const out = { dx: (f.x - TOWER_A / 2) * PX + (s ? s.ax : 0), dy: (48 - f.y) * PX, tint: THING_TINT[f.plane] };
+    if (s) out.s = s; else { out.signs = things.signs; out.sign = f.sign; }
+    if (f.what === 'bucket') out.swing = true;
+    return out;
+  };
   const areas = {};
   for (const [kind, A] of Object.entries(TOWER_AREAS)) {
-    const draw = AREA_DRAW[kind];
-    areas[kind] = { enter: tile((t) => draw(t, 'enter')), leave: tile((t) => draw(t, 'leave')), loop: Array.from({ length: A.loop }, (_, j) => tile((t) => draw(t, j))) };
+    const draw = AREA_DRAW[kind], fix = {};
+    const one = (j) => { const f = []; const s = tile((t) => draw(t, j, f)); (typeof j === 'number' ? (fix.loop = fix.loop || []) : fix)[j] = f.map(hung); return s; };
+    areas[kind] = { enter: one('enter'), leave: one('leave'), loop: Array.from({ length: A.loop }, (_, j) => one(j)), fix };
   }
-  return { plain, band, bandWorn, areas };
+  return { plain, band, bandWorn, bands: { worn: bandWorn }, areas };
 }

@@ -1,7 +1,7 @@
 import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js';
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
-import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
+import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
 import { TOWER_AREAS } from './art/tower.js';
 import { towerAreaAt, towerAreaForced } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
@@ -100,6 +100,8 @@ const TOWER_VEIL = { color: '#14242b', alpha: 0.3 };
 
 // The tower's string course: its top edge this far above the foot of a storey's window (layer px), which is right under the sill.
 const STRING_COURSE = 4;
+// What hangs on the wall keeps this far from a window's frame (layer px), or is not hung.
+const HUNG_CLEAR = 8;
 
 export class Background {
   constructor(art) {
@@ -211,8 +213,9 @@ export class Background {
     const t = this.art.tiles;
     // the wall, tile by tile: plain, or the look of the area it is in (towerwall.js); what grows on it is laid over it below
     const areaAt = (k) => (this.forceWall && TOWER_AREAS[this.forceWall] ? towerAreaForced(this.forceWall, k) : this.forceWall ? null : towerAreaAt(k));
-    const spriteOf = (a) => { const A = t.towerAreas[a.kind]; return typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]; };
-    const grown = [];
+    const of = (A, a) => (typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]);
+    const spriteOf = (a) => of(t.towerAreas[a.kind], a);
+    const grown = [], hung = [];
     for (let k = first; k <= last; k++) {
       const h = hash(k + 7), a = areaAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
       let v = 0;
@@ -220,16 +223,27 @@ export class Background {
       if (a && !TOWER_AREAS[a.kind].overlay) g.blit(spriteOf(a), W / 2 + cam.ox, sy);
       else g.blit(t.tower[v], W / 2 + cam.ox, sy);
       if (a && TOWER_AREAS[a.kind].overlay) grown.push([spriteOf(a), sy]);
+      if (a) for (const f of of(t.towerAreas[a.kind].fix, a)) hung.push([f, k, sy, a]);
     }
-    // a string course runs round the tower under every row of windows (broken where the wall is crumbling)
+    // a string course runs round the tower under every row of windows (broken where the wall is crumbling or being mended)
     for (let i = Math.max(0, Math.floor((camF - STRING_COURSE - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
       if (ly > camF + H + 30) break;
       const a = areaAt(Math.floor((ly - 12) / TILE_H));
-      g.blit(a && a.kind === 'worn' ? t.towerBandWorn : t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
+      g.blit((a && t.towerBands[TOWER_AREAS[a.kind].band]) || t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
     }
     // what grows on the wall, over its bricks and its string courses; the windows are cut into it
     for (const [sprite, sy] of grown) g.blit(sprite, W / 2 + cam.ox, sy);
+    // what hangs on the wall (art/tower.js): each thing whole or not at all, so none where a window is
+    for (const [f, k, sy, a] of hung) {
+      const j = typeof a.tile === 'number' ? a.tile : 0;
+      const s = f.s || f.signs[f.sign == null ? (j + hash(k - j)) % f.signs.length : f.sign];      // (a sign of its own for each place in one round of the loop, other ones in the next)
+      const left = f.dx - s.ax, top = k * TILE_H + f.dy + s.ay;
+      if (windowsBetween(top - s.h - WINDOW_H - HUNG_CLEAR, top + HUNG_CLEAR).some((w) => left < w.x + WINDOW_W / 2 + HUNG_CLEAR && left + s.w > w.x - WINDOW_W / 2 - HUNG_CLEAR)) continue;
+      const o = f.tint ? { tint: f.tint } : {};
+      if (f.swing) o.rot = 0.05 * Math.sin(time * 1.3 + k) + 0.02 * Math.sin(time * 2.9 + k * 2);
+      g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy, o);
+    }
     this.drawWindows(g, cam, camF, time, world);
     // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
     if (this.towerVeil.alpha > 0) g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, this.towerVeil.color, this.towerVeil.alpha);

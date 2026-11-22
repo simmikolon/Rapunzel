@@ -21,7 +21,7 @@
 //   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
 //   ?dev=1           show altitude and zone in the corner
 //   ?veil=0.5        how strongly the tower's wall is set back outside (0 not at all, up to 0.9; background.js TOWER_VEIL)
-//   ?wall=ivy        one look of the tower's wall all the way up (ivy|worn|stone|moss; plain: none of them)
+//   ?wall=ivy        one look of the tower's wall all the way up (ivy|worn|stone|moss|mended; plain: none of them)
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
