@@ -5,6 +5,7 @@ import { World } from '../src/world.js';
 import { GRAVITY, W, PX_PER_METER } from '../src/config.js';
 import { RNG } from '../src/util.js';
 import { startAt } from '../src/dev.js';
+import { STAGES } from '../src/stages.js';
 
 const STEP = 1 / 120;
 
@@ -191,17 +192,18 @@ function makeWorld(input) {
   return new World({ art, input, best: 0 });
 }
 
-export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true, vaults = true } = {}) {
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null } = {}) {
   const input = new BotInput();
   const world = makeWorld(input);
   world.level.gates = gates;        // false: the tower without gates between outside and inside (the baseline)
   world.level.vaults = vaults;      // false: the tower without treasuries (the baseline before them)
+  if (stages) world.route = { ...STAGES, lives: lives == null ? STAGES.lives : lives };   // the tower in stages (stages.js); `lives`: another number of them than the game's (Infinity: he goes on for ever)
   world.reset(seed, place);
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
   const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0, webCatch: 0, webFree: 0, webBite: 0, webPunch: 0, gates: 0, darks: 0, vaultDoors: 0, vaults: 0, vaultSuns: 0, vaultSunsOf: 0, vaultHearts: 0, vaultTime: 0, vaultMaxTime: 0, chests: 0, rescues: 0 };
-  const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
+  const band = () => Math.floor(world.heightM / 100) * 100;      // (by what he has climbed: in stages that is not the height he is at)
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
   const origCollect = world.collect.bind(world);
@@ -230,6 +232,11 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   const origCut = world.cutBraid.bind(world);
   world.cutBraid = (ly, bx, y) => { stats.cuts++; stats.cutAt.push(world.player.maxY); origCut(ly, bx, y); };
   let t = 0, witchSeen = 0, scissorsSeen = 0, flockSeen = 0;
+  // stages: how far he got, how long each took, where and why he went on from a door
+  stats.stage = stages ? 1 : 0; stats.stageTimes = {}; stats.retriesByStage = {}; stats.retryCauses = {}; stats.retries = 0;
+  let stageT0 = 0;
+  world.onStage = (pl, st) => { stats.stageTimes[st.n] = t - stageT0; stageT0 = t; stats.stage = st.n + 1; };
+  world.onRetry = (pl, st, cause) => { const k = st.n + 1; stats.retries++; stats.retriesByStage[k] = (stats.retriesByStage[k] || 0) + 1; stats.retryCauses[cause] = (stats.retryCauses[cause] || 0) + 1; };
   while (!world.over && t < maxTime && world.heightM < cap) {
     bot.step(STEP);
     world.update(STEP);
@@ -263,13 +270,14 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   return stats;
 }
 
-export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true, vaults = true } = {}) {
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null } = {}) {
   const all = [];
-  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates, vaults }));
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates, vaults, stages, lives }));
   // the place is named in the report only when it is not the outside, so the outside's reports read as they always did
   const cfg = place === 'outside' ? { runs, skill, policy, cap, startM } : { runs, skill, policy, cap, startM, place };
   if (!gates) cfg.gates = false;
   if (!vaults && (place !== 'outside' || gates)) cfg.vaults = false;      // (the outside without gates has none to switch off)
+  if (stages) cfg.stages = `${lives == null ? STAGES.lives : lives} lives`;
   return summarize(all, cfg);
 }
 
@@ -312,8 +320,26 @@ function summarize(all, cfg) {
     vaultDoors: total('vaultDoors'), vaults: total('vaults'), vaultSuns: total('vaultSuns'), vaultSunsOf: total('vaultSunsOf'), vaultHearts: total('vaultHearts'), chests: total('chests'), rescues: total('rescues'),
     vaultTime: total('vaults') ? +(total('vaultTime') / total('vaults')).toFixed(1) : 0, vaultMaxTime: +Math.max(0, ...all.map((s) => s.vaultMaxTime)).toFixed(1), endedInVault: total('endedInVault'),
     webCatch: total('webCatch'), webFree: total('webFree'), webBite: total('webBite'), webPunch: total('webPunch'),
+    ...stageSummary(all),
     runsDetail: all.map((s) => ({ seed: s.seed, h: s.height, cause: s.cause, t: Math.round(s.time) })),
   };
+}
+
+// Stages: how many runs got into each, how often he went on from a door in each and why, and how long a stage took (the runs that finished it).
+function stageSummary(all) {
+  const top = Math.max(0, ...all.map((s) => s.stage || 0));
+  if (!top) return {};
+  const reach = {}, time = {}, again = {}, causes = {};
+  for (let n = 1; n <= top; n++) {
+    reach[n] = all.filter((s) => s.stage >= n).length;
+    const done = all.filter((s) => s.stageTimes[n] != null);
+    if (done.length) time[n] = Math.round(done.reduce((a, s) => a + s.stageTimes[n], 0) / done.length);
+    const k = all.reduce((a, s) => a + (s.retriesByStage[n] || 0), 0);
+    if (k) again[n] = k;
+  }
+  for (const s of all) for (const c of Object.keys(s.retryCauses)) causes[c] = (causes[c] || 0) + s.retryCauses[c];
+  const stages = all.map((s) => s.stage).sort((a, b) => a - b);
+  return { stageReach: reach, stageTime: time, stageAgain: again, stageCauses: causes, stageMedian: stages[Math.floor(stages.length / 2)], retries: all.reduce((a, s) => a + s.retries, 0), timeMean: Math.round(all.reduce((a, s) => a + s.time, 0) / all.length) };
 }
 
 export function formatReport(r) {
@@ -335,6 +361,11 @@ export function formatReport(r) {
   if (r.gates) lines.push(`gates: gone through ${r.gates} times`);
   if (r.darks) lines.push(`dark stretches entered: ${r.darks}`);
   if (r.vaultDoors) lines.push(`treasuries: ${r.vaults} entered of ${r.vaultDoors} golden doors; suns ${r.vaultSuns} of ${r.vaultSunsOf}, chests ${r.chests}, visits that restored hearts ${r.vaultHearts}, carried back up by the bubble ${r.rescues} times; ${r.vaultTime} s inside on average (longest ${r.vaultMaxTime} s), runs that ended inside ${r.endedInVault}`);
+  if (r.cfg.stages) {
+    lines.push(`stages: median ${r.stageMedian}; runs that got into each ${JSON.stringify(Object.fromEntries(Object.entries(r.stageReach).map(([k, v]) => [k, pct(v)])))}; a run lasted ${r.timeMean} s on average`);
+    lines.push(`went on from a door ${r.retries} times (${(r.retries / n).toFixed(1)} a run): by stage ${JSON.stringify(r.stageAgain)}, after ${JSON.stringify(r.stageCauses)}`);
+    lines.push(`seconds a stage took (the runs that finished it): ${JSON.stringify(r.stageTime)}`);
+  }
   // the inside's own things are reported only there, so the outside's reports read as they always did
   if (r.cfg.place === 'inside') lines.push(`webs: caught ${r.webCatch} times (torn free ${r.webFree}, bitten ${r.webBite}), boosted through ${r.webPunch}`);
   return lines.join('\n');

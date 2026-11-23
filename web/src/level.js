@@ -9,6 +9,7 @@ import { hatchesBetween, pillarTile, hasDoor, HATCH } from './pillars.js';
 import { STONE_STYLE, STAIR } from './art/interior.js';
 import { placeOf } from './places.js';
 import { VAULT } from './vault.js';
+import { stageAt, stagePacing } from './stages.js';
 
 // Procedural level built from "rows" (the original's beats). Each row holds
 // one or two platforms picked from fixed slots: a branch on the left tree,
@@ -151,6 +152,8 @@ export const VAULT_FIRST = [4000, 7000], VAULT_EVERY = [20000, 30000];
 export const DARK_FROM = 15000, DARK_EVERY = [14000, 22000], DARK_LEN = [3200, 4200], DARK_FADE = 520;
 
 export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 1600, CUT_MARGIN = 240, CUT_ROOM = 1000;
+// In stages (stages.js) a stage has at most one braid cut and one flock, where its zone has them at all: this is how likely.
+const STAGE_CUT = 0.5, STAGE_FLOCK = 0.35;
 const braidOnly = (layout) => layout.split('+').every((k) => k === 'ribbon' || k === 'bow');
 
 function tierAt(y) {
@@ -183,6 +186,9 @@ export class Level {
     this.rngVault = rng;         // where the golden doors are, and which room is behind one
     this.vaults = true;          // false: a tower without treasuries (the simulator's baseline)
     this.forcePlan = null;       // dev: every treasury begins with this section (vault.js SECTIONS)
+    this.route = null;           // the tower in stages (stages.js; the world sets it before reset()); null: the endless game
+    this.stage = null;           // the stage being built: { n, place, from, to, end } with `end` its floor and door once they stand
+    this.endNext = null;         // the next row is the door over a stage's last floor: 'gateL' or 'gateR'
     this.place = placeOf('outside');   // where this tower is climbed (places.js); the world sets it before reset()
     this.zones = ZONES;
     this.forceLen = null;        // dev: every branch gets this length class
@@ -224,7 +230,61 @@ export class Level {
     this.nextVaultY = this.vaults && this.place.inside ? this.rngVault.range(VAULT_FIRST[0], VAULT_FIRST[1]) : Infinity;   // the first golden door between 40 and 70 m
     this.lastPower = null;       // the kind of the last power-up (never twice in a row)
     this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
+    this.stage = this.route ? { ...stageAt(this.route, 0), base: 0, y0: 0 } : null;
+    this.endNext = null;
+    if (this.stage) this.beginStage();
   }
+
+  // --- stages (stages.js) ----------------------------------------------------
+  // How hard the tower is at height y. In the endless game that is the
+  // height; in stages it is how far he has come in all (a stage is built at
+  // its theme's height, `y0`, and `base` is what he had climbed before it).
+  tierOf(y) { const st = this.stage; return tierAt(st ? st.base + (y - st.y0) : y); }
+  // A stage begins (or begins again): what the endless game plans along the
+  // height is planned from the stage's start instead, wherever in the tower
+  // that is. A braid cut and a flock where the zone has them, one of each at
+  // the most; the dark for the whole stage or not at all (`dark`; the lights
+  // are back on before the door); a power-up soon.
+  beginStage() {
+    const st = this.stage, R = this.route;
+    // (not in every stage: in the endless tower a cut comes every 120 to 180 m and a flock every 300 to 450)
+    this.cutPlan = null; this.nextCutY = this.rngTower.chance(STAGE_CUT) ? Math.max(CUT_FROM, st.from + 2000) : Infinity;
+    this.flockPlan = null; this.flockNext = false; this.nextFlockY = this.rngFauna.chance(STAGE_FLOCK) ? Math.max(FLOCK_FROM, st.from + 2500 + this.rngFauna.range(0, 2500)) : Infinity;
+    const said = this.darks.some((d) => d.said && d.stage === st.n);
+    this.darks = st.dark ? [{ from: st.from + 300, to: st.to - R.calmBefore, said, stage: st.n }] : [];
+    this.nextDarkY = Infinity;
+    this.nextPowerY = st.from + this.rngPower.range(600, 2500);
+    this.planStage();
+  }
+  // What a stage has besides its rows: no gate but the door at its end, and
+  // (`vault`) a golden door, once, where the treasury behind it still lets
+  // him out below the stage's last stretch. Its end is not built yet (or no
+  // longer: the rows above were cleared).
+  planStage() {
+    const st = this.stage, R = this.route;
+    st.end = null; this.endNext = null;
+    this.nextGateY = Infinity;
+    this.nextDarkY = Infinity;                                           // (the dark is the stage's or nobody's: beginStage)
+    const room = st.to - R.calmBefore - 600 - VAULT.rise - st.from;      // how far up the stage a golden door may stand
+    this.nextVaultY = this.vaults && st.vault && !st.vaulted && room > 800 ? st.from + this.rngVault.range(600, room) : Infinity;
+  }
+  // He came through the door into stage `st` (stages.js stageAt, with `base`:
+  // what he has climbed so far): he stands at its start, y, and its rows go up from there.
+  enterStage(st, y, gap) {
+    this.stage = { ...st, y0: y };
+    this.restartFrom(y, gap);
+    this.modelCam = this.world.cam.y;
+    this.beginStage();
+  }
+  // He goes on from the door at height y he had come through (or from the
+  // lawn): the stage's rows are built again from there, others than before.
+  retryStage(y, gap) {
+    this.restartFrom(y, gap);
+    this.modelCam = this.world.cam.y;      // the camera is back at the door
+    this.beginStage();
+  }
+  // He left the stage's rows for the treasury (the world cleared them): what stood of its end is gone with them.
+  clearStageEnd() { if (this.stage) { this.stage.end = null; this.endNext = null; } }
 
   // The prince went through a gate at height y: the place is another now,
   // and the rows from here on are its rows. (The world cleared what stood
@@ -300,7 +360,7 @@ export class Level {
     const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len !== 'stub');
     // one thing per branch: not where a spider hangs or a squirrel lives
     if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === branch))) return null;
-    const T = tierAt(branch.y);
+    const T = this.tierOf(branch.y);
     const half = branch.w / 2 - 30;
     const bat = new Bat(branch, rf.range(-half, half), clamp((T.index - 2) / 2.5, 0, 1), this.child(rf));
     this.world.enemies.push(bat);
@@ -328,13 +388,13 @@ export class Level {
       && !this.world.enemies.some((e) => (e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === p));
     if (!ledge) return null;
     const half = ledge.w / 2 - 44;
-    const cat = new Cat(ledge, rf.range(-half, half), clamp((tierAt(ledge.y).index - 2) / 2.5, 0, 1), this.child(rf));
+    const cat = new Cat(ledge, rf.range(-half, half), clamp((this.tierOf(ledge.y).index - 2) / 2.5, 0, 1), this.child(rf));
     this.world.enemies.push(cat);
     return cat;
   }
 
-  get difficulty() { return tierAt(this.world.player.maxY); }
-  pacingAt(y) { return pacingAt(y); }
+  get difficulty() { return this.tierOf(this.world.player.maxY); }
+  pacingAt(y) { return this.stage ? stagePacing(this.route, this.stage, y) : pacingAt(y); }
 
   generateUpTo(yTop) {
     if (this.place.vault) return;      // the treasury is furnished at once (vault.js), it has no rows
@@ -414,7 +474,7 @@ export class Level {
     const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'long')
       || platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'normal');
     if (!branch) return null;
-    const T = tierAt(branch.y);
+    const T = this.tierOf(branch.y);
     const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1), this.child());
     this.world.enemies.push(sq);
     return sq;
@@ -436,7 +496,7 @@ export class Level {
     const cover = this.world.platforms.filter((p) => (inside ? hasDoor(p) : p.kind === 'balcony' || p.kind === 'gate'));
     const free = (inside ? hatchesBetween(lyRow - 60, lyRow + 420, cover) : windowsBetween(lyRow - 60, lyRow + 420, cover)).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
     if (!free.length) return null;
-    const T = tierAt(y);
+    const T = this.tierOf(y);
     const gr = new Grabber(rt.pick(free), this.child(rt), (inside ? 165 : 130) + 30 * clamp((T.index - 2.5) / 2.5, 0, 1), this.world.cam.y);
     this.world.enemies.push(gr);
     return gr;
@@ -444,15 +504,21 @@ export class Level {
 
   makeRow() {
     const r = this.rng;
-    const T = tierAt(this.nextY);
+    const T = this.tierOf(this.nextY);
     const y = this.nextY;
+    // A stage (stages.js): this row is the door over its last floor (`doorRow`), or its end is due (`due`: the floor is
+    // the first row from its last height on that nothing else has a claim to), or it is so close to its end that
+    // nothing long is begun any more (`late`: no braid cut, no dark, no flock).
+    const st = this.stage, doorRow = this.endNext;
+    this.endNext = null;
+    const due = !!st && !st.end && !doorRow && y >= st.to, late = !!st && y >= st.to - 1500;
     // Plan a braid cut: never in a stretch that starts or ends in a breather.
-    if (!this.cutPlan && !this.flockPlan && !this.flockNext && y >= this.nextCutY && this.zoneMul(y, 'scissors') > 0 && !pacingAt(y).breather && !pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
+    if (!late && !this.cutPlan && !this.flockPlan && !this.flockNext && y >= this.nextCutY && this.zoneMul(y, 'scissors') > 0 && !this.pacingAt(y).breather && !this.pacingAt(y + CUT_AHEAD + CUT_MARGIN).breather) {
       this.cutPlan = { from: y, yc: y + CUT_AHEAD, until: y + CUT_AHEAD + CUT_MARGIN, fired: false };
     }
-    const P0 = pacingAt(y);
+    const P0 = this.pacingAt(y);
     // Plan a dark stretch from this row up (inside), never around a swarm's floors.
-    if (this.place.inside && y >= this.nextDarkY && !this.flockPlan && !this.flockNext) {
+    if (!late && this.place.inside && y >= this.nextDarkY && !this.flockPlan && !this.flockNext) {
       const len = this.rngDark.range(DARK_LEN[0], DARK_LEN[1]);
       this.darks = this.darks.filter((d) => d.to > y - 6000);
       this.darks.push({ from: y, to: y + len, said: false });
@@ -462,17 +528,20 @@ export class Level {
     // A flock: this row is the floor under it ('below'), or the one over it ('above').
     let flockRow = null;
     if (this.flockNext) { flockRow = 'above'; this.flockNext = false; }
-    else if (!this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !pacingAt(y + FLOCK_GAP).breather && !dark && !this.inDark(y + FLOCK_GAP)) flockRow = 'below';
+    else if (!late && !doorRow && !this.flockPlan && !this.cutPlan && y >= this.nextFlockY && this.zoneMul(y, 'flock') > 0 && !P0.breather && !this.pacingAt(y + FLOCK_GAP).breather && !dark && !this.inDark(y + FLOCK_GAP)) flockRow = 'below';
+    // A stage's last floor: across the whole width, like a flock's.
+    const endRow = due && !flockRow && !this.flockPlan && !this.cutPlan && !dark;
+    const solid = !!flockRow || endRow;      // this row is a floor
     // A gate: its landing on one side, a healthy branch on the other.
     const gateRow = !flockRow && !this.flockPlan && !this.cutPlan && !dark && y >= this.nextGateY && y < GATE_TO;
     // A golden door: the same row as a gate's, on its own plan.
-    const vaultRow = !gateRow && !flockRow && !this.flockPlan && !this.cutPlan && !dark && this.place.inside && y >= this.nextVaultY;
-    const P = flockRow || gateRow || vaultRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row: nothing crumbles, nothing small, nobody on them
+    const vaultRow = !gateRow && !flockRow && !endRow && !doorRow && !this.flockPlan && !this.cutPlan && !dark && this.place.inside && y >= this.nextVaultY;
+    const P = solid || doorRow || gateRow || vaultRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row, a stage's end: nothing crumbles, nothing small, nobody on them
       : dark ? { ...P0, dry: 0, short: 0, enemy: P0.enemy * 0.7, lantern: P0.lantern * 2.2 }   // in the dark: nothing crumbles, nothing small, fewer creatures, more lanterns
       : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
-    let layout = this.nextLayout || this.pickLayout(T, y);
+    let layout = doorRow || this.nextLayout || this.pickLayout(T, y);
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
-    if (flockRow) layout = floorLayout(y, this.place);
+    if (solid) layout = floorLayout(y, this.place);
     if (gateRow) { layout = this.rngGates.chance(0.5) ? 'gateL+branchR' : 'branchL+gateR'; this.nextGateY = y + this.rngGates.range(GATE_EVERY[0], GATE_EVERY[1]); this.nextVaultY = Math.max(this.nextVaultY, y + 1500); }
     if (vaultRow) {
       layout = this.rngVault.chance(0.5) ? 'vaultL+branchR' : 'branchL+vaultR';
@@ -515,7 +584,7 @@ export class Level {
       }
       const opts = {};
       let kind = slot;
-      if (slot.startsWith('cloud') && !flockRow && r.chance(0.6 * lanternAmount(y))) {
+      if (slot.startsWith('cloud') && !solid && r.chance(0.6 * lanternAmount(y))) {
         // from sunset on, a cloud slot often holds a sky lantern instead
         kind = 'skyLantern';
         const lane = slot[5];
@@ -529,7 +598,7 @@ export class Level {
         opts.variant = r.int(0, 1);
         // sizes follow the branch logic: small ones are the aim test (never in
         // a breather), wide ones the relief
-        if (flockRow) opts.size = 'wide';                 // three wide clouds make a floor
+        if (solid) opts.size = 'wide';                    // three wide clouds make a floor
         else if (r.chance(T.cloudSmall * P.short)) opts.size = 'small';
         else if (r.chance(T.cloudWide * P.long)) opts.size = 'wide';
         // lanes: a wide cloud sits a little further in so it stays on screen
@@ -538,7 +607,7 @@ export class Level {
         opts.cloud = 'thick';
         // wispy follows the dry-branch rules; a cloud drifts or is wispy, not
         // both; a storm cloud is thick, not small and never alone in its row
-        if (flockRow) { /* a floor: thick, where it is */ }
+        if (solid) { /* a floor: thick, where it is */ }
         else if (canBeDry && opts.size !== 'small' && r.chance(T.dry * P.dry)) opts.dry = true;
         else if (opts.size !== 'wide' && r.chance(T.drift * (P.breather ? 0.6 : 1))) {
           // patrol around the lane centre; the swing keeps the cloud fully on screen
@@ -578,18 +647,19 @@ export class Level {
         opts.variant = r.int(0, 1);
       }
       if (kind === 'branchL' || kind === 'branchR') {
-        const len = flockRow ? 'long' : this.pickLen(T, P, y, kinds);   // a flock's floor: two long branches that meet
+        const len = solid ? 'long' : this.pickLen(T, P, y, kinds);   // a floor: two long branches that meet
         opts.len = len;
         if (len === 'normal' || len === 'long') {          // stubs and short branches are never dry
           if (canBeDry && r.chance(T.dry * P.dry)) opts.dry = true;
-          opts.lenScale = flockRow ? 1.08 : r.range(0.88, 1.12);
+          opts.lenScale = solid ? 1.08 : r.range(0.88, 1.12);
         }
         opts.variant = len === 'stub' ? r.int(0, 1) : r.int(0, 5);
         opts.style = this.place.inside ? STONE_STYLE : treeStyleIndexAt(y);   // inside they are stone ledges
         opts.tint = r.pick([null, null, '#f2ece4', '#e4ddd2', '#d8d4cc', '#e8e0d0']);
       }
       const py = y + (kinds.length > 1 ? r.int(-16, 16) : 0);
-      if (kind === 'ribbon' || kind === 'bow' || kind === 'balcony' || kind === 'gate') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), arrivalCam);
+      // (a stage's door is met with the camera resting on the floor under it, not where the climb would have taken it)
+      if (kind === 'ribbon' || kind === 'bow' || kind === 'balcony' || kind === 'gate') opts.ly = Platform.worldToLayer(py, Platform.layerFactor(kind), doorRow ? st.floorY - this.route.floorShown : arrivalCam);
       const p = new Platform(kind, py, opts);
       platforms.push(p);
       if (p.cloud === 'storm') this.world.enemies.push(new Lightning(p, this.child()));
@@ -600,6 +670,14 @@ export class Level {
       platforms[0].dry = false; safe = true;
     }
     for (const p of platforms) this.world.platforms.push(p);
+    if (doorRow) {
+      // The stage ends here: its door, and no row above it. (The world keeps the camera on the floor below until he has gone through.)
+      platforms[0].exit = true;
+      st.end = { floorY: st.floorY, door: platforms[0] };
+      this.lastSafeY = y; this.nextY = Infinity; this.rowIndex++;
+      this.world.onStageEnd(st);
+      return;
+    }
     // A gallery's door covers the pillar where it stands: a pike guard who
     // was given a hatch there (from a row below) has no hatch any more.
     if (platforms.some(hasDoor)) {
@@ -616,7 +694,7 @@ export class Level {
     // Decide the next row's layout now: from a front-plane row up to a row
     // that only has tower-layer platforms the effective gap grows while the
     // camera climbs, so that gap is kept short.
-    const nextLayout = this.pickLayout(tierAt(y + gapMin), y + gapMin, this.rowIndex + 1);
+    const nextLayout = this.pickLayout(this.tierOf(y + gapMin), y + gapMin, this.rowIndex + 1);
     const nextTowerOnly = nextLayout.split('+').every((k) => k === 'ribbon' || k === 'bow' || k.startsWith('balcony'));
     if (front && nextTowerOnly) gapMax = Math.min(gapMax, platforms.some((p) => p.dry) ? LAYER_GAP_CAP_DRY : LAYER_GAP_CAP);
     gapMax = Math.max(gapMax, gapMin);
@@ -640,11 +718,18 @@ export class Level {
     // just above this row to just below the next; more in breathers.
     this.updraftLane = null;
     const nextSlot = nextLayout.split('+')[0];
-    if (this.place.sky && cloudAmount(y) >= 1 && !flockRow && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
+    if (this.place.sky && cloudAmount(y) >= 1 && !solid && nextSlot.startsWith('cloud') && r.chance(T.updraft * (P.breather ? 1.6 : 1))) {
       const lane = nextSlot[5];
       const ux = lane === 'L' ? -190 : lane === 'R' ? 190 : 0;
       this.world.spawnUpdraft(ux, y + 60, y + gap - 90);
       this.updraftLane = lane;
+    }
+    if (endRow) {
+      // the door stands over this floor, on one side or the other, an easy jump up
+      gap = this.route.doorGap;
+      this.nextLayout = null;
+      this.endNext = this.rngGates.chance(0.5) ? 'gateL' : 'gateR';
+      st.floorY = y;
     }
     const bounceVy = kinds.includes('bow') || kinds.includes('bell') ? SPRING_VY : platforms.every((p) => p.dry) ? WEAK_JUMP_VY : JUMP_VY;
     this.prevRowY = y; this.prevRowApex = bounceVy * bounceVy / (2 * GRAVITY);

@@ -70,9 +70,10 @@ export const ZONES = {
   boost: { id: 'boost', x: W - 190, get y() { return H - 200 - SAFE.bottom; }, w: 160, h: 160 },
   // on the title's sign: PLAY in the middle, the settings in the bottom row
   play: { id: 'play', x: W / 2 - 248, y: 468, w: 496, h: 96 },     // a ribbon: its tails take the outer 48 px
-  // the place to climb: outside or inside, side by side under PLAY
-  placeOut: { id: 'placeOut', x: W / 2 - 268, y: 580, w: 256, h: 52 },
-  placeIn: { id: 'placeIn', x: W / 2 + 12, y: 580, w: 256, h: 52 },
+  // the climb: the tower in stages, or the endless one outside or inside, side by side under PLAY
+  placeTour: { id: 'placeTour', x: W / 2 - 268, y: 580, w: 168, h: 52 },
+  placeOut: { id: 'placeOut', x: W / 2 - 84, y: 580, w: 168, h: 52 },
+  placeIn: { id: 'placeIn', x: W / 2 + 100, y: 580, w: 168, h: 52 },
   fx: { id: 'fx', x: 72, y: 688, w: 240, h: 56 },
   titleSound: { id: 'sound', x: W / 2 - 28, y: 688, w: 56, h: 56 },
   tilt: { id: 'tilt', x: W - 312, y: 688, w: 240, h: 56 },
@@ -168,7 +169,7 @@ export class HUD {
     if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
     if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, shiftZone(ZONES.pauseMenu));
     if (mode === 'title') {
-      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn));
+      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn));
       if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(shiftZone(ZONES.tilt));
     }
     if (mode === 'gameover') zones.push(ZONES.sound, shiftZone(ZONES.again), shiftZone(ZONES.menu));
@@ -183,6 +184,13 @@ export class HUD {
     g.text(`${world.heightM} m`, 28, top + 64, 40, '#fff');
     if (this.game.best > 0) g.text(`best ${this.game.best} m`, 28, top + 112, 16, '#cfe8e3');
     if (world.suns) { g.blit(art.creatures.sun[0], 44, top + 152, { glow: 0.5 }); g.text(`${world.suns}`, 76, top + 154, 18, '#ffe9a0'); }
+    // in stages: which one he is in
+    const stage = world.stageInfo;
+    if (stage) {
+      g.text(`stage ${stage.n}`, 28, top + 196, 16, '#cfe8e3');
+      // and his lives: a little prince for each he still has, this one included
+      if (isFinite(world.lives)) for (let i = 0; i < world.lives; i++) g.blit(art.prince.life, 44 + i * 44, top + 258, { sx: 0.5, sy: 0.5 });
+    }
     // Hearts
     for (let i = 0; i < MAX_HEARTS; i++) {
       const full = i < pl.hearts;

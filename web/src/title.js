@@ -42,12 +42,14 @@ export function drawTitle(g, game, t, o = {}) {
   // PLAY on a ribbon
   const z = zone(ZONES.play);
   ribbonButton(g, art, z, 'PLAY', { alpha, t });
-  // where to climb: two boards side by side, the chosen one with the gold rim
-  const place = game.round.place;
-  tagButton(g, zone(ZONES.placeOut), 'OUTSIDE', { alpha, size: 13, on: place !== 'inside', icon: (gg, x, y, a) => gg.blit(art.sign.tree, x, y, { alpha: a }) });
-  tagButton(g, zone(ZONES.placeIn), 'INSIDE', { alpha, size: 13, on: place === 'inside', icon: (gg, x, y, a) => gg.blit(art.sign.door, x, y, { alpha: a }) });
+  // what to climb: three boards side by side, the chosen one with the gold rim. The tower in stages (in and out
+  // through its doors), or the endless climb in one place, outside or inside.
+  const climb = game.climb;
+  tagButton(g, zone(ZONES.placeTour), 'TOWER', { alpha, size: 13, on: climb === 'stages' });
+  tagButton(g, zone(ZONES.placeOut), 'OUTSIDE', { alpha, size: 12, on: climb === 'outside', icon: (gg, x, y, a) => gg.blit(art.sign.tree, x - 12, y, { alpha: a }) });
+  tagButton(g, zone(ZONES.placeIn), 'INSIDE', { alpha, size: 12, on: climb === 'inside', icon: (gg, x, y, a) => gg.blit(art.sign.door, x - 12, y, { alpha: a }) });
   // controls, painted on the board below in one line
-  paint(g, input.isTouch ? 'hold a side to steer, tap the flame to boost' : 'arrows steer, space boosts, O / I picks the place', W / 2, Y(660), 13, 'center', { alpha });
+  paint(g, input.isTouch ? 'hold a side to steer, tap the flame to boost' : 'arrows steer, space boosts, T / O / I picks the climb', W / 2, Y(660), 13, 'center', { alpha });
   // settings in the bottom row: effects left, sound in the middle, tilt right
   tagButton(g, zone(ZONES.fx), game.fxPreset.toUpperCase(), { alpha, size: 13, icon: (gg, x, y, a) => gg.blit(art.sign.sparkle, x, y, { alpha: a, glow: 0.4 * a }) });
   tagButton(g, zone(ZONES.titleSound), null, { alpha, icon: (gg, x, y, a) => drawSpeaker(gg, x, y, game.muted, INK) });

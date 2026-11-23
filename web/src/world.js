@@ -1,4 +1,4 @@
-import { W, H, PX_PER_METER, PLAYER_H, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY, MAGNET_RADIUS, MAGNET_SPEED, MAGNET_ACCEL } from './config.js';
+import { W, H, PX_PER_METER, PLAYER_H, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWOFF_VY, COUNT_MIN_T, GRAVITY, MAGNET_RADIUS, MAGNET_SPEED, MAGNET_ACCEL, CAMERA_START_Y } from './config.js';
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
@@ -16,6 +16,7 @@ import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
+import { stageAt } from './stages.js';
 import { furnishVault, CHEST_SUNS } from './vault.js';
 import { VAULT_LOOK } from './art/vault.js';
 import { STONE_STYLE, INSIDE } from './art/interior.js';
@@ -51,12 +52,15 @@ export class World {
     this.rng = new RNG();
     this.level = new Level(this, this.rng);
     this.placeName = (game.round && game.round.place) || 'outside';
+    this.route = null;            // the tower in stages (stages.js): set before reset() by whoever starts the round; null is the endless game
     this.reset();
   }
 
   // A fresh round from `seed`, in `place` (places.js; the one it was in when none is named).
   reset(seed, place = this.placeName) {
     if (place === TREASURY.name) place = (this.vault && this.vault.from) || 'inside';   // a round is never begun in the treasury
+    if (this.route) place = stageAt(this.route, 0).place;                                // the route says where a round in stages begins
+    this.level.route = this.route;
     this.placeName = place;
     this.place = placeOf(place);
     this.level.place = this.place;
@@ -77,8 +81,14 @@ export class World {
     this.level.rngGates = new RNG(seed == null ? undefined : hash(seed + 7));
     this.level.rngDark = new RNG(seed == null ? undefined : hash(seed + 8));
     this.level.rngVault = new RNG(seed == null ? undefined : hash(seed + 9));
-    this.passage = null;          // { gate, t, switched }: going through a gate (enterGate)
+    this.passage = null;          // { gate, t, switched }: going through a gate (enterGate), or back to the last door (`retry`)
     this.vault = null;            // the treasury he is in (enterVault): its floor, ceiling, doors, and what he had when he came
+    this.checkpoint = null;       // in stages: the door he goes on from after a fall, and where the camera was ({ door, camY }); null is the lawn
+    this.retries = 0;             // how often he has gone on from a door this round
+    this.lives = this.route ? this.route.lives : 1;   // in stages: how often he may still fall or lose his last heart, this time included
+    this.topY = 0;                // the highest he was in this stage before he last went back to its door (the score counts it)
+    this.scoreBase = 0;           // in stages: what he had climbed before the stage he is in (px), and the height that stage began at
+    this.scoreFrom = 0;
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
@@ -90,6 +100,7 @@ export class World {
     this.cam.reset();
     this.player.reset(0, 0);
     this.level.reset();
+    if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
     this.suns = 0;
     this.stomps = 0;
     this.nextWitchY = 12000;
@@ -114,7 +125,12 @@ export class World {
     this.level.generateUpTo(H + 900);
   }
 
-  get heightM() { return Math.max(0, Math.floor(this.player.maxY / PX_PER_METER)); }
+  // How high he has climbed (px, m). In the endless game that is the height he reached; in stages, where a stage is
+  // built at its theme's height, it is what he climbed in the stages before plus how far up this one he has been.
+  get scoreY() { return this.scoreBase + Math.max(this.topY, this.player.maxY) - this.scoreFrom; }
+  get heightM() { return Math.max(0, Math.floor(this.scoreY / PX_PER_METER)); }
+  // In stages: the stage he is in (its number from 1, its name), or null.
+  get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: st.name } : null; }
 
   start() {
     this.started = true;
@@ -181,11 +197,12 @@ export class World {
       this.braidCut.pieces = this.braidCut.pieces.filter((pc) => pc.top - fallDist(pc.t) > camF - 200);
     }
 
-    // Out of the bottom of the picture: the end of the round, except in the treasury (rescue).
-    if (pl.alive && pl.headY < this.cam.y - 10) { if (!this.vault) pl.die('fell'); else if (!pl.carried) this.rescue(); }
+    // Out of the bottom of the picture: the end of the round, except in the treasury and on a stage's last floor (rescue).
+    if (pl.alive && pl.headY < this.cam.y - 10) { if (!this.vault && !this.atStageEnd) pl.die('fell'); else if (!pl.carried) this.rescue(); }
     if (!pl.alive) {
       this.overT += dt;
-      if ((pl.deathCause === 'caught' && this.overT > 1.3) || pl.headY < this.cam.y - 200 || this.overT > 3) this.over = true;
+      // (in stages he goes on from the last door while he may: retry())
+      if (((pl.deathCause === 'caught' && this.overT > 1.3) || pl.headY < this.cam.y - 200 || this.overT > 3) && !this.retry()) this.over = true;
     }
   }
 
@@ -273,7 +290,7 @@ export class World {
   updatePassage(dt) {
     const ps = this.passage, pl = this.player;
     ps.t += dt;
-    if (!ps.switched && ps.t >= GATE_OPEN + GATE_IRIS) { ps.switched = true; this.switchPlace(ps.gate); }
+    if (!ps.switched && ps.t >= GATE_OPEN + GATE_IRIS) { ps.switched = true; if (ps.retry) this.backToDoor(); else this.switchPlace(ps.gate); }
     if (ps.t >= GATE_OPEN + 2 * GATE_IRIS) {
       this.passage = null;
       pl.frozen = false;
@@ -314,6 +331,7 @@ export class World {
   switchPlace(gate) {
     if (gate.gold === 'in') return this.enterVault(gate);
     if (gate.gold === 'out') return this.leaveVault(gate);
+    if (gate.exit) return this.nextStage(gate);
     const pl = this.player;
     this.setPlace(this.place.other);
     const top = gate.y + 60;
@@ -330,6 +348,86 @@ export class World {
     this.onGatePass(pl, gate);
   }
   onGatePass(pl, gate) {}                   // the simulator counts here
+  onStage(pl, stage) {}
+  onRetry(pl, stage, cause) {}
+
+  // --- Stages (stages.js) -----------------------------------------------------
+  // Through a stage's door (the picture is shut): the next stage is another
+  // piece of the tower altogether, built at its theme's height, so nothing
+  // comes along but the prince and what he has. He stands on a landing like
+  // the one he left, at the same place in the picture, the door behind him;
+  // the wall has the stage's look, the braid is whole again, and what he has
+  // climbed so far is kept apart from the height he is at now (scoreY).
+  nextStage(gate) {
+    const pl = this.player, base = this.scoreY, lift = gate.y - this.cam.y;
+    const st = stageAt(this.route, this.level.stage.n + 1), y = st.from;
+    this.setPlace(st.place);
+    this.platforms = this.platforms.filter((p) => p.kind === 'ground');
+    this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
+    this.particles.clear();
+    this.braidCut = { ly: -Infinity, pieces: [] };
+    this.cam.cap = null;
+    this.cam.jumpTo(y - lift);
+    const door = new Platform('gate', y, { side: gate.side, x: gate.x, ly: Platform.worldToLayer(y, Platform.layerFactor('gate'), this.cam.y) });
+    door.used = true;
+    this.platforms.push(door);
+    pl.x = door.x; pl.y = y; pl.prevY = y; pl.maxY = y; pl.landedOn = door;
+    this.scoreBase = base; this.scoreFrom = y; this.topY = y;
+    this.bg.setWall(st.wall, this.cam, st.n, st.roses);
+    this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
+    this.level.generateUpTo(this.cam.top + 900);
+    this.nextWitchY = Math.max(12000, y + 3000);      // she and the storks keep to the heights they have in the endless tower
+    this.nextStorkY = Math.max(47000, y + 400);
+    this.floorName = zoneAt(y, this.level.zones).name;
+    this.checkpoint = { door, camY: this.cam.y };      // from here he goes on after a fall
+    this.toast(`Stage ${st.n + 1}: ${st.name}`, '#fff2a8', 2.4);
+    this.onStage(pl, this.level.stage);
+    this.onGatePass(pl, gate);
+  }
+  // The level has built a stage's end: the camera stops with its last floor
+  // in the picture (camera.js `cap`), so he can bounce there until he has
+  // found the door, and whoever drops out of the picture there is carried
+  // back up (rescue) instead of ending his round below a floor.
+  onStageEnd(st) { this.cam.cap = st.end.floorY - this.route.floorShown; }
+  get atStageEnd() { const st = this.route && this.level.stage; return !!st && !!st.end && this.player.maxY >= st.end.floorY; }
+  // He fell or lost his last heart: that costs a life. With one left, in
+  // stages, he goes on from the last door he came through (the first time,
+  // from the lawn): the picture closes, and backToDoor() puts everything in
+  // its place. False: it was his last, the round is over.
+  get canRetry() { return !!this.route && !this.vault && this.lives > 1; }
+  retry() {
+    if (this.passage && this.passage.retry) return true;
+    if (!this.canRetry) return false;
+    this.lives--;
+    this.retries++;
+    this.passage = { retry: true, gate: null, t: GATE_OPEN, switched: false };
+    this.audio.gate();
+    return true;
+  }
+  // Back at the door (the picture is shut): the stage's rows are built anew
+  // from there, he stands on its landing with all his hearts, and what he
+  // collected and how high he was stay his.
+  backToDoor() {
+    const pl = this.player, cp = this.checkpoint, door = cp ? cp.door : null, cause = pl.deathCause;
+    this.topY = Math.max(this.topY, pl.maxY);
+    this.platforms = this.platforms.filter((p) => p.kind === 'ground');
+    this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
+    this.particles.clear();
+    this.cam.cap = null;
+    this.cam.jumpTo(cp ? cp.camY : CAMERA_START_Y);
+    if (door) { if (door.layer < 1) door.y = Platform.layerToWorld(door.ly, door.layer, this.cam.y); this.platforms.push(door); }      // where the door is on the wall with the camera there
+    const y = door ? door.y : 0;
+    pl.reset(door ? door.x : 0, y);
+    pl.maxY = y;
+    pl.landedOn = door || this.platforms[0];
+    pl.frozen = true;
+    this.over = false; this.overT = 0;
+    this.level.retryStage(y, door ? BEAT * 0.9 : 300);
+    this.level.generateUpTo(this.cam.top + 900);
+    this.nextWitchY = Math.max(this.nextWitchY, y + 3000);
+    this.toast(this.lives === 1 ? 'Last life!' : `${this.lives} lives left`, this.lives === 1 ? '#ff9ab0' : '#fff2a8', 2.2);
+    this.onRetry(pl, this.level.stage, cause);
+  }
   onDark(pl, d) {}                          // and here
 
   // --- The treasury (vault.js) --------------------------------------------------
@@ -340,6 +438,7 @@ export class World {
   // waits (player.js).
   enterVault(gate) {
     const pl = this.player, from = this.placeName;
+    if (this.route) { this.level.stage.vaulted = true; this.level.clearStageEnd(); this.cam.cap = null; }      // one treasury to a stage; what stood of the stage above goes with the tower
     this.setPlace(TREASURY.name);
     this.platforms = this.platforms.filter((p) => p.kind === 'ground');
     this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
@@ -361,6 +460,7 @@ export class World {
     this.particles.clear();
     this.cam.setRoom(null);
     this.level.leaveVault(gate.y, BEAT * 0.9, v.entryY);
+    if (this.route) { this.level.planStage(); this.checkpoint = { door: gate, camY: this.cam.y }; }      // the stage goes on, and this door is the one he goes on from now
     this.level.generateUpTo(this.cam.top + 900);
     this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
     const got = this.suns - v.suns0;
@@ -572,8 +672,11 @@ export class World {
         if (pl.maxY < d.to) { this.toast('The lights are out!', '#cfc8ff', 2.4); this.audio.lightsOut(); this.onDark(pl, d); }
       }
     }
-    // Inside the tower a new floor says its name.
-    if (this.place.inside) {
+    // A stage's end comes into view: where it goes on is said.
+    const st = this.route && this.level.stage;
+    if (st && st.end && !st.end.said && pl.maxY > st.end.floorY - 700) { st.end.said = true; this.toast('To the door!', '#fff2a8', 2); }
+    // Inside the tower a new floor says its name (in stages the stage has said it).
+    if (this.place.inside && !this.route) {
       const floor = zoneAt(pl.maxY, this.level.zones).name;
       if (floor !== this.floorName) { this.floorName = floor; this.toast(floor[0].toUpperCase() + floor.slice(1), '#e9e6f7', 2.2); }
     }
@@ -704,7 +807,7 @@ export class World {
     this.toast(`+${PUNCH_SUNS}`, '#ffe9a0', 0.9);
   }
   onPlayerHurt(pl, src) { this.audio.hurt(); this.particles.hurtPuff(pl.x, pl.y + 100); this.cam.shake(10, 0.35); }
-  onPlayerDie(pl, cause) { this.audio.gameOver(); this.cam.shake(14, 0.5); }
+  onPlayerDie(pl, cause) { if (this.canRetry) this.audio.hurt(); else this.audio.gameOver(); this.cam.shake(14, 0.5); }      // (no game-over tune while he goes on from a door)
 
   // ------------------------------------------------------------------- draw
   // The slope of the shaft's chain at height y, as a rotation for what hangs on it.
@@ -749,6 +852,8 @@ export class World {
       default: return;
     }
     const cam = this.cam;
+    // a stage's door shines until he has gone through: it is the way on
+    if (p.exit && !p.used) g.halo(cam.sx(p.x), cam.sy(p.y) - 96, 190, '#ffe9a0', 0.34 + 0.12 * Math.sin(this.time * 4), { glow: 0.8 });
     const dip = p.kind === 'balcony' || p.kind === 'step' || p.kind === 'gate' || p.kind === 'chest' ? 0 : p.kind === 'gallery' ? p.squash * 4 : p.squash * 10;   // stone does not give, a wooden landing hardly
     if (p.kind === 'stork') { opts.sy = 1 - p.squash * 0.15; opts.rot = (p.vx > 0 ? 1 : -1) * p.squash * 0.08; }
     else if (p.kind === 'skyLantern') {

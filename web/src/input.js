@@ -28,7 +28,7 @@ export class Input {
     this.pauseQueued = 0;
     this.muteQueued = 0;
     this.fxQueued = 0;
-    this.placeQueued = null;    // 'outside' | 'inside': O / I or left / right on the title
+    this.placeQueued = null;    // 'stages' | 'outside' | 'inside': T, O / I or left / right on the title
     this.anyInteraction = null; // callback for unlocking audio
     // Regions where a touch acts as a button rather than steering. Set by HUD.
     this.buttonZones = [];      // {id, x, y, w, h}
@@ -55,6 +55,7 @@ export class Input {
       if (e.code === 'Escape' || e.code === 'KeyP') this.pauseQueued++;
       if (e.code === 'KeyM') this.muteQueued++;
       if (e.code === 'KeyF') this.fxQueued++;
+      if (e.code === 'KeyT') this.placeQueued = 'stages';
       if (e.code === 'KeyO' || e.code === 'ArrowLeft') this.placeQueued = 'outside';
       if (e.code === 'KeyI' || e.code === 'ArrowRight') this.placeQueued = 'inside';
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
