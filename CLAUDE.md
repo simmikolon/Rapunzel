@@ -51,10 +51,12 @@ which only copies the two folders together). The design document
   `?place=inside&at=50&spawn=vault` puts a golden door to the treasury
   above the start (`vault1` to `vault6` pick the room's first section);
   `?place=inside&at=200&spawn=dark` puts the lights out above the start.
-  The tower in stages (a trial, `web/src/stages.js`; the title's TOWER board):
-  `?stages=1|0` picks it or the endless game for a visit, `?stage=3` starts
-  at that stage's door, `?retries=3` limits how often one goes on from the
-  last door (`?place=`, `?at=` and `?spawn=` mean the endless tower).
+  The tower in stages (a trial; the title's TOWER board): what each stage is
+  (place, the height it is taken from, length, wall, dark, golden door) and
+  their order are written down in `web/src/stages.js` (`THEMES`, `STAGES`).
+  `?stages=1|0` picks the mode or the endless game for a visit, `?stage=3`
+  starts at that stage's door, `?lives=5` (or `inf`) sets the lives of a
+  round (`?place=`, `?at=` and `?spawn=` mean the endless tower).
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
@@ -65,7 +67,7 @@ which only copies the two folders together). The design document
   `... 40 good bold 1500 1 0 inside` the inside of the tower; `off`
   for `<gates>` runs the tower without gates, a second `off` without
   treasuries: `... inside off off` is the inside's baseline; an eleventh argument
-  `on` (or a number of retries) climbs the tower in stages:
+  `on` (or a number of lives, or `inf`) climbs the tower in stages:
   `... 40 kid bold 300 1 0 outside on on on`). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.

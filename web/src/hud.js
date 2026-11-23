@@ -186,7 +186,11 @@ export class HUD {
     if (world.suns) { g.blit(art.creatures.sun[0], 44, top + 152, { glow: 0.5 }); g.text(`${world.suns}`, 76, top + 154, 18, '#ffe9a0'); }
     // in stages: which one he is in
     const stage = world.stageInfo;
-    if (stage) g.text(`stage ${stage.n}`, 28, top + 196, 16, '#cfe8e3');
+    if (stage) {
+      g.text(`stage ${stage.n}`, 28, top + 196, 16, '#cfe8e3');
+      // and his lives: a little prince for each he still has, this one included
+      if (isFinite(world.lives)) for (let i = 0; i < world.lives; i++) g.blit(art.prince.life, 44 + i * 44, top + 258, { sx: 0.5, sy: 0.5 });
+    }
     // Hearts
     for (let i = 0; i < MAX_HEARTS; i++) {
       const full = i < pl.hearts;

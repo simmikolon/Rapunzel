@@ -3,7 +3,7 @@ import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
 import { TOWER_AREAS, ROSES, COURSE } from './art/tower.js';
-import { towerAreaAt, towerAreaForced } from './towerwall.js';
+import { towerAreaAt, towerAreaForced, stageWall } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
@@ -111,6 +111,7 @@ export class Background {
     this.art = art;
     this.towerVeil = { ...TOWER_VEIL };
     this.forceWall = null;       // dev (?wall=): one look of the wall all the way up, or 'plain' for none
+    this.wall = null;            // in stages: the wall of the stage he is in, tile by tile (setWall); null: the tower's own plan
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
@@ -127,6 +128,9 @@ export class Background {
 
   // Where the round is climbed (places.js): the world says so before every reset.
   setPlace(place) { this.place = place; }
+  // In stages: the look of the tower's wall for the stage that begins with the camera where it is (towerwall.js
+  // stageWall; `kind` undefined is plain wall). setWall(null) gives the tower its own plan back.
+  setWall(kind, cam, seed = 0, n = 0) { this.wall = kind === null ? null : stageWall(kind, Math.floor(cam.layerY(PARALLAX_TOWER) / TILE_H), seed, n); }
   get inside() { return !!this.place && this.place.inside; }
   skyColors(cam) { return skyAt(cam.y); }
 
@@ -215,7 +219,7 @@ export class Background {
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     const t = this.art.tiles;
     // the wall, tile by tile: plain, or the look of the area it is in (towerwall.js); what grows on it is laid over it below
-    const areaAt = (k) => (this.forceWall && TOWER_AREAS[this.forceWall] ? towerAreaForced(this.forceWall, k) : this.forceWall ? null : towerAreaAt(k));
+    const areaAt = (k) => (this.forceWall && TOWER_AREAS[this.forceWall] ? towerAreaForced(this.forceWall, k) : this.forceWall ? null : this.wall ? this.wall(k) : towerAreaAt(k));
     const of = (A, a) => (typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]);
     const spriteOf = (a) => of(t.towerAreas[a.kind], a);
     const grown = [], hung = [];

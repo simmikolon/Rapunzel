@@ -152,6 +152,8 @@ export const VAULT_FIRST = [4000, 7000], VAULT_EVERY = [20000, 30000];
 export const DARK_FROM = 15000, DARK_EVERY = [14000, 22000], DARK_LEN = [3200, 4200], DARK_FADE = 520;
 
 export const CUT_FROM = 30000, CUT_EVERY = [12000, 18000], CUT_AHEAD = 1600, CUT_MARGIN = 240, CUT_ROOM = 1000;
+// In stages (stages.js) a stage has at most one braid cut and one flock, where its zone has them at all: this is how likely.
+const STAGE_CUT = 0.5, STAGE_FLOCK = 0.35;
 const braidOnly = (layout) => layout.split('+').every((k) => k === 'ribbon' || k === 'bow');
 
 function tierAt(y) {
@@ -228,36 +230,58 @@ export class Level {
     this.nextVaultY = this.vaults && this.place.inside ? this.rngVault.range(VAULT_FIRST[0], VAULT_FIRST[1]) : Infinity;   // the first golden door between 40 and 70 m
     this.lastPower = null;       // the kind of the last power-up (never twice in a row)
     this.nextPowerY = this.rngPower.range(POWER_FIRST[0], POWER_FIRST[1]);   // the next power-up waits above the first row from here
-    this.stage = this.route ? stageAt(this.route, 0) : null;
+    this.stage = this.route ? { ...stageAt(this.route, 0), base: 0, y0: 0 } : null;
     this.endNext = null;
-    if (this.stage) this.planStage();
+    if (this.stage) this.beginStage();
   }
 
   // --- stages (stages.js) ----------------------------------------------------
+  // How hard the tower is at height y. In the endless game that is the
+  // height; in stages it is how far he has come in all (a stage is built at
+  // its theme's height, `y0`, and `base` is what he had climbed before it).
+  tierOf(y) { const st = this.stage; return tierAt(st ? st.base + (y - st.y0) : y); }
+  // A stage begins (or begins again): what the endless game plans along the
+  // height is planned from the stage's start instead, wherever in the tower
+  // that is. A braid cut and a flock where the zone has them, one of each at
+  // the most; the dark for the whole stage or not at all (`dark`; the lights
+  // are back on before the door); a power-up soon.
+  beginStage() {
+    const st = this.stage, R = this.route;
+    // (not in every stage: in the endless tower a cut comes every 120 to 180 m and a flock every 300 to 450)
+    this.cutPlan = null; this.nextCutY = this.rngTower.chance(STAGE_CUT) ? Math.max(CUT_FROM, st.from + 2000) : Infinity;
+    this.flockPlan = null; this.flockNext = false; this.nextFlockY = this.rngFauna.chance(STAGE_FLOCK) ? Math.max(FLOCK_FROM, st.from + 2500 + this.rngFauna.range(0, 2500)) : Infinity;
+    const said = this.darks.some((d) => d.said && d.stage === st.n);
+    this.darks = st.dark ? [{ from: st.from + 300, to: st.to - R.calmBefore, said, stage: st.n }] : [];
+    this.nextDarkY = Infinity;
+    this.nextPowerY = st.from + this.rngPower.range(600, 2500);
+    this.planStage();
+  }
   // What a stage has besides its rows: no gate but the door at its end, and
-  // inside the tower a golden door, once, where the treasury behind it still
-  // lets him out below the stage's last stretch. Its end is not built yet
-  // (or no longer: the rows above were cleared).
+  // (`vault`) a golden door, once, where the treasury behind it still lets
+  // him out below the stage's last stretch. Its end is not built yet (or no
+  // longer: the rows above were cleared).
   planStage() {
     const st = this.stage, R = this.route;
     st.end = null; this.endNext = null;
     this.nextGateY = Infinity;
+    this.nextDarkY = Infinity;                                           // (the dark is the stage's or nobody's: beginStage)
     const room = st.to - R.calmBefore - 600 - VAULT.rise - st.from;      // how far up the stage a golden door may stand
-    this.nextVaultY = this.vaults && this.place.inside && !st.vaulted && room > 800 ? st.from + this.rngVault.range(600, room) : Infinity;
+    this.nextVaultY = this.vaults && st.vault && !st.vaulted && room > 800 ? st.from + this.rngVault.range(600, room) : Infinity;
   }
-  // He came through the door at height y into stage `st`: its rows from here.
+  // He came through the door into stage `st` (stages.js stageAt, with `base`:
+  // what he has climbed so far): he stands at its start, y, and its rows go up from there.
   enterStage(st, y, gap) {
-    this.stage = { ...st, from: y, to: Math.max(st.to, y + 2500) };
+    this.stage = { ...st, y0: y };
     this.restartFrom(y, gap);
-    this.modelCam = this.world.cam.y;      // the camera rested on the last stage's floor: lower than the climb implied
-    this.planStage();
+    this.modelCam = this.world.cam.y;
+    this.beginStage();
   }
   // He goes on from the door at height y he had come through (or from the
   // lawn): the stage's rows are built again from there, others than before.
   retryStage(y, gap) {
     this.restartFrom(y, gap);
     this.modelCam = this.world.cam.y;      // the camera is back at the door
-    this.planStage();
+    this.beginStage();
   }
   // He left the stage's rows for the treasury (the world cleared them): what stood of its end is gone with them.
   clearStageEnd() { if (this.stage) { this.stage.end = null; this.endNext = null; } }
@@ -336,7 +360,7 @@ export class Level {
     const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len !== 'stub');
     // one thing per branch: not where a spider hangs or a squirrel lives
     if (!branch || this.world.enemies.some((e) => (e.kind === 'spider' && Math.abs(e.anchorY - (branch.y - 28)) < 2) || ((e.kind === 'squirrel' || e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === branch))) return null;
-    const T = tierAt(branch.y);
+    const T = this.tierOf(branch.y);
     const half = branch.w / 2 - 30;
     const bat = new Bat(branch, rf.range(-half, half), clamp((T.index - 2) / 2.5, 0, 1), this.child(rf));
     this.world.enemies.push(bat);
@@ -364,12 +388,12 @@ export class Level {
       && !this.world.enemies.some((e) => (e.kind === 'bat' || e.kind === 'web' || e.kind === 'cat') && e.platform === p));
     if (!ledge) return null;
     const half = ledge.w / 2 - 44;
-    const cat = new Cat(ledge, rf.range(-half, half), clamp((tierAt(ledge.y).index - 2) / 2.5, 0, 1), this.child(rf));
+    const cat = new Cat(ledge, rf.range(-half, half), clamp((this.tierOf(ledge.y).index - 2) / 2.5, 0, 1), this.child(rf));
     this.world.enemies.push(cat);
     return cat;
   }
 
-  get difficulty() { return tierAt(this.world.player.maxY); }
+  get difficulty() { return this.tierOf(this.world.player.maxY); }
   pacingAt(y) { return this.stage ? stagePacing(this.route, this.stage, y) : pacingAt(y); }
 
   generateUpTo(yTop) {
@@ -450,7 +474,7 @@ export class Level {
     const branch = platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'long')
       || platforms.find((p) => (p.kind === 'branchL' || p.kind === 'branchR') && !p.dry && p.len === 'normal');
     if (!branch) return null;
-    const T = tierAt(branch.y);
+    const T = this.tierOf(branch.y);
     const sq = new Squirrel(branch, r.range(-60, 60), r.range(95, 150), clamp((T.index - 1.5) / 2.5, 0.3, 1), this.child());
     this.world.enemies.push(sq);
     return sq;
@@ -472,7 +496,7 @@ export class Level {
     const cover = this.world.platforms.filter((p) => (inside ? hasDoor(p) : p.kind === 'balcony' || p.kind === 'gate'));
     const free = (inside ? hatchesBetween(lyRow - 60, lyRow + 420, cover) : windowsBetween(lyRow - 60, lyRow + 420, cover)).filter((w) => !taken.some((e) => e.win.i === w.i && e.win.side === w.side));
     if (!free.length) return null;
-    const T = tierAt(y);
+    const T = this.tierOf(y);
     const gr = new Grabber(rt.pick(free), this.child(rt), (inside ? 165 : 130) + 30 * clamp((T.index - 2.5) / 2.5, 0, 1), this.world.cam.y);
     this.world.enemies.push(gr);
     return gr;
@@ -480,7 +504,7 @@ export class Level {
 
   makeRow() {
     const r = this.rng;
-    const T = tierAt(this.nextY);
+    const T = this.tierOf(this.nextY);
     const y = this.nextY;
     // A stage (stages.js): this row is the door over its last floor (`doorRow`), or its end is due (`due`: the floor is
     // the first row from its last height on that nothing else has a claim to), or it is so close to its end that
@@ -670,7 +694,7 @@ export class Level {
     // Decide the next row's layout now: from a front-plane row up to a row
     // that only has tower-layer platforms the effective gap grows while the
     // camera climbs, so that gap is kept short.
-    const nextLayout = this.pickLayout(tierAt(y + gapMin), y + gapMin, this.rowIndex + 1);
+    const nextLayout = this.pickLayout(this.tierOf(y + gapMin), y + gapMin, this.rowIndex + 1);
     const nextTowerOnly = nextLayout.split('+').every((k) => k === 'ribbon' || k === 'bow' || k.startsWith('balcony'));
     if (front && nextTowerOnly) gapMax = Math.min(gapMax, platforms.some((p) => p.dry) ? LAYER_GAP_CAP_DRY : LAYER_GAP_CAP);
     gapMax = Math.max(gapMax, gapMin);

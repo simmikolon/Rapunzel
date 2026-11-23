@@ -60,5 +60,32 @@ export function towerAreaAt(k) {
   }
   return null;
 }
+// The wall of one stage (stages.js: a stage has one look, the looks do not
+// mix there): from tile k0 up, `kind` in stretches (its `enter` tile, its
+// loop once or more, its `leave` tile) with two to four tiles of plain wall
+// between them, so that it is a wall something has happened to and not a
+// pattern. `n` is passed on (the roses' colour). 'foot' is the plain wall
+// over the tower's foot of old stone; any other name is plain wall.
+export function stageWall(kind, k0, seed, n = 0) {
+  if (kind === 'foot') return (k) => (k >= 0 && k < FOOT.tiles.length ? { kind: FOOT.kind, tile: FOOT.tiles[k], i: k, n: 0 } : null);
+  if (!TOWER_AREAS[kind]) return () => null;
+  const list = [], M = TOWER_AREAS[kind].loop, [lo, hi] = LOOPS[kind];
+  let next = k0 + 1 + (hash(seed * 13 + 3) % 2);
+  return (k) => {
+    if (k < k0) return null;
+    while (next <= k) {
+      const h = hash(seed * 7 + list.length * 31 + 5), tiles = ['enter'];
+      for (let j = 0, len = (lo + (h % (hi - lo + 1))) * M; j < len; j++) tiles.push(j % M);
+      tiles.push('leave');
+      list.push({ from: next, tiles });
+      next += tiles.length + 2 + ((h >>> 8) % 3);
+    }
+    for (let i = list.length - 1; i >= 0; i--) {
+      const a = list[i];
+      if (k >= a.from) return k < a.from + a.tiles.length ? { kind, tile: a.tiles[k - a.from], i: k - a.from, n } : null;
+    }
+    return null;
+  };
+}
 // A look all the way up (dev: ?wall=ivy): the loop's tiles in turn.
 export const towerAreaForced = (kind, k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop, i: k + 1, n: Math.max(0, Math.floor(k / TOWER_AREAS[kind].loop)) });

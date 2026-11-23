@@ -85,7 +85,10 @@ export class World {
     this.vault = null;            // the treasury he is in (enterVault): its floor, ceiling, doors, and what he had when he came
     this.checkpoint = null;       // in stages: the door he goes on from after a fall, and where the camera was ({ door, camY }); null is the lawn
     this.retries = 0;             // how often he has gone on from a door this round
-    this.topY = 0;                // the highest he was before he last went back to a door (the score counts it)
+    this.lives = this.route ? this.route.lives : 1;   // in stages: how often he may still fall or lose his last heart, this time included
+    this.topY = 0;                // the highest he was in this stage before he last went back to its door (the score counts it)
+    this.scoreBase = 0;           // in stages: what he had climbed before the stage he is in (px), and the height that stage began at
+    this.scoreFrom = 0;
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
@@ -97,6 +100,7 @@ export class World {
     this.cam.reset();
     this.player.reset(0, 0);
     this.level.reset();
+    if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
     this.suns = 0;
     this.stomps = 0;
     this.nextWitchY = 12000;
@@ -121,9 +125,12 @@ export class World {
     this.level.generateUpTo(H + 900);
   }
 
-  get heightM() { return Math.max(0, Math.floor(Math.max(this.topY, this.player.maxY) / PX_PER_METER)); }
-  // In stages: the stage he is in (its number from 1, its zone's name), or null.
-  get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: zoneAt((st.from + st.to) / 2, this.level.zones).name } : null; }
+  // How high he has climbed (px, m). In the endless game that is the height he reached; in stages, where a stage is
+  // built at its theme's height, it is what he climbed in the stages before plus how far up this one he has been.
+  get scoreY() { return this.scoreBase + Math.max(this.topY, this.player.maxY) - this.scoreFrom; }
+  get heightM() { return Math.max(0, Math.floor(this.scoreY / PX_PER_METER)); }
+  // In stages: the stage he is in (its number from 1, its name), or null.
+  get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: st.name } : null; }
 
   start() {
     this.started = true;
@@ -301,10 +308,7 @@ export class World {
     const inside = this.place.inside, style = inside ? STONE_STYLE : treeStyleIndexAt(p.y);
     const onBraid = (kind) => { const ly = Platform.worldToLayer(p.y, PARALLAX_TOWER, this.cam.y); return ly > this.braidCut.ly ? new Platform(kind, p.y, { ly }) : null; };
     switch (p.kind) {
-      case 'branchL': case 'branchR':
-        // (a stage's door above the trees: out there no tree is left to carry a branch, so a ledge is a cloud)
-        if (!inside && this.place.sky && cloudAmount(p.y) >= 0.5) return new Platform('cloud', p.y, { x: Math.sign(p.x) * 170, cloud: 'thick', size: 'wide', variant: 0, phase: 0 });
-        p.style = style; return p;
+      case 'branchL': case 'branchR': p.style = style; return p;
       case 'swing': return p;
       case 'ribbon': return inside ? new Platform('chandelier', p.y) : null;
       case 'bow': return inside ? new Platform('bell', p.y) : null;
@@ -327,27 +331,20 @@ export class World {
   switchPlace(gate) {
     if (gate.gold === 'in') return this.enterVault(gate);
     if (gate.gold === 'out') return this.leaveVault(gate);
+    if (gate.exit) return this.nextStage(gate);
     const pl = this.player;
-    const next = gate.exit ? stageAt(this.route, this.level.stage.n + 1) : null;      // a stage's door leads to the next stage
-    this.setPlace(next ? next.place : this.place.other);
+    this.setPlace(this.place.other);
     const top = gate.y + 60;
     this.platforms = this.platforms.map((p) => (p === gate || p.kind === 'ground' ? p : p.y > top || !p.landable ? null : this.twin(p))).filter(Boolean);
     this.enemies.length = 0;
     this.fields.length = 0;
     this.pickups = this.pickups.filter((k) => k.y <= top);
     this.particles.clear();
-    if (next) { this.cam.cap = null; this.level.enterStage(next, gate.y, BEAT * 0.9); }
-    else this.level.restartFrom(gate.y, BEAT * 0.9);
+    this.level.restartFrom(gate.y, BEAT * 0.9);
     this.level.generateUpTo(this.cam.top + 900);
     this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
     this.floorName = zoneAt(pl.maxY, this.level.zones).name;      // the place is said, not the floor
-    if (next) {
-      // from here he goes on after a fall, and the new stage says its number and its name
-      this.checkpoint = { door: gate, camY: this.cam.y };
-      const info = this.stageInfo;
-      this.toast(`Stage ${info.n}: ${info.name}`, '#fff2a8', 2.4);
-      this.onStage(pl, this.level.stage);
-    } else this.toast(this.place.arrive, '#fff2a8', 2);
+    this.toast(this.place.arrive, '#fff2a8', 2);
     this.onGatePass(pl, gate);
   }
   onGatePass(pl, gate) {}                   // the simulator counts here
@@ -355,20 +352,53 @@ export class World {
   onRetry(pl, stage, cause) {}
 
   // --- Stages (stages.js) -----------------------------------------------------
+  // Through a stage's door (the picture is shut): the next stage is another
+  // piece of the tower altogether, built at its theme's height, so nothing
+  // comes along but the prince and what he has. He stands on a landing like
+  // the one he left, at the same place in the picture, the door behind him;
+  // the wall has the stage's look, the braid is whole again, and what he has
+  // climbed so far is kept apart from the height he is at now (scoreY).
+  nextStage(gate) {
+    const pl = this.player, base = this.scoreY, lift = gate.y - this.cam.y;
+    const st = stageAt(this.route, this.level.stage.n + 1), y = st.from;
+    this.setPlace(st.place);
+    this.platforms = this.platforms.filter((p) => p.kind === 'ground');
+    this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
+    this.particles.clear();
+    this.braidCut = { ly: -Infinity, pieces: [] };
+    this.cam.cap = null;
+    this.cam.jumpTo(y - lift);
+    const door = new Platform('gate', y, { side: gate.side, x: gate.x, ly: Platform.worldToLayer(y, Platform.layerFactor('gate'), this.cam.y) });
+    door.used = true;
+    this.platforms.push(door);
+    pl.x = door.x; pl.y = y; pl.prevY = y; pl.maxY = y; pl.landedOn = door;
+    this.scoreBase = base; this.scoreFrom = y; this.topY = y;
+    this.bg.setWall(st.wall, this.cam, st.n, st.roses);
+    this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
+    this.level.generateUpTo(this.cam.top + 900);
+    this.nextWitchY = Math.max(12000, y + 3000);      // she and the storks keep to the heights they have in the endless tower
+    this.nextStorkY = Math.max(47000, y + 400);
+    this.floorName = zoneAt(y, this.level.zones).name;
+    this.checkpoint = { door, camY: this.cam.y };      // from here he goes on after a fall
+    this.toast(`Stage ${st.n + 1}: ${st.name}`, '#fff2a8', 2.4);
+    this.onStage(pl, this.level.stage);
+    this.onGatePass(pl, gate);
+  }
   // The level has built a stage's end: the camera stops with its last floor
   // in the picture (camera.js `cap`), so he can bounce there until he has
   // found the door, and whoever drops out of the picture there is carried
   // back up (rescue) instead of ending his round below a floor.
   onStageEnd(st) { this.cam.cap = st.end.floorY - this.route.floorShown; }
   get atStageEnd() { const st = this.route && this.level.stage; return !!st && !!st.end && this.player.maxY >= st.end.floorY; }
-  // He fell or lost his last heart. In stages he goes on from the last door
-  // he came through (the first time, from the lawn) while the route lets
-  // him: the picture closes, and backToDoor() puts everything in its place.
-  // False: the round is over.
-  get canRetry() { const R = this.route; return !!R && R.retry === 'door' && !this.vault && this.retries < R.retries; }
+  // He fell or lost his last heart: that costs a life. With one left, in
+  // stages, he goes on from the last door he came through (the first time,
+  // from the lawn): the picture closes, and backToDoor() puts everything in
+  // its place. False: it was his last, the round is over.
+  get canRetry() { return !!this.route && !this.vault && this.lives > 1; }
   retry() {
     if (this.passage && this.passage.retry) return true;
     if (!this.canRetry) return false;
+    this.lives--;
     this.retries++;
     this.passage = { retry: true, gate: null, t: GATE_OPEN, switched: false };
     this.audio.gate();
@@ -395,6 +425,7 @@ export class World {
     this.level.retryStage(y, door ? BEAT * 0.9 : 300);
     this.level.generateUpTo(this.cam.top + 900);
     this.nextWitchY = Math.max(this.nextWitchY, y + 3000);
+    this.toast(this.lives === 1 ? 'Last life!' : `${this.lives} lives left`, this.lives === 1 ? '#ff9ab0' : '#fff2a8', 2.2);
     this.onRetry(pl, this.level.stage, cause);
   }
   onDark(pl, d) {}                          // and here
@@ -644,8 +675,8 @@ export class World {
     // A stage's end comes into view: where it goes on is said.
     const st = this.route && this.level.stage;
     if (st && st.end && !st.end.said && pl.maxY > st.end.floorY - 700) { st.end.said = true; this.toast('To the door!', '#fff2a8', 2); }
-    // Inside the tower a new floor says its name.
-    if (this.place.inside) {
+    // Inside the tower a new floor says its name (in stages the stage has said it).
+    if (this.place.inside && !this.route) {
       const floor = zoneAt(pl.maxY, this.level.zones).name;
       if (floor !== this.floorName) { this.floorName = floor; this.toast(floor[0].toUpperCase() + floor.slice(1), '#e9e6f7', 2.2); }
     }

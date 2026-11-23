@@ -192,18 +192,18 @@ function makeWorld(input) {
   return new World({ art, input, best: 0 });
 }
 
-export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, retries = null } = {}) {
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null } = {}) {
   const input = new BotInput();
   const world = makeWorld(input);
   world.level.gates = gates;        // false: the tower without gates between outside and inside (the baseline)
   world.level.vaults = vaults;      // false: the tower without treasuries (the baseline before them)
-  if (stages) world.route = { ...STAGES, retries: retries == null ? Infinity : retries };   // the tower in stages (stages.js); `retries`: how often he may go on from a door
+  if (stages) world.route = { ...STAGES, lives: lives == null ? STAGES.lives : lives };   // the tower in stages (stages.js); `lives`: another number of them than the game's (Infinity: he goes on for ever)
   world.reset(seed, place);
   if (startM) startAt(world, startM);
   world.start();
   const bot = new Bot(world, input, skill, policy, new RNG(seed * 7919 + 13));
   const stats = { seed, startM, height: 0, climb: 0, cause: null, time: 0, hits: {}, hitsByBand: {}, hitsByBandKind: {}, hearts: 0, lanterns: 0, boosts: 0, stomps: 0, punches: 0, witches: 0, scissors: 0, cuts: 0, cutAt: [], fellAfterCut: 0, powers: {}, powerSpawns: 0, powerTime: 0, suns: 0, deathPower: null, flocks: 0, flockPass: 0, flockTurn: 0, fellAtFlock: 0, webCatch: 0, webFree: 0, webBite: 0, webPunch: 0, gates: 0, darks: 0, vaultDoors: 0, vaults: 0, vaultSuns: 0, vaultSunsOf: 0, vaultHearts: 0, vaultTime: 0, vaultMaxTime: 0, chests: 0, rescues: 0 };
-  const band = () => Math.floor(world.player.maxY / PX_PER_METER / 100) * 100;
+  const band = () => Math.floor(world.heightM / 100) * 100;      // (by what he has climbed: in stages that is not the height he is at)
   const origHurt = world.onPlayerHurt.bind(world);
   world.onPlayerHurt = (pl, src) => { const k = src.kind || 'unknown'; stats.hits[k] = (stats.hits[k] || 0) + 1; const b = band(); stats.hitsByBand[b] = (stats.hitsByBand[b] || 0) + 1; const bk = stats.hitsByBandKind[b] || (stats.hitsByBandKind[b] = {}); bk[k] = (bk[k] || 0) + 1; origHurt(pl, src); };
   const origCollect = world.collect.bind(world);
@@ -270,14 +270,14 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   return stats;
 }
 
-export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, retries = null } = {}) {
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null } = {}) {
   const all = [];
-  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates, vaults, stages, retries }));
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates, vaults, stages, lives }));
   // the place is named in the report only when it is not the outside, so the outside's reports read as they always did
   const cfg = place === 'outside' ? { runs, skill, policy, cap, startM } : { runs, skill, policy, cap, startM, place };
   if (!gates) cfg.gates = false;
   if (!vaults && (place !== 'outside' || gates)) cfg.vaults = false;      // (the outside without gates has none to switch off)
-  if (stages) cfg.stages = retries == null ? 'on' : `on, ${retries} retries`;
+  if (stages) cfg.stages = `${lives == null ? STAGES.lives : lives} lives`;
   return summarize(all, cfg);
 }
 

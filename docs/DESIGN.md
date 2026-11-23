@@ -681,25 +681,60 @@ is a pool to draw from, not a promise.
   that floor in the picture, so one can bounce there until the door
   is found, and whoever drops out of the picture there is carried
   back up by the bubble. The door leads into the next stage in the
-  other place, which says its number and its name ("Stage 3: deep
-  forest"). Whoever falls or loses the last heart goes on from the
-  last door he came through (a golden door's way out counts), with
-  all hearts, his suns and the height he had; the stage's rows are
-  built anew, so it is not the same stretch again. The height stays
-  the score.
-  Looks, creatures and difficulty still come from the height, so the
-  stages are cut along the zones: forest floor (to 40 m), the hall
-  (to 120 m, with the first golden door), deep forest (to 190 m), the
-  guard rooms (to 250 m), the windows (to 325 m), the library (to
-  400 m), above the trees (to 485 m), the belfry (to 570 m), then on
-  in turn, 80 to 95 m each. No free gates in this mode; one treasury
-  to a stage where there is room for it. Inside a stage the pressure
+  other place, which says its number and its name ("Stage 3: the rose
+  wall").
+  **Themes.** What a stage is, is written down in one place:
+  `THEMES` in `src/stages.js` says for each kind of stage its name,
+  its place, the height of the endless tower it is taken from (`at`:
+  the zone and its creatures, the trees, the forest behind, the sky
+  and the light, the floor of the tower inside all come with that
+  height), how long it is, the look of the tower's wall (one look for
+  the whole stage; the looks no longer mix), whether the lights are
+  out (inside: the dark is a stage of its own, the other stages stay
+  lit) and whether a golden door stands in it. `STAGES.route` is the
+  order of a round's first stages and `STAGES.loop` what follows,
+  round and round. A stage is built at its theme's height in the
+  world; the door takes the prince to another piece of the tower
+  altogether, and what he has climbed is counted apart from the
+  height he is at. How hard a stage is comes from how far he has come
+  in all, so a theme that returns is harder then.
+
+  | # | Stage | Place | Taken from | Long | Wall | |
+  |---|---|---|---|---|---|---|
+  | 1 | the forest floor | outside | 0 m | 60 m | plain, the stone foot | the lawn |
+  | 2 | the hall | inside | 4 m | 114 m | | golden door |
+  | 3 | the rose wall | outside | 18 m | 95 m | briar, red roses | |
+  | 4 | the guard rooms | inside | 124 m | 100 m | | |
+  | 5 | the deep forest | outside | 128 m | 105 m | moss | |
+  | 6 | the dark rooms | inside | 136 m | 95 m | | the lights are out |
+  | 7 | the masons' site | outside | 256 m | 100 m | mended | |
+  | 8 | the library | inside | 254 m | 130 m | | golden door |
+  | 9 | above the trees | outside | 468 m | 105 m | old stone | |
+  | 10 | the belfry | inside | 404 m | 105 m | | |
+
+  After these: the crumbling tower (outside, 262 m, crumbling wall),
+  the hall, the deep forest, the dark rooms, the night sky (outside,
+  705 m, briar with white roses), the guard rooms, the ivy wall
+  (outside, 24 m), the library, above the trees, the belfry, the rose
+  wall, the dark rooms, the masons' site, the guard rooms, and round
+  again.
+  **Hearts and lives.** The three hearts are the health inside a
+  stage. A round has three lives on top (`STAGES.lives`, shown as
+  three little princes under the stage's number): a fall or the last
+  heart costs one, and with one left he goes on from the last door he
+  came through (a golden door's way out counts) with all hearts, his
+  suns and the height he had; the stage's rows are built anew. With
+  the last life gone the round is over, as in the endless game. The
+  height stays the score.
+  No free gates in this mode. A stage has at most one braid cut (half
+  of those whose zone has the witch's scissors) and one flock (a
+  third of those whose zone has it). Inside a stage the pressure
   builds toward its end; the first 5 m behind a door and the last
   12 m before the next are calm.
   In the simulator: `tools/analyze.mjs ... on on on` (the eleventh
-  argument; a number instead of `on` limits how often the bot goes on
-  from a door), with a report of stages reached, seconds a stage took
-  and where one went on from a door.
+  argument: `on` with the game's lives, a number with that many,
+  `inf` going on for ever), with a report of stages reached, seconds
+  a stage took and where one went on from a door.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
 
@@ -1026,7 +1061,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| Stages (trial) | ends at 40, 120, 190, 250, 325, 400, 485, 570 m, then 80–95 m each, the places in turn from the outside; a stage's end is the first row from that height on that no flock, braid cut or dark stretch has a claim to, and none of those begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; going on from the last door: as often as it takes (`?retries=3` for a limit, `?stage=3` starts there, `?stages=0|1` picks the mode) |
+| Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
 | The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
@@ -2340,3 +2375,54 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   `flow.mjs` passes, and `stages.mjs` is the new check for the mode.
   Not measured and not known: whether it is more fun. That is what
   the branch is for.
+- 2026-11-23: Stages get themes, more length and lives
+  (`element/stages`). Simon played the trial: it is really good, the
+  passages work cleanly, the direction is right. Three things: some
+  stages are much too short; a stage should have a theme that is
+  fixed somewhere (the mossy tower or the broken tower belonging to
+  one stage and not turning up between all of them; inside, the dark
+  not coming over a stage suddenly but being a stage of its own that
+  returns), written down as a description or a configuration; and the
+  round never ends, so one is forced to quit while still alive: three
+  hearts as the health inside a stage and three lives on top.
+  Decisions:
+  - A theme is a piece of the endless tower with a face of its own:
+    `THEMES` in `src/stages.js` gives it a name, a place, the height
+    it is taken from, a length, a wall, the dark or not, a golden door
+    or not. That file is the configuration asked for; the table in
+    section 7 is its description.
+  - A stage is built at its theme's height in the world. Everything
+    that goes by the height (zone, creatures, trees, forest, sky,
+    light, the tower's floors) is there already and need not be
+    taught about stages; the door carries the prince to that height,
+    the landing staying where it was in the picture, and nothing else
+    comes along. The first cut of the stages had kept the heights
+    running on and so could only ever show the zones in their old
+    order and at their old lengths.
+  - The score is counted apart: what he climbed in the stages before
+    plus how far up this one he has been. Difficulty follows the
+    score, not the theme's height, so the forest floor can come back
+    at 900 m and be hard.
+  - The wall has one look per stage, laid in stretches with two to
+    four plain tiles between them: one look all the way up is a
+    pattern, a wall with gaps is a wall something happened to.
+  - The dark is a stage (the dark rooms), dark from three metres
+    behind its door to twelve before the next one, where the lights
+    are on again so that the door is seen. No other stage goes dark.
+  - What the endless game plans along the height is planned from a
+    stage's start: at most one braid cut and one flock per stage, and
+    not in every one (a flock in each stage was what the first
+    measurement showed: eight a run).
+  - Stages are 95 to 130 m, the first 60 m: the good bot needs about
+    30 s for one where it needed 10 to 25 s.
+  - Three lives. A life is lost by a fall or the last heart; the
+    lives are shown as little princes. Not built: winning lives back
+    (a hundred suns for a life would give the suns a use; to be
+    decided after playing).
+  Measured (40 runs each, three lives, to 1500 m): the good bold bot's
+  median is 1182 m (14 of 40 reach 1500 m), a run lasts 316 s, a
+  stage 26 to 36 s, 1.13 hits per 100 m; the kid's median is 206 m
+  (about 85 m in the endless game), 55 % get into the third stage, a
+  run lasts 88 s, and every life is lost by a fall. The endless game
+  is untouched: `tools/checks/identity.sh` reports all five the same,
+  `flow.mjs` and `stages.mjs` pass.

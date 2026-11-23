@@ -54,7 +54,8 @@ class Game {
     if (this.dev.stages === '1' || this.dev.stage) this.round.mode = 'stages';
     else if (this.dev.stages === '0' || this.dev.place || this.dev.at || this.dev.spawn) this.round.mode = 'endless';
     this.route = { ...STAGES };
-    if (this.dev.retries !== '' && isFinite(+this.dev.retries)) this.route.retries = Math.max(0, +this.dev.retries);   // ?retries=3 for this visit
+    if (this.dev.lives === 'inf') this.route.lives = Infinity;                                                       // ?lives=5 (or inf) for this visit
+    else if (this.dev.lives && isFinite(+this.dev.lives)) this.route.lives = Math.max(1, Math.floor(+this.dev.lives));
     this.world.onStage = () => this.keepBest();
     this.world.onRetry = () => this.keepBest();
     if (this.staged || this.round.place !== this.world.placeName) this.resetWorld();

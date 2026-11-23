@@ -1,4 +1,5 @@
 import { buildPrince } from './prince.js';
+import { makeCanvas } from './sprite.js';
 import { buildPlatforms } from './platforms.js';
 import { buildCreatures } from './creatures.js';
 import { buildTiles } from './tiles.js';
@@ -17,9 +18,19 @@ import { buildCat } from './cat.js';
 import { buildVault } from './vault.js';
 import { buildBackdrop } from './backdrop.js';
 
+// A life in the HUD (the tower in stages): the prince's head with its crown, cut from his standing sprite.
+function lifeIcon(prince) {
+  const src = prince.right.standing, w = src.w, h = Math.round(src.h * 0.4);
+  const canvas = makeCanvas(w, h);
+  canvas.getContext('2d').drawImage(src.canvas, 0, 0, w, h, 0, 0, w, h);
+  return { canvas, w, h, ax: w / 2, ay: h };
+}
+
 export function buildAllArt() {
+  const prince = buildPrince();
+  prince.life = lifeIcon(prince);
   return {
-    prince: buildPrince(),
+    prince,
     platforms: buildPlatforms(),
     creatures: buildCreatures(),
     tiles: buildTiles(),

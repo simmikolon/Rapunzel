@@ -25,7 +25,7 @@
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 //   ?stages=1        the tower in stages for this visit (0: the endless game), whatever the title's choice (stages.js)
 //   ?stage=3         start at the door into that stage (the first is 1)
-//   ?retries=3       how often one goes on from the last door in a round of stages (none given: as often as it takes)
+//   ?lives=5         how many lives a round of stages has (stages.js STAGES.lives; inf: he goes on for ever)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
 import { zoneAt } from './level.js';
@@ -41,7 +41,7 @@ import { POWERS } from './powerups.js';
 export function devParams() {
   const q = new URLSearchParams(location.search);
   return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '',
-    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), retries: q.get('retries') == null ? '' : q.get('retries') };
+    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '' };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
@@ -88,11 +88,17 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
 export function startStage(world, n) {
   if (!world.route || n <= 0) return;
   const st = stageAt(world.route, n);
+  // as if he had come through every door below without going back once: he has climbed what those stages are long
+  let base = 0;
+  for (let i = 0; i < n; i++) base += stageAt(world.route, i).len * PX_PER_METER;
   world.setPlace(st.place);
-  world.level.stage = st;
+  world.level.stage = { ...st, base, y0: st.from };
   world.level.restartFrom(st.from, 300);      // (the place's zones)
-  world.level.planStage();
+  world.level.beginStage();
   startAt(world, st.from / PX_PER_METER, '', true);
+  world.scoreBase = base; world.scoreFrom = st.from; world.topY = st.from;
+  world.bg.setWall(st.wall, world.cam, st.n, st.roses);
+  world.nextMilestone = Math.floor(world.heightM / 100) * 100 + 100;
   // the branch startAt put under him stands in for the door
   const start = world.platforms.find((q) => q.kind !== 'ground' && Math.abs(q.y - (st.from - 10)) < 1);
   world.checkpoint = start ? { door: start, camY: world.cam.y } : null;
@@ -165,5 +171,5 @@ export function spawnNear(world, element) {
 
 export function devLabel(world) {
   const st = world.route && world.level.stage;
-  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}${st ? `  stage ${st.n + 1} to ${Math.round(st.to / PX_PER_METER)} m, again ${world.retries}` : ''}`;
+  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}${st ? `  stage ${st.n + 1} ${st.key}: at ${Math.round(world.player.maxY / PX_PER_METER)} of ${Math.round(st.from / PX_PER_METER)}-${Math.round(st.to / PX_PER_METER)} m` : ''}`;
 }

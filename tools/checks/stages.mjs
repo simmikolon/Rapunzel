@@ -18,7 +18,7 @@ const open = async (url) => {
 };
 const state = (page) => page.evaluate(() => {
   const w = window.game.world, st = w.level.stage, pl = w.player;
-  return { mode: window.game.mode, place: w.place.name, stage: st ? st.n + 1 : 0, end: !!(st && st.end), cap: w.cam.cap, camY: Math.round(w.cam.y), y: Math.round(pl.y), alive: pl.alive, hearts: pl.hearts, h: w.heightM, retries: w.retries, over: w.over, toast: w.toasts.map((t) => t.text).join('|') };
+  return { mode: window.game.mode, place: w.place.name, stage: st ? st.n + 1 : 0, end: !!(st && st.end), cap: w.cam.cap, camY: Math.round(w.cam.y), y: Math.round(pl.y), alive: pl.alive, hearts: pl.hearts, h: w.heightM, retries: w.retries, lives: w.lives, wall: w.level.stage ? w.level.stage.wall || 'plain' : '', key: st ? st.key : '', over: w.over, toast: w.toasts.map((t) => t.text).join('|') };
 });
 {
   // the title: a fresh save plays the tower in stages; T, O and I pick the climb
@@ -66,7 +66,8 @@ const state = (page) => page.evaluate(() => {
   await page.waitForTimeout(250);
   const next = await state(page);
   await page.screenshot({ path: `${OUT}/stages_next.png` });
-  report('the door leads to the next stage', next.stage === 3 && next.place === 'outside' && next.cap == null && next.alive && /Stage 3/.test(next.toast) && !page.errors.length, JSON.stringify({ next, errors: page.errors }));
+  // (the next stage is another piece of the tower: he is at its theme's height, and what he has climbed is kept)
+  report('the door leads to the next stage', next.stage === 3 && next.place === 'outside' && next.key === 'roses' && next.wall === 'briar' && next.cap == null && next.alive && next.h >= atEnd.h && /Stage 3/.test(next.toast) && !page.errors.length, JSON.stringify({ next, errors: page.errors }));
   // a fall: he goes on from that door, with all his hearts and the height he had
   await page.evaluate(() => { const w = window.game.world; w.player.maxY = w.player.y + 2000; w.player.hearts = 1; w.player.die('fell'); });
   const fell = await state(page);
@@ -74,18 +75,18 @@ const state = (page) => page.evaluate(() => {
   await page.waitForTimeout(200);
   const again = await state(page);
   await page.screenshot({ path: `${OUT}/stages_again.png` });
-  report('after a fall he goes on from the door', again.alive && again.hearts === 3 && again.stage === 3 && again.place === 'outside' && again.h === fell.h && again.mode === 'playing' && !again.over && !page.errors.length, JSON.stringify({ fell, again, errors: page.errors }));
+  report('after a fall he goes on from the door, a life less', again.alive && again.hearts === 3 && again.lives === fell.lives - 1 && again.stage === 3 && again.place === 'outside' && again.h === fell.h && again.mode === 'playing' && !again.over && !page.errors.length, JSON.stringify({ fell, again, errors: page.errors }));
   await page.close();
 }
 {
-  // with ?retries=0 a fall ends the round, as in the endless game
-  const page = await open(GAME + '/?stage=2&retries=0');
+  // the last life: a fall ends the round, as in the endless game
+  const page = await open(GAME + '/?stage=2&lives=1');
   await page.keyboard.press('Space');
   await page.waitForFunction(() => window.game.mode === 'playing', null, { timeout: 20000 });
   await page.evaluate(() => window.game.world.player.die('fell'));
   await page.waitForFunction(() => window.game.mode === 'gameover', null, { timeout: 10000 }).catch(() => {});
   const over = await state(page);
-  report('without retries a fall is the end', over.mode === 'gameover' && over.retries === 0 && !page.errors.length, JSON.stringify({ over, errors: page.errors }));
+  report('with the last life a fall is the end', over.mode === 'gameover' && over.retries === 0 && over.lives === 1 && !page.errors.length, JSON.stringify({ over, errors: page.errors }));
   await page.close();
 }
 console.log(bad ? `${bad} FAILED` : 'all ok');
