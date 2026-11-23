@@ -13,6 +13,7 @@ machine has it (`lib.mjs`). Pictures go to `check-out/` (ignored by git;
 |---|---|
 | `identity.sh` | The simulator's five reports on fixed seeds, compared with `baseline/`. A change that is only for the eye must leave them exactly as they are. About five minutes. |
 | `flow.mjs` | The game's flow in the browser: the title's selector, a round inside, a death, again, back outside; the inside's `?spawn` helpers; the landing page still draws with the game's modules. |
+| `stages.mjs` | The tower in stages: the title offers it, a stage ends at a floor with a door and nothing above, the camera rests on that floor, the door leads into the next stage in the other place, a fall goes on from that door with the height kept, and with `?retries=0` a fall ends the round. Pictures of each step. |
 | `atlas.mjs` | The size of the sprite atlas (it has to stay under the smallest `MAX_TEXTURE_SIZE` we support, 4096). |
 | `shots.mjs` | Pictures of the game frozen at given heights, outside or inside: `node tools/checks/shots.mjs outside 20,180,420`. |
 | `treasury_camera.mjs` | Climbs a treasury (`vault1` to `vault6` as its argument), counts the frames in which the camera goes down (there must be none), then drops the prince out of the picture and watches the bubble set him down. |

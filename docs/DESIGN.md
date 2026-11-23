@@ -671,6 +671,35 @@ is a pool to draw from, not a promise.
     stands on or meets.
   - 🔜 more sounds (stone underfoot, chains), floors of the tower as zones, gates. ⚠️ A system, not an
     element: built in steps, each a branch.
+- 🔜 the tower in stages, a trial on `element/stages` (`src/stages.js`;
+  the title's third board, TOWER, beside the endless climbs OUTSIDE
+  and INSIDE): the climb is a row of stretches with a start and an
+  end instead of one endless stretch in one place. A stage is climbed
+  in one place and ends at a floor across the whole width with a door
+  on a landing above it and nothing above that; the door shines, and
+  "To the door!" is said as it comes into view. The camera stops with
+  that floor in the picture, so one can bounce there until the door
+  is found, and whoever drops out of the picture there is carried
+  back up by the bubble. The door leads into the next stage in the
+  other place, which says its number and its name ("Stage 3: deep
+  forest"). Whoever falls or loses the last heart goes on from the
+  last door he came through (a golden door's way out counts), with
+  all hearts, his suns and the height he had; the stage's rows are
+  built anew, so it is not the same stretch again. The height stays
+  the score.
+  Looks, creatures and difficulty still come from the height, so the
+  stages are cut along the zones: forest floor (to 40 m), the hall
+  (to 120 m, with the first golden door), deep forest (to 190 m), the
+  guard rooms (to 250 m), the windows (to 325 m), the library (to
+  400 m), above the trees (to 485 m), the belfry (to 570 m), then on
+  in turn, 80 to 95 m each. No free gates in this mode; one treasury
+  to a stage where there is room for it. Inside a stage the pressure
+  builds toward its end; the first 5 m behind a door and the last
+  12 m before the next are calm.
+  In the simulator: `tools/analyze.mjs ... on on on` (the eleventh
+  argument; a number instead of `on` limits how often the bot goes on
+  from a door), with a report of stages reached, seconds a stage took
+  and where one went on from a door.
 - 💡 doors as short bonus rooms (enter, climb for suns, exit higher), once
   the gates exist.
 
@@ -997,6 +1026,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
+| Stages (trial) | ends at 40, 120, 190, 250, 325, 400, 485, 570 m, then 80–95 m each, the places in turn from the outside; a stage's end is the first row from that height on that no flock, braid cut or dark stretch has a claim to, and none of those begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; going on from the last door: as often as it takes (`?retries=3` for a limit, `?stage=3` starts there, `?stages=0|1` picks the mode) |
 | The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
@@ -2259,3 +2289,54 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   they were. The atlas is 4096 x 3922 (701 sprites): 174 px under the
   4096 that older phones can take, so the next thing on the wall
   needs the atlas made smaller first.
+- 2026-11-23: The tower in stages, a trial (`element/stages`). Simon,
+  from playing it while the outside was rebuilt: the game has much
+  more flow when the scene changes (out before the tower, in through
+  a door, into the treasury, out again), so every part should be a
+  stretch of its own with a start and an end, procedural in between,
+  and the door the only way on. Asked what a death does, whether the
+  tower ends and what the score is: on from the last door for now
+  (to be made a setting, perhaps with a number of retries), the
+  stages follow each other without end for now (a finale and further
+  towers later), the height stays the score. First it is to be tried
+  whether the principle works at all. Decisions:
+  - A mode beside the endless game, not instead of it: the title has
+    a third board, and the endless climbs are what the stages are
+    compared with. On this branch a save without a choice plays the
+    stages; `?place=`, `?at=` and `?spawn=` still mean the endless
+    tower, so every helper and check works as it did.
+  - The cheapest cut that tests the principle: a stage is a stretch
+    of the tower we have, between two heights, in one place. Looks,
+    creatures and difficulty keep coming from the height, and the
+    list of stages follows the zones' bands, so the outside is
+    another zone every time one comes out again (forest floor, deep
+    forest, windows, sky) and the inside another floor. Stages with a
+    theme of their own, whatever the height (and weather), need the
+    look and the difficulty taken off the height first; that is the
+    step after this one, if the principle holds.
+  - The end is a floor one cannot fall through and a door an easy
+    jump above it. The camera, which only ever climbs, would have
+    left that floor below the picture after the first bounce, and a
+    missed door would have been a fall back to the stage's start; so
+    it stops there, and what the prince does above the picture's top
+    edge after a boost it does not follow. There is no lid over the
+    door yet: outside nothing is there to bump into. If the stages
+    stay, the end of a stage wants a piece of building of its own (a
+    gallery round the tower, a ceiling inside).
+  - Going on from a door is the gate's passage run again: the picture
+    closes, opens on the landing, he bounces on. No game-over tune.
+    The score is the highest he ever was; what happens in the tower
+    goes by where he is now.
+  - A treasury's way out is a door to go on from too: nobody climbs
+    the hall again because he fell after the gold.
+  Measured (40 runs each, going on as often as it takes): the good
+  bold bot reaches 700 m in 189 s, through nine doors, going on from
+  a door 0.6 times a run; a stage takes it 10 to 25 s, so the scene
+  changes about every 20 s. The kid reaches 300 m in 179 s and goes
+  on from a door 7.7 times a run, nine times in ten after a fall,
+  most often in the deep forest (stage 3: 115 of 309). In the endless
+  game the same kid's median is about 85 m. The endless game itself
+  is untouched: `tools/checks/identity.sh` reports all five the same,
+  `flow.mjs` passes, and `stages.mjs` is the new check for the mode.
+  Not measured and not known: whether it is more fun. That is what
+  the branch is for.

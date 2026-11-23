@@ -23,6 +23,9 @@
 //   ?veil=0.5        how strongly the tower's wall is set back outside (0 not at all, up to 0.9; background.js TOWER_VEIL)
 //   ?wall=ivy        one look of the tower's wall all the way up (ivy|worn|stone|moss|mended|briar; plain: none of them)
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
+//   ?stages=1        the tower in stages for this visit (0: the endless game), whatever the title's choice (stages.js)
+//   ?stage=3         start at the door into that stage (the first is 1)
+//   ?retries=3       how often one goes on from the last door in a round of stages (none given: as often as it takes)
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
 import { zoneAt } from './level.js';
@@ -32,11 +35,13 @@ import { windowsBetween } from './windows.js';
 import { hatchesBetween, hasDoor } from './pillars.js';
 import { STONE_STYLE } from './art/interior.js';
 import { PowerUp } from './pickups.js';
+import { stageAt } from './stages.js';
 import { POWERS } from './powerups.js';
 
 export function devParams() {
   const q = new URLSearchParams(location.search);
-  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '' };
+  return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '',
+    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), retries: q.get('retries') == null ? '' : q.get('retries') };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
@@ -75,6 +80,22 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
   if (overBranch) p.x = world.platforms[world.platforms.length - 1].x;
   world.enemies.length = 0; world.pickups.length = 0;
   world.level.generateUpTo(world.cam.top + 900);
+}
+
+// A fresh round in stages begins at stage n (0 is the first) instead of on
+// the lawn: he stands where that stage's door would have let him in, in its
+// place, and goes on from there after a fall.
+export function startStage(world, n) {
+  if (!world.route || n <= 0) return;
+  const st = stageAt(world.route, n);
+  world.setPlace(st.place);
+  world.level.stage = st;
+  world.level.restartFrom(st.from, 300);      // (the place's zones)
+  world.level.planStage();
+  startAt(world, st.from / PX_PER_METER, '', true);
+  // the branch startAt put under him stands in for the door
+  const start = world.platforms.find((q) => q.kind !== 'ground' && Math.abs(q.y - (st.from - 10)) < 1);
+  world.checkpoint = start ? { door: start, camY: world.cam.y } : null;
 }
 
 // Force a branch length class for the whole round (before the level generates).
@@ -143,5 +164,6 @@ export function spawnNear(world, element) {
 }
 
 export function devLabel(world) {
-  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}`;
+  const st = world.route && world.level.stage;
+  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}${st ? `  stage ${st.n + 1} to ${Math.round(st.to / PX_PER_METER)} m, again ${world.retries}` : ''}`;
 }

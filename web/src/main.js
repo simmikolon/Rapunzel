@@ -7,9 +7,10 @@ import { HUD, SIGNS, signTravel } from './hud.js';
 import { drawTitle, drawCount } from './title.js';
 import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
 import { createRenderer, PRESETS, DEFAULT_PRESET } from './gfx/renderer.js';
-import { devParams, startAt, spawnNear, forceLen, devLabel } from './dev.js';
+import { devParams, startAt, startStage, spawnNear, forceLen, devLabel } from './dev.js';
 import { platform } from './platform.js';
 import { PLACES } from './places.js';
+import { STAGES } from './stages.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -31,8 +32,11 @@ class Game {
     this.mode = 'title';
     this.intro = null;      // { from, dur, t, ease } while the camera rides down to the lawn
     this.modeT = 0;
-    this.round = { mode: 'endless', place: 'outside' };   // what startRound() plays: the mode, and where (places.js); a tower with its seed later
-    this.bests = { outside: 0, inside: 0 };                // a best height per place; `best` is the one of the place chosen
+    // What startRound() plays: the mode ('stages': the tower in stages, in and out through its doors, stages.js;
+    // 'endless': one place all the way up) and, for the endless game, where (places.js); a tower with its seed later.
+    this.round = { mode: 'stages', place: 'outside' };
+    this.bests = { outside: 0, inside: 0, stages: 0 };     // a best height per climb; `best` is the one of the climb chosen
+    this.bestBeaten = false;  // this round has already beaten it (in stages it is kept at every door)
     this.isNewBest = false;
     this.noticeText = '';
     this.noticeT = 0;
@@ -45,7 +49,15 @@ class Game {
     if (this.dev.wall) this.world.bg.forceWall = this.dev.wall;                       // ?wall= for this visit
     this.loadSave();
     if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit
-    if (this.round.place !== this.world.placeName) this.world.reset(undefined, this.round.place);
+    // ?stages=1|0 picks the mode for this visit, ?stage=3 starts at that stage; the helpers that put something into
+    // the endless tower (?place=, ?at=, ?spawn=) mean the endless game unless stages are asked for.
+    if (this.dev.stages === '1' || this.dev.stage) this.round.mode = 'stages';
+    else if (this.dev.stages === '0' || this.dev.place || this.dev.at || this.dev.spawn) this.round.mode = 'endless';
+    this.route = { ...STAGES };
+    if (this.dev.retries !== '' && isFinite(+this.dev.retries)) this.route.retries = Math.max(0, +this.dev.retries);   // ?retries=3 for this visit
+    this.world.onStage = () => this.keepBest();
+    this.world.onRetry = () => this.keepBest();
+    if (this.staged || this.round.place !== this.world.placeName) this.resetWorld();
     // ?fx=full|bloom|off forces a preset for this visit.
     const param = new URLSearchParams(location.search).get('fx');
     this.fxPreset = this.gfx.setPreset(PRESETS.includes(param) ? param : this.fxPreset);
@@ -69,20 +81,28 @@ class Game {
     document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
     platform.onPause(hide);
     // the dev teleport goes straight to the title; everyone else rides down to the lawn first
-    this.setMode(this.dev.at || this.dev.spawn ? 'title' : 'intro');
+    this.setMode(this.dev.at || this.dev.spawn || this.dev.stage ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
   }
 
   get muted() { return audio.muted; }
-  get best() { return this.bests[this.round.place] || 0; }
-  set best(v) { this.bests[this.round.place] = v; }
+  get staged() { return this.round.mode === 'stages'; }
+  get climb() { return this.staged ? 'stages' : this.round.place; }      // which of the title's three boards is chosen
+  get best() { return this.bests[this.climb] || 0; }
+  set best(v) { this.bests[this.climb] = v; }
 
-  // The title's selector: climb outside or inside. The world behind the sign
-  // changes at once; the choice is kept.
-  setPlace(name) {
-    if (!PLACES[name] || name === this.round.place) return;
-    this.round = { ...this.round, place: name };
-    this.world.reset(undefined, name);
+  // A fresh world for the round chosen: in stages the route says where it begins.
+  resetWorld(seed) {
+    this.world.route = this.staged ? this.route : null;
+    this.world.reset(seed, this.round.place);
+  }
+
+  // The title's selector: the tower in stages, or the endless climb outside
+  // or inside. The world behind the sign changes at once; the choice is kept.
+  setClimb(name) {
+    if (name === this.climb || (name !== 'stages' && !PLACES[name])) return;
+    this.round = name === 'stages' ? { ...this.round, mode: 'stages' } : { ...this.round, mode: 'endless', place: name };
+    this.resetWorld();
     this.world.hop();
     this.save();
     audio.click();
@@ -101,21 +121,27 @@ class Game {
   loadSave() {
     try {
       const s = JSON.parse(platform.storage.get(STORAGE_KEY) || platform.storage.get(LEGACY_STORAGE_KEY) || '{}');
-      this.bests = { outside: s.best || 0, inside: s.bestInside || 0 };
+      this.bests = { outside: s.best || 0, inside: s.bestInside || 0, stages: s.bestStages || 0 };
       if (PLACES[s.place]) this.round.place = s.place;
+      if (s.mode === 'endless' || s.mode === 'stages') this.round.mode = s.mode;      // (a save from before the stages has none: the stages it is)
       // Only a preset the player picked is kept. Saves from before the
       // default became 'off' wrote 'full' with every best height whether or
       // not anyone chose it, so an old `fx` counts only when it is not 'full'.
       const pick = PRESETS.includes(s.fxPick) ? s.fxPick : (s.fx === 'bloom' || s.fx === 'off') ? s.fx : null;
       if (pick) { this.fxPick = pick; this.fxPreset = pick; }
-    } catch (_) { this.bests = { outside: 0, inside: 0 }; }
+    } catch (_) { this.bests = { outside: 0, inside: 0, stages: 0 }; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
   }
   recordBest() {
-    this.isNewBest = this.world.heightM > this.best;
-    if (this.isNewBest) { this.best = this.world.heightM; this.save(); }
+    this.isNewBest = this.world.heightM > this.best || this.bestBeaten;
+    if (this.world.heightM > this.best) { this.best = this.world.heightM; this.save(); }
+  }
+  // In stages a round can go on for a long time: the best height is kept at every door and every time he goes on from one.
+  keepBest() {
+    if (this.world.heightM <= this.best) return;
+    this.best = this.world.heightM; this.bestBeaten = true; this.save();
   }
 
   cycleFx() {
@@ -163,7 +189,15 @@ class Game {
   // the lawn, hopping; the countdown runs on his next landings.
   startRound(config = this.round) {
     this.round = config;
-    if (this.world.started || this.world.placeName !== config.place) this.world.reset(config.seed, config.place);
+    this.bestBeaten = false;
+    if (this.world.started || !!this.world.route !== this.staged || (!this.staged && this.world.placeName !== config.place)) this.resetWorld(config.seed);
+    if (this.staged && this.dev.stage) {
+      // the dev start at a stage skips the countdown, like the teleport below
+      startStage(this.world, this.dev.stage - 1);
+      this.world.start();
+      this.beginPlaying();
+      return;
+    }
     if (this.dev.at) {
       // the dev teleport skips the countdown; it needs the fresh lawn state first
       startAt(this.world, this.dev.at, this.dev.spawn, true);
@@ -185,7 +219,7 @@ class Game {
 
   toTitle() {
     if (this.mode === 'paused') this.recordBest();
-    this.world.reset(undefined, this.round.place);
+    this.resetWorld();
     this.setMode('title');
   }
 
@@ -261,8 +295,8 @@ class Game {
         input.consumeBoost();            // clicks, space and tilt-taps queue boosts; none belongs to the title
         input.consumePause();
         const play = input.consumeButton('play');
-        const pick = input.consumeButton('placeOut') ? 'outside' : input.consumeButton('placeIn') ? 'inside' : input.consumePlace();
-        if (pick) this.setPlace(pick);
+        const pick = input.consumeButton('placeTour') ? 'stages' : input.consumeButton('placeOut') ? 'outside' : input.consumeButton('placeIn') ? 'inside' : input.consumePlace();
+        if (pick) this.setClimb(pick);
         else if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();
         break;
       }
