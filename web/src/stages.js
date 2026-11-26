@@ -28,18 +28,20 @@ import { clamp } from './util.js';
 //   dark    (inside) the lights are out for the whole stage; in the others
 //           they stay on
 //   vault   (inside) a golden door to the treasury stands in it
+//   weather (outside) the stage's weather (weather.js): 'rain', 'storm',
+//           'snow' or 'golden' (the golden hour); none: clear
 // How hard a stage is does not come from `at` but from how far he has come
 // (level.js tierOf), so a theme can come again later and be harder then.
 export const THEMES = {
   // outside
   lawn:      { name: 'the forest floor', place: 'outside', at: 0, len: 60, wall: 'foot' },
-  roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, wall: 'briar', roses: 0 },
-  ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, wall: 'ivy' },
-  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'moss' },
-  site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended' },
-  crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn' },
+  roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, wall: 'briar', roses: 0, weather: 'golden' },
+  ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, wall: 'ivy', weather: 'rain' },
+  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'moss', weather: 'rain' },
+  site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended', weather: 'snow' },
+  crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', weather: 'storm' },
   sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'stone' },
-  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'briar', roses: 1 },
+  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'briar', roses: 1, weather: 'snow' },
   // inside
   // (a stage stays inside one band of the tower's floors, 0, 120, 250 and 400 m: the floor is its furniture)
   hall:      { name: 'the hall', place: 'inside', at: 4, len: 114, vault: true },

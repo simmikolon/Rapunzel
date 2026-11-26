@@ -153,6 +153,36 @@ class Synth {
     s.stop(t0 + dur + 0.05);
   }
 
+  // The weather's two beds of noise (weather.js): rain, a hiss, and wind, a low rush that rises in a gust, each
+  // at a level 0..1. Made when one is first asked for and left running, silent while there is no weather.
+  weather(rain, wind) {
+    if (!this.ctx) return;
+    if (!this.wx) {
+      if (rain <= 0 && wind <= 0) return;
+      const bed = (type, freq, q) => {
+        const s = this.ctx.createBufferSource();
+        s.buffer = this.noiseBuf; s.loop = true;
+        const f = this.ctx.createBiquadFilter();
+        f.type = type; f.frequency.value = freq; f.Q.value = q;
+        const g = this.ctx.createGain();
+        g.gain.value = 0;
+        s.connect(f).connect(g).connect(this.master);
+        s.start();
+        return { f, g };
+      };
+      this.wx = { rain: bed('highpass', 2400, 0.5), wind: bed('bandpass', 280, 0.8) };
+    }
+    const t = this.ctx.currentTime;
+    this.wx.rain.g.gain.setTargetAtTime(0.06 * rain, t, 0.5);
+    this.wx.wind.g.gain.setTargetAtTime(0.12 * wind, t, 0.25);
+    this.wx.wind.f.frequency.setTargetAtTime(240 + 560 * wind, t, 0.3);
+  }
+  // Thunder after sheet lightning: a crack, then a long low roll.
+  thunder() {
+    this.noise({ dur: 0.22, vol: 0.16, filter: 'lowpass', freq: 1200, to: 240, delay: 0.3 });
+    this.noise({ dur: 1.8, vol: 0.28, filter: 'lowpass', freq: 200, to: 45, q: 0.6, delay: 0.38 });
+  }
+
   // Effects --------------------------------------------------------------
   // Haptics ride on the events (before the tones, so they play when muted);
   // in a browser platform.haptic() is a no-op. Landings and pickups are light

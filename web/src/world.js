@@ -14,6 +14,7 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
+import { frontAt } from './weather.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
 import { stageAt } from './stages.js';
@@ -101,6 +102,10 @@ export class World {
     this.player.reset(0, 0);
     this.level.reset();
     if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
+    // the weather (weather.js): its fronts in the endless tower and its gusts come from the round's seed
+    this.weatherSeed = seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 10);
+    this.bg.weather.reset(new RNG(seed == null ? undefined : hash(seed + 11)));
+    this.bg.weather.want(this.weatherKind(), true);
     this.suns = 0;
     this.stomps = 0;
     this.nextWitchY = 12000;
@@ -130,6 +135,14 @@ export class World {
   get scoreY() { return this.scoreBase + Math.max(this.topY, this.player.maxY) - this.scoreFrom; }
   get heightM() { return Math.max(0, Math.floor(this.scoreY / PX_PER_METER)); }
   // In stages: the stage he is in (its number from 1, its name), or null.
+  // The weather here (weather.js): none inside; a stage has its own (stages.js THEMES); the endless tower has
+  // fronts by height. ?weather= sets one for a visit (forceWeather).
+  weatherKind() {
+    if (this.place.inside) return 'clear';
+    if (this.forceWeather) return this.forceWeather;
+    if (this.route) return (this.level.stage && this.level.stage.weather) || 'clear';
+    return frontAt(this.weatherSeed || 0, this.cam.y);
+  }
   get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: st.name } : null; }
 
   start() {
@@ -390,6 +403,7 @@ export class World {
     this.scoreBase = base; this.scoreFrom = y; this.topY = y;
     this.bg.setWall(st.wall, this.cam, st.n, st.roses);
     this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
+    this.bg.weather.want(this.weatherKind(), true);      // the next stage's weather is there when the picture opens
     this.level.generateUpTo(this.cam.top + 900);
     this.nextWitchY = Math.max(12000, y + 3000);      // she and the storks keep to the heights they have in the endless tower
     this.nextStorkY = Math.max(47000, y + 400);
@@ -999,6 +1013,7 @@ export class World {
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);
+    if (!this.place.inside) this.bg.weather.drawCaps(g, cam, visible, this.time);      // rain splashes and snow lies on what one stands on
     for (const [x, y, a, sc] of this.sparkles) g.blit(this.art.sign.sparkle, x, y, { alpha: a, sx: sc, sy: sc, glow: 0.5 });   // the golden doors' glints, over everything one stands on
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);

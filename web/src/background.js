@@ -9,6 +9,7 @@ import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
+import { Weather } from './weather.js';
 import { StringLights } from './lights.js';
 import { Interior } from './interior.js';
 import { windowsBetween } from './windows.js';
@@ -122,6 +123,7 @@ export class Background {
     this.swayAmp = 12;
     for (const f of this.fireflies) { f.vx = 0; f.vy = 0; }
     this.atmo = new Atmosphere(art, r);
+    this.weather = new Weather(art);      // rain, storm, snow, the golden hour (weather.js): which it is, the world says
     this.lights = new StringLights(art);
     this.interior = new Interior(art, this);
     this.place = null;
@@ -145,7 +147,7 @@ export class Background {
   }
 
   drawSky(g, cam) {
-    const { top, bot } = skyAt(cam.y);
+    const { top, bot } = this.weather.sky(skyAt(cam.y), cam.y);
     g.sky(top, bot);
   }
 
@@ -524,6 +526,7 @@ export class Background {
     this.drawSky(g, cam);
     this.drawFar(g, cam, time);
     this.drawForest(g, cam);
+    this.weather.drawFar(g, cam, time);
     this.drawSkyLanterns(g, cam, time, false);
     this.atmo.drawBackFog(g, cam, time);
     this.drawTower(g, cam, time, world);
@@ -532,7 +535,9 @@ export class Background {
     this.drawSkyLanterns(g, cam, time, true);
     this.atmo.drawBackLeaves(g, cam);
     this.atmo.drawMidFog(g, cam, time);
+    this.weather.drawMid(g, cam, time);
     this.drawGround(g, cam);
+    this.weather.drawGround(g, cam);
     this.atmo.drawLawnMist(g, cam, time);
     this.drawTrees(g, cam, time);
     this.drawOwls(g, cam, time);
@@ -542,12 +547,14 @@ export class Background {
   }
 
   // Closest layer: big leaves and mist drifting in front of everything.
-  drawFrontAtmosphere(g, cam, time, world) { if (!this.inside) this.atmo.drawFront(g, cam, time, world); }
+  drawFrontAtmosphere(g, cam, time, world) { if (!this.inside) { this.atmo.drawFront(g, cam, time, world); this.weather.drawFront(g, cam, time); } }
 
   // No weather indoors: no gusts, fog, leaves or string lights.
   updateAtmosphere(dt, cam, time, world) {
-    if (this.inside) return;
+    if (this.inside) { if (world && world.audio && world.audio.weather) world.audio.weather(0, 0); return; }      // (its rain and wind are not heard in here)
     this.atmo.update(dt, cam, time, world);
+    this.weather.want(world && world.weatherKind ? world.weatherKind() : 'clear');
+    this.weather.update(dt, time, world && world.audio);
     this.lights.update(dt, cam, time, world, this.atmo.gustEnv());
   }
 
@@ -626,6 +633,7 @@ export class Background {
     if (this.inside) return this.interior.drawLighting(g, cam);
     const l = lightAt(cam.y);
     if (l.alpha > 0.001) g.lighting(l.color, l.alpha);
+    this.weather.drawLight(g);
     this.lights.drawGlow(g);      // lamps shine through the time of day
   }
 

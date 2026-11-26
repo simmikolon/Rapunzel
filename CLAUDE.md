@@ -54,8 +54,10 @@ which only copies the two folders together). The design document
   `?place=inside&at=50&spawn=vault` puts a golden door to the treasury
   above the start (`vault1` to `vault6` pick the room's first section);
   `?place=inside&at=200&spawn=dark` puts the lights out above the start.
+  `?weather=rain|storm|snow|golden|clear` sets the weather outside for a
+  visit (`web/src/weather.js`).
   The tower in stages (a trial; the title's TOWER board): what each stage is
-  (place, the height it is taken from, length, wall, dark, golden door) and
+  (place, the height it is taken from, length, wall, weather, dark, golden door) and
   their order are written down in `web/src/stages.js` (`THEMES`, `STAGES`).
   `?stages=1|0` picks the mode or the endless game for a visit, `?stage=3`
   starts at that stage's door, `?lives=5` (or `inf`) sets the lives of a
