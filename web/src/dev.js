@@ -29,7 +29,8 @@
 //   ?story=1         tell the opening story on this visit (0: not; none given: once per device; story.js)
 //   ?perf=1          the performance readout: frame times, where they go, the longest frames; a tap on its numbers takes the next
 //                    resolution, a tap on its graph scales the picture up with hard pixels or smoothly (perf.js)
-//   ?res=1.5         the drawing resolution in pixels per logical pixel (1.5, 1.25, 1, 0.75 or 0.5; none given: the screen's own)
+//   ?res=1.5         the drawing resolution in pixels per logical pixel (1.5, 1.25, 1, 0.75 or 0.5; screen: the screen's own;
+//                    none given: config.js RESOLUTION)
 //   ?px=hard         the screen scales the picture up with hard pixels, not smoothly (what keeps a resolution below 1 sharp)
 //   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';

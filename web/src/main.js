@@ -1,4 +1,4 @@
-import { W, H, SAFE, setViewport, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T } from './config.js';
+import { W, H, SAFE, setViewport, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T, RESOLUTION } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
@@ -49,9 +49,10 @@ class Game {
     this.fxPreset = DEFAULT_PRESET;
     this.fxPick = null;       // the preset the player chose (F, the title's button); null: the default
     this.dev = devParams();
-    // The drawing resolution (pixels of the backing store per logical pixel; null: the screen's own) and the
-    // performance readout: ?res=1.5 and ?perf=1 (perf.js).
-    this.resScale = RES.includes(+this.dev.res) && +this.dev.res > 0 ? +this.dev.res : null;
+    // The drawing resolution (pixels of the backing store per logical pixel: RESOLUTION unless ?res=1.5 asks for
+    // another; null, ?res=screen: the screen's own) and the performance readout, ?perf=1 (perf.js).
+    const res = this.dev.res;
+    this.resScale = res === 'screen' || res === '0' ? null : RES.includes(+res) && +res > 0 ? +res : RESOLUTION;
     this.hardPixels = this.dev.px === 'hard';
     this.gfx.letters = this.dev.letters !== '0';      // ?letters=0: every text painted by the browser, as before the letter sheets (to compare)
     this.perf = new Perf(this);
@@ -170,10 +171,10 @@ class Game {
     this.notice(`Effects: ${this.fxLabel}`, 1.6);
   }
 
-  // The backing store matches the CSS size in device pixels, so nothing is
-  // resampled by the compositor; all drawing stays in logical coordinates,
-  // 768 wide and as tall as the screen's shape asks for.
-  // (`resScale` asks for less: pixel art loses nothing at whole art pixels, and the screen scales the picture up.)
+  // The backing store has `resScale` pixels to a logical pixel (RESOLUTION: pixel art loses nothing at whole art
+  // pixels, and the screen scales the picture up), or the screen's own where that is fewer or `resScale` is null:
+  // then it matches the CSS size in device pixels and nothing is resampled. All drawing stays in logical
+  // coordinates, 768 wide and as tall as the screen's shape asks for.
   setupDpr() {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = measureViewport(this.canvas);

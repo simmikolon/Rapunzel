@@ -16,7 +16,7 @@ import { W, H, SAFE } from './config.js';
 // 1 the smooth way is what blurs, the hard way keeps the art's edges and
 // makes small letters coarse.
 const N = 120;                             // frames kept for the numbers and the graph
-export const RES = [0, 1.5, 1.25, 1, 0.75, 0.5];      // 0: the screen's own resolution
+export const RES = [0, 1.5, 1.25, 1, 0.75, 0.5];      // 0: the screen's own resolution (the game's own is config.js RESOLUTION)
 
 export class Perf {
   constructor(game) {

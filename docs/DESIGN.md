@@ -2508,3 +2508,15 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   - The look stays: positions put back to within a pixel; the browser's
     "fl" and "fi" ligatures are gone. `?letters=0` paints as before, so
     that the phone can say what it bought.
+- 2026-11-26: The game is drawn at 1 (`tools/perf`). On the iPhone Air
+  Simon stepped through the drawing resolutions: at one backing pixel
+  to a logical pixel it ran smoothest, and he saw no difference to the
+  screen's own 1.64 in the picture. Decisions:
+  - `RESOLUTION = 1` in `config.js`, for every screen, not only the
+    phone: 37 % of the Air's pixels, and an art pixel is still four
+    pixels wide. The screen scales the picture up smoothly, as before.
+  - Smaller was tried (0.75 and 0.5 are in the readout's steps):
+    scaled up smoothly it blurs, with hard pixels the art holds and
+    the small letters do not. Going below 1 would mean drawing the
+    world small and the HUD at the screen's resolution on top; left
+    until a reading asks for it.

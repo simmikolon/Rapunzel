@@ -149,12 +149,46 @@ resolution on top of it (two targets in the renderer), and to scale
 the world up by a whole number first. Not built; it is the step after
 the default is chosen.
 
+### Decision: the game is drawn at 1 (suspect 1)
+
+Simon, after playing the steps: 1 for everybody. `RESOLUTION` in
+`web/src/config.js`: one backing pixel to a logical pixel, four to an
+art pixel, on every screen; the screen scales the picture up, smoothly.
+On the Air that is 768 x 1668 instead of 1260 x 2736, 37 % of the
+pixels. A window with fewer pixels than that keeps its own; `?res=screen`
+draws at the screen's own as before, and the panel still steps through
+all of them. The letter sheets at 1 are 9 MB.
+
+### Measured here: what is left in our own drawing
+
+Looked for what a frame does twice or for nothing (headless, one frozen
+frame per place, a small window so that filling pixels costs nothing;
+the median of the drawing's time on the CPU):
+
+| place | sprites | as now | vines as sprites | glow layer skipped |
+|---|---|---|---|---|
+| 180 m, deep forest | 856 | 3.3 ms | 1.4 ms | 3.3 ms |
+| 20 m, forest floor | 664 | 2.2 ms | 1.1 ms | 2.4 ms |
+| stage 3, the rose wall | 699 | 2.0 ms | 1.0 ms | 1.9 ms |
+| inside, 150 m | 246 | 0.7 ms | 0.8 ms | 0.7 ms |
+
+- The vines and lianas on the trunks are drawn as vector lines, a few
+  pixels of line between every two leaves. Each run of lines is a shape
+  of its own that the engine builds again every frame (90 to 100 of
+  them in the forest, none above the trees or inside). Drawn as turned
+  sprites, like every rectangle already is, the drawing's time in the
+  forest is halved. Not built yet: the lines have to look the same.
+- Whatever glows is placed a second time, in the glow layer, which is
+  only shown with bloom on, and bloom is off by default: 12 to 27 % of
+  a frame's sprites are placed for nothing. Leaving them out is not
+  measurable (they are never handed to the GPU). Not worth a change by
+  itself.
+
 ## The suspects, in the order we take them
 
-1. **Resolution.** (By eye, 1 is the smoothest and looks the same as
-   the screen's own; 0.75 and 0.5 are there to try, see Readings. Open:
-   the panel's numbers at each, and the phone's default.) The backing
-   store is the screen's own pixels
+1. **Resolution.** (Taken: the game is drawn at 1, see Readings. Open:
+   the panel's numbers of a round at 1.) The backing store was the
+   screen's own pixels
    (1260 x 2736 on the Air), and several layers are blended over the
    whole of it. Pixel art gains nothing from that: an art pixel is four
    logical pixels. At 1.5, 1.25 or 1 backing pixels to a logical one the
@@ -185,7 +219,11 @@ the default is chosen.
    fog and light over the whole picture. To do: after 1 to 3, if frames
    are still late where the picture is full.
 6. **Rows and creatures far away.** Building rows and stepping
-   everything that exists, seen or not. Small; last.
+   everything that exists, seen or not. Small; last. (The first reading
+   says the step is 0.3 ms: nothing to fetch here.)
+7. **Vector lines.** Found while looking at 5: the vines on the trunks
+   are half of the drawing's time in the forest (see Readings). To do:
+   `g.line` as a turned sprite; pictures before and after the same.
 
 If the phone holds 60 after this, the shell is the app, and Android is
 the same build in its own shell. If it does not, the numbers say why,
