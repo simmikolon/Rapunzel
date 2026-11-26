@@ -12,6 +12,7 @@ import { platform } from './platform.js';
 import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
 import { Story } from './story.js';
+import { Perf, RES } from './perf.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -48,6 +49,12 @@ class Game {
     this.fxPreset = DEFAULT_PRESET;
     this.fxPick = null;       // the preset the player chose (F, the title's button); null: the default
     this.dev = devParams();
+    // The drawing resolution (pixels of the backing store per logical pixel; null: the screen's own) and the
+    // performance readout: ?res=1.5 and ?perf=1 (perf.js).
+    this.resScale = RES.includes(+this.dev.res) && +this.dev.res > 0 ? +this.dev.res : null;
+    this.perf = new Perf(this);
+    this.perf.on = this.dev.perf === '1';
+    window.__perf = () => this.perf.summary();
     if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
     if (this.dev.veil != null && this.dev.veil !== '' && isFinite(+this.dev.veil)) this.world.bg.towerVeil.alpha = Math.max(0, Math.min(0.9, +this.dev.veil));   // ?veil= for this visit
     if (this.dev.wall) this.world.bg.forceWall = this.dev.wall;                       // ?wall= for this visit
@@ -164,12 +171,13 @@ class Game {
   // The backing store matches the CSS size in device pixels, so nothing is
   // resampled by the compositor; all drawing stays in logical coordinates,
   // 768 wide and as tall as the screen's shape asks for.
+  // (`resScale` asks for less: pixel art loses nothing at whole art pixels, and the screen scales the picture up.)
   setupDpr() {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = measureViewport(this.canvas);
     const cssW = rect.width || W;
     const scale = (cssW * dpr) / W;
-    this.gfx.resize(scale);
+    this.gfx.resize(this.resScale ? Math.min(scale, this.resScale) : scale);
   }
 
   setMode(m) {
@@ -251,9 +259,13 @@ class Game {
     // one runs, and only a persistent error stops the game with a message
     // instead of a frozen picture.
     try {
+      const t0 = performance.now();
       this.input.poll(dt);
       this.update(dt);
+      const t1 = performance.now();
       this.draw();
+      this.perf.frame(now - this.perfLast, t1 - t0, performance.now() - t1);
+      this.perfLast = now;
       this.frameErrors = 0;
     } catch (err) {
       this.onFrameError(err);
@@ -289,6 +301,7 @@ class Game {
     this.modeT += dt;
     const input = this.input;
     this.hud.layout(this.mode);
+    if (this.perf.on) { input.buttonZones.push(this.perf.zone); if (input.consumeButton('perf')) this.perf.nextRes(); }      // a tap on the readout: the next resolution
     if (this.noticeT > 0) this.noticeT -= dt;
     if (input.consumeMute() || input.consumeButton('sound')) {
       audio.unlock();
@@ -388,6 +401,7 @@ class Game {
     }
     if (this.noticeT > 0) this.hud.drawNotice(g, this.noticeText, this.noticeT);
     if (this.dev.dev) { g.layer('overlay'); g.text(devLabel(this.world), W / 2, H - 24 - SAFE.bottom, 12, '#8fd1c7', 'center'); }
+    this.perf.draw(g);
     g.end(this.dt);
   }
 }

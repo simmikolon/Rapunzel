@@ -62,6 +62,10 @@ which only copies the two folders together). The design document
   round (`?place=`, `?at=` and `?spawn=` mean the endless tower).
   The opening story (`web/src/story.js`, told once per device before the
   title): `?story=1` tells it on a visit, `?story=0` does not.
+  Performance (`docs/plans/performance.md`): `?perf=1` shows frame times,
+  where they go and the longest frames (`web/src/perf.js`; a tap on it
+  takes the next drawing resolution), `?res=1.5|1.25|1` sets the
+  resolution in backing pixels per logical pixel.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark

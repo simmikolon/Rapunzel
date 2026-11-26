@@ -49,6 +49,8 @@ export class Renderer {
     this.renderer = app.renderer;
     this.fx = fx;
     this.resolution = 1;
+    this.stats = { sprites: 0, texts: 0, rasters: 0 };      // the last frame's counts (begin())
+    this.count = { sprites: 0, texts: 0, rasters: 0 };
     this.time = 0;
     this.colors = new Map();
 
@@ -136,6 +138,10 @@ export class Renderer {
 
   // ------------------------------------------------------------- frame
   begin() {
+    // what the last frame took (perf.js reads it): sprites and texts placed, and texts whose words were new, each of
+    // which the browser has to paint and hand to the GPU again
+    this.stats.sprites = this.count.sprites; this.stats.texts = this.count.texts; this.stats.rasters = this.count.rasters;
+    this.count.sprites = 0; this.count.texts = 0; this.count.rasters = 0;
     for (const L of this.all) {
       L.ns = 0; L.ng = 0; L.z = 0; L.cur = null;
       for (const p of L.texts.values()) p.n = 0;
@@ -218,6 +224,7 @@ export class Renderer {
     let s = L.sprites[L.ns];
     if (!s) { s = new Sprite(); L.sprites.push(s); L.c.addChild(s); }
     L.ns++;
+    this.count.sprites++;
     L.cur = null;
     s.visible = true;
     s.zIndex = L.z++;
@@ -478,8 +485,10 @@ export class Renderer {
         wordWrap: wrap > 0,
         wordWrapWidth: wrap || 100,
       });
-      return new Text({ text: str, style });
+      return new Text({ text: '', style });
     });
+    this.count.texts++;
+    if (t.text !== str) this.count.rasters++;
     t.text = str;
     const c = this._col(paint ? '#fff' : color);
     t.tint = c.rgb;
