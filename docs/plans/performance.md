@@ -222,6 +222,46 @@ a storm cloud, a drifting cloud's streaks.
   screen's resolution), and whether the deep forest still falls below
   60.
 
+### 2026-11-26, iPhone Air, after the three steps (letter sheets, drawn at 1, lines as sprites)
+
+Simon: "really very smooth now, much better than before." The panel in
+the forest at 157 m, half a minute into a round (768 x 1668, x1):
+
+| | first reading (screen's resolution) | now |
+|---|---|---|
+| frames of the round | 5906 (to 376 m) | 1791 (to 157 m) |
+| longer than 20 ms | 6.1 % | 1.8 % |
+| longer than 25 ms | 1.5 % | 0.6 % |
+| longer than 50 ms | 2 | 0 |
+| the longest | 75 ms | 32 ms |
+| `upd` mean / longest | 0.3 / 7 ms | 0.4 / 3 ms |
+| `draw` mean / longest | 4.1 / 61 ms | 4.1 / 22 ms |
+| most sprites in a frame | 1584 | 1623 |
+
+The last 120 frames in the forest: 60 a second, 99th percentile 23 ms,
+longest 26, `draw` 4 (longest 5) for 970 sprites, no text painted anew.
+The round's longest frame (32 ms at 120 m) had 7 ms of ours in it and
+two texts painted.
+
+What it says:
+- Late frames are down to under a third, and the long ones (over
+  50 ms) are gone. Against the aim (none over 25 ms, 99 of 100 within
+  20 ms) it is close, not there: 1.8 % and 0.6 %.
+- What is left is mostly frames of 23 to 26 ms, which is a callback
+  that came late, not a picture left out (that would be 33 ms), and
+  one frame of 32 ms of which three quarters were not our code.
+- Our drawing is 4 ms for some 1000 sprites, a quarter of a frame. It
+  is the number of sprites that sets it now, not shapes or text.
+- The reading is a short one and ends at 157 m: the deep forest around
+  300 m, where the first reading fell to 55 a second, is not in it.
+
+Where this leaves the question the plan began with: the web view holds
+60 on the Air, and nobody playing sees what is left. A port to
+SpriteKit or an engine is not needed for smoothness. Open for later,
+none of it urgent: a whole round's reading to 300 m and beyond; the
+atlas at art size (suspect 3), which is about memory and the 126 px
+left under the limit, not about frames.
+
 ## The suspects, in the order we take them
 
 1. **Resolution.** (Taken: the game is drawn at 1, see Readings. Open:
