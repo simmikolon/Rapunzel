@@ -30,8 +30,9 @@ the CPU's part), the backing store's size, sprites and texts per frame
 and how many texts were new (`new`: each is painted and uploaded
 again), platforms, enemies, pickups, and the longest frame with what
 was going on. The bars are the last 120 frames; the line is 60 a
-second. A tap on the panel takes the next drawing resolution;
-`?res=1.5` sets one. On the phone:
+second. A tap on the panel's numbers takes the next drawing
+resolution (`?res=1.5` sets one); a tap on its graph scales the
+picture up with hard pixels or smoothly (`?px=hard`). On the phone:
 `tools/ios_run.sh Simmi -gameQuery "perf=1"`.
 
 What a reading says:
@@ -111,10 +112,49 @@ from them, and a new word is new positions, not a new picture
   `?letters=0` (painted as before), both at the screen's resolution:
   `>20ms` and `draw`'s longest say whether the text was it.
 
+### 2026-11-26, later: the sheets and the resolutions, by eye
+
+Simon played the variants on the Air (no panel pictures this time):
+the hard stutter is gone with the letter sheets; at 1 it ran best and
+smoothest; and between the screen's resolution (1.64) and 1 he saw no
+difference in the picture, whichever step the panel was on. His
+question: can it be smaller still before it shows?
+
+### Step taken: smaller steps to try, and hard pixels
+
+The panel's steps now go on to 0.75 and 0.5 (three and two backing
+pixels to an art pixel; 21 % and 9 % of the screen's pixels, where 1
+is 37 %), and a tap on the panel's graph (or `?px=hard`) has the
+screen scale the picture up with hard pixels instead of smoothly.
+
+What the same frame looks like here, on a screen shaped like the
+Air's (pictures of each step, enlarged):
+- Scaled up smoothly, as now: 1 is a touch softer than the screen's
+  own, 0.75 is soft, 0.5 is blurred. That is the scaling, not the art.
+- With hard pixels the art stays as sharp at 0.5 as at 1 (it is drawn
+  on a grid twice as coarse still). What gives first is everything
+  that is finer than an art pixel: the letters (a 12 px text is six
+  pixels high at 0.5: legible, coarse), the thin vines, soft glows'
+  edges. And 384 pixels do not go evenly into the screen's 1260, so
+  an art pixel is six or seven screen pixels wide by turns; whether
+  that shows as a shimmer in a slow scroll, the phone has to say.
+- Smaller only helps while the pixels are what is late. A web view
+  shows 60 frames a second at most; once a round has no late frames,
+  a smaller picture is cooler and easier on the battery, not smoother.
+  The panel's `>20ms` after a round at each step says where that is.
+
+If below 1 is wanted for good, the way to keep the HUD sharp is to
+draw the world small and the HUD and the letters at the screen's
+resolution on top of it (two targets in the renderer), and to scale
+the world up by a whole number first. Not built; it is the step after
+the default is chosen.
+
 ## The suspects, in the order we take them
 
-1. **Resolution.** (Open: the first reading was at the screen's own
-   resolution only.) The backing store is the screen's own pixels
+1. **Resolution.** (By eye, 1 is the smoothest and looks the same as
+   the screen's own; 0.75 and 0.5 are there to try, see Readings. Open:
+   the panel's numbers at each, and the phone's default.) The backing
+   store is the screen's own pixels
    (1260 x 2736 on the Air), and several layers are blended over the
    whole of it. Pixel art gains nothing from that: an art pixel is four
    logical pixels. At 1.5, 1.25 or 1 backing pixels to a logical one the

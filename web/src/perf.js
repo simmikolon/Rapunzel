@@ -8,12 +8,15 @@ import { W, H, SAFE } from './config.js';
 // `worst` keeps what was going on).
 // The panel is drawn with the game's own renderer, so it costs a little
 // itself: its numbers are refreshed only twice a second.
-// A tap on the panel takes the next resolution (RES): the game's backing
-// store in pixels per logical pixel. Whole art pixels (an art pixel is four
-// logical ones) come out even at 1, 1.25, 1.5 and 1.75; the screen then
-// scales the picture up to its own pixels.
+// A tap on the panel's numbers takes the next resolution (RES): the game's
+// backing store in pixels per logical pixel. Whole art pixels (an art pixel
+// is four logical ones) come out even at every quarter: 0.5 is two pixels
+// to an art pixel, 1 is four. The screen then scales the picture up to its
+// own pixels, smoothly, or with hard pixels after a tap on the graph: below
+// 1 the smooth way is what blurs, the hard way keeps the art's edges and
+// makes small letters coarse.
 const N = 120;                             // frames kept for the numbers and the graph
-export const RES = [0, 1.5, 1.25, 1];      // 0: the screen's own resolution
+export const RES = [0, 1.5, 1.25, 1, 0.75, 0.5];      // 0: the screen's own resolution
 
 export class Perf {
   constructor(game) {
@@ -85,19 +88,27 @@ export class Perf {
     };
   }
 
-  // The next resolution (a tap on the panel).
+  // The next resolution (a tap on the panel's numbers).
   nextRes() {
     const game = this.game, at = RES.indexOf(game.resScale || 0);
     game.resScale = RES[(at + 1) % RES.length];
     game.setupDpr();
     this.n = 0; this.i = 0; this.total = 0; this.long = 0; this.worst = []; this.skip = 5;      // other numbers from here on
   }
+  // How the screen scales the picture up, smoothly or with hard pixels (a tap on the panel's graph).
+  nextPixels() {
+    this.game.hardPixels = !this.game.hardPixels;
+    this.game.setupDpr();
+  }
 
-  get zone() { return { id: 'perf', x: 8, y: SAFE.top + 290, w: 480, h: 322 }; }
+  // The panel, and its two halves to tap: the numbers (the next resolution) and the graph (smooth or hard pixels).
+  get panel() { return { x: 8, y: SAFE.top + 290, w: 480, h: 322 }; }
+  get zone() { const p = this.panel; return { id: 'perf', x: p.x, y: p.y, w: p.w, h: 198 }; }
+  get zonePixels() { const p = this.panel; return { id: 'perfpx', x: p.x, y: p.y + 198, w: p.w, h: p.h - 198 }; }
 
   draw(g) {
     if (!this.on) return;
-    const z = this.zone, x = z.x + 10;
+    const z = this.panel, x = z.x + 10;
     let y = z.y + 16;
     g.layer('overlay');
     g.rect(z.x, z.y, z.w, z.h, '#0b1418', 0.72);
@@ -108,7 +119,7 @@ export class Perf {
       this.lines = [
         `${s.fps} fps ${s.ms}ms p99 ${s.p99} max ${s.max}`,
         `upd ${s.upd}/${s.updMax} draw ${s.drw}/${s.drwMax}`,
-        `res ${s.res} x${s.scale}${s.pick ? '' : ' screen'}`,
+        `res ${s.res} x${s.scale}${s.pick ? '' : ' screen'}${this.game.hardPixels ? ' hard' : ''}`,
         `spr ${s.sprites} txt ${s.texts} new ${s.rasters} p${w.platforms.length} e${w.enemies.length}`,
       ];
       if (r && r.frames) {
@@ -118,10 +129,10 @@ export class Perf {
         this.lines.push(` >50ms ${r.over50}  max ${Math.round(r.max)}  spr ${r.sprites}`);
         this.lines.push(` upd ${(r.upd / r.frames).toFixed(1)}/${r.updMax.toFixed(0)} draw ${(r.drw / r.frames).toFixed(1)}/${r.drwMax.toFixed(0)}`);
         if (r.worst) this.lines.push(` worst ${r.worst.ms}ms @${r.worst.m}m ours ${r.worst.ours} txt ${r.worst.rasters}`);
-      } else this.lines.push('round: play one, read it after', 'tap here: next resolution');
+      } else this.lines.push('round: play one, read it after', 'tap numbers: next resolution');
     }
     for (const line of this.lines) { g.text(line, x, y, 12, '#d8f0e8', 'left', false); y += 22; }
-    g.text('tap: next resolution', x + 230, z.y + z.h - 118, 10, '#8fb8ae', 'left', false);
+    g.text(`tap graph: pixels ${this.game.hardPixels ? 'hard' : 'smooth'}`, x + 170, z.y + z.h - 118, 12, '#8fb8ae', 'left', false);
     // the last frames: one bar each, as high as the frame was long; the line is where 60 a second is
     const base = z.y + z.h - 10, usual = this.median();
     for (let k = 0; k < this.n; k++) {

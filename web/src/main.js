@@ -52,6 +52,7 @@ class Game {
     // The drawing resolution (pixels of the backing store per logical pixel; null: the screen's own) and the
     // performance readout: ?res=1.5 and ?perf=1 (perf.js).
     this.resScale = RES.includes(+this.dev.res) && +this.dev.res > 0 ? +this.dev.res : null;
+    this.hardPixels = this.dev.px === 'hard';
     this.gfx.letters = this.dev.letters !== '0';      // ?letters=0: every text painted by the browser, as before the letter sheets (to compare)
     this.perf = new Perf(this);
     this.perf.on = this.dev.perf === '1';
@@ -179,6 +180,9 @@ class Game {
     const cssW = rect.width || W;
     const scale = (cssW * dpr) / W;
     this.gfx.resize(this.resScale ? Math.min(scale, this.resScale) : scale);
+    // (how the screen scales a smaller picture up: smoothly, as a browser does, or with hard pixels: ?px=hard)
+    const hard = this.hardPixels ? 'pixelated' : '';
+    if (this.canvas.style.imageRendering !== hard) this.canvas.style.imageRendering = hard;
   }
 
   setMode(m) {
@@ -303,7 +307,11 @@ class Game {
     this.modeT += dt;
     const input = this.input;
     this.hud.layout(this.mode);
-    if (this.perf.on) { input.buttonZones.push(this.perf.zone); if (input.consumeButton('perf')) this.perf.nextRes(); }      // a tap on the readout: the next resolution
+    if (this.perf.on) {      // a tap on the readout's numbers: the next resolution; on its graph: smooth or hard pixels
+      input.buttonZones.push(this.perf.zone, this.perf.zonePixels);
+      if (input.consumeButton('perf')) this.perf.nextRes();
+      if (input.consumeButton('perfpx')) this.perf.nextPixels();
+    }
     if (this.noticeT > 0) this.noticeT -= dt;
     if (input.consumeMute() || input.consumeButton('sound')) {
       audio.unlock();
