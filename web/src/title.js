@@ -48,16 +48,15 @@ export function drawTitle(g, game, t, o = {}) {
   tagButton(g, zone(ZONES.placeTour), 'TOWER', { alpha, size: 13, on: climb === 'stages' });
   tagButton(g, zone(ZONES.placeOut), 'OUTSIDE', { alpha, size: 12, on: climb === 'outside', icon: (gg, x, y, a) => gg.blit(art.sign.tree, x - 12, y, { alpha: a }) });
   tagButton(g, zone(ZONES.placeIn), 'INSIDE', { alpha, size: 12, on: climb === 'inside', icon: (gg, x, y, a) => gg.blit(art.sign.door, x - 12, y, { alpha: a }) });
-  // controls, painted on the board below in one line
-  paint(g, input.isTouch ? 'hold a side to steer, tap the flame to boost' : 'arrows steer, space boosts, T / O / I picks the climb', W / 2, Y(660), 13, 'center', { alpha });
-  // settings in the bottom row: effects left, sound in the middle, tilt right
-  tagButton(g, zone(ZONES.fx), game.fxPreset.toUpperCase(), { alpha, size: 13, icon: (gg, x, y, a) => gg.blit(art.sign.sparkle, x, y, { alpha: a, glow: 0.4 * a }) });
+  // controls, painted on the board below in one line: how the chosen steering goes
+  const steer = game.settings.v.steer;
+  const how = !input.isTouch ? 'arrows steer, space boosts, T / O / I picks the climb'
+    : steer === 'tilt' && input.tiltEnabled ? 'lean the phone to steer, tap to boost'
+      : steer === 'swipe' ? 'slide a finger to steer, tap to boost' : 'hold a side to steer, tap the flame to boost';
+  paint(g, how, W / 2, Y(660), 13, 'center', { alpha });
+  // the bottom row: the settings (steering, effects, sound, settings.js), and sound on or off beside them
+  tagButton(g, zone(ZONES.settings), 'SETTINGS', { alpha, size: 14, icon: (gg, x, y, a) => gg.blit(art.sign.sparkle, x, y, { alpha: a }) });
   tagButton(g, zone(ZONES.titleSound), null, { alpha, icon: (gg, x, y, a) => drawSpeaker(gg, x, y, game.muted, INK) });
-  if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) {
-    const on = input.tiltEnabled;
-    tagButton(g, zone(ZONES.tilt), on ? 'TILT ON' : 'TILT OFF', { alpha, size: 13, on, icon: (gg, x, y, a) => gg.blit(on ? art.sign.phoneOn : art.sign.phone, x, y, { alpha: a }) });
-  }
-  if (input.tiltMessageT > 0) paint(g, input.tiltMessage, W / 2, Y(762), 13, 'center', { alpha });
 }
 
 // Rapunzel peeks over the sign's top-right corner, holding on. Her braid

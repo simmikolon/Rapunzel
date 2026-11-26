@@ -1,4 +1,4 @@
-import { W, H, TILT_DEAD_ZONE, TILT_FULL } from './config.js';
+import { W, H, TILT_DEAD_ZONE, TILT_FULL, SWIPE } from './config.js';
 import { clamp, approach } from './util.js';
 import { platform } from './platform.js';
 
@@ -6,6 +6,26 @@ import { platform } from './platform.js';
 // (mouse + touch) and device tilt. The game reads `axis` (-1..1), the
 // edge-triggered `boost` / `tap` flags and the list of pointer taps in
 // logical canvas coordinates (for HUD buttons).
+// A touch steers in one of three ways (`steer`, the player's setting):
+// 'tap' holds a side of the screen, 'swipe' slides a finger from where it
+// was set down, 'tilt' leans the phone (and any touch is a boost).
+
+// How far the screen's right edge is dipped below its left, in degrees
+// (-90..90), from a DeviceOrientation event's angles and the screen's turn.
+// It is the gravity along the screen's width, sin(gamma) cos(beta) in
+// portrait, taken as an angle: the same lean steers the same however the
+// phone is pitched, upright, lying flat or tipped past upright towards the
+// player. (gamma itself is the lean only while the phone lies flat: held
+// upright it runs away at the smallest turn, and past upright it changes
+// its sign.) The shell sends the same angle from CoreMotion (TiltSource.swift).
+export function leanDegrees(beta, gamma, angle = 0) {
+  const b = (beta * Math.PI) / 180, g = (gamma * Math.PI) / 180;
+  const gx = Math.sin(g) * Math.cos(b), gy = -Math.sin(b);      // gravity along the device's width and its length
+  const a = ((angle % 360) + 360) % 360;
+  const across = a === 90 ? -gy : a === 270 ? gy : a === 180 ? -gx : gx;
+  return (Math.asin(clamp(across, -1, 1)) * 180) / Math.PI;
+}
+
 export class Input {
   constructor(canvas) {
     this.canvas = canvas;
@@ -16,6 +36,12 @@ export class Input {
     this.tilt = 0;              // smoothed, -1..1
     this.tiltRaw = 0;
     this.tiltEnabled = false;
+    this.tiltFull = TILT_FULL;  // degrees of lean for full speed (the setting "tilt")
+    this.wantTilt = false;      // the player's setting is 'tilt': it is asked for at the next click (a browser grants it only from a gesture)
+    this.tiltBusy = false;
+    this.onTilt = null;         // (ok) => the answer to that
+    this.steer = 'tap';         // 'tap' | 'swipe' | 'tilt'
+    this.slideAxis = 0;
     // In the native shell tilt comes from CoreMotion through platform.js: no
     // permission prompt (the WKWebView would show one for DeviceOrientation).
     this.tiltSupported = platform.isNative ? platform.tilt.available : typeof DeviceOrientationEvent !== 'undefined';
@@ -33,8 +59,6 @@ export class Input {
     // Regions where a touch acts as a button rather than steering. Set by HUD.
     this.buttonZones = [];      // {id, x, y, w, h}
     this.buttonHits = [];       // ids hit this frame
-    this.tiltMessage = '';
-    this.tiltMessageT = 0;
 
     this.bind();
   }
@@ -70,9 +94,15 @@ export class Input {
       const p = this.toLogical(e.clientX, e.clientY);
       const zone = this.zoneAt(p.x, p.y);
       let role = 'steer';
-      if (zone) { role = 'button'; if (zone.id !== 'tilt') this.buttonHits.push(zone.id); }
+      if (zone) { role = 'button'; this.buttonHits.push(zone.id); }
       else if (e.pointerType === 'mouse' || this.tiltEnabled) { role = 'boost'; }
-      this.pointers.set(e.pointerId, { x: p.x, y: p.y, role });
+      else if (this.steer === 'swipe') {
+        // the finger that slides, or, while one does, a second finger: a boost
+        let sliding = false;
+        for (const q of this.pointers.values()) if (q.role === 'slide') sliding = true;
+        role = sliding ? 'boost' : 'slide';
+      }
+      this.pointers.set(e.pointerId, { x: p.x, y: p.y, role, x0: p.x, sx: p.x, sy: p.y, far: 0, t0: performance.now() });
       this.taps.push(p);
       this.tapQueued++;
       if (role === 'boost') this.boostQueued++;
@@ -85,25 +115,35 @@ export class Input {
       if (!pt) return;
       const p = this.toLogical(e.clientX, e.clientY);
       pt.x = p.x; pt.y = p.y;
+      if (pt.role !== 'slide') return;
+      pt.far = Math.max(pt.far, Math.abs(p.x - pt.sx), Math.abs(p.y - pt.sy));
+      // past full speed the middle comes along with the finger
+      if (pt.x - pt.x0 > SWIPE.full) pt.x0 = pt.x - SWIPE.full;
+      else if (pt.x0 - pt.x > SWIPE.full) pt.x0 = pt.x + SWIPE.full;
     };
     // Audio may only be unlocked from a "real" activation: on iOS that is the
     // end of a touch or a click, not its start, so fire the hook here too.
-    const up = (e) => { this.pointers.delete(e.pointerId); this.anyInteraction && this.anyInteraction(); };
+    const up = (e) => {
+      const pt = this.pointers.get(e.pointerId);
+      // a sliding finger that only tapped: a boost
+      if (pt && pt.role === 'slide' && e.type === 'pointerup' && performance.now() - pt.t0 < SWIPE.tapTime * 1000 && pt.far < SWIPE.tapMove) this.boostQueued++;
+      this.pointers.delete(e.pointerId);
+      this.anyInteraction && this.anyInteraction();
+    };
     c.addEventListener('pointerdown', down);
     c.addEventListener('pointermove', move);
     c.addEventListener('pointerup', up);
     c.addEventListener('pointercancel', up);
     c.addEventListener('contextmenu', (e) => e.preventDefault());
     c.addEventListener('touchend', () => { this.anyInteraction && this.anyInteraction(); }, { passive: true });
-    // The tilt toggle is handled on 'click' because iOS only grants the
-    // DeviceOrientation permission from inside a user-gesture handler.
-    c.addEventListener('click', (e) => {
+    // Tilt is asked for on 'click', because iOS only grants the
+    // DeviceOrientation permission from inside a user-gesture handler: the
+    // click that chose it in the settings, or on a later visit the first click.
+    c.addEventListener('click', () => {
       this.anyInteraction && this.anyInteraction();
-      const p = this.toLogical(e.clientX, e.clientY);
-      const zone = this.zoneAt(p.x, p.y);
-      if (!zone || zone.id !== 'tilt') return;
-      if (this.tiltEnabled) this.disableTilt();
-      else this.requestTilt().then((ok) => { this.tiltMessage = ok ? 'Tilt on: tap anywhere to boost' : 'Tilt not available'; this.tiltMessageT = 2.5; });
+      if (!this.wantTilt || this.tiltEnabled || this.tiltBusy) return;
+      this.tiltBusy = true;
+      this.requestTilt().then((ok) => { this.tiltBusy = false; if (this.onTilt) this.onTilt(ok); });
     });
 
     window.addEventListener('deviceorientation', (e) => this.onOrientation(e));
@@ -119,31 +159,21 @@ export class Input {
 
   onOrientation(e) {
     if (!this.tiltEnabled) return;
-    let g = e.gamma; // left/right tilt in portrait, degrees
-    let b = e.beta;
-    if (g == null) return;
+    if (e.gamma == null || e.beta == null) return;
     const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-    let v;
-    if (angle === 90) v = b;
-    else if (angle === -90 || angle === 270) v = -b;
-    else if (angle === 180) v = -g;
-    else v = g;
-    this.setTiltDegrees(v);
+    this.setTiltDegrees(leanDegrees(e.beta, e.gamma, angle));
   }
 
-  // The shell's CoreMotion samples: gamma in degrees, portrait only.
-  onNativeTilt(gammaDeg) {
-    if (!this.tiltEnabled || typeof gammaDeg !== 'number') return;
-    this.setTiltDegrees(gammaDeg);
+  // The shell's CoreMotion samples: the same lean in degrees, portrait only.
+  onNativeTilt(leanDeg) {
+    if (!this.tiltEnabled || typeof leanDeg !== 'number') return;
+    this.setTiltDegrees(leanDeg);
   }
 
   setTiltDegrees(v) {
-    // Phones held nearly flat report wild gamma values when beta flips sign;
-    // the magnitude check keeps that from flinging the player.
-    if (Math.abs(v) > 80) v = Math.sign(v) * 80;
     const dead = TILT_DEAD_ZONE;
     const mag = Math.max(0, Math.abs(v) - dead);
-    this.tiltRaw = clamp(Math.sign(v) * (mag / (TILT_FULL - dead)), -1, 1);
+    this.tiltRaw = clamp(Math.sign(v) * (mag / (this.tiltFull - dead)), -1, 1);
   }
 
   // iOS 13+ needs a permission prompt triggered by a user gesture.
@@ -169,16 +199,21 @@ export class Input {
 
   // Called once per frame by the game loop before update.
   poll(dt) {
-    if (this.tiltMessageT > 0) this.tiltMessageT -= dt;
     const left = this.keys.has('ArrowLeft') || this.keys.has('KeyA');
     const right = this.keys.has('ArrowRight') || this.keys.has('KeyD');
     this.keyAxis = (right ? 1 : 0) - (left ? 1 : 0);
 
-    // Touch steering: a held finger on the left/right half of the screen.
-    let ta = 0;
+    // Touch steering: a held finger on the left/right half of the screen, or
+    // a finger sliding away from where it was set down.
+    let ta = 0, sliding = false;
+    this.slideAxis = 0;
     for (const pt of this.pointers.values()) {
-      if (pt.role !== 'steer') continue;
-      ta += pt.x < W / 2 ? -1 : 1;
+      if (pt.role === 'steer') ta += pt.x < W / 2 ? -1 : 1;
+      else if (pt.role === 'slide') {
+        sliding = true;
+        const d = pt.x - pt.x0, m = Math.max(0, Math.abs(d) - SWIPE.dead);
+        this.slideAxis = clamp((Math.sign(d) * m) / (SWIPE.full - SWIPE.dead), -1, 1);
+      }
     }
     this.touchAxis = clamp(ta, -1, 1);
 
@@ -186,8 +221,10 @@ export class Input {
 
     if (this.keyAxis !== 0) this.axis = this.keyAxis;
     else if (this.touchAxis !== 0) this.axis = this.touchAxis;
+    else if (sliding) this.axis = this.slideAxis;
     else this.axis = this.tilt;
-    this.usingTilt = this.tiltEnabled && this.keyAxis === 0 && this.touchAxis === 0;
+    // (steering by degrees, with the lean or the sliding finger: the player's top speed is the higher one then)
+    this.usingTilt = (this.tiltEnabled || sliding) && this.keyAxis === 0 && this.touchAxis === 0;
   }
 
   consumeBoost() { const v = this.boostQueued > 0; this.boostQueued = 0; return v; }

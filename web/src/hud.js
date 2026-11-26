@@ -76,9 +76,9 @@ export const ZONES = {
   placeTour: { id: 'placeTour', x: W / 2 - 268, y: 580, w: 168, h: 52 },
   placeOut: { id: 'placeOut', x: W / 2 - 84, y: 580, w: 168, h: 52 },
   placeIn: { id: 'placeIn', x: W / 2 + 100, y: 580, w: 168, h: 52 },
-  fx: { id: 'fx', x: 72, y: 688, w: 240, h: 56 },
-  titleSound: { id: 'sound', x: W / 2 - 28, y: 688, w: 56, h: 56 },
-  tilt: { id: 'tilt', x: W - 312, y: 688, w: 240, h: 56 },
+  // the bottom row: the settings' sign (settings.js), and sound on or off beside it
+  settings: { id: 'settings', x: W / 2 - 188, y: 688, w: 300, h: 56 },
+  titleSound: { id: 'sound', x: W / 2 + 132, y: 688, w: 56, h: 56 },
   // on the game over's and the pause's sign
   again: { id: 'again', x: W / 2 - 272, y: 684, w: 544, h: 88 },
   menu: { id: 'menu', x: W / 2 - 112, y: 808, w: 224, h: 56 },
@@ -171,8 +171,9 @@ export class HUD {
     if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
     if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, shiftZone(ZONES.pauseMenu));
     if (mode === 'title') {
-      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn), shiftZone(ZONES.story));
-      if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(shiftZone(ZONES.tilt));
+      // (the settings' sign, while it is open, hangs in the title's place with boards of its own)
+      if (this.game.settings.open) zones.push(...this.game.settings.zones());
+      else zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.settings), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn), shiftZone(ZONES.story));
     }
     if (mode === 'gameover') zones.push(ZONES.sound, shiftZone(ZONES.again), shiftZone(ZONES.menu));
     input.buttonZones = zones;
