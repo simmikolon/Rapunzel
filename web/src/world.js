@@ -206,6 +206,21 @@ export class World {
     }
   }
 
+  // A world nobody plays in (the opening story's ride down the tower,
+  // story.js): time passes and things move, but nothing is made, met or
+  // taken away. `guests` are things of another world that are only shown
+  // here: that world moves them.
+  tick(dt, guests) {
+    this.time += dt;
+    this.bg.updateFireflies(dt, this.cam, this.time, this);
+    this.bg.updateAtmosphere(dt, this.cam, this.time, this);
+    const braidX = (ly) => this.bg.braidX(ly, this.time);
+    for (const p of this.platforms) if (!guests.has(p)) p.update(dt, this.time, braidX, this.cam);
+    for (const e of this.enemies) if (!guests.has(e) && e.y > this.cam.y - 600 && e.y < this.cam.top + 600) e.update(dt, this);
+    for (const k of this.pickups) if (!guests.has(k)) k.update(dt);
+    this.particles.update(dt);
+  }
+
   collide() {
     const pl = this.player;
     const left = pl.bodyLeft, right = pl.bodyRight;
@@ -979,7 +994,8 @@ export class World {
     g.layer('world');
     const order = { swing: 0, step: 0, gate: 1, balcony: 1, gallery: 1, ribbon: 1, bow: 1, chandelier: 1, bell: 1, tome: 1, branchL: 2, branchR: 2, cloud: 2, skyLantern: 2, stork: 3, chest: 3 };
     this.sparkles.length = 0;
-    const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - (p.flight ? 360 : 120) && p.y < cam.top + (p.flight ? 220 : 120));   // a flight of stairs reaches well above and below its lowest tread
+    const loose = this.braidCut.loose ? this.braidCut.ly : null;      // the opening story: the braid is still coming down, and nothing hangs on it below its end
+    const visible = this.platforms.filter((p) => p.kind !== 'ground' && p.y > cam.y - (p.flight ? 360 : 120) && p.y < cam.top + (p.flight ? 220 : 120) && !(loose != null && p.def.onBraid && p.ly < loose));   // a flight of stairs reaches well above and below its lowest tread
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);

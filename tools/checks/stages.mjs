@@ -22,7 +22,7 @@ const state = (page) => page.evaluate(() => {
 });
 {
   // the title: a fresh save plays the tower in stages; T, O and I pick the climb
-  const page = await open(GAME + '/');
+  const page = await open(GAME + '/?story=0');      // (without the opening story: story.mjs checks that)
   const first = await page.evaluate(() => ({ climb: window.game.climb, route: !!window.game.world.route, place: window.game.world.place.name }));
   await page.keyboard.press('KeyI'); await page.waitForTimeout(200);
   const inside = await page.evaluate(() => ({ climb: window.game.climb, route: !!window.game.world.route, place: window.game.world.place.name }));

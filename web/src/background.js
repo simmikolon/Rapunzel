@@ -112,6 +112,7 @@ export class Background {
     this.towerVeil = { ...TOWER_VEIL };
     this.forceWall = null;       // dev (?wall=): one look of the wall all the way up, or 'plain' for none
     this.wall = null;            // in stages: the wall of the stage he is in, tile by tile (setWall); null: the tower's own plan
+    this.top = null;             // the opening story (story.js): where the tower ends, { ly: the wall's upper edge, sill: Rapunzel's window, look: { dy, blink } } (layer px); null: it has no end
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
     this.clouds = Array.from({ length: 9 }, (_, i) => ({ x: r.range(-60, W + 60), y: r.range(0, 2 * H), v: i % 3, drift: r.range(4, 12) }));
@@ -223,7 +224,8 @@ export class Background {
     const of = (A, a) => (typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]);
     const spriteOf = (a) => of(t.towerAreas[a.kind], a);
     const grown = [], hung = [];
-    for (let k = Math.max(0, first - 1); k <= last + 1; k++) {      // (a tile more at each end: a thing that hangs on it may reach into the picture)
+    const topTile = this.top ? Math.floor(this.top.ly / TILE_H) - 1 : Infinity;      // (the story's tower has a top: no wall above it)
+    for (let k = Math.max(0, first - 1); k <= Math.min(last + 1, topTile); k++) {      // (a tile more at each end: a thing that hangs on it may reach into the picture)
       const h = hash(k + 7), a = areaAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
       let v = 0;
       if (k > 0) { const r = h % 100; v = r < 56 ? 0 : r < 70 ? 1 : r < 82 ? 2 : r < 92 ? 3 : 4; }
@@ -235,7 +237,7 @@ export class Background {
     // a string course runs round the tower under every row of windows (broken where the wall is crumbling or being mended)
     for (let i = Math.max(0, Math.floor((camF - STRING_COURSE - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
-      if (ly > camF + H + 30) break;
+      if (ly > camF + H + 30 || (this.top && ly > this.top.ly - 60)) break;
       const a = areaAt(Math.floor((ly - 12) / TILE_H));
       g.blit((a && t.towerBands[TOWER_AREAS[a.kind].band]) || t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
     }
@@ -273,7 +275,31 @@ export class Background {
       }
     }
     // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
-    if (this.towerVeil.alpha > 0) g.rect(W / 2 - TOWER_W / 2 + cam.ox, 0, TOWER_W, H, this.towerVeil.color, this.towerVeil.alpha);
+    const wallTop = this.top ? Math.max(0, H - (this.top.ly - camF) + cam.oy) : 0;
+    if (this.towerVeil.alpha > 0 && wallTop < H) g.rect(W / 2 - TOWER_W / 2 + cam.ox, wallTop, TOWER_W, H - wallTop, this.towerVeil.color, this.towerVeil.alpha);
+    this.drawTowerTop(g, cam, time);
+  }
+
+  // The tower's top (the opening story sets `top`): the cornice and the roof
+  // over the wall's upper edge, and under them Rapunzel at her window, in the
+  // light of her room. She is the title sign's portrait; `top.look` is how
+  // she holds herself (`dy`: ducked or stretched, px; `blink`). Drawn after
+  // the veil: this is what the picture is about.
+  drawTowerTop(g, cam, time) {
+    const T = this.top;
+    if (!T) return;
+    const camF = cam.layerY(PARALLAX_TOWER), sy = (ly) => H - (ly - camF) + cam.oy, x = W / 2 + cam.ox;
+    if (sy(T.ly) > H + 420 || sy(T.sill) < -260) return;
+    const A = this.art.story, S = this.art.sign, look = T.look || {};
+    g.blit(A.cornice, x, sy(T.ly) - 12);
+    g.blit(A.roof, x, sy(T.ly) - 8);
+    const wy = sy(T.sill), dy = look.dy || 0;
+    g.halo(x, wy - 80, 260, '#ffb347', 0.2 + 0.04 * Math.sin(time * 2.3), { glow: 0.5 });
+    g.blit(A.windowBack, x, wy);
+    const blink = look.blink != null ? look.blink : (time % 4.3) < 0.13;
+    g.blit(blink ? S.rapunzelBlink : S.rapunzel, x - 10, wy + 14 + dy + Math.sin(time * 1.7) * 2);
+    g.blit(A.windowFront, x, wy);
+    if (dy < 18) g.blit(S.hands, x - 10, wy + 2);
   }
 
   // Windows left and right of the braid in their storey rhythm (windows.js
@@ -283,6 +309,7 @@ export class Background {
     const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony' || p.kind === 'gate') : [];   // a gate's door takes a window's place too
     const spr = this.art.windows;
     for (const w of windowsBetween(camF - 130, camF + H + 10, blockers)) {
+      if (this.top && w.ly > this.top.sill - 420) continue;      // (none beside Rapunzel's own)
       const sx = W / 2 + w.x + cam.ox, sy = H - (w.ly - camF) + cam.oy;
       g.blit(spr[w.side][w.variant], sx, sy);
       if (w.lit) {
@@ -449,17 +476,28 @@ export class Background {
   // After a cut (`cut.ly`, layer height) only the part above it hangs, with
   // a frayed end; the pieces below (`cut.pieces`: { top, bottom, t }) fall
   // away, shifted down by fallDist(t) like the ribbons riding them.
+  // In the opening story (story.js) the braid has an upper end too
+  // (`cut.top`: Rapunzel's sill) and its lower end is not cut but let down
+  // (`cut.loose`): it comes down the tower with a bow on it.
   drawBraid(g, cam, time, cut) {
     const t = this.art.tiles;
     const step = 40;
     const camF = cam.layerY(PARALLAX_TOWER);
-    const start = Math.floor((camF + H + 60) / step) * step;
+    const top = cut && cut.top != null ? cut.top : Infinity;
+    const start = Math.min(Math.floor((camF + H + 60) / step) * step, Math.floor((top - step) / step) * step);
     const cutLy = cut ? cut.ly : -Infinity;
     const bottom = Math.max(-240, camF - 60, cutLy);
     for (let ly = start; ly >= bottom; ly -= step) {
       g.blit(t.braid, W / 2 + this.braidX(ly, time) + cam.ox, H - (ly + step - camF) + cam.oy);
     }
-    if (cutLy > camF - 80 && cutLy < camF + H + 80) g.blit(t.braidCut, W / 2 + this.braidX(cutLy, time) + cam.ox, H - (cutLy - camF) + cam.oy);
+    if (cut && cut.loose) {
+      // the end that is let down: the braid runs on to it, and it carries a bow that swings
+      if (cutLy <= top - step && cutLy > camF - 120 && cutLy < camF + H + 80) {
+        const bx = W / 2 + this.braidX(cutLy, time) + cam.ox, by = H - (cutLy - camF) + cam.oy;
+        g.blit(t.braid, bx, by - step);
+        g.blit(this.art.sign.bow, bx + Math.sin(time * 9) * 4, by + 4);
+      }
+    } else if (cutLy > camF - 80 && cutLy < camF + H + 80) g.blit(t.braidCut, W / 2 + this.braidX(cutLy, time) + cam.ox, H - (cutLy - camF) + cam.oy);
     if (cut) {
       for (const pc of cut.pieces) {
         const d = fallDist(pc.t), sw = fallSwing(pc.t);

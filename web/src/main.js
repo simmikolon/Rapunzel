@@ -11,6 +11,7 @@ import { devParams, startAt, startStage, spawnNear, forceLen, devLabel } from '.
 import { platform } from './platform.js';
 import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
+import { Story } from './story.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -31,6 +32,9 @@ class Game {
     // intro -> title -> countdown -> playing -> paused | gameover; MENU leads back.
     this.mode = 'title';
     this.intro = null;      // { from, dur, t, ease } while the camera rides down to the lawn
+    this.story = null;      // the opening story while it is told instead of that ride (story.js)
+    this.seenStory = false; // it has been told on this device (it is told once; Rapunzel on the title sign tells it again)
+    this.tellStory = false; // the next intro tells it
     this.modeT = 0;
     // What startRound() plays: the mode ('stages': the tower in stages, in and out through its doors, stages.js;
     // 'endless': one place all the way up) and, for the endless game, where (places.js); a tower with its seed later.
@@ -56,6 +60,9 @@ class Game {
     this.route = { ...STAGES };
     if (this.dev.lives === 'inf') this.route.lives = Infinity;                                                       // ?lives=5 (or inf) for this visit
     else if (this.dev.lives && isFinite(+this.dev.lives)) this.route.lives = Math.max(1, Math.floor(+this.dev.lives));
+    // The opening story: once per device, where the title's world is the outside of the tower (?story=1 tells it
+    // on this visit, ?story=0 does not).
+    this.tellStory = this.dev.story === '1' || (this.dev.story !== '0' && !this.seenStory && this.climb !== 'inside');
     this.world.onStage = () => this.keepBest();
     this.world.onRetry = () => this.keepBest();
     if (this.staged || this.round.place !== this.world.placeName) this.resetWorld();
@@ -82,7 +89,7 @@ class Game {
     document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
     platform.onPause(hide);
     // the dev teleport goes straight to the title; everyone else rides down to the lawn first
-    this.setMode(this.dev.at || this.dev.spawn || this.dev.stage ? 'title' : 'intro');
+    this.setMode((this.dev.at || this.dev.spawn || this.dev.stage) && this.dev.story !== '1' ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
   }
 
@@ -124,6 +131,7 @@ class Game {
       const s = JSON.parse(platform.storage.get(STORAGE_KEY) || platform.storage.get(LEGACY_STORAGE_KEY) || '{}');
       this.bests = { outside: s.best || 0, inside: s.bestInside || 0, stages: s.bestStages || 0 };
       if (PLACES[s.place]) this.round.place = s.place;
+      this.seenStory = !!s.story;
       if (s.mode === 'endless' || s.mode === 'stages') this.round.mode = s.mode;      // (a save from before the stages has none: the stages it is)
       // Only a preset the player picked is kept. Saves from before the
       // default became 'off' wrote 'full' with every best height whether or
@@ -133,7 +141,7 @@ class Game {
     } catch (_) { this.bests = { outside: 0, inside: 0, stages: 0 }; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best || this.bestBeaten;
@@ -175,8 +183,17 @@ class Game {
   // applied in draw() only, so nothing is generated or culled for it; the
   // rows it passes are made once here). A tap shortens the rest to half a second.
   startIntro() {
-    this.intro = { from: INTRO_FROM, dur: INTRO_T, t: 0, ease: easeInOutCubic };
     this.world.level.generateUpTo(CAMERA_START_Y + INTRO_FROM + H + 900);
+    if (this.tellStory && !this.world.place.inside) {
+      // the opening story instead of the plain ride (it ends on the same picture)
+      this.tellStory = false;
+      this.intro = null;
+      this.story = new Story(this);
+      if (!this.seenStory) { this.seenStory = true; this.save(); }
+      return;
+    }
+    this.story = null;
+    this.intro = { from: INTRO_FROM, dur: INTRO_T, t: 0, ease: easeInOutCubic };
   }
   introLift() { const i = this.intro; return i ? i.from * (1 - i.ease(clamp(i.t / i.dur, 0, 1))) : 0; }
   skipIntro() {
@@ -286,6 +303,12 @@ class Game {
       case 'intro': {
         this.stepWorld(dt);
         const tap = input.consumeTap(), boost = input.consumeBoost(), pause = input.consumePause();
+        if (this.story) {
+          if (tap || boost || pause) this.story.skip();
+          this.story.update(dt);
+          if (this.story.done) { this.story = null; this.setMode('title'); }
+          break;
+        }
         if (tap || boost || pause) this.skipIntro();
         this.intro.t += dt;
         if (this.intro.t >= this.intro.dur) { this.intro = null; this.setMode('title'); }
@@ -298,6 +321,7 @@ class Game {
         const play = input.consumeButton('play');
         const pick = input.consumeButton('placeTour') ? 'stages' : input.consumeButton('placeOut') ? 'outside' : input.consumeButton('placeIn') ? 'inside' : input.consumePlace();
         if (pick) this.setClimb(pick);
+        else if (input.consumeButton('story') && !this.world.place.inside) { this.tellStory = true; audio.click(); this.setMode('intro'); }      // a tap on Rapunzel: she tells it again
         else if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();
         break;
       }
@@ -337,9 +361,12 @@ class Game {
     const g = this.gfx, cam = this.world.cam;
     g.begin();
     const camY = cam.y;
-    if (this.mode === 'intro') cam.y = camY + this.introLift();   // the ride is a drawing offset only
-    this.world.draw(g);
-    cam.y = camY;
+    if (this.mode === 'intro' && this.story) this.story.draw(g);   // the opening story draws the world itself
+    else {
+      if (this.mode === 'intro') cam.y = camY + this.introLift();   // the ride is a drawing offset only
+      this.world.draw(g);
+      cam.y = camY;
+    }
     switch (this.mode) {
       case 'title': {
         // the sign is lowered in on its ropes and settles with a small dip;
