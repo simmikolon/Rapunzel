@@ -20,6 +20,14 @@ export function setViewport(height, safe) {
 
 // Size of one "art pixel". bg.png from the prototype uses 4-px blocks.
 export const PX = 4;
+// The drawing resolution: pixels of the backing store per logical pixel,
+// whatever the screen has; the screen scales the picture up to its own. A
+// phone has 1.5 to 1.7 screen pixels to a logical one, which is two and a
+// half times the pixels to fill for a picture that looked no different on
+// the iPhone Air and ran less smoothly (docs/plans/performance.md). A
+// window with fewer pixels than this is drawn at its own. ?res=screen draws
+// at the screen's own resolution, ?res=0.5 at another.
+export const RESOLUTION = 1;
 
 // --- Physics (ported from the SpriteKit prototype, then tuned) ---
 // SpriteKit used g = 9.8 m/s^2 * 150 pt/m = 1470 and a jump of 1500 pt/s,

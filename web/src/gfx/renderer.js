@@ -1,4 +1,4 @@
-import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, Color, RenderTexture } from '../../vendor/pixi.min.mjs';
+import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, Color, RenderTexture, BitmapText, DynamicBitmapFont, Cache } from '../../vendor/pixi.min.mjs';
 import { W, H, PX } from '../config.js';
 import { makeCanvas } from '../art/sprite.js';
 import { buildAtlas, makeGlowTexture, makeBeamTexture, makeFogTexture, canvasTexture } from './atlas.js';
@@ -23,6 +23,15 @@ import { BloomFilter, CRTFilter } from './filters.js';
 // all inside `root`, which carries the CRTFilter.
 
 export const FONT = ['Press Start 2P', 'Courier New', 'monospace'];
+// The letter sheets (_sheet): the sizes there are sheets for, the letters painted on a sheet ahead (the biggest one
+// is the height's in the HUD and gets only what a height is written with), and the sheets with an outline that are
+// made before the first round because the game is known to use them.
+const SHEETS = [10, 12, 14, 16, 18, 22, 30, 40];
+const ALL = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
+const SHEET_CHARS = { 40: '0123456789 m' };
+const SHEETS_AHEAD = [12, 14, 16, 18, 22, 30, 40];
+const SHEET_FIT = { mid: 0.4, right: 0.8, up: 1.34 };      // what brings a sheet's text to where a painted one is (_lettersAt)
+const SHEET_WAIT = 20;      // frames the resolution has to stand still before the sheets are made again for it
 export const PRESETS = ['full', 'bloom', 'off'];
 // The game starts without screen effects (the plain picture looked better);
 // bloom and CRT are there for whoever picks them (F, the title's button).
@@ -49,6 +58,14 @@ export class Renderer {
     this.renderer = app.renderer;
     this.fx = fx;
     this.resolution = 1;
+    this.letters = true;         // texts in the game's own font come from letter sheets (false: every text is painted by the browser, as it was)
+    this.sheets = new Map();     // the letter sheets made so far: name → { font, chars } (_sheet)
+    this.sheetRes = 0;           // the resolution they are painted at (0: none yet), and the frames to wait before they follow a new one
+    this.sheetWait = 0;
+    this.sized = false;          // resize() has said what the resolution is
+    this.warm = []; this.warmFrames = 0;      // the sheets made ahead, and the frames in which each is still drawn once unseen (_keepSheets)
+    this.stats = { sprites: 0, texts: 0, rasters: 0 };      // the last frame's counts (begin())
+    this.count = { sprites: 0, texts: 0, rasters: 0 };
     this.time = 0;
     this.colors = new Map();
 
@@ -127,6 +144,8 @@ export class Renderer {
   // H can change with the window's shape (config.js), so the filter areas
   // follow it; the vignette texture is stretched in vignette().
   resize(scale) {
+    if (scale !== this.resolution || !this.sized) this.sheetWait = this.sheetRes ? SHEET_WAIT : 0;
+    this.sized = true;
     this.resolution = scale;
     this.renderer.resize(W, H, scale);
     this.root.filterArea = SCREEN();
@@ -136,6 +155,11 @@ export class Renderer {
 
   // ------------------------------------------------------------- frame
   begin() {
+    // what the last frame took (perf.js reads it): sprites and texts placed, and texts whose words were new, each of
+    // which the browser has to paint and hand to the GPU again
+    this.stats.sprites = this.count.sprites; this.stats.texts = this.count.texts; this.stats.rasters = this.count.rasters;
+    this.count.sprites = 0; this.count.texts = 0; this.count.rasters = 0;
+    this._keepSheets();
     for (const L of this.all) {
       L.ns = 0; L.ng = 0; L.z = 0; L.cur = null;
       for (const p of L.texts.values()) p.n = 0;
@@ -147,6 +171,7 @@ export class Renderer {
 
   end(dt) {
     this.time += dt;
+    if (this.warmFrames > 0) { this.warmFrames--; for (const size of this.warm) this._lettersAt(this.layers.overlay, SHEET_CHARS[size] || ALL, -9000, -9000, size, '#fff', 'left', true, { alpha: 0.02 }, 1); }
     this._renderLightMap();
     for (const L of this.all) {
       for (let i = L.ns; i < L.sprites.length; i++) L.sprites[i].visible = false;
@@ -218,6 +243,7 @@ export class Renderer {
     let s = L.sprites[L.ns];
     if (!s) { s = new Sprite(); L.sprites.push(s); L.c.addChild(s); }
     L.ns++;
+    this.count.sprites++;
     L.cur = null;
     s.visible = true;
     s.zIndex = L.z++;
@@ -417,12 +443,25 @@ export class Renderer {
     sp.tint = 0xffffff;
   }
 
-  // ------------------------------------------------------------- vectors
+  // A straight line: a rectangle as long as the line and as wide, turned
+  // its way. A sprite, like every rectangle, and not a vector shape: those
+  // the engine builds again every frame, and the vines on the trunks alone
+  // were a hundred of them in the forest, half of a frame's drawing.
   line(x0, y0, x1, y1, color, width = 2, alpha = 1) {
-    const g = this._graphics(this.cur);
+    const dx = x1 - x0, dy = y1 - y0;
+    const sp = this._sprite(this.cur);
     const c = this._col(color);
-    g.moveTo(x0, y0).lineTo(x1, y1).stroke({ width, color: c.rgb, alpha: c.a * alpha });
+    sp.texture = this.white;
+    sp.blendMode = 'normal';
+    sp.pivot.set(1, 1);
+    sp.position.set((x0 + x1) / 2, (y0 + y1) / 2);
+    sp.rotation = Math.atan2(dy, dx);
+    sp.scale.set(Math.hypot(dx, dy) / 2, width / 2);
+    sp.alpha = c.a * alpha;
+    sp.tint = c.rgb;
   }
+
+  // ------------------------------------------------------------- vectors
 
   // o: fill, stroke, width, alpha, join, cap, glow
   roundRect(x, y, w, h, r, o = {}) { this.path((g) => g.roundRect(x, y, w, h, r), o); }
@@ -459,11 +498,90 @@ export class Renderer {
     this._textAt(this.cur, str, x, y, size, color, align, outline, o, 1);
     if (o.glow) this._textAt(this.layers.glow, str, x, y, size, color, align, outline, o, o.glow);
   }
+  // The game's own letters from a prepared sheet: one sheet per size of the
+  // pixel font, with or without its outline, painted once (at the backing
+  // store's resolution) and kept. A text made of them costs nothing when its
+  // words change; a text the browser paints (the old way, kept below for
+  // what is painted in its own colours, wraps, is in another font or bigger
+  // than the biggest sheet: the countdown) is painted and handed to the GPU
+  // again with every new word, and the height in the HUD has a new word with
+  // every metre climbed.
+  // There are sheets for the sizes in SHEETS; a size between two of them
+  // takes the next bigger one, made smaller (a toast is as big as its
+  // length allows). A sheet is one square picture, as small as holds its
+  // letters (a letter that was not painted ahead is added when a text first
+  // asks for it). Null while there are no sheets yet (_keepSheets): then the
+  // browser paints, as it would have.
+  _sheet(size, outline) {
+    const res = this.sheetRes;
+    if (!res) return null;
+    const name = `sb${size}${outline ? 'o' : 'p'}r${Math.round(res * 100)}`;
+    if (!this.sheets.has(name)) {
+      const chars = (outline && SHEET_CHARS[size]) || ALL;
+      const width = outline ? Math.max(4, size * 0.28) : 0;
+      const style = new TextStyle({ fontFamily: [...FONT], fontSize: size, fill: 0xffffff, stroke: outline ? { color: 'rgba(10,20,24,0.85)', width, join: 'round' } : undefined });      // (a copy of FONT: the list is changed by whoever takes it)
+      // the smallest picture (its side a power of two, as the GPU likes it) that takes the letters on one page
+      let font, side = 128;
+      while (side * side < chars.length * size * size * res * res) side *= 2;
+      for (; ; side *= 2) {
+        font = new DynamicBitmapFont({ style, overrideFill: false, overrideSize: false, skipKerning: true, padding: outline ? 1 : 2, resolution: res, textureSize: Math.floor(side / res), mipmap: false });
+        font.ensureCharacters(chars);
+        if (font.pages.length <= 1 || side >= 2048) break;
+        font.destroy();
+      }
+      Cache.set(`${name}-bitmap`, font);
+      font.once('destroy', () => Cache.remove(`${name}-bitmap`));
+      this.sheets.set(name, { font, chars, side });
+    }
+    return name;
+  }
+  // The sheets follow the backing store's resolution: made when it is first known and the font is there, and made
+  // again when it has changed and stood still for a moment (a window being dragged changes it with every frame; the
+  // texts are drawn from the old sheets meanwhile). The sheets the game is known to need are made here, before the
+  // first round, so that none is made in the middle of one; and since a sheet only goes to the GPU when something is
+  // first drawn with it, each of them is drawn once where nobody sees it, in the frames that follow.
+  _keepSheets() {
+    if (!this.letters || !this.sized || this.sheetRes === this.resolution) return;
+    if (this.sheetWait > 0) { this.sheetWait--; return; }
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.check && !document.fonts.check('16px "Press Start 2P"')) return;
+    for (const L of this.all) for (const [key, pool] of L.texts) if (key.startsWith('b|')) { for (const t of pool.list) t.destroy(); L.texts.delete(key); }
+    for (const sheet of this.sheets.values()) sheet.font.destroy();
+    this.sheets.clear();
+    this.sheetRes = this.resolution;
+    this.warm = SHEETS_AHEAD.filter((size) => this._sheet(size, true));
+    this.warmFrames = 2;
+  }
+  _lettersAt(L, str, x, y, size, color, align, outline, o, mul) {
+    const base = SHEETS.find((q) => q >= size);
+    const name = base ? this._sheet(base, outline) : null;
+    if (!name) return false;
+    const t = this._text(L, `b|${name}|${align}`, () => new BitmapText({ text: '', style: { fontFamily: name, fontSize: base, fill: 0xffffff, align } }));
+    this.count.texts++;
+    if (t.text !== str) t.text = str;
+    const c = this._col(color);
+    t.tint = c.rgb;
+    t.alpha = c.a * (o.alpha == null ? 1 : o.alpha) * mul;
+    t.anchor.set(align === 'center' ? 0.5 : align === 'right' ? 1 : 0, 0.5);
+    const sc = (o.scale == null ? 1 : o.scale) * (size / base);
+    t.scale.set(sc, sc);
+    // A sheet's letters with an outline sit a little off where the browser paints the same words (the sheet counts
+    // the outline's width differently): put back, so that a text is where it was (measured: within half a pixel).
+    let dx = 0, dy = 0;
+    if (outline) {
+      const w = Math.max(4, base * 0.28), q = w * base / 200;
+      dx = (align === 'center' ? -(q + SHEET_FIT.mid) : align === 'right' ? -(q + w / 2 + SHEET_FIT.right) : w / 2 - q) * sc;
+      dy = -q * SHEET_FIT.up * sc;
+    }
+    t.position.set(Math.round(x) + dx, Math.round(y) + dy);
+    return true;
+  }
+
   _textAt(L, str, x, y, size, color, align, outline, o, mul) {
     size = Math.max(1, Math.round(size));
     const family = o.family || FONT;
     const wrap = o.wrap || 0;
     const paint = o.paint;
+    if (this.letters && family === FONT && !wrap && !paint && !o.weight && this._lettersAt(L, str, x, y, size, color, align, outline, o, mul)) return;
     const key = `${size}|${outline ? 1 : 0}|${align}|${wrap}|${typeof family === 'string' ? family : family[0]}|${o.weight || ''}|${paint ? `${paint.fill}/${paint.stroke}/${paint.width}` : ''}`;
     const t = this._text(L, key, () => {
       const width = paint ? paint.width : Math.max(4, size * 0.28);
@@ -478,8 +596,10 @@ export class Renderer {
         wordWrap: wrap > 0,
         wordWrapWidth: wrap || 100,
       });
-      return new Text({ text: str, style });
+      return new Text({ text: '', style });
     });
+    this.count.texts++;
+    if (t.text !== str) this.count.rasters++;
     t.text = str;
     const c = this._col(paint ? '#fff' : color);
     t.tint = c.rgb;

@@ -1,4 +1,4 @@
-import { W, H, SAFE, setViewport, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T } from './config.js';
+import { W, H, SAFE, setViewport, STORAGE_KEY, LEGACY_STORAGE_KEY, FX, CAMERA_START_Y, INTRO_FROM, INTRO_T, RESOLUTION } from './config.js';
 import { buildAllArt } from './art/index.js';
 import { Input } from './input.js';
 import { audio, isIOS } from './audio.js';
@@ -12,6 +12,7 @@ import { platform } from './platform.js';
 import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
 import { Story } from './story.js';
+import { Perf, RES } from './perf.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -48,6 +49,15 @@ class Game {
     this.fxPreset = DEFAULT_PRESET;
     this.fxPick = null;       // the preset the player chose (F, the title's button); null: the default
     this.dev = devParams();
+    // The drawing resolution (pixels of the backing store per logical pixel: RESOLUTION unless ?res=1.5 asks for
+    // another; null, ?res=screen: the screen's own) and the performance readout, ?perf=1 (perf.js).
+    const res = this.dev.res;
+    this.resScale = res === 'screen' || res === '0' ? null : RES.includes(+res) && +res > 0 ? +res : RESOLUTION;
+    this.hardPixels = this.dev.px === 'hard';
+    this.gfx.letters = this.dev.letters !== '0';      // ?letters=0: every text painted by the browser, as before the letter sheets (to compare)
+    this.perf = new Perf(this);
+    this.perf.on = this.dev.perf === '1';
+    window.__perf = () => this.perf.summary();
     if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
     if (this.dev.veil != null && this.dev.veil !== '' && isFinite(+this.dev.veil)) this.world.bg.towerVeil.alpha = Math.max(0, Math.min(0.9, +this.dev.veil));   // ?veil= for this visit
     if (this.dev.wall) this.world.bg.forceWall = this.dev.wall;                       // ?wall= for this visit
@@ -86,8 +96,8 @@ class Game {
       if (this.mode === 'playing') this.setMode('paused');
       else if (this.mode === 'countdown') this.toTitle();
     };
-    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
-    platform.onPause(hide);
+    document.addEventListener('visibilitychange', () => { this.perf.skip = 3; if (document.hidden) hide(); });      // (the frame after a pause is not the game's)
+    platform.onPause(() => { this.perf.skip = 3; hide(); });
     // the dev teleport goes straight to the title; everyone else rides down to the lawn first
     this.setMode((this.dev.at || this.dev.spawn || this.dev.stage) && this.dev.story !== '1' ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
@@ -161,15 +171,19 @@ class Game {
     this.notice(`Effects: ${this.fxLabel}`, 1.6);
   }
 
-  // The backing store matches the CSS size in device pixels, so nothing is
-  // resampled by the compositor; all drawing stays in logical coordinates,
-  // 768 wide and as tall as the screen's shape asks for.
+  // The backing store has `resScale` pixels to a logical pixel (RESOLUTION: pixel art loses nothing at whole art
+  // pixels, and the screen scales the picture up), or the screen's own where that is fewer or `resScale` is null:
+  // then it matches the CSS size in device pixels and nothing is resampled. All drawing stays in logical
+  // coordinates, 768 wide and as tall as the screen's shape asks for.
   setupDpr() {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = measureViewport(this.canvas);
     const cssW = rect.width || W;
     const scale = (cssW * dpr) / W;
-    this.gfx.resize(scale);
+    this.gfx.resize(this.resScale ? Math.min(scale, this.resScale) : scale);
+    // (how the screen scales a smaller picture up: smoothly, as a browser does, or with hard pixels: ?px=hard)
+    const hard = this.hardPixels ? 'pixelated' : '';
+    if (this.canvas.style.imageRendering !== hard) this.canvas.style.imageRendering = hard;
   }
 
   setMode(m) {
@@ -230,6 +244,7 @@ class Game {
 
   // The round is live: world.start() has run (the GO landing or the dev path).
   beginPlaying() {
+    this.perf.roundStart();
     if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
     this.maybeIosSoundHint();
     this.setMode('playing');
@@ -251,9 +266,13 @@ class Game {
     // one runs, and only a persistent error stops the game with a message
     // instead of a frozen picture.
     try {
+      const t0 = performance.now();
       this.input.poll(dt);
       this.update(dt);
+      const t1 = performance.now();
       this.draw();
+      this.perf.frame(now - this.perfLast, t1 - t0, performance.now() - t1);
+      this.perfLast = now;
       this.frameErrors = 0;
     } catch (err) {
       this.onFrameError(err);
@@ -289,6 +308,11 @@ class Game {
     this.modeT += dt;
     const input = this.input;
     this.hud.layout(this.mode);
+    if (this.perf.on) {      // a tap on the readout's numbers: the next resolution; on its graph: smooth or hard pixels
+      input.buttonZones.push(this.perf.zone, this.perf.zonePixels);
+      if (input.consumeButton('perf')) this.perf.nextRes();
+      if (input.consumeButton('perfpx')) this.perf.nextPixels();
+    }
     if (this.noticeT > 0) this.noticeT -= dt;
     if (input.consumeMute() || input.consumeButton('sound')) {
       audio.unlock();
@@ -388,6 +412,7 @@ class Game {
     }
     if (this.noticeT > 0) this.hud.drawNotice(g, this.noticeText, this.noticeT);
     if (this.dev.dev) { g.layer('overlay'); g.text(devLabel(this.world), W / 2, H - 24 - SAFE.bottom, 12, '#8fd1c7', 'center'); }
+    this.perf.draw(g);
     g.end(this.dt);
   }
 }

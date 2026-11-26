@@ -62,6 +62,13 @@ which only copies the two folders together). The design document
   round (`?place=`, `?at=` and `?spawn=` mean the endless tower).
   The opening story (`web/src/story.js`, told once per device before the
   title): `?story=1` tells it on a visit, `?story=0` does not.
+  Performance (`docs/plans/performance.md`): `?perf=1` shows frame times,
+  where they go and the longest frames (`web/src/perf.js`; a tap on its
+  numbers takes the next drawing resolution, a tap on its graph hard or
+  smooth pixels), `?res=1.5|1.25|1|0.75|0.5|screen` sets the resolution in
+  backing pixels per logical pixel, `?px=hard` scales the picture up
+  with hard pixels, `?letters=0` has the browser paint every text as
+  before the letter sheets (to compare).
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
@@ -113,7 +120,9 @@ which only copies the two folders together). The design document
   simulator and follows the screen on phones (`H` in `config.js`, read live;
   `SAFE` keeps the HUD out of the notch and the home indicator; the sign
   screens are laid out for 1364 and centred). World y up, 100 px = 1 m,
-  `beat` = 300 px.
+  `beat` = 300 px. The picture is drawn at one backing pixel per logical
+  pixel on every screen (`RESOLUTION` in `config.js`) and scaled up by
+  the screen.
 - Drawing goes through the renderer facade `g` (`web/src/gfx/renderer.js`);
   gameplay code never touches PixiJS. Pass `glow` on draw calls for bloom.
   `g.dark(amount)` makes a frame dark and `g.lamp(x, y, r)` lights it.

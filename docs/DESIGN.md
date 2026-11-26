@@ -2490,3 +2490,64 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   For the eye only: `tools/checks/identity.sh` reports all five the
   same; `story.mjs` is its check, `flow.mjs` and `stages.mjs` pass.
   The atlas is 4096 x 3970 (706 sprites), 126 px under the limit.
+- 2026-11-26: Letters from sheets (`tools/perf`, `docs/plans/performance.md`).
+  The first reading on the iPhone Air: the game's step 0.3 ms, its
+  drawing 4 ms, and still 6 % of a round's frames longer than 20 ms,
+  the longest with ten texts new. A text the browser paints is painted
+  and handed to the GPU again whenever its words change, and the height
+  changes with every metre climbed: the hitches come "when the screen
+  scrolls". Decisions:
+  - Texts in the game's own font are put together from letter sheets
+    made before the title (one per size, with the outline painted in);
+    signs, wrapped text and the countdown stay painted, they do not
+    change in a climb.
+  - The sheets are as small as hold their letters (17 MB at the Air's
+    resolution) and follow the drawing resolution. The engine's own
+    way (a big page per size, every letter of every size) was over
+    100 MB next to an atlas that is already large.
+  - The look stays: positions put back to within a pixel; the browser's
+    "fl" and "fi" ligatures are gone. `?letters=0` paints as before, so
+    that the phone can say what it bought.
+- 2026-11-26: The game is drawn at 1 (`tools/perf`). On the iPhone Air
+  Simon stepped through the drawing resolutions: at one backing pixel
+  to a logical pixel it ran smoothest, and he saw no difference to the
+  screen's own 1.64 in the picture. Decisions:
+  - `RESOLUTION = 1` in `config.js`, for every screen, not only the
+    phone: 37 % of the Air's pixels, and an art pixel is still four
+    pixels wide. The screen scales the picture up smoothly, as before.
+  - Smaller was tried (0.75 and 0.5 are in the readout's steps):
+    scaled up smoothly it blurs, with hard pixels the art holds and
+    the small letters do not. Going below 1 would mean drawing the
+    world small and the HUD at the screen's resolution on top; left
+    until a reading asks for it.
+- 2026-11-26: Lines are turned sprites (`tools/perf`). Looking for what
+  a frame draws twice or for nothing: the vines and lianas on the
+  trunks were vector lines, 70 to 85 shapes a frame in the forest that
+  the engine built again every frame, and half of the drawing's time
+  there. `g.line` now places a white rectangle, turned: the drawing in
+  the forest takes half the time (2.7 to 1.3 ms at 180 m, measured
+  headless), and no pixel differs, in the game's own frames or in 400
+  made-up lines at three resolutions. What glows being placed a second
+  time in the hidden glow layer was measured too and left: it does not
+  show in the time.
+- 2026-11-26: The atlas keeps the sprites at art size (`tools/perf`).
+  The sheet had grown to 4096 x 3970, 126 px under the limit of older
+  phones and 62 MB on the GPU, because every sprite was stored as it is
+  painted, four times its art each way. Simon's questions: does making
+  it smaller mean drawing everything again, or could it be split?
+  Decisions:
+  - Neither. The sprites are drawn by code on the art grid; 704 of 705
+    are on it exactly. The atlas packs them at a quarter each way and
+    the texture says it is four times coarser, so nothing that draws
+    changes: 1024 x 1009, 3.9 MB, room for sixteen times today's art.
+  - Splitting would have lifted the limit and left the memory. It is
+    used for the exceptions only: a sprite that is not on the grid
+    (today the lives' little prince) goes onto a second sheet at full
+    size.
+  - The rule that was a matter of style is now one the atlas depends
+    on, so it is checked: `tools/checks/atlas.mjs` names a sprite that
+    is off the grid.
+  - The picture is the same to the eye, not to the pixel: at the
+    game's resolution 14 to 157 pixels of a million sit one pixel
+    off, at art pixels' edges inside sprites that are scaled, turned
+    or stand between pixels.
