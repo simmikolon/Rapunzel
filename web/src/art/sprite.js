@@ -6,6 +6,13 @@ import { PX } from '../config.js';
 // place it by foot / surface / center. At start-up gfx/atlas.js packs all
 // sprite canvases into one WebGL texture and adds a `tex` property to each.
 //
+// The atlas keeps a sprite at art size, one texel to an art pixel, so what
+// is drawn here has to stay on the art grid: `p` and the tools below do,
+// `ctx` used directly has to mind it (whole multiples of PX). A sprite that
+// is meant to be finer than the grid says so (`opts.fine`, or `fine: true`
+// on its object) and is kept at full size; tools/checks/atlas.mjs names a
+// sprite that is off the grid without saying so.
+//
 // To use hand-drawn art instead, return `{ canvas: <image>, w, h, ax, ay }`
 // objects of the same anchors from the build* functions.
 
@@ -43,7 +50,9 @@ export function makeSprite(wA, hA, draw, anchor = { ax: 0.5, ay: 1 }, opts = {})
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   const ax = (opts.axPx != null) ? opts.axPx : anchor.ax * canvas.width;
   const ay = (opts.ayPx != null) ? opts.ayPx : anchor.ay * canvas.height;
-  return { canvas, w: canvas.width, h: canvas.height, ax, ay };
+  const sprite = { canvas, w: canvas.width, h: canvas.height, ax, ay };
+  if (opts.fine) sprite.fine = true;
+  return sprite;
 }
 
 export function pixelLine(p, x0, y0, x1, y1, color, thick = 1) {

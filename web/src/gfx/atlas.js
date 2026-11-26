@@ -1,14 +1,33 @@
 import { CanvasSource, Texture, Rectangle } from '../../vendor/pixi.min.mjs';
 import { makeCanvas } from '../art/sprite.js';
+import { PX } from '../config.js';
 
-// Packs every procedural sprite canvas into one texture atlas so the whole
-// scene batches into a single draw call per layer. Each sprite object
+// Packs every procedural sprite into one texture atlas so the whole scene
+// batches into a single draw call per layer. Each sprite object
 // ({ canvas, w, h, ax, ay }) gets a `tex` property: a PixiJS Texture whose
 // frame is the sprite's rectangle in the atlas. The atlas samples with
 // nearest-neighbour filtering so the chunky art stays crisp when scaled.
+//
+// The sprites are drawn PX logical pixels to an art pixel (art/sprite.js);
+// the atlas keeps them at art size, one texel to an art pixel, which is a
+// sixteenth of the texels (1024 x 1009 where it was 4096 x 3970, and
+// 126 px under the limit). The texture is told that it is PX times coarser
+// (its resolution is 1 / PX), so a sprite's frame, size and anchor are in
+// logical pixels as before and nothing that draws has to know.
+// That holds for a sprite on the art grid: every block of PX x PX pixels of
+// its canvas one colour. A sprite that is not (its size is not whole art
+// pixels, or it says `fine: true`) goes onto a second sheet at full size.
+// tools/checks/atlas.mjs looks at every sprite: one that is off the grid
+// without saying so would lose what is between the art pixels.
 
-const ATLAS_W = 4096;   // wide rather than tall: 4096 is the texture limit of older phones, and at 2048 the sheet had grown to 3810 high
-const GUTTER = 2;      // transparent pixels between sprites against bleeding
+const SIDES = [1024, 2048, 4096];   // the sheet's width in texels: the first at which it is no higher than MAX
+const MAX = 4096;                   // the texture limit of older phones
+const GUTTER = 1;                   // transparent texels between sprites against bleeding (a whole art pixel)
+const FINE_W = 1024;                // the second sheet's width, in logical pixels as the sprites are drawn
+const FINE_GUTTER = 2;
+
+// Is a sprite kept at art size? (What the check verifies: then it has to be on the grid.)
+export const onGrid = (s) => !s.fine && s.w % PX === 0 && s.h % PX === 0;
 
 function collect(obj, out, seen) {
   for (const k of Object.keys(obj)) {
@@ -19,40 +38,61 @@ function collect(obj, out, seen) {
   }
 }
 
+// Shelf packing, tallest first: every sprite gets its place (_x, _y) on a sheet `width` wide, in units of
+// `unit` logical pixels. Returns the sheet's height.
+function shelves(list, width, gutter, unit) {
+  let x = gutter, y = gutter, rowH = 0;
+  for (const s of list) {
+    const w = s.w / unit, h = s.h / unit;
+    if (x + w + gutter > width) { x = gutter; y += rowH + gutter; rowH = 0; }
+    s._x = x; s._y = y;
+    x += w + gutter;
+    rowH = Math.max(rowH, h);
+  }
+  return y + rowH + gutter;
+}
+
 export function buildAtlas(art) {
   const items = [];
   collect(art, items, new Set());
 
-  // A solid white block for rectangles and particles (the frame is the inner
-  // 2 x 2 so nearest sampling never reaches the transparent gutter).
-  const whiteCanvas = makeCanvas(4, 4);
+  // A solid white block for rectangles, lines and particles: three art pixels square, of which the frame is the
+  // middle of the middle one, so that no sampling ever reaches the transparent gutter.
+  const whiteCanvas = makeCanvas(3 * PX, 3 * PX);
   const wctx = whiteCanvas.getContext('2d');
-  wctx.fillStyle = '#fff'; wctx.fillRect(0, 0, 4, 4);
-  const white = { canvas: whiteCanvas, w: 4, h: 4, ax: 0, ay: 0 };
+  wctx.fillStyle = '#fff'; wctx.fillRect(0, 0, 3 * PX, 3 * PX);
+  const white = { canvas: whiteCanvas, w: 3 * PX, h: 3 * PX, ax: 0, ay: 0 };
   items.push(white);
 
-  // Shelf packing, tallest first.
-  const order = items.slice().sort((a, b) => b.h - a.h || b.w - a.w);
-  let x = GUTTER, y = GUTTER, rowH = 0;
-  for (const s of order) {
-    if (x + s.w + GUTTER > ATLAS_W) { x = GUTTER; y += rowH + GUTTER; rowH = 0; }
-    s._atlasX = x; s._atlasY = y;
-    x += s.w + GUTTER;
-    rowH = Math.max(rowH, s.h);
-  }
-  const height = y + rowH + GUTTER;
-  const canvas = makeCanvas(ATLAS_W, height);
-  const ctx = canvas.getContext('2d');
-  for (const s of order) ctx.drawImage(s.canvas, s._atlasX, s._atlasY);
+  const tallest = (a, b) => b.h - a.h || b.w - a.w;
+  const small = items.filter(onGrid).sort(tallest), fine = items.filter((s) => !onGrid(s)).sort(tallest);
 
-  const source = new CanvasSource({ resource: canvas, scaleMode: 'nearest', label: 'bouncealot-atlas' });
-  for (const s of order) {
-    s.tex = new Texture({ source, frame: new Rectangle(s._atlasX, s._atlasY, s.w, s.h) });
-    delete s._atlasX; delete s._atlasY;
+  // The sheet at art size.
+  let width = SIDES[0], height = 0;
+  for (width of SIDES) { height = shelves(small, width, GUTTER, PX); if (height <= MAX) break; }
+  const canvas = makeCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;      // (one texel out of each block, which is all one colour)
+  for (const s of small) ctx.drawImage(s.canvas, 0, 0, s.w, s.h, s._x, s._y, s.w / PX, s.h / PX);
+  const source = new CanvasSource({ resource: canvas, resolution: 1 / PX, scaleMode: 'nearest', label: 'bouncealot-atlas' });
+  for (const s of small) s.tex = new Texture({ source, frame: new Rectangle(s._x * PX, s._y * PX, s.w, s.h) });
+  // The white texture: 2 x 2 logical pixels in the middle of the block's middle texel.
+  white.tex = new Texture({ source, frame: new Rectangle((white._x + 1) * PX + 1, (white._y + 1) * PX + 1, 2, 2) });
+
+  // The sheet at full size, for what is not on the grid.
+  let fineSheet = null;
+  if (fine.length) {
+    const fw = Math.min(FINE_W, fine.reduce((a, q) => a + q.w + FINE_GUTTER, FINE_GUTTER));      // (no wider than what is on it)
+    const fh = shelves(fine, fw, FINE_GUTTER, 1);
+    const fc = makeCanvas(fw, fh);
+    const fctx = fc.getContext('2d');
+    for (const s of fine) fctx.drawImage(s.canvas, s._x, s._y);
+    const fs = new CanvasSource({ resource: fc, scaleMode: 'nearest', label: 'bouncealot-atlas-fine' });
+    for (const s of fine) s.tex = new Texture({ source: fs, frame: new Rectangle(s._x, s._y, s.w, s.h) });
+    fineSheet = { canvas: fc, source: fs, count: fine.length };
   }
-  // The white texture uses the inner 2 x 2 of its block.
-  white.tex = new Texture({ source, frame: new Rectangle(white.tex.frame.x + 1, white.tex.frame.y + 1, 2, 2) });
-  return { canvas, source, white: white.tex, count: order.length };
+  for (const s of items) { delete s._x; delete s._y; }
+  return { canvas, source, white: white.tex, count: items.length, fine: fineSheet };
 }
 
 // Soft radial disc (white, alpha falls off linearly to the edge) for glows

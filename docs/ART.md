@@ -25,7 +25,9 @@ sprite fit the rule.
 
 ## Fixed
 - The grid: one art pixel is `PX` (4) logical pixels, sizes are given in
-  art pixels, no smoothing, nothing between pixels. Draw with `p`, `rect`,
+  art pixels, no smoothing, nothing between pixels (the atlas keeps a
+  sprite at art size: what is between pixels is lost, and
+  `tools/checks/atlas.mjs` names the sprite). Draw with `p`, `rect`,
   `line`, `disc`, `ellipse`, `ring`, `poly`, `hatch` (`sprite.js`), all
   on the grid. `poly` fills an art pixel when its centre lies inside, so
   thin tips break into single pixels: draw thin shapes as row spans, as

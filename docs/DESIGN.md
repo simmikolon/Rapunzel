@@ -2530,3 +2530,24 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   made-up lines at three resolutions. What glows being placed a second
   time in the hidden glow layer was measured too and left: it does not
   show in the time.
+- 2026-11-26: The atlas keeps the sprites at art size (`tools/perf`).
+  The sheet had grown to 4096 x 3970, 126 px under the limit of older
+  phones and 62 MB on the GPU, because every sprite was stored as it is
+  painted, four times its art each way. Simon's questions: does making
+  it smaller mean drawing everything again, or could it be split?
+  Decisions:
+  - Neither. The sprites are drawn by code on the art grid; 704 of 705
+    are on it exactly. The atlas packs them at a quarter each way and
+    the texture says it is four times coarser, so nothing that draws
+    changes: 1024 x 1009, 3.9 MB, room for sixteen times today's art.
+  - Splitting would have lifted the limit and left the memory. It is
+    used for the exceptions only: a sprite that is not on the grid
+    (today the lives' little prince) goes onto a second sheet at full
+    size.
+  - The rule that was a matter of style is now one the atlas depends
+    on, so it is checked: `tools/checks/atlas.mjs` names a sprite that
+    is off the grid.
+  - The picture is the same to the eye, not to the pixel: at the
+    game's resolution 14 to 157 pixels of a million sit one pixel
+    off, at art pixels' edges inside sprites that are scaled, turned
+    or stand between pixels.

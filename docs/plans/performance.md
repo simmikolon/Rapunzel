@@ -259,8 +259,53 @@ Where this leaves the question the plan began with: the web view holds
 60 on the Air, and nobody playing sees what is left. A port to
 SpriteKit or an engine is not needed for smoothness. Open for later,
 none of it urgent: a whole round's reading to 300 m and beyond; the
-atlas at art size (suspect 3), which is about memory and the 126 px
-left under the limit, not about frames.
+atlas at art size (suspect 3, taken in the next step), which is about
+memory and the 126 px left under the limit, not about frames.
+
+### Step taken: the atlas keeps the sprites at art size (suspect 3)
+
+Nothing had to be drawn again. The sprites are drawn by code in art
+pixels and only painted four times as large; of the 705, 704 are on the
+art grid exactly (every block of 4 x 4 pixels one colour). The one that
+is not is the little prince of the lives in the HUD, a cut of his
+sprite 93 pixels high.
+
+`web/src/gfx/atlas.js` now packs every sprite on the grid at a quarter
+each way, one texel to an art pixel, and tells the texture that it is
+four times coarser (its resolution is 1/4): a sprite's frame, size and
+anchor are in logical pixels as before, and the renderer and the game
+do not know the difference. What is not on the grid goes onto a second
+sheet at full size. The landing page, the social pictures and the
+sprite sheet page use the sprites' own canvases, not the atlas, and
+are as they were.
+
+| | before | after |
+|---|---|---|
+| the atlas | 4096 x 3970 | 1024 x 1009, and 108 x 97 for the one |
+| on the GPU, and again as its canvas | 62 MB each | 3.9 MB each |
+| room under the limit of 4096 | 126 px | sixteen times today's art |
+| packing it at start-up (headless) | 58 ms | 10 ms |
+| the first frame with it, which hands it to the GPU (headless) | 204 ms | 9 ms |
+| a frame's drawing after that | 1.1 ms / 0.6 ms | 1.2 ms / 0.6 ms |
+
+- The picture: the same frozen frame with the atlas as it was and as
+  it is, at 17 places. At 1, the game's resolution, 14 to 157 pixels of
+  a million differ; at 1.25 0.06 %, at 0.5 0.03 %, at the Air's own
+  1.64 0.1 to 0.4 %. They are single rows of pixels where an art
+  pixel's edge inside a sprite that stands between pixels, is scaled
+  or turned falls one screen pixel higher or lower; in the enlarged
+  crops no difference is to be seen. Not the same to the pixel, as
+  the lines were.
+- `tools/checks/atlas.mjs` now looks at every sprite: one kept at art
+  size has to be on the grid, and the atlas has to hold it as it is
+  drawn. A sprite drawn off the grid by mistake is named there before
+  a push (tried with a planted dot: it fails and names the sprite). A
+  sprite that is meant to be finer says `fine: true`.
+- Not done, a step of its own: the 705 canvases the sprites are drawn
+  on stay in memory after the atlas is packed (55 MB in the web view).
+  The game does not use them after the start; the landing page does.
+- To read on the phone: that it starts and looks as it did; the frames
+  should not change.
 
 ## The suspects, in the order we take them
 
@@ -282,12 +327,11 @@ left under the limit, not about frames.
    reading and taken (see Readings): letters from prepared sheets, so
    that changing words costs nothing. To do: read a round with and
    without them on the phone.
-3. **The atlas.** Every sprite is stored four times as large as its art
-   (16 texels to an art pixel): 4096 x 3970, some 64 MB on the GPU, and
-   126 px under the limit of older phones. Stored at art size it is
-   about 1024 x 1000. To do: sprites drawn at one texel per art pixel
-   and enlarged by the renderer; pictures before and after must be the
-   same (`tools/checks/shots.mjs`).
+3. **The atlas.** Every sprite was stored four times as large as its
+   art (16 texels to an art pixel): 4096 x 3970, some 62 MB on the GPU,
+   and 126 px under the limit of older phones. Taken (see Readings):
+   kept at art size it is 1024 x 1009. Left: the sprites' own canvases
+   (55 MB) after the start.
 4. **Allocation in the frame.** The step and the drawing build small
    lists and closures every frame (`filter`, `map`, `sort`); the
    collector's pauses are single late frames. To do: if `upd` or `draw`
