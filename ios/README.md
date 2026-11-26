@@ -19,6 +19,10 @@ What the shell adds over Safari:
   The patterns are one table in `App/Haptics.swift`.
 - The ring/silent switch mutes the game; music from another app keeps
   playing (ambient audio session).
+- The opening story is told at every launch (in a browser once per
+  device), with its sounds from the first second: the shell lets Web Audio
+  start without a tap, and the page starts it at launch there
+  (`web/src/main.js`). Coming back from the background is not a launch.
 - The screen never dims while steering by tilt; the game pauses when the
   app resigns active (Control Centre, a call, the lock screen).
 - The safe-area insets (Dynamic Island, home indicator) go to the page with
