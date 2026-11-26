@@ -29,6 +29,7 @@
 //   ?story=1         tell the opening story on this visit (0: not; none given: once per device; story.js)
 //   ?perf=1          the performance readout: frame times, where they go, the longest frames; a tap on it takes the next resolution (perf.js)
 //   ?res=1.5         the drawing resolution in pixels per logical pixel (1.5, 1.25 or 1; none given: the screen's own)
+//   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
 import { zoneAt } from './level.js';
@@ -44,7 +45,7 @@ import { POWERS } from './powerups.js';
 export function devParams() {
   const q = new URLSearchParams(location.search);
   return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '',
-    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '' };
+    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '' };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.

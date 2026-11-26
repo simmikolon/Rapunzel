@@ -42,9 +42,79 @@ What a reading says:
   what is left to us.
 - the longest frames have `new txt` above 0: text.
 
+## Readings
+
+### 2026-11-26, iPhone Air, the screen's own resolution (1260 x 2736, x1.64)
+
+One round in stages to 376 m, read from the panel:
+- the title: 60.2 frames a second; `upd` 0.3 ms, `draw` 5.5 ms (longest
+  13) for 989 sprites.
+- the round, 5906 frames: 6.1 % longer than 20 ms, 1.5 % longer than
+  25 ms, 2 longer than 50 ms, the longest 75 ms (at 0 m: 8 ms of it
+  ours, 10 texts new). `upd` 0.3 ms (longest 7), `draw` 4.1 ms (longest
+  61). Most sprites in a frame: 1584.
+- at 311 m in the deep forest, 985 sprites: 55 frames a second, 18.2 ms
+  a frame, while `draw` was 4.9 ms (longest 13).
+- by eye (Simon): smooth most of the time; small hitches "when the
+  screen scrolls and loads", now and then a moment like a dropout.
+
+What it says:
+- The game's step is nothing (0.3 ms). Allocation and the building of
+  rows (suspects 4 and 6) are not what is seen; its longest frame is
+  7 ms.
+- Our drawing on the CPU is a quarter of a frame. The frames that come
+  late are late outside it, or in the few frames in which `draw` jumps
+  to 61 ms.
+- Text fits the hitches: the height in the HUD has a new word with
+  every metre climbed, about four times a second in a climb and never
+  while he stands, which is "when the screen scrolls"; four frames in
+  sixty is the 6 % of late frames; and the longest frame had 10 texts
+  new, with a `draw` of 61 ms, some 6 ms a text.
+- The deep forest holds 55 with a `draw` of 5 ms: there the GPU is
+  what is late (the pixels), which is suspect 1. Rounds at 1.5 and at 1
+  have not been read yet.
+
+### Step taken: the letters come from sheets (suspect 2)
+
+Texts in the game's own font are no longer painted by the browser word
+by word. Each size has a sheet with its letters, painted once at the
+backing store's resolution before the title; a text is put together
+from them, and a new word is new positions, not a new picture
+(`_sheet`, `_lettersAt` in `web/src/gfx/renderer.js`).
+- Sheets ahead: 12, 14, 16, 18, 22 and 30 px with the outline, and
+  40 px with only what a height is written with. A size in between
+  takes the next bigger sheet, made smaller (a toast is as big as its
+  length allows). Each sheet is one square picture as small as holds
+  its letters: 17 MB in all at the Air's resolution, 9 MB at 1; making
+  them takes some 35 ms, once. (As the engine makes them by default,
+  one page of 1024 x 1024 or more per sheet and every size the game
+  ever asks for, it was well over 100 MB.)
+- Still painted by the browser: what has its own colours (the signs),
+  what wraps, other fonts, and the countdown's big digits. None of it
+  changes while he climbs.
+- The sheets follow the resolution: made again when it has changed
+  and stood still for 20 frames (a tap on the panel, a turned phone, a
+  window being dragged).
+- The look is the same: a text is where it was within a pixel
+  (measured for every size and alignment; the sheets count the
+  outline's width differently, which `SHEET_FIT` puts back). One
+  thing differs: the browser joined "fl" and "fi" into one letter, the
+  sheets do not, as the pixel font means it.
+- Measured here (headless, software drawing, so only the CPU's part and
+  no GPU to wait for): with the height counting up, texts painted anew
+  75 → 0; the first frame of a round 13 to 18 ms instead of 18 to 59
+  (five rounds each); the drawing's time otherwise the same within
+  what the software renderer scatters (1.2 to 1.6 ms either way). What
+  the sheets buy on the phone, where a new text is handed to the GPU,
+  this cannot show.
+- To read on the phone: a round with the sheets and one with
+  `?letters=0` (painted as before), both at the screen's resolution:
+  `>20ms` and `draw`'s longest say whether the text was it.
+
 ## The suspects, in the order we take them
 
-1. **Resolution.** The backing store is the screen's own pixels
+1. **Resolution.** (Open: the first reading was at the screen's own
+   resolution only.) The backing store is the screen's own pixels
    (1260 x 2736 on the Air), and several layers are blended over the
    whole of it. Pixel art gains nothing from that: an art pixel is four
    logical pixels. At 1.5, 1.25 or 1 backing pixels to a logical one the
@@ -56,9 +126,10 @@ What a reading says:
    four times a second while climbing, the suns with every sun, a toast
    coming or going, which moves every text after it to another object)
    the browser paints the text again and hands a new texture to the
-   GPU. That fits "where a lot is going on". To do: confirm with `new`
-   in the longest frames; then letters from one prepared sheet (a
-   bitmap font), so that changing words costs nothing.
+   GPU. That fits "where a lot is going on". Confirmed by the first
+   reading and taken (see Readings): letters from prepared sheets, so
+   that changing words costs nothing. To do: read a round with and
+   without them on the phone.
 3. **The atlas.** Every sprite is stored four times as large as its art
    (16 texels to an art pixel): 4096 x 3970, some 64 MB on the GPU, and
    126 px under the limit of older phones. Stored at art size it is

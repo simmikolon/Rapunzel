@@ -52,6 +52,7 @@ class Game {
     // The drawing resolution (pixels of the backing store per logical pixel; null: the screen's own) and the
     // performance readout: ?res=1.5 and ?perf=1 (perf.js).
     this.resScale = RES.includes(+this.dev.res) && +this.dev.res > 0 ? +this.dev.res : null;
+    this.gfx.letters = this.dev.letters !== '0';      // ?letters=0: every text painted by the browser, as before the letter sheets (to compare)
     this.perf = new Perf(this);
     this.perf.on = this.dev.perf === '1';
     window.__perf = () => this.perf.summary();

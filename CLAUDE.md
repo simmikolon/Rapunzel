@@ -65,7 +65,8 @@ which only copies the two folders together). The design document
   Performance (`docs/plans/performance.md`): `?perf=1` shows frame times,
   where they go and the longest frames (`web/src/perf.js`; a tap on it
   takes the next drawing resolution), `?res=1.5|1.25|1` sets the
-  resolution in backing pixels per logical pixel.
+  resolution in backing pixels per logical pixel, `?letters=0` has the
+  browser paint every text as before the letter sheets (to compare).
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark

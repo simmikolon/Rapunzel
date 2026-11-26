@@ -2490,3 +2490,21 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   For the eye only: `tools/checks/identity.sh` reports all five the
   same; `story.mjs` is its check, `flow.mjs` and `stages.mjs` pass.
   The atlas is 4096 x 3970 (706 sprites), 126 px under the limit.
+- 2026-11-26: Letters from sheets (`tools/perf`, `docs/plans/performance.md`).
+  The first reading on the iPhone Air: the game's step 0.3 ms, its
+  drawing 4 ms, and still 6 % of a round's frames longer than 20 ms,
+  the longest with ten texts new. A text the browser paints is painted
+  and handed to the GPU again whenever its words change, and the height
+  changes with every metre climbed: the hitches come "when the screen
+  scrolls". Decisions:
+  - Texts in the game's own font are put together from letter sheets
+    made before the title (one per size, with the outline painted in);
+    signs, wrapped text and the countdown stay painted, they do not
+    change in a climb.
+  - The sheets are as small as hold their letters (17 MB at the Air's
+    resolution) and follow the drawing resolution. The engine's own
+    way (a big page per size, every letter of every size) was over
+    100 MB next to an atlas that is already large.
+  - The look stays: positions put back to within a pixel; the browser's
+    "fl" and "fi" ligatures are gone. `?letters=0` paints as before, so
+    that the phone can say what it bought.
