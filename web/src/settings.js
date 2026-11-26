@@ -11,7 +11,8 @@ import { tagButton, ribbonButton, SIGNS, signShift } from './hud.js';
 //   steer    how a touch steers: 'tap' (hold a side of the screen), 'swipe'
 //            (slide a finger from where it was set down) or 'tilt' (lean the
 //            phone; any touch is a boost)
-//   tilt     how far the phone is leaned for full speed (config.js TILT_FEEL)
+//   tilt     how sensitive tilt is: 'low', 'mid' or 'high', which is how far
+//            the phone is leaned for full speed (config.js TILT_FEEL)
 //   glow     the glow around what shines     } the effects, both off unless
 //   lines    scan lines over the picture     } the player wants them
 //   silent   (the app) sound although the phone's switch says silent
@@ -21,7 +22,7 @@ import { tagButton, ribbonButton, SIGNS, signShift } from './hud.js';
 // here too. What a platform cannot do is not shown: steering only with a
 // touch screen, tilt only where the phone can, `silent` and `haptics` only
 // in the app.
-export const DEFAULTS = { steer: 'tap', tilt: 'normal', glow: false, lines: false, silent: true, haptics: true };
+export const DEFAULTS = { steer: 'tap', tilt: 'low', glow: false, lines: false, silent: true, haptics: true };
 const CHOICES = { steer: ['tap', 'swipe', 'tilt'], tilt: Object.keys(TILT_FEEL) };
 
 // The sign's layout, on the title's sign (768 x 1364, moved with it on a taller screen).
@@ -83,7 +84,7 @@ export class Settings {
       const steer = [{ id: 'set.steer.tap', text: 'TAP', on: v.steer === 'tap' }, { id: 'set.steer.swipe', text: 'SWIPE', on: v.steer === 'swipe' }];
       if (this.tiltOffered) steer.push({ id: 'set.steer.tilt', text: 'TILT', on: v.steer === 'tilt' });
       rows.push({ label: 'STEERING', boards: steer });
-      if (v.steer === 'tilt') rows.push({ label: 'TILT', boards: CHOICES.tilt.map((k) => ({ id: `set.tilt.${k}`, text: k.toUpperCase(), on: v.tilt === k })) });
+      if (v.steer === 'tilt') rows.push({ label: 'SENSITIVITY', boards: CHOICES.tilt.map((k) => ({ id: `set.tilt.${k}`, text: k.toUpperCase(), on: v.tilt === k })) });
     }
     rows.push({ label: 'EFFECTS', boards: [{ id: 'set.glow', text: 'GLOW', on: v.glow }, { id: 'set.lines', text: 'SCANLINES', on: v.lines }] });
     const sound = [{ id: 'set.sound', text: audio.muted ? 'OFF' : 'ON', on: !audio.muted }];

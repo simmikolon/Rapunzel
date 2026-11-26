@@ -1053,7 +1053,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Dry branch / bow spring bounce | 1550 (~572 px) / 2650 (~1670 px) |
 | Boost | +1500 px/s, 3 charges, 0.5 charge per landing, 0.5 s shield, 3 suns per punch |
 | Horizontal speed (keys, a held side / tilt, a sliding finger) | 560 / 820 px/s |
-| Tilt | the dip of the screen's right edge below its left; 2° do nothing, full speed at 22° (the setting: gentle 30°, quick 15°) |
+| Tilt | the dip of the screen's right edge below its left; 2° do nothing, full speed at 22° (the setting SENSITIVITY: low 22°, mid 16°, high 12°) |
 | Sliding finger | where it is set down is the middle; 8 px do nothing, full speed 110 px to either side, past that the middle comes along; a touch under 0.22 s that moved under 14 px is a boost, and so is a second finger |
 | Effects | glow: bloom gain 0.5 (was 1.25); scan lines: depth 0.22, mask 0.06, no curvature; both off unless chosen |
 | Hearts / invulnerability after a hit | 3 / 1.6 s |
@@ -2620,3 +2620,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   - Not tried on a phone yet: the lean, the slide's reach (110 px),
     the sound in silent mode. The Swift is one line and was not
     compiled here.
+- 2026-11-26: Tilt's sensitivity, low, mid, high (`element/settings`).
+  Simon on the phone: tilt is good now, the effects look much better;
+  the sensitivity should be a switch of three, with what it is now as
+  the lowest. The row is called SENSITIVITY and its boards LOW, MID and
+  HIGH: full speed at 22 degrees of lean (as it has always been, and the
+  default), at 16 and at 12. The first cut of the row had 22 in the
+  middle, between a gentler 30 and a quicker 15, under names that did
+  not say what they set.

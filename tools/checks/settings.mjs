@@ -134,19 +134,19 @@ const state = (page) => page.evaluate(() => { const g = window.game, i = g.input
   await page.screenshot({ path: `${OUT}/settings_app.png` });
   await tap(page, 'set.steer.tilt');
   const tilt = await state(page);
-  await tap(page, 'set.tilt.quick'); await tap(page, 'set.silent'); await tap(page, 'set.haptics');
+  await tap(page, 'set.tilt.high'); await tap(page, 'set.silent'); await tap(page, 'set.haptics');
   const set = await state(page);
-  // the shell's lean: 10 degrees is 8 of the 13 between the dead zone and full at 'quick'
+  // the shell's lean: 10 degrees is 8 of the 10 between the dead zone and full at 'high' (of the 20 at 'low')
   const raw = await page.evaluate(() => { window.__nativeTilt(10); const a = window.game.input.tiltRaw; window.__nativeTilt(-40); return { ten: +a.toFixed(2), far: window.game.input.tiltRaw }; });
   const posted = await page.evaluate(() => window.__posted.filter((q) => !q.startsWith('storage')).join(' '));
-  report('the app has its rows, and tilt starts without asking', rows.rows === 'STEERING EFFECTS SOUND HAPTICS STORY' && tilt.steer === 'tilt' && tilt.tilt && tilt.rows.includes('TILT') && posted.includes('tilt.start'), JSON.stringify({ rows: rows.rows, tilt, posted }));
-  report('its choices take effect', set.full === 15 && set.v.silent === false && set.v.haptics === false && raw.ten > 0.6 && raw.ten < 0.63 && raw.far === -1, JSON.stringify({ set, raw }));
+  report('the app has its rows, and tilt starts without asking', rows.rows === 'STEERING EFFECTS SOUND HAPTICS STORY' && tilt.steer === 'tilt' && tilt.tilt && tilt.full === 22 && tilt.v.tilt === 'low' && tilt.rows.includes('SENSITIVITY') && posted.includes('tilt.start'), JSON.stringify({ rows: rows.rows, tilt, posted }));
+  report('its choices take effect', set.full === 12 && set.v.tilt === 'high' && set.v.silent === false && set.v.haptics === false && raw.ten === 0.8 && raw.far === -1, JSON.stringify({ set, raw }));
   await tap(page, 'set.done');
   await page.close();
   page = await open(context);
   const later = await state(page);
   const again = await page.evaluate(() => window.__posted.filter((q) => !q.startsWith('storage')).join(' '));
-  report('and are there at the next start', later.steer === 'tilt' && later.tilt && later.full === 15 && later.v.silent === false && later.v.haptics === false && again.includes('tilt.start') && !page.errors.length, JSON.stringify({ later, again, errors: page.errors }));
+  report('and are there at the next start', later.steer === 'tilt' && later.tilt && later.full === 12 && later.v.silent === false && later.v.haptics === false && again.includes('tilt.start') && !page.errors.length, JSON.stringify({ later, again, errors: page.errors }));
   await context.close();
 }
 console.log(bad ? `${bad} FAILED` : 'all ok');

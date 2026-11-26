@@ -59,8 +59,10 @@ export const MOVE_DECEL = 3800;
 export const TILT_SPEED = 820;        // full tilt top speed
 export const TILT_DEAD_ZONE = 2;      // degrees
 export const TILT_FULL = 22;          // degrees for full speed
-// ... by the setting "tilt" (settings.js): how far the phone is leaned for full speed.
-export const TILT_FEEL = { gentle: 30, normal: TILT_FULL, quick: 15 };
+// ... by the setting SENSITIVITY (settings.js): how far the phone is leaned
+// for full speed. `low` is TILT_FULL, the lean the game has always had; the
+// other two ask for less.
+export const TILT_FEEL = { low: TILT_FULL, mid: 16, high: 12 };
 // Steering by sliding a finger (the setting "swipe"): where the finger is set
 // down is the middle, `full` px to either side is full speed, the first
 // `dead` px do nothing; past `full` the middle comes along, so that turning
