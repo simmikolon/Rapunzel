@@ -93,8 +93,8 @@ class Game {
       if (this.mode === 'playing') this.setMode('paused');
       else if (this.mode === 'countdown') this.toTitle();
     };
-    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
-    platform.onPause(hide);
+    document.addEventListener('visibilitychange', () => { this.perf.skip = 3; if (document.hidden) hide(); });      // (the frame after a pause is not the game's)
+    platform.onPause(() => { this.perf.skip = 3; hide(); });
     // the dev teleport goes straight to the title; everyone else rides down to the lawn first
     this.setMode((this.dev.at || this.dev.spawn || this.dev.stage) && this.dev.story !== '1' ? 'title' : 'intro');
     requestAnimationFrame((t) => this.frame(t));
@@ -238,6 +238,7 @@ class Game {
 
   // The round is live: world.start() has run (the GO landing or the dev path).
   beginPlaying() {
+    this.perf.roundStart();
     if (this.dev.spawn) spawnNear(this.world, this.dev.spawn);
     this.maybeIosSoundHint();
     this.setMode('playing');

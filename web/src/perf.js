@@ -25,13 +25,33 @@ export class Perf {
     this.i = 0; this.n = 0;
     this.lines = [];
     this.linesT = 0;
-    this.worst = [];                       // the longest frames of this visit, longest first: { ms, upd, drw, m, mode, plats, enemies, pickups, sprites, texts, rasters }
+    this.worst = [];                       // the longest frames of this visit, longest first: { ms, upd, drw, out, m, mode, plats, enemies, pickups, sprites, texts, rasters }
     this.total = 0; this.long = 0;         // frames counted, and those that took more than one and a half of the usual
+    this.skip = 0;                         // frames not to count: the app came back, the resolution changed
+    this.round = null;                     // the round being played, or the last one: what the plan's aim is read from (roundStart())
+  }
+
+  // A round begins: its frames are counted apart from the title's and the menus', and the count stays on the panel
+  // when the round is over, so that it can be read (and photographed) then and not while playing.
+  roundStart() {
+    this.round = { frames: 0, over20: 0, over25: 0, over50: 0, max: 0, upd: 0, drw: 0, updMax: 0, drwMax: 0, sprites: 0, worst: null };
   }
 
   // One frame is over: `every` ms since the one before, `upd` and `drw` ms spent in the game's step and its drawing.
   frame(every, upd, drw) {
     if (!this.on || !(every > 0) || every > 1000) return;
+    if (this.skip > 0) { this.skip--; return; }
+    const game = this.game, r = this.round;
+    if (r && game.mode === 'playing') {
+      r.frames++; r.upd += upd; r.drw += drw;
+      if (every > 20) r.over20++;
+      if (every > 25) r.over25++;
+      if (every > 50) r.over50++;
+      if (upd > r.updMax) r.updMax = upd;
+      if (drw > r.drwMax) r.drwMax = drw;
+      if (game.gfx.stats.sprites > r.sprites) r.sprites = game.gfx.stats.sprites;
+      if (every > r.max) { r.max = every; r.worst = { ms: Math.round(every), ours: Math.round(upd + drw), m: game.world.heightM, rasters: game.gfx.stats.rasters, sprites: game.gfx.stats.sprites }; }
+    }
     this.every[this.i] = every; this.upd[this.i] = upd; this.drw[this.i] = drw;
     this.i = (this.i + 1) % N; if (this.n < N) this.n++;
     const usual = this.median();
@@ -39,7 +59,7 @@ export class Perf {
     if (this.n > 30 && every > usual * 1.5) {
       this.long++;
       const w = this.game.world, s = this.game.gfx.stats;
-      this.worst.push({ ms: Math.round(every), upd: +upd.toFixed(1), drw: +drw.toFixed(1), m: w.heightM, mode: this.game.mode, plats: w.platforms.length, enemies: w.enemies.length, pickups: w.pickups.length, sprites: s.sprites, texts: s.texts, rasters: s.rasters });
+      this.worst.push({ ms: Math.round(every), upd: +upd.toFixed(1), drw: +drw.toFixed(1), out: Math.round(every - upd - drw), m: w.heightM, mode: this.game.mode, plats: w.platforms.length, enemies: w.enemies.length, pickups: w.pickups.length, sprites: s.sprites, texts: s.texts, rasters: s.rasters });
       this.worst.sort((a, b) => b.ms - a.ms);
       if (this.worst.length > 12) this.worst.length = 12;
     }
@@ -61,7 +81,7 @@ export class Perf {
       upd: +avg(this.upd).toFixed(1), updMax: +max(this.upd).toFixed(1), drw: +avg(this.drw).toFixed(1), drwMax: +max(this.drw).toFixed(1),
       res: c ? `${c.width}x${c.height}` : '', scale: +g.resolution.toFixed(2), pick: this.game.resScale || 0,
       sprites: g.stats.sprites, texts: g.stats.texts, rasters: g.stats.rasters,
-      worst: this.worst,
+      worst: this.worst, round: this.round,
     };
   }
 
@@ -70,10 +90,10 @@ export class Perf {
     const game = this.game, at = RES.indexOf(game.resScale || 0);
     game.resScale = RES[(at + 1) % RES.length];
     game.setupDpr();
-    this.n = 0; this.i = 0; this.total = 0; this.long = 0; this.worst = [];      // other numbers from here on
+    this.n = 0; this.i = 0; this.total = 0; this.long = 0; this.worst = []; this.skip = 5;      // other numbers from here on
   }
 
-  get zone() { return { id: 'perf', x: 8, y: SAFE.top + 290, w: 480, h: 250 }; }
+  get zone() { return { id: 'perf', x: 8, y: SAFE.top + 290, w: 480, h: 322 }; }
 
   draw(g) {
     if (!this.on) return;
@@ -83,16 +103,25 @@ export class Perf {
     g.rect(z.x, z.y, z.w, z.h, '#0b1418', 0.72);
     if (this.game.world.time - this.linesT > 0.5 || !this.lines.length || this.game.world.time < this.linesT) {
       this.linesT = this.game.world.time;
-      const s = this.summary(), w = this.game.world, top = s.worst[0];
+      const s = this.summary(), w = this.game.world, r = this.round;
+      // (the pixel font is as wide as it is high: 38 letters fit the panel)
       this.lines = [
-        `${s.fps} fps  ${s.ms} ms  p99 ${s.p99}  max ${s.max}`,
-        `long ${s.long}%  upd ${s.upd}/${s.updMax}  draw ${s.drw}/${s.drwMax}`,
-        `res ${s.res} x${s.scale}${s.pick ? '' : ' (screen)'}  tap: next`,
-        `spr ${s.sprites}  txt ${s.texts} new ${s.rasters}  p${w.platforms.length} e${w.enemies.length} k${w.pickups.length}`,
-        top ? `worst ${top.ms} ms at ${top.m} m: upd ${top.upd} draw ${top.drw} new txt ${top.rasters}` : 'worst: none yet',
+        `${s.fps} fps ${s.ms}ms p99 ${s.p99} max ${s.max}`,
+        `upd ${s.upd}/${s.updMax} draw ${s.drw}/${s.drwMax}`,
+        `res ${s.res} x${s.scale}${s.pick ? '' : ' screen'}`,
+        `spr ${s.sprites} txt ${s.texts} new ${s.rasters} p${w.platforms.length} e${w.enemies.length}`,
       ];
+      if (r && r.frames) {
+        // the round: all its frames, how many were late, and its longest (what of it was the game's own work)
+        const pc = (k) => ((k / r.frames) * 100).toFixed(k / r.frames < 0.1 ? 1 : 0);
+        this.lines.push(`round ${r.frames}f >20ms ${pc(r.over20)}% >25 ${pc(r.over25)}%`);
+        this.lines.push(` >50ms ${r.over50}  max ${Math.round(r.max)}  spr ${r.sprites}`);
+        this.lines.push(` upd ${(r.upd / r.frames).toFixed(1)}/${r.updMax.toFixed(0)} draw ${(r.drw / r.frames).toFixed(1)}/${r.drwMax.toFixed(0)}`);
+        if (r.worst) this.lines.push(` worst ${r.worst.ms}ms @${r.worst.m}m ours ${r.worst.ours} txt ${r.worst.rasters}`);
+      } else this.lines.push('round: play one, read it after', 'tap here: next resolution');
     }
     for (const line of this.lines) { g.text(line, x, y, 12, '#d8f0e8', 'left', false); y += 22; }
+    g.text('tap: next resolution', x + 230, z.y + z.h - 118, 10, '#8fb8ae', 'left', false);
     // the last frames: one bar each, as high as the frame was long; the line is where 60 a second is
     const base = z.y + z.h - 10, usual = this.median();
     for (let k = 0; k < this.n; k++) {
