@@ -14,7 +14,7 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
-import { frontAt } from './weather.js';
+import { frontAt, isWinter } from './weather.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
 import { stageAt } from './stages.js';
@@ -104,6 +104,7 @@ export class World {
     if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
     // the weather (weather.js): its fronts in the endless tower and its gusts come from the round's seed
     this.weatherSeed = seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 10);
+    this._winter = null;      // (a round begun on the first of December finds the lawn snowed in)
     this.bg.weather.reset(new RNG(seed == null ? undefined : hash(seed + 11)));
     this.bg.weather.want(this.weatherKind(), true);
     this.suns = 0;
@@ -137,12 +138,18 @@ export class World {
   // In stages: the stage he is in (its number from 1, its name), or null.
   // The weather here (weather.js): none inside; a stage has its own (stages.js THEMES); the endless tower has
   // fronts by height. ?weather= sets one for a visit (forceWeather).
+  // Around Christmas the lawn is snowed in: the first stage, and the endless tower's first band.
   weatherKind() {
     if (this.place.inside) return 'clear';
     if (this.forceWeather) return this.forceWeather;
-    if (this.route) return (this.level.stage && this.level.stage.weather) || 'clear';
-    return frontAt(this.weatherSeed || 0, this.cam.y);
+    if (this.route) { const st = this.level.stage; return (st && st.weather) || (st && st.key === 'lawn' && this.winter ? 'snow' : 'clear'); }
+    return frontAt(this.weatherSeed || 0, this.cam.y, this.winter);
   }
+  get winter() { if (this._winter == null) this._winter = this.forceSeason ? this.forceSeason === 'winter' : isWinter(); return this._winter; }
+  set season(v) { this.forceSeason = v || null; this._winter = null; }      // ?season=winter|summer for a visit
+  // How fast a storm's gust carries the prince sideways now, px/s. Only where the world has gusts (`gusts`: the
+  // game's world; the simulator's and the opening story's have none, so the bots are not blown about yet).
+  windPush() { return this.gusts && !this.place.inside ? this.bg.weather.push : 0; }
   get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: st.name } : null; }
 
   start() {

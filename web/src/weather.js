@@ -21,8 +21,9 @@ import { nightAlpha, hash } from './altitude.js';
 // stage's own, or in the endless tower the fronts below); a change fades
 // out and in. What falls is not kept as particles: a drop's place is worked
 // out from the clock and the camera each frame, from tables made once.
-// All of it is for the eye. A storm's gusts are told apart by `push`, which
-// is what they will lean on the prince with (nothing reads it yet).
+// All of it is for the eye and the ear but one thing: a storm's gust leans
+// on the prince (`push`, read by world.js windPush where the world has
+// gusts: the game's has, the simulator's bots are not blown about yet).
 export const WEATHER = {
   clear: {},
   rain: { rain: 1, breeze: 0.22, sky: ['#2e3f4a', '#5b6e76'], skyMix: 0.6, light: ['#93a9bb', 0.2], haze: ['#6f8794', 0.1] },
@@ -40,27 +41,39 @@ const RAIN = [
   { n: 30, f: 1.25, len: 46, w: 4, v: [1400, 1700], a: 0.6 },
 ];
 const SNOW = [
-  { n: 120, f: 0.7, size: 4, v: [34, 60], sway: 10, a: 0.55 },
-  { n: 96, f: 0.95, size: 4, big: 0.3, v: [60, 100], sway: 18, a: 0.9 },      // some of the middle ones are two art pixels square
-  { n: 26, f: 1.3, size: 12, scale: 2, v: [110, 160], sway: 30, a: 0.95 },    // the near ones are the flake sprite, doubled
+  { n: 200, f: 0.7, size: 4, v: [34, 60], sway: 10, a: 0.55 },
+  { n: 160, f: 0.95, size: 4, big: 0.3, v: [60, 100], sway: 18, a: 0.9 },     // some of the middle ones are two art pixels square
+  { n: 42, f: 1.3, size: 12, scale: 2, v: [110, 160], sway: 30, a: 0.95 },    // the near ones are the flake sprite, doubled
 ];
 const MOTES = { n: 56, v: [10, 26], a: 0.9 };
 const CURLS = { n: 8, v: [520, 760] };
 const RAIN_COLOR = '#c9dcf2', SNOW_COLOR = '#f4f8ff', SNOW_SHADE = '#cddbee', GOLD = '#ffe9a8';
+// The lawn under snow: its body, the hollows in it, and the grass that still shows.
+const LAWN = { body: '#e7eef9', far: '#d6e2f2', hollow: '#bccde3', grass: '#3f8a3a', grassDark: '#2c6a33' };
 const SUN = { x: 0.8, y: 0.3 };
 // A storm's gusts: so long calm, a moment in which the curls already show, then the blow.
-export const GUSTS = { calm: [3.5, 6.5], warn: 0.9, blow: [1.8, 2.8], push: 150 };
+// `push`: how fast the blow carries the prince sideways at its height, px/s (his own steering is 560).
+export const GUSTS = { calm: [3.5, 6.5], warn: 0.9, blow: [1.8, 2.8], push: 180 };
+
+// Around Christmas the lawn is snowed in, and the title with it: from the first of December to Epiphany.
+// (?season=winter|summer says which it is for a visit.)
+export const WINTER = { from: [12, 1], to: [1, 6] };
+export function isWinter(d = new Date()) {
+  const m = d.getMonth() + 1, day = d.getDate();
+  return (m === WINTER.from[0] && day >= WINTER.from[1]) || (m === WINTER.to[0] && day <= WINTER.to[1]);
+}
 const SPAN_PAD = 120;
 const mod = (v, m) => ((v % m) + m) % m;
 
 // In the endless tower the weather comes in fronts: bands of the height,
 // each with its own weather or none, by the round's seed and by what the
 // height is like (rain in the forest, storms above the trees, the golden
-// hour toward sunset, snow at night). The first band is always clear.
+// hour toward sunset, snow at night). The first band is always clear, or in
+// winter snowed in.
 const FRONT = 9000;
-export function frontAt(seed, y) {
+export function frontAt(seed, y, winter) {
   const k = Math.floor(y / FRONT);
-  if (k < 1) return 'clear';
+  if (k < 1) return winter ? 'snow' : 'clear';
   const r = hash(seed + k * 101) % 100, mid = (k + 0.5) * FRONT;
   if (mid < 42000) return r < 22 ? 'rain' : r < 32 ? 'golden' : 'clear';
   if (mid < 56000) return r < 16 ? 'rain' : r < 32 ? 'storm' : r < 46 ? 'golden' : 'clear';
@@ -106,7 +119,7 @@ export class Weather {
   // How hard the gust blows now, 0..1 (the warning already shows a little of it), and which way.
   get blow() { const g = this.gust; return g.phase === 'blow' ? Math.sin((Math.PI * g.t) / g.dur) ** 2 : 0; }
   get warn() { const g = this.gust; return g.phase === 'warn' ? g.t / g.dur : g.phase === 'blow' ? 1 : 0; }
-  // What the gust leans on the prince with, px/s sideways (for the eye only so far).
+  // What the gust leans on the prince with, px/s sideways.
   get push() { return this.def.gusts ? this.blow * this.gust.dir * GUSTS.push * this.amount : 0; }
 
   // `sound`: the world's audio (the opening story's world has a silent one).
@@ -230,14 +243,25 @@ export class Weather {
     if (def.snow) this.snow(g, 1, cam, time, def.snow);
     if (def.gusts) this.curls(g, time, false);
   }
-  // Snow lying on the lawn.
+  // The lawn under snow: white from its edge down to the picture's foot, humps along the edge, hollows in it, and
+  // here and there a tuft of grass that still shows.
   drawGround(g, cam) {
     const k = this.amount;
-    if (!this.def.caps || k <= 0 || cam.y > 80) return;
-    const y = cam.sy(0);
-    g.rect(0, y - 4, W, 12, SNOW_COLOR, k);
-    g.rect(0, y + 8, W, 4, SNOW_SHADE, k);
-    for (let x = 0; x < W; x += 32) { const h = hash(x) % 3; if (h) g.rect(x + (hash(x + 5) % 12), y - 4 - h * 4, 12 + (hash(x + 9) % 3) * 8, h * 4, SNOW_COLOR, k); }
+    if (!this.def.caps || k <= 0 || cam.y > 400) return;
+    const y = Math.round(cam.sy(0));
+    if (y > H + 20) return;
+    g.rect(0, y + 4, W, H - y, LAWN.body, k);
+    g.rect(0, y + 72, W, H - y, LAWN.far, k);
+    g.rect(0, y - 8, W, 12, SNOW_COLOR, k);
+    for (let x = 0; x < W; x += 32) { const h = hash(x) % 3; if (h) g.rect(x + (hash(x + 5) % 12), y - 8 - h * 4, 12 + (hash(x + 9) % 3) * 8, h * 4, SNOW_COLOR, k); }
+    for (let i = 0; i < 46; i++) {
+      const hx = hash(i * 13 + 1), hy = hash(i * 29 + 7), yy = y + 20 + (hy % 60) * 4;
+      if (yy < H) g.rect((hx % 190) * 4, yy, 16 + (hx % 3) * 8, 4, LAWN.hollow, k * (0.45 + 0.1 * (hy % 4)));
+    }
+    for (let i = 0; i < 9; i++) {
+      const x = (hash(i * 71 + 5) % 186) * 4, yy = y + 12 + (hash(i * 31 + 2) % 9) * 4;
+      g.rect(x, yy - 8, 4, 8, LAWN.grass, k); g.rect(x + 8, yy - 12, 4, 12, LAWN.grass, k); g.rect(x + 4, yy - 4, 4, 4, LAWN.grassDark, k);
+    }
   }
   // On what one stands on (world.js hands over the platforms in the picture): rain splashing, snow lying.
   drawCaps(g, cam, platforms, time) {

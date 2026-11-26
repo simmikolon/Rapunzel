@@ -55,7 +55,8 @@ which only copies the two folders together). The design document
   above the start (`vault1` to `vault6` pick the room's first section);
   `?place=inside&at=200&spawn=dark` puts the lights out above the start.
   `?weather=rain|storm|snow|golden|clear` sets the weather outside for a
-  visit (`web/src/weather.js`).
+  visit (`web/src/weather.js`), `?season=winter|summer` whether the lawn
+  is snowed in as around Christmas.
   The tower in stages (a trial; the title's TOWER board): what each stage is
   (place, the height it is taken from, length, wall, weather, dark, golden door) and
   their order are written down in `web/src/stages.js` (`THEMES`, `STAGES`).

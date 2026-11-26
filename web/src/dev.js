@@ -33,6 +33,7 @@
 //                    none given: config.js RESOLUTION)
 //   ?px=hard         the screen scales the picture up with hard pixels, not smoothly (what keeps a resolution below 1 sharp)
 //   ?weather=snow    the weather outside for this visit: rain, storm, snow, golden or clear (weather.js)
+//   ?season=winter   as around Christmas, the lawn and the title snowed in (summer: not, whatever the date)
 //   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
@@ -49,7 +50,7 @@ import { POWERS } from './powerups.js';
 export function devParams() {
   const q = new URLSearchParams(location.search);
   return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '',
-    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '', px: q.get('px') || '', weather: q.get('weather') || '' };
+    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '', px: q.get('px') || '', weather: q.get('weather') || '', season: q.get('season') || '' };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
