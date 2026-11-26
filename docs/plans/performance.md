@@ -177,12 +177,50 @@ the median of the drawing's time on the CPU):
   of its own that the engine builds again every frame (90 to 100 of
   them in the forest, none above the trees or inside). Drawn as turned
   sprites, like every rectangle already is, the drawing's time in the
-  forest is halved. Not built yet: the lines have to look the same.
+  forest is halved. Built in the next step.
 - Whatever glows is placed a second time, in the glow layer, which is
   only shown with bloom on, and bloom is off by default: 12 to 27 % of
   a frame's sprites are placed for nothing. Leaving them out is not
   measurable (they are never handed to the GPU). Not worth a change by
   itself.
+
+### Step taken: lines are turned sprites (suspect 7)
+
+`g.line` (`web/src/gfx/renderer.js`) no longer makes a vector shape. A
+line is a white rectangle as long and as wide as the line, turned its
+way: a sprite from the atlas like every rectangle, in the same batch as
+its neighbours. That is every line the game draws: the vines and lianas
+on the trunks, the ropes and chains of what hangs, the lights' wire,
+threads and the web, the guard's pike, the rain and the lightning under
+a storm cloud, a drifting cloud's streaks.
+
+- The picture is the same to the pixel: the same frozen frame drawn
+  both ways at five places with lines (forest floor, deep forest, 310 m,
+  the rose wall, inside with its chains), and 400 made-up lines of
+  every width from 2 to 14, every angle, whole and half positions,
+  solid and see-through, at 1, at the Air's 1.64 and at 0.5: no pixel
+  differs.
+- Measured here as above (the drawing's time on the CPU, one frozen
+  frame, median of alternating blocks):
+
+| place | shapes a frame | before | after |
+|---|---|---|---|
+| 180 m, deep forest | 79 → 3 | 2.7 ms | 1.3 ms |
+| 20 m, forest floor | 72 → 3 | 2.4 ms | 0.9 ms |
+| 310 m | 36 → 3 | 1.5 ms | 1.0 ms |
+| stage 3, the rose wall | 85 → 3 | 2.2 ms | 1.0 ms |
+| 480 m, above the trees | 3 | 0.7 ms | 0.7 ms |
+| inside, 150 m | 3 | 0.7 ms | 0.7 ms |
+
+  A frame in the forest has 200 to 280 sprites more for it (the lines'
+  pieces) and is still twice as fast to draw: a sprite is four corners
+  in a list, a shape was built, cut into triangles and handed to the
+  GPU as a buffer of its own, every frame.
+- The three shapes left in a frame are the HUD's (round frames,
+  rings); they do not change with the place.
+- To read on the phone: `draw` in the forest (it was 4 to 5 ms at the
+  screen's resolution), and whether the deep forest still falls below
+  60.
 
 ## The suspects, in the order we take them
 
@@ -222,8 +260,9 @@ the median of the drawing's time on the CPU):
    everything that exists, seen or not. Small; last. (The first reading
    says the step is 0.3 ms: nothing to fetch here.)
 7. **Vector lines.** Found while looking at 5: the vines on the trunks
-   are half of the drawing's time in the forest (see Readings). To do:
-   `g.line` as a turned sprite; pictures before and after the same.
+   were half of the drawing's time in the forest. Taken (see
+   Readings): `g.line` is a turned sprite, the picture the same to the
+   pixel.
 
 If the phone holds 60 after this, the shell is the app, and Android is
 the same build in its own shell. If it does not, the numbers say why,

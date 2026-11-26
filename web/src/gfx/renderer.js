@@ -443,12 +443,25 @@ export class Renderer {
     sp.tint = 0xffffff;
   }
 
-  // ------------------------------------------------------------- vectors
+  // A straight line: a rectangle as long as the line and as wide, turned
+  // its way. A sprite, like every rectangle, and not a vector shape: those
+  // the engine builds again every frame, and the vines on the trunks alone
+  // were a hundred of them in the forest, half of a frame's drawing.
   line(x0, y0, x1, y1, color, width = 2, alpha = 1) {
-    const g = this._graphics(this.cur);
+    const dx = x1 - x0, dy = y1 - y0;
+    const sp = this._sprite(this.cur);
     const c = this._col(color);
-    g.moveTo(x0, y0).lineTo(x1, y1).stroke({ width, color: c.rgb, alpha: c.a * alpha });
+    sp.texture = this.white;
+    sp.blendMode = 'normal';
+    sp.pivot.set(1, 1);
+    sp.position.set((x0 + x1) / 2, (y0 + y1) / 2);
+    sp.rotation = Math.atan2(dy, dx);
+    sp.scale.set(Math.hypot(dx, dy) / 2, width / 2);
+    sp.alpha = c.a * alpha;
+    sp.tint = c.rgb;
   }
+
+  // ------------------------------------------------------------- vectors
 
   // o: fill, stroke, width, alpha, join, cap, glow
   roundRect(x, y, w, h, r, o = {}) { this.path((g) => g.roundRect(x, y, w, h, r), o); }

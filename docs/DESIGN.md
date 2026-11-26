@@ -2520,3 +2520,13 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     the small letters do not. Going below 1 would mean drawing the
     world small and the HUD at the screen's resolution on top; left
     until a reading asks for it.
+- 2026-11-26: Lines are turned sprites (`tools/perf`). Looking for what
+  a frame draws twice or for nothing: the vines and lianas on the
+  trunks were vector lines, 70 to 85 shapes a frame in the forest that
+  the engine built again every frame, and half of the drawing's time
+  there. `g.line` now places a white rectangle, turned: the drawing in
+  the forest takes half the time (2.7 to 1.3 ms at 180 m, measured
+  headless), and no pixel differs, in the game's own frames or in 400
+  made-up lines at three resolutions. What glows being placed a second
+  time in the hidden glow layer was measured too and left: it does not
+  show in the time.
