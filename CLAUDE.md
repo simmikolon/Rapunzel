@@ -60,8 +60,9 @@ which only copies the two folders together). The design document
   `?stages=1|0` picks the mode or the endless game for a visit, `?stage=3`
   starts at that stage's door, `?lives=5` (or `inf`) sets the lives of a
   round (`?place=`, `?at=` and `?spawn=` mean the endless tower).
-  The opening story (`web/src/story.js`, told once per device before the
-  title): `?story=1` tells it on a visit, `?story=0` does not.
+  The opening story (`web/src/story.js`, told before the title: once per
+  device in a browser, at every start in the iOS shell): `?story=1` tells
+  it on a visit, `?story=0` does not.
   Performance (`docs/plans/performance.md`): `?perf=1` shows frame times,
   where they go and the longest frames (`web/src/perf.js`; a tap on its
   numbers takes the next drawing resolution, a tap on its graph hard or

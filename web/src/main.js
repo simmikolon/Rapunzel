@@ -11,7 +11,7 @@ import { devParams, startAt, startStage, spawnNear, forceLen, devLabel } from '.
 import { platform } from './platform.js';
 import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
-import { Story } from './story.js';
+import { Story, STORY } from './story.js';
 import { Perf, RES } from './perf.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
@@ -28,13 +28,18 @@ class Game {
     this.art = art;
     this.input = new Input(canvas);
     this.input.anyInteraction = () => audio.unlock();
+    // In the app the shell lets sound start without a tap (ios/App/GameViewController.swift), and there the opening
+    // story is told at every start: its sounds are to be there from its first second. (A browser allows no sound
+    // before a gesture; the phone's silent switch still mutes the app.)
+    if (platform.isNative) audio.unlock();
     this.hud = new HUD(this);
     this.world = new World(this);
     // intro -> title -> countdown -> playing -> paused | gameover; MENU leads back.
     this.mode = 'title';
     this.intro = null;      // { from, dur, t, ease } while the camera rides down to the lawn
     this.story = null;      // the opening story while it is told instead of that ride (story.js)
-    this.seenStory = false; // it has been told on this device (it is told once; Rapunzel on the title sign tells it again)
+    this.seenStory = false; // it has been told on this device (Rapunzel on the title sign tells it again)
+    this.storyAt = 0;       // when it was last told (ms; 0: a save from before this was kept)
     this.tellStory = false; // the next intro tells it
     this.modeT = 0;
     // What startRound() plays: the mode ('stages': the tower in stages, in and out through its doors, stages.js;
@@ -70,9 +75,12 @@ class Game {
     this.route = { ...STAGES };
     if (this.dev.lives === 'inf') this.route.lives = Infinity;                                                       // ?lives=5 (or inf) for this visit
     else if (this.dev.lives && isFinite(+this.dev.lives)) this.route.lives = Math.max(1, Math.floor(+this.dev.lives));
-    // The opening story: once per device, where the title's world is the outside of the tower (?story=1 tells it
-    // on this visit, ?story=0 does not).
-    this.tellStory = this.dev.story === '1' || (this.dev.story !== '0' && !this.seenStory && this.climb !== 'inside');
+    // The opening story, where the title's world is the outside of the tower: the first time on a device, and
+    // after that when a start is due one (story.js STORY.again: in the app every start, in a browser none).
+    // ?story=1 tells it on this visit, ?story=0 does not.
+    const hours = platform.isNative ? STORY.again.app : STORY.again.web;
+    const due = !this.seenStory || hours === 0 || Date.now() - this.storyAt >= hours * 3600e3;
+    this.tellStory = this.dev.story === '1' || (this.dev.story !== '0' && due && this.climb !== 'inside');
     this.world.onStage = () => this.keepBest();
     this.world.onRetry = () => this.keepBest();
     if (this.staged || this.round.place !== this.world.placeName) this.resetWorld();
@@ -142,6 +150,7 @@ class Game {
       this.bests = { outside: s.best || 0, inside: s.bestInside || 0, stages: s.bestStages || 0 };
       if (PLACES[s.place]) this.round.place = s.place;
       this.seenStory = !!s.story;
+      this.storyAt = +s.storyAt || 0;
       if (s.mode === 'endless' || s.mode === 'stages') this.round.mode = s.mode;      // (a save from before the stages has none: the stages it is)
       // Only a preset the player picked is kept. Saves from before the
       // default became 'off' wrote 'full' with every best height whether or
@@ -151,7 +160,7 @@ class Game {
     } catch (_) { this.bests = { outside: 0, inside: 0, stages: 0 }; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, storyAt: this.storyAt || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best || this.bestBeaten;
@@ -203,7 +212,8 @@ class Game {
       this.tellStory = false;
       this.intro = null;
       this.story = new Story(this);
-      if (!this.seenStory) { this.seenStory = true; this.save(); }
+      this.seenStory = true; this.storyAt = Date.now();
+      this.save();
       return;
     }
     this.story = null;

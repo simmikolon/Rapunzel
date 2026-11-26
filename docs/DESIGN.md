@@ -684,10 +684,14 @@ is a pool to draw from, not a promise.
   last stretch passes the masons' site and the red roses and comes to
   rest on the lawn, where the braid curls up and Sir Bouncealot
   answers "On my way!". Then the title's sign comes down as ever.
-  It is told once per device, where the title's world is the outside
-  of the tower (a first visit to INSIDE gets the plain ride). A tap
-  skips the rest. A tap on Rapunzel on the title sign tells it again;
-  `?story=1` tells it on a visit, `?story=0` does not.
+  It is told where the title's world is the outside of the tower (a
+  start on INSIDE gets the plain ride): in a browser once per device,
+  in the app (the iOS shell) at every start, there with its sounds
+  from the first second. A tap skips the rest; "tap to skip" is
+  written at the foot of the picture from the second telling on, the
+  first has the picture to itself. A tap on Rapunzel on the title
+  sign tells it again; `?story=1` tells it on a visit, `?story=0`
+  does not.
   Nothing in it is a film. The ride goes down a world of its own that
   nobody plays in (the endless tower outside, built up to her
   window), with the round's first rows shown in it as guests, and for
@@ -1084,7 +1088,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world |
+| The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world; told again at a start: in the app every start, in a browser never (`STORY.again`, hours since it was last told) |
 | Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
 | The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
@@ -2551,3 +2555,24 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     game's resolution 14 to 157 pixels of a million sit one pixel
     off, at art pixels' edges inside sprites that are scaled, turned
     or stand between pixels.
+- 2026-11-26: The opening story at every start of the app
+  (`element/story-always`). Simon: it is good as it is, the beginning
+  above all; should it not be shown at every start, at least on iOS?
+  Decisions:
+  - In the app, yes. A start there is a launch: the app stays in
+    memory between rounds and through the background, so it is about
+    once a day, a tap skips it, and it gives the app an opening like a
+    game's. In a browser it stays once per device: there every page
+    opened is a start, and who comes back from a link wants to play.
+  - `STORY.again` holds it as hours since the story was last told (app
+    0, browser never), so that "at most once a day" is one number if
+    every start turns out too much on Simon's own phone.
+  - "tap to skip" is offered from the second telling on and has a dark
+    edge now, to read over the roses; the first telling keeps the
+    picture free (a tap skips it all the same).
+  - The app starts its sound at launch instead of at the first tap
+    (the shell allows it, and the silent switch still mutes it): the
+    story's sounds would otherwise be missing every time. Not heard
+    on a phone yet.
+  - His other thought, to fade the three looks in instead of riding to
+    them, is left: he likes the ride as it is.

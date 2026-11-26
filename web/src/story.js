@@ -35,6 +35,11 @@ export const STORY = {
   settle: 1.5,           // ... and this long after it has, the title follows
   handover: 1000,        // the last stretch (the view's lower edge this far above the lawn, px) is the round's own world
   skipFade: 0.25,
+  // When a start tells it again after the first time: so many hours after it was last told. In the app at every
+  // start (0): a start there is a launch, the app stays in memory between rounds and through the background, so
+  // that is about once a day, and a tap skips it. In a browser never (Infinity): every page opened is a start, and
+  // who comes back wants to play. (24 would be: at most once a day.)
+  again: { app: 0, web: Infinity },
 };
 const QUIET = new Proxy({}, { get: () => () => {} });      // the ride's world makes no sound
 const INK = '#3b2a1e', PAPER = '#fffdf6';
@@ -70,6 +75,7 @@ export class Story {
     this.t = 0;
     this.done = false;
     this.skipT = null;                 // seconds since a tap asked to skip the rest
+    this.first = !game.seenStory;      // told for the first time on this device: the picture stays free of "tap to skip"
     this.said = {};                    // the sounds that have been made
     this.topLy = STORY.topTile * TILE_H;
     this.sillLy = this.topLy - STORY.sillBelow;
@@ -186,8 +192,9 @@ export class Story {
       const pl = real.player, px = real.cam.sx(pl.x), py = real.cam.sy(pl.y + PLAYER_H);
       this.bubble(g, 'On my way!', clamp(px + 150, 150, W - 150), py - 96, px + 30, py - 10, clamp(ans / 0.22, 0, 1), clamp((this.total - t) / 0.2, 0, 1));
     }
-    // "tap to skip", once the story is under way, until the braid is down
-    if (t > 1.6 && t < STORY.throwAt + this.fallT - 0.5 && this.skipT == null) g.text('tap to skip', W / 2, H - 44 - SAFE.bottom, 13, '#ffffff', 'center', false, { alpha: 0.5 });
+    // "tap to skip", once the story is under way, until the braid is down: for whoever has seen it before (a tap
+    // skips the first telling too, it just is not offered)
+    if (!this.first && t > 1.6 && t < STORY.throwAt + this.fallT - 0.5 && this.skipT == null) g.text('tap to skip', W / 2, H - 44 - SAFE.bottom, 14, '#ffffff', 'center', true, { alpha: 0.75 });      // (with its dark edge: it has to read over the roses and over the sky)
     // out of black at the start, and through black when the rest is skipped
     let black = 1 - clamp(t / STORY.fadeIn, 0, 1);
     if (this.skipT != null) black = Math.max(black, this.skipT < STORY.skipFade ? this.skipT / STORY.skipFade : 1 - clamp((this.skipT - STORY.skipFade) / STORY.skipFade, 0, 1));
