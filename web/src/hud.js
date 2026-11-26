@@ -71,6 +71,8 @@ export const ZONES = {
   // on the title's sign: PLAY in the middle, the settings in the bottom row
   play: { id: 'play', x: W / 2 - 248, y: 468, w: 496, h: 96 },     // a ribbon: its tails take the outer 48 px
   // the climb: the tower in stages, or the endless one outside or inside, side by side under PLAY
+  // Rapunzel, peeking over the title sign's upper right corner: a tap and she tells the opening story again
+  story: { id: 'story', x: SIGNS.title.x + SIGNS.title.w - 108 - 48, y: SIGNS.title.y - 88, w: 96, h: 96 },
   placeTour: { id: 'placeTour', x: W / 2 - 268, y: 580, w: 168, h: 52 },
   placeOut: { id: 'placeOut', x: W / 2 - 84, y: 580, w: 168, h: 52 },
   placeIn: { id: 'placeIn', x: W / 2 + 100, y: 580, w: 168, h: 52 },
@@ -169,7 +171,7 @@ export class HUD {
     if (mode === 'playing') { zones.push(ZONES.pause, ZONES.sound); if (input.isTouch) zones.push(ZONES.boost); }
     if (mode === 'paused') zones.push(ZONES.pause, ZONES.sound, shiftZone(ZONES.pauseMenu));
     if (mode === 'title') {
-      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn));
+      zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.fx), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn), shiftZone(ZONES.story));
       if (input.tiltSupported && (input.isTouch || input.tiltNeedsPermission)) zones.push(shiftZone(ZONES.tilt));
     }
     if (mode === 'gameover') zones.push(ZONES.sound, shiftZone(ZONES.again), shiftZone(ZONES.menu));

@@ -17,6 +17,7 @@ import { buildInterior } from './interior.js';
 import { buildCat } from './cat.js';
 import { buildVault } from './vault.js';
 import { buildBackdrop } from './backdrop.js';
+import { buildStory } from './story.js';
 
 // A life in the HUD (the tower in stages): the prince's head with its crown, cut from his standing sprite.
 function lifeIcon(prince) {
@@ -48,5 +49,6 @@ export function buildAllArt() {
     cat: buildCat(),
     vault: buildVault(),
     backdrop: buildBackdrop(),
+    story: buildStory(),
   };
 }

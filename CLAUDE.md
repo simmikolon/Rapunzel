@@ -57,6 +57,8 @@ which only copies the two folders together). The design document
   `?stages=1|0` picks the mode or the endless game for a visit, `?stage=3`
   starts at that stage's door, `?lives=5` (or `inf`) sets the lives of a
   round (`?place=`, `?at=` and `?spawn=` mean the endless tower).
+  The opening story (`web/src/story.js`, told once per device before the
+  title): `?story=1` tells it on a visit, `?story=0` does not.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
@@ -76,7 +78,7 @@ which only copies the two folders together). The design document
   reports in `tools/checks/baseline/`: a change that is only for the eye
   must leave them exactly as they are. `flow.mjs` plays through the
   browser flow and the landing page, `stages.mjs` through a stage's end,
-  its door and a fall, `shots.mjs outside 20,180,420` takes
+  its door and a fall, `story.mjs` through the opening story, `shots.mjs outside 20,180,420` takes
   pictures at heights.
 - Headless browser checks need Playwright (on this machine:
   `/opt/node-tools/node_modules/playwright`, Chromium with
