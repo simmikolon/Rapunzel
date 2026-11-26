@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sir Bouncealot · pictures for social media</title>
+  <!--
+    Profile pictures for Instagram (1080 x 1080, shown in a circle), put
+    together from the game's own sprites, its wordmark and the app icon, like
+    the share picture next door (og.html). Nothing here is drawn by hand or
+    generated: every pixel is a sprite of the game on its art grid, enlarged
+    by a whole number.
+    To make them again after the art changed: `python3 tools/serve.py --site
+    8002`, then `node tools/social.mjs` (it saves every canvas of this page
+    to docs/social/instagram/). Or open /dev/social.html and save a canvas.
+  -->
+  <style>
+    @font-face { font-family: "Press Start 2P"; src: url("/play/fonts/press-start-2p-latin.woff2") format("woff2"); }
+    html, body { margin: 0; background: #222; color: #ddd; font: 12px "Press Start 2P", monospace; }
+    figure { display: inline-block; margin: 12px; }
+    canvas { display: block; width: 360px; height: 360px; image-rendering: pixelated; }
+    canvas.wide { width: auto; height: auto; image-rendering: auto; }
+    figcaption { padding: 6px 0; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    const load = (p) => import('/play/src/' + p);
+    const [{ buildPrince }, { buildSign }, { buildLogo, WORD_ADVANCE }, { buildTiles }, { buildPlatforms }, { buildCreatures }, { PAL: C }, sign] = await Promise.all([
+      load('art/prince.js'), load('art/sign.js'), load('art/logo.js'), load('art/tiles.js'), load('art/platforms.js'), load('art/creatures.js'), load('palette.js'), load('sign.js'),
+    ]);
+    const art = { prince: buildPrince(), sign: buildSign(), logo: buildLogo(), tiles: buildTiles(), platforms: buildPlatforms(), creatures: buildCreatures() };
+    await document.fonts.load('20px "Press Start 2P"');
+    const icon = new Image();
+    icon.src = '/play/icons/icon-512.png';
+    await icon.decode();
+
+    const SIZE = 1080;
+    const pictures = [];
+    // A picture: drawn on a small canvas of L x L logical px (4 to an art pixel, as in the game) through the
+    // renderer's rect and blit, then enlarged to 1080 by a whole number, so every art pixel stays a square.
+    function picture(name, title, L, draw) {
+      const small = document.createElement('canvas');
+      small.width = small.height = L;
+      const ctx = small.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      const g = {
+        rect(x, y, w, h, color, a = 1) { ctx.globalAlpha = a; ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); ctx.globalAlpha = 1; },
+        blit(s, x, y, o) {
+          const sx = o && o.sx != null ? o.sx : 1, sy = o && o.sy != null ? o.sy : 1, flip = o && o.flip;
+          ctx.globalAlpha = o && o.alpha != null ? o.alpha : 1;
+          if (flip) { ctx.save(); ctx.translate(Math.round(x), 0); ctx.scale(-1, 1); ctx.drawImage(s.canvas, Math.round(-s.ax * sx), Math.round(y - s.ay * sy), s.w * sx, s.h * sy); ctx.restore(); }
+          else ctx.drawImage(s.canvas, Math.round(x - s.ax * sx), Math.round(y - s.ay * sy), s.w * sx, s.h * sy);
+          ctx.globalAlpha = 1;
+        },
+      };
+      draw(g, ctx, L);
+      const big = document.createElement('canvas');
+      big.width = big.height = SIZE;
+      big.dataset.name = name;
+      const b = big.getContext('2d');
+      b.imageSmoothingEnabled = false;
+      b.drawImage(small, 0, 0, SIZE, SIZE);
+      pictures.push({ name, title, canvas: big });
+    }
+    // Where a sprite's picture is on its canvas (px): { x0, y0, x1, y1 } of what is not transparent.
+    function bbox(s) {
+      const d = s.canvas.getContext('2d').getImageData(0, 0, s.w, s.h).data;
+      let x0 = s.w, y0 = s.h, x1 = 0, y1 = 0;
+      for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) if (d[(y * s.w + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
+    }
+
+    // The tower's wall behind a picture L wide, `x` its middle, set back more than in the game (`veil`) so that
+    // what stands in front of it is read first in a picture the size of a thumbnail.
+    function wall(g, L, x, veil) {
+      for (let k = 0, y = L + 40; y > -192; k++, y -= 192) g.blit(art.tiles.tower[[0, 2, 0, 1, 0][k % 5]], x, y);
+      g.rect(0, 0, L, L, '#14242b', veil);
+    }
+    const braid = (g, L, x) => { for (let y = -40; y < L + 40; y += 40) g.blit(art.tiles.braid, x, y); };
+
+    // 1. The jump: Sir Bouncealot in the air over a bow on Rapunzel's braid, the tower behind him. He fills the
+    // circle from the crown to the pogo's foot.
+    picture('profil-sprung', 'Der Sprung', 270, (g, ctx, L) => {
+      wall(g, L, 135, 0.5);
+      braid(g, L, 150);
+      const s = art.prince.right.jumpUp, bb = bbox(s);
+      const foot = 214;                                               // where the pogo's foot is: on the bow
+      g.blit(art.platforms.bowSquash, 150, foot + 4);
+      g.blit(art.creatures.sun[0], 62, 74); g.blit(art.creatures.sun[1], 44, 120); g.blit(art.creatures.sun[0], 214, 54);
+      g.blit(s, 138 + s.ax - (bb.x0 + bb.x1) / 2, foot + s.ay - bb.y1);
+    });
+
+    // 2. The portrait: his head and shoulders, big, in a ring of the braid's gold.
+    picture('profil-portrait', 'Das Portrait', 120, (g, ctx, L) => {
+      g.rect(0, 0, L, L, C.tealDark);
+      // the ring, on the art grid: gold with its light at the upper left and its shade at the lower right
+      const A = 4, n = L / A, c = (n - 1) / 2;
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const d = Math.hypot(x - c, y - c);
+        if (d > 14.6) g.rect(x * A, y * A, A, A, C.sceneBg);
+        else if (d > 12.4) g.rect(x * A, y * A, A, A, x + y < n - 6 ? C.braidHi : x + y > n + 6 ? C.braidShade : C.braid);
+        else g.rect(x * A, y * A, A, A, (x + y) % 9 === 0 && d < 11 ? C.teal : C.tealDark);
+      }
+      // head and shoulders: from his crown down 22 art pixels, inside the ring
+      const s = art.prince.right.standing, bb = bbox(s), top = 16, tall = 22 * A;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(L / 2 - 2, L / 2 - 2, 12.4 * A, 0, Math.PI * 2); ctx.clip();
+      ctx.beginPath(); ctx.rect(0, 0, L, top + tall); ctx.clip();
+      ctx.drawImage(s.canvas, Math.round(L / 2 - (bb.x0 + bb.x1) / 2), top - bb.y0);
+      ctx.restore();
+    });
+
+    // 3. The wordmark: SIR, BOUNCE, ALOT on the title's wooden sign, with the crown, a bow under it.
+    picture('profil-wortmarke', 'Die Wortmarke', 540, (g, ctx, L) => {
+      g.rect(0, 0, L, L, C.barkDeep);
+      sign.drawSign(g, art, -60, -52, L + 120, sign.signHeight(9));
+      const cx = L / 2, letters = art.logo.letters;
+      g.blit(art.logo.sir, cx, 196);
+      for (let i = 0; i < 6; i++) g.blit(letters[i], cx + (i - 2.5) * WORD_ADVANCE, 322);
+      for (let i = 6; i < 10; i++) g.blit(letters[i], cx + (i - 7.5) * WORD_ADVANCE, 322 + 100);
+      g.blit(art.sign.bow, cx, 470, { sx: 2, sy: 2 });
+    });
+
+    // 4. The app icon's prince with his hobby-horse pogo, so that the account and the app show the same face:
+    // the icon enlarged three times and cut to the square.
+    picture('profil-icon', 'Das App-Icon', 360, (g, ctx, L) => {
+      const probe = document.createElement('canvas'); probe.width = probe.height = 1;
+      const pc = probe.getContext('2d'); pc.drawImage(icon, 0, 0); const [r, gg, b] = pc.getImageData(0, 0, 1, 1).data;
+      g.rect(0, 0, L, L, `rgb(${r},${gg},${b})`);
+      ctx.drawImage(icon, (L - 512) / 2 - 6, (L - 512) / 2 - 2);
+    });
+
+    // The pictures, and how each looks in Instagram's circle: on the profile, in the feed, in a comment.
+    for (const p of pictures) {
+      const f = document.createElement('figure'), cap = document.createElement('figcaption');
+      cap.textContent = `${p.name}.png`;
+      f.append(p.canvas, cap);
+      document.body.append(f);
+    }
+    const sheet = document.createElement('canvas');
+    const CW = 430, PAD = 30, sizes = [320, 110, 40];
+    sheet.width = PAD + pictures.length * CW; sheet.height = 700;
+    sheet.className = 'wide'; sheet.dataset.name = 'uebersicht';
+    const sc = sheet.getContext('2d');
+    sc.fillStyle = '#fafafa'; sc.fillRect(0, 0, sheet.width, sheet.height);
+    sc.imageSmoothingEnabled = true; sc.imageSmoothingQuality = 'high';
+    pictures.forEach((p, i) => {
+      const cx = PAD + i * CW + CW / 2 - PAD / 2;
+      let y = 40;
+      sc.fillStyle = '#222'; sc.font = '16px "Press Start 2P"'; sc.textAlign = 'center'; sc.textBaseline = 'top';
+      sc.fillText(`${i + 1}. ${p.title}`, cx, y); y += 44;
+      for (const d of sizes) {
+        // (halved step by step, as a phone would show it, so the small ones are not just noise)
+        let src = p.canvas;
+        for (let w = SIZE / 2; w >= d * 1.5; w /= 2) { const t = document.createElement('canvas'); t.width = t.height = w; const tc = t.getContext('2d'); tc.imageSmoothingQuality = 'high'; tc.drawImage(src, 0, 0, w, w); src = t; }
+        sc.save(); sc.beginPath(); sc.arc(cx, y + d / 2, d / 2, 0, Math.PI * 2); sc.clip();
+        sc.drawImage(src, cx - d / 2, y, d, d);
+        sc.restore();
+        sc.strokeStyle = '#ddd'; sc.lineWidth = 1; sc.beginPath(); sc.arc(cx, y + d / 2, d / 2, 0, Math.PI * 2); sc.stroke();
+        y += d + 28;
+      }
+    });
+    document.body.append(sheet);
+    window.__social = true;
+  </script>
+</body>
+</html>

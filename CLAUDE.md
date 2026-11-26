@@ -31,6 +31,9 @@ which only copies the two folders together). The design document
   back to plain CSS), so check `/` after such a change. On a deployed URL
   the dev helpers go after `/play/`; `/?at=150` forwards there.
   A devlog episode: `python3 tools/devlog_add.py <youtube-url> "Title" "Text"`.
+  Pictures for social media (Instagram profile pictures, from the game's
+  own sprites): `node tools/social.mjs` saves the canvases of
+  `site/dev/social.html` to `docs/social/instagram/` (needs `--site 8002`).
 - Dev helpers: `?at=150` starts at 150 m (and skips the ride down and the title's countdown), `?spawn=squirrel` puts one on the
   next branch, `?spawn=storm|stork|updraft` for the sky elements,
   `?spawn=guard|pot` on the next balcony, `?spawn=grabber` in the nearest
