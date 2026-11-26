@@ -106,8 +106,12 @@ the game, in its zone, in the simulator, and one line in this document.
 **Phase 0, the port (✅)**: plain JavaScript, 768 x 1364 logical portrait
 resolution, deployed from `master` via Vercel. Rendering is WebGL through
 PixiJS behind a small immediate-mode facade (`web/src/gfx/renderer.js`);
-gameplay code never touches PixiJS. Selective bloom and a CRT pass with
-presets full / bloom / off (F key, title button, `?fx=`), off by default.
+gameplay code never touches PixiJS. Two effects, each a setting of its
+own and off by default: a glow (selective bloom) and scan lines (F key,
+the settings' sign, `?fx=`). The settings' sign (`web/src/settings.js`,
+SETTINGS on the title) also holds how a touch steers (hold a side, slide
+a finger, or lean the phone), sound, and in the app sound in silent mode
+and haptics.
 
 - Prince on a pogo stick: automatic bounce, tap to boost (three charges,
   refilled by landings and lanterns), keys, touch halves or phone tilt,
@@ -974,9 +978,10 @@ is a pool to draw from, not a promise.
 - 💡 shake and motion effects when things happen: more shake, hit-stop,
   zoom punch on bow springs and the witch, speed lines on boost.
 - 💡 more particles and atmosphere in general.
-- ✅ bloom (selective, via a glow layer) and a CRT pass (curvature,
-  scanlines, aberration, flicker) with presets. Anything that should glow
-  passes `glow` on its draw call. With WebGL in place, fog with depth of
+- ✅ a glow (bloom, selective, via a glow layer) and scan lines (the CRT
+  pass with its tube, the curvature, aberration, corner shading and
+  flicker, set to nothing), each a setting of its own. Anything that
+  should glow passes `glow` on its draw call. With WebGL in place, fog with depth of
   field, god rays and the portal's light trails are straightforward.
 - 💡 an automatic preset fallback for slower phones (drop to bloom, then
   off, when frames run long); a bitmap font for the score text.
@@ -1047,7 +1052,10 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | Gravity / bounce velocity | 2100 px/s² / 1650 px/s (~648 px bounce) |
 | Dry branch / bow spring bounce | 1550 (~572 px) / 2650 (~1670 px) |
 | Boost | +1500 px/s, 3 charges, 0.5 charge per landing, 0.5 s shield, 3 suns per punch |
-| Horizontal speed (keys / tilt) | 560 / 820 px/s |
+| Horizontal speed (keys, a held side / tilt, a sliding finger) | 560 / 820 px/s |
+| Tilt | the dip of the screen's right edge below its left; 2° do nothing, full speed at 22° (the setting: gentle 30°, quick 15°) |
+| Sliding finger | where it is set down is the middle; 8 px do nothing, full speed 110 px to either side, past that the middle comes along; a touch under 0.22 s that moved under 14 px is a boost, and so is a second finger |
+| Effects | glow: bloom gain 0.5 (was 1.25); scan lines: depth 0.22, mask 0.06, no curvature; both off unless chosen |
 | Hearts / invulnerability after a hit | 3 / 1.6 s |
 | Row gaps (tier 0 → 5) | 0.75–1.0 → 1.3–1.9 beats (beat = 300 px) |
 | Safe gap guarantee | 520 px between non-crumbling platforms |
@@ -2576,3 +2584,39 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     on a phone yet.
   - His other thought, to fade the three looks in instead of riding to
     them, is left: he likes the ride as it is.
+- 2026-11-26: Settings, steering, effects, sound (`element/settings`).
+  Simon, from playing on the phone: a settings dialog for the phone;
+  tilt runs away when the phone is held upright, is inverted when it
+  is tipped towards the player, and hardly answers when it is tipped
+  far back; somebody wished for steering with a sliding finger; the
+  shaders bring little (the scan lines are nice, the tube's curvature
+  does not fit, the bloom is far too much), make them options and
+  switch them off; and the app has sound only with the silent switch
+  off. Decisions:
+  - Tilt was DeviceOrientation's gamma, atan2 of the gravity along the
+    screen's width and the gravity through the screen. Held upright
+    the second is nearly nothing and the angle runs away; past upright
+    it changes its sign. The lean is now the dip of the screen's right
+    edge below its left (the arcsine of the gravity along the width),
+    in the shell and in a browser: the same in every pose, never
+    inverted. What it cannot do is physics: a phone lying flat that is
+    turned like a wheel does not change its gravity at all.
+  - A third way to steer, SWIPE: the finger's first touch is the
+    middle, sliding steers by degrees, a tap or a second finger
+    boosts. It has the higher top speed of tilt, being as fine.
+  - One sign for all of it, hung in the title's place, instead of the
+    three boards (effects, sound, tilt) the title had: SETTINGS, and
+    sound on or off beside it. The same sign in a browser, without the
+    app's rows.
+  - The effects are two switches, GLOW and SCANLINES, both off; an old
+    save's preset is not read. The glow's gain goes from 1.25 to 0.5,
+    the tube's curvature, aberration, corner shading and flicker to
+    nothing.
+  - Sound: the shell kept the audio session ambient on purpose, so the
+    silent switch muted the game. A browser has always made it sound
+    regardless. The app now does the same by default, as a setting (IN
+    SILENT MODE); the price is that another app's music stops when the
+    game sounds, which the setting switched off avoids.
+  - Not tried on a phone yet: the lean, the slide's reach (110 px),
+    the sound in silent mode. The Swift is one line and was not
+    compiled here.

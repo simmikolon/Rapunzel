@@ -42,7 +42,7 @@ which only copies the two folders together). The design document
   `?spawn=bat` hangs a bat under the next branch, `?at=170&spawn=flock` builds a
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
-  altitude and zone, `?fx=off|bloom|full`, `?veil=0.3` sets how strongly the
+  altitude and zone, `?fx=off|bloom|lines|full` (the glow, the scan lines, both), `?veil=0.3` sets how strongly the
   tower's wall is set back outside (0 to 0.9), `?wall=ivy|worn|stone|moss|mended|briar|plain`
   shows one look of the tower's wall all the way up, `?place=inside|outside` picks
   where the round is climbed whatever the title's selector says (inside,
@@ -89,7 +89,8 @@ which only copies the two folders together). The design document
   reports in `tools/checks/baseline/`: a change that is only for the eye
   must leave them exactly as they are. `flow.mjs` plays through the
   browser flow and the landing page, `stages.mjs` through a stage's end,
-  its door and a fall, `story.mjs` through the opening story, `shots.mjs outside 20,180,420` takes
+  its door and a fall, `story.mjs` through the opening story, `settings.mjs` through the
+  settings' sign and the ways to steer, `shots.mjs outside 20,180,420` takes
   pictures at heights.
 - Headless browser checks need Playwright (on this machine:
   `/opt/node-tools/node_modules/playwright`, Chromium with

@@ -6,7 +6,8 @@ import { World } from './world.js';
 import { HUD, SIGNS, signTravel } from './hud.js';
 import { drawTitle, drawCount } from './title.js';
 import { clamp, easeOutBack, easeInOutCubic, easeOutCubic } from './util.js';
-import { createRenderer, PRESETS, DEFAULT_PRESET } from './gfx/renderer.js';
+import { createRenderer, PRESETS } from './gfx/renderer.js';
+import { Settings } from './settings.js';
 import { devParams, startAt, startStage, spawnNear, forceLen, devLabel } from './dev.js';
 import { platform } from './platform.js';
 import { PLACES } from './places.js';
@@ -19,7 +20,7 @@ import { Perf, RES } from './perf.js';
 // canvas to the viewport while keeping that aspect ratio. Rendering is WebGL
 // through PixiJS (see src/gfx/), which makes the bloom and CRT passes possible.
 
-export const FX_LABELS = { full: 'bloom + CRT', bloom: 'bloom only', off: 'off' };
+export const FX_LABELS = { full: 'glow and scan lines', bloom: 'glow', lines: 'scan lines', off: 'off' };
 
 class Game {
   constructor(canvas, gfx, art) {
@@ -51,8 +52,8 @@ class Game {
     this.noticeText = '';
     this.noticeT = 0;
     this.iosSoundHintShown = false;
-    this.fxPreset = DEFAULT_PRESET;
-    this.fxPick = null;       // the preset the player chose (F, the title's button); null: the default
+    this.settings = new Settings(this);      // steering, effects, sound in silent mode, haptics (settings.js)
+    this.fxForced = false;    // ?fx= has set the effects for this visit: the settings leave them alone
     this.dev = devParams();
     // The drawing resolution (pixels of the backing store per logical pixel: RESOLUTION unless ?res=1.5 asks for
     // another; null, ?res=screen: the screen's own) and the performance readout, ?perf=1 (perf.js).
@@ -84,9 +85,11 @@ class Game {
     this.world.onStage = () => this.keepBest();
     this.world.onRetry = () => this.keepBest();
     if (this.staged || this.round.place !== this.world.placeName) this.resetWorld();
-    // ?fx=full|bloom|off forces a preset for this visit.
+    // ?fx=off|bloom|lines|full forces the effects for this visit; otherwise they are the player's settings.
     const param = new URLSearchParams(location.search).get('fx');
-    this.fxPreset = this.gfx.setPreset(PRESETS.includes(param) ? param : this.fxPreset);
+    if (PRESETS.includes(param)) { this.fxForced = true; this.gfx.setPreset(param); }
+    this.input.onTilt = (ok) => { if (!ok) this.settings.tiltRefused(); };
+    this.settings.apply();
     this.last = performance.now();
     this.dt = 0;
     this.STEP = 1 / 120;      // longest physics step: a frame is split into equal steps no longer than this
@@ -133,13 +136,13 @@ class Game {
     this.save();
     audio.click();
   }
-  get fxLabel() { return FX_LABELS[this.fxPreset] || this.fxPreset; }
+  get fxLabel() { return FX_LABELS[this.gfx.preset] || this.gfx.preset; }
 
   notice(text, seconds = 3.5) { this.noticeText = text; this.noticeT = seconds; }
 
   // iOS mutes Web Audio with the ring/silent switch; tell the player once.
   maybeIosSoundHint() {
-    if (!isIOS || audio.muted || this.iosSoundHintShown) return;
+    if (!isIOS || audio.muted || this.iosSoundHintShown || (platform.isNative && audio.throughSilent)) return;
     this.iosSoundHintShown = true;
     this.notice('No sound? Flip the ring/silent switch on the side of the phone', 4.5);
   }
@@ -152,15 +155,13 @@ class Game {
       this.seenStory = !!s.story;
       this.storyAt = +s.storyAt || 0;
       if (s.mode === 'endless' || s.mode === 'stages') this.round.mode = s.mode;      // (a save from before the stages has none: the stages it is)
-      // Only a preset the player picked is kept. Saves from before the
-      // default became 'off' wrote 'full' with every best height whether or
-      // not anyone chose it, so an old `fx` counts only when it is not 'full'.
-      const pick = PRESETS.includes(s.fxPick) ? s.fxPick : (s.fx === 'bloom' || s.fx === 'off') ? s.fx : null;
-      if (pick) { this.fxPick = pick; this.fxPreset = pick; }
+      // (An effects preset from before the settings, `fx` or `fxPick`, is not read: the effects are off until
+      // they are switched on there.)
+      this.settings.load(s.set);
     } catch (_) { this.bests = { outside: 0, inside: 0, stages: 0 }; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, storyAt: this.storyAt || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, fxPick: this.fxPick || undefined })); } catch (_) { /* ignore */ }
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, storyAt: this.storyAt || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, set: this.settings.toSave() })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best || this.bestBeaten;
@@ -172,9 +173,12 @@ class Game {
     this.best = this.world.heightM; this.bestBeaten = true; this.save();
   }
 
+  // The F key: the four combinations of the two effects, one after the other.
   cycleFx() {
-    this.fxPreset = this.gfx.nextPreset();
-    this.fxPick = this.fxPreset;
+    const next = PRESETS[(PRESETS.indexOf(this.gfx.preset) + 1) % PRESETS.length], v = this.settings.v;
+    v.glow = next === 'bloom' || next === 'full'; v.lines = next === 'lines' || next === 'full';
+    this.fxForced = false;
+    this.settings.apply();
     this.save();
     audio.click();
     this.notice(`Effects: ${this.fxLabel}`, 1.6);
@@ -330,7 +334,7 @@ class Game {
       audio.click();
       if (!muted) this.maybeIosSoundHint();
     }
-    if (input.consumeFx() || input.consumeButton('fx')) this.cycleFx();
+    if (input.consumeFx()) this.cycleFx();
     const tapOutsideButtons = () => input.consumeTap() && !input.taps.some((t) => input.zoneAt(t.x, t.y));
 
     switch (this.mode) {
@@ -351,7 +355,15 @@ class Game {
       case 'title': {
         this.stepWorld(dt);
         input.consumeBoost();            // clicks, space and tilt-taps queue boosts; none belongs to the title
+        if (this.settings.open) {
+          // the settings' sign hangs in the title's place: taps are its own, Esc closes it
+          if (input.consumePause()) { this.settings.open = false; audio.click(); }
+          else if (this.settings.update(dt, input) === 'story') { this.tellStory = true; this.setMode('intro'); }
+          input.consumeTap(); input.consumePlace();
+          break;
+        }
         input.consumePause();
+        if (input.consumeButton('settings')) { this.settings.show(); audio.click(); break; }
         const play = input.consumeButton('play');
         const pick = input.consumeButton('placeTour') ? 'stages' : input.consumeButton('placeOut') ? 'outside' : input.consumeButton('placeIn') ? 'inside' : input.consumePlace();
         if (pick) this.setClimb(pick);
@@ -406,7 +418,9 @@ class Game {
         // the sign is lowered in on its ropes and settles with a small dip;
         // once it hangs the scene behind it dims slowly
         const k = clamp(this.modeT / 0.7, 0, 1);
-        drawTitle(g, this, this.world.time, { dy: -signTravel(SIGNS.title) * (1 - easeOutBack(k, 0.8)), dim: clamp((this.modeT - 0.6) / 1.4, 0, 1) });
+        const hang = { dy: -signTravel(SIGNS.title) * (1 - easeOutBack(k, 0.8)), dim: clamp((this.modeT - 0.6) / 1.4, 0, 1) };
+        if (this.settings.open) this.settings.draw(g, this.world.time, hang);
+        else drawTitle(g, this, this.world.time, hang);
         break;
       }
       case 'countdown': {

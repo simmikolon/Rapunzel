@@ -59,6 +59,14 @@ export const MOVE_DECEL = 3800;
 export const TILT_SPEED = 820;        // full tilt top speed
 export const TILT_DEAD_ZONE = 2;      // degrees
 export const TILT_FULL = 22;          // degrees for full speed
+// ... by the setting "tilt" (settings.js): how far the phone is leaned for full speed.
+export const TILT_FEEL = { gentle: 30, normal: TILT_FULL, quick: 15 };
+// Steering by sliding a finger (the setting "swipe"): where the finger is set
+// down is the middle, `full` px to either side is full speed, the first
+// `dead` px do nothing; past `full` the middle comes along, so that turning
+// back takes hold at once. A touch shorter than `tapTime` s that moved less
+// than `tapMove` px is a tap: a boost.
+export const SWIPE = { full: 110, dead: 8, tapTime: 0.22, tapMove: 14 };
 
 // Player body
 export const PLAYER_W = 104;
@@ -137,17 +145,22 @@ export const CARRY_VX = 520;
 export const PX_PER_METER = 100;
 
 // --- Post-processing (WebGL renderer, see src/gfx/) ---
-// Presets: 'full' (bloom + CRT), 'bloom', 'off'; F key / the title button cycle
-// them, ?fx=<preset> forces one for a visit.
+// Two effects, each on its own and both off unless the player switches them
+// on in the settings (settings.js): the glow and the scan lines. The F key
+// goes through the four combinations; ?fx=off|bloom|lines|full forces one
+// for a visit.
 export const FX = {
   // Selective bloom: glowing things are drawn again into a glow layer that
   // is rendered at `resolution` x the screen, blurred `passes` times with a
   // 9-tap Gaussian `spread` texels wide and added over the scene x `gain`.
-  bloom: { resolution: 0.5, spread: 1.6, passes: 2, gain: 1.25 },
-  // CRT pass: barrel curvature (corners bend off screen), chromatic
-  // aberration (fraction of the frame at the edges), scanline depth (one
-  // line per art pixel), phosphor mask depth, corner shading, flicker.
-  crt: { curvature: 0.035, aberration: 0.0022, scanline: 0.22, mask: 0.06, vignette: 0.22, flicker: 0.02 },
+  // (The gain was 1.25: everything that glows stood in a white haze. At 0.5
+  // a lantern has a soft rim and the picture keeps its colours.)
+  bloom: { resolution: 0.5, spread: 1.6, passes: 2, gain: 0.5 },
+  // The scan lines: scanline depth (one line per art pixel) and a faint
+  // phosphor mask. The pass can also bend the picture like a tube (barrel
+  // curvature, chromatic aberration at the edges, shaded corners, flicker):
+  // all at nothing, the bent picture did not suit a phone's flat screen.
+  crt: { curvature: 0, aberration: 0, scanline: 0.22, mask: 0.06, vignette: 0, flicker: 0 },
 };
 
 export const STORAGE_KEY = 'bouncealot.web.v1';

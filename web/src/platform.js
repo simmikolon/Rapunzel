@@ -38,8 +38,9 @@ export const platform = {
   // A game event for the Taptic Engine: 'bounce' (strength 0..1 scales it),
   // 'soft', 'spring', 'boost', 'bonk', 'clank', 'stomp', 'hurt', 'over'. The
   // shell owns the patterns (ios/App/Haptics.swift); silently nothing in a browser.
+  haptics: true,      // the player's setting (settings.js): false, and nothing is felt
   haptic(kind, strength) {
-    if (!handler()) return;
+    if (!handler() || !this.haptics) return;
     post(strength == null ? { type: 'haptic', kind } : { type: 'haptic', kind, strength });
   },
 

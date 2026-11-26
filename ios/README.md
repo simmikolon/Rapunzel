@@ -10,15 +10,22 @@ What the shell adds over Safari:
 - The game loads from the bundle through a custom URL scheme
   (`app://game/`), so it works offline and the ES modules get a proper origin.
 - Tilt steering from CoreMotion: no permission prompt, same dead zone and
-  full-tilt angle as in the browser.
+  full-tilt angle as in the browser. The angle is the dip of the screen's
+  right edge below its left (`App/TiltSource.swift`), the same however
+  the phone is pitched.
 - Best height, effects preset and mute live in `UserDefaults`.
 - Haptics on the Taptic Engine (Core Haptics): a light tap on every landing
   and every pickup, firmer with the combo, a softer one on clouds, lanterns and dry
   branches, a springy double on the bow, a kick and a rush on the boost,
   hard hits on bonk, helmet, stomp and hurt, a falling triple at game over.
   The patterns are one table in `App/Haptics.swift`.
-- The ring/silent switch mutes the game; music from another app keeps
-  playing (ambient audio session).
+- Sound in silent mode is the player's setting (the settings' sign, on by
+  default): on, the game sounds whatever the ring/silent switch says and
+  another app's music stops when it does; off, the switch mutes the game
+  and the music plays on (ambient audio session). WebKit picks the
+  session by what the page plays, so the page does the switching
+  (`web/src/audio.js` setThroughSilent).
+- Haptics can be switched off in the settings.
 - The opening story is told at every launch (in a browser once per
   device), with its sounds from the first second: the shell lets Web Audio
   start without a tap, and the page starts it at launch there

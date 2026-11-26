@@ -8,7 +8,7 @@ import os
 ///
 ///   storage.set { key, value }   -> UserDefaults (keys with the game's prefix only)
 ///   haptic { kind, strength? }   -> Haptics (a game event, the shell owns the pattern)
-///   tilt.start / tilt.stop       -> TiltSource; samples go back as window.__nativeTilt(gammaDeg)
+///   tilt.start / tilt.stop       -> TiltSource; samples go back as window.__nativeTilt(leanDeg)
 ///   log { message }              -> the system log, for page errors
 final class NativeBridge: NSObject, WKScriptMessageHandler {
     static let handlerName = "native"

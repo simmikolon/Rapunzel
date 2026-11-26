@@ -32,7 +32,7 @@ const SHEET_CHARS = { 40: '0123456789 m' };
 const SHEETS_AHEAD = [12, 14, 16, 18, 22, 30, 40];
 const SHEET_FIT = { mid: 0.4, right: 0.8, up: 1.34 };      // what brings a sheet's text to where a painted one is (_lettersAt)
 const SHEET_WAIT = 20;      // frames the resolution has to stand still before the sheets are made again for it
-export const PRESETS = ['full', 'bloom', 'off'];
+export const PRESETS = ['off', 'bloom', 'lines', 'full'];      // nothing, the glow, the scan lines, both (?fx=, the F key)
 // The game starts without screen effects (the plain picture looked better);
 // bloom and CRT are there for whoever picks them (F, the title's button).
 export const DEFAULT_PRESET = 'off';
@@ -131,12 +131,16 @@ export class Renderer {
   // 'full' = bloom + CRT, 'bloom' = bloom only, 'off' = plain WebGL.
   setPreset(p) {
     if (!PRESETS.includes(p)) p = DEFAULT_PRESET;
-    this.preset = p;
-    const bloom = p !== 'off', crt = p === 'full';
-    this.layers.glow.c.visible = bloom;
-    this.layers.glow.c.filters = bloom ? [this.bloom] : null;
-    this.root.filters = crt ? [this.crt] : null;
-    return p;
+    return this.setFx(p === 'bloom' || p === 'full', p === 'lines' || p === 'full');
+  }
+  // The two effects, each on its own: the glow (what glows is drawn again into the glow layer and bloomed over the
+  // picture) and the scan lines (a pass over the whole frame). Returns the preset's name for the pair.
+  setFx(glow, lines) {
+    this.layers.glow.c.visible = !!glow;
+    this.layers.glow.c.filters = glow ? [this.bloom] : null;
+    this.root.filters = lines ? [this.crt] : null;
+    this.preset = glow ? (lines ? 'full' : 'bloom') : lines ? 'lines' : 'off';
+    return this.preset;
   }
   nextPreset() { return this.setPreset(PRESETS[(PRESETS.indexOf(this.preset) + 1) % PRESETS.length]); }
 

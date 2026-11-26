@@ -31,6 +31,9 @@ class Synth {
     this.noiseBuf = null;
     this.silentEl = null;
     this.sessionPrimed = false;
+    // Sound although the phone's ring/silent switch says silent. A browser always tries (the silent <audio> element
+    // below); in the app it is the player's setting (setThroughSilent), and off means the switch mutes the game.
+    this.throughSilent = !platform.isNative;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) return;
       // iOS suspends ("interrupts") the context in the background; the next
@@ -71,7 +74,18 @@ class Synth {
         src.start(0);
       } catch (_) { /* ignore */ }
     }
-    if (!platform.isNative) this.primeSession();
+    if (this.throughSilent) this.primeSession();
+  }
+
+  // The app's setting "sound in silent mode". WebKit decides the audio session by what plays: Web Audio alone is
+  // 'ambient' (the silent switch mutes it, another app's music plays on), a playing <audio> element makes it
+  // 'playback' (it sounds whatever the switch says, and another app's music stops). Where WebKit lets the page say
+  // which it wants (navigator.audioSession, iOS 16.4 on), it is told as well.
+  setThroughSilent(on) {
+    this.throughSilent = !!on;
+    try { if (navigator.audioSession) navigator.audioSession.type = on ? 'playback' : 'ambient'; } catch (_) { /* ignore */ }
+    if (on) { this.sessionPrimed = false; if (this.ctx) this.primeSession(); }
+    else if (this.silentEl) { try { this.silentEl.pause(); } catch (_) { /* ignore */ } this.sessionPrimed = false; }
   }
 
   primeSession() {
