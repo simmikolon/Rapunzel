@@ -301,11 +301,67 @@ are as they were.
   drawn. A sprite drawn off the grid by mistake is named there before
   a push (tried with a planted dot: it fails and names the sprite). A
   sprite that is meant to be finer says `fine: true`.
-- Not done, a step of its own: the 705 canvases the sprites are drawn
-  on stay in memory after the atlas is packed (55 MB in the web view).
-  The game does not use them after the start; the landing page does.
+- Left for a step of its own, and taken (the next one): the 705
+  canvases the sprites are drawn on stayed in memory after the atlas
+  was packed (55 MB in the web view).
 - To read on the phone: that it starts and looks as it did; the frames
   should not change.
+
+### Step taken: the sprites' canvases are given back
+
+About memory, not about frames: the canvases were never drawn after
+the start. Each sprite is painted on a canvas of its own, four times
+its art size each way; the atlas is packed from them, and from then on
+the game draws from the atlas only. The 709 canvases stayed, because
+every sprite object held its own: 14.4 million pixels, 55 MB as
+counted.
+
+`buildAtlas` (`web/src/gfx/atlas.js`) now gives them back once both
+sheets are painted: each canvas is set to no size, which frees its
+pixels at once, and the sprite's `canvas` is null. A sprite keeps its
+size, its anchor and `tex`, which is all the renderer reads.
+
+- Who read the canvases: nobody in the game after the start. What
+  works on a sprite's pixels (`flipH`, `tint`, the cut-out for the
+  lives, the inside's `recede`) does so while the art is built. The landing
+  page, the social pictures, the sprite sheet page and the simulator
+  build the art themselves and pack no atlas: they keep theirs and are
+  as they were (all four loaded, no errors).
+- The atlas's own canvas (3.9 MB) is kept: the check reads it, and
+  PixiJS holds it as the texture's source.
+- The start is as it was: all canvases are there together until the
+  atlas is packed. Drawing the sprites at art size from the beginning
+  would take that away too, and reaches into every drawing tool, the
+  landing page and the social pictures; not done, and only worth it if
+  the start shows up as a problem on a phone.
+
+| headless Chromium on Linux, the title, after a collection | before | after |
+|---|---|---|
+| sprites holding a canvas | 709 (55.2 MB as counted) | 0 |
+| the page's process | 228 to 230 MB | 125 to 127 MB |
+| all of the browser's processes | 411 to 418 MB | 309 to 311 MB |
+
+- The browser gives back about 103 MB, near twice what the pixels
+  count to; why it held two for one was not looked into. Three runs
+  before, three after, and two more of each later: the same within
+  2 MB.
+- Only letting go of the canvases (null, no size set) gives the same
+  figure here, after a collection that the measurement forces. The
+  game sets the size as well, because nothing forces a collection on a
+  phone, and a canvas's object is small however many pixels hang on it.
+- Not measured on a phone. To read there: the app's memory in Xcode
+  (the Debug navigator's Memory gauge) on the title and in a round,
+  with `master` and with this.
+- The picture cannot change: the atlas's two sheets are the same to
+  the byte before and after, and every sprite's frame, size and anchor
+  (hashed on both). The simulator's five reports are as they were.
+- `tools/checks/atlas.mjs` builds the art a second time for the pixels
+  it compares (in a frame of its own: `art/tower.js` draws from one
+  random generator for as long as a page lives, so a second build in
+  the same page has other bricks), and fails if a sprite of the game
+  still holds a canvas (run against `master`, it names all 709).
+- Packing art that has been packed before throws and says so.
+- The budget of 80 MB in the check stays, as what the start may take.
 
 ## The suspects, in the order we take them
 
@@ -330,8 +386,9 @@ are as they were.
 3. **The atlas.** Every sprite was stored four times as large as its
    art (16 texels to an art pixel): 4096 x 3970, some 62 MB on the GPU,
    and 126 px under the limit of older phones. Taken (see Readings):
-   kept at art size it is 1024 x 1009. Left: the sprites' own canvases
-   (55 MB) after the start.
+   kept at art size it is 1024 x 1009. The sprites' own canvases
+   (55 MB) are given back after the start (taken too, see Readings);
+   they are still all there while the game starts.
 4. **Allocation in the frame.** The step and the drawing build small
    lists and closures every frame (`filter`, `map`, `sort`); the
    collector's pauses are single late frames. To do: if `upd` or `draw`

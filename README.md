@@ -250,8 +250,9 @@ frame: the scan lines, and the weather's mood while there is a storm.
   wide) with nearest-neighbour sampling, so the whole scene batches into a
   handful of draw calls and the chunky pixels stay crisp. A sprite therefore
   has to be on the art grid; `tools/checks/atlas.mjs` names one that is not.
-  `web/dev/sprites.html` keeps working because the sprites keep their
-  canvases.
+  Once it is packed the sprites' own canvases are given back (55 MB);
+  `web/dev/sprites.html`, the landing page and the social pictures build
+  the art themselves and keep theirs.
 * The logical resolution is 768 wide and as tall as the screen's shape
   asks for. The picture is drawn at one backing pixel per logical pixel on
   every screen (`RESOLUTION` in `web/src/config.js`) and scaled up by the

@@ -2819,3 +2819,35 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   - Freeing the canvases after the atlas is packed (the open point of
     the performance plan) would take most of the 55 MB away; the
     budget is to be set anew then.
+- 2026-11-27: The sprites' canvases are given back
+  (`claude/dazzling-hopper-ytoqgp`). The open point of the performance
+  plan and of the budget above. Simon: plan it and do it. Decisions:
+  - The small way, not the big one. Once the atlas is packed,
+    `buildAtlas` sets every sprite's canvas to no size and its `canvas`
+    to null. Drawing the sprites at art size from the start would also
+    take the start's peak away, but reaches into the drawing tools, the
+    landing page and the social pictures: only if a phone shows the
+    start to be a problem.
+  - The size is set, not only the reference dropped: that frees the
+    pixels at once and does not wait for a collection.
+  - Nothing in the game read a canvas after the start; the pages that
+    do (landing page, social pictures, sprite sheet, simulator) build
+    their own art and are not touched. Packing the same art twice
+    throws.
+  - Measured in a headless browser only: the page's process 229 MB to
+    126 MB on the title, 103 MB where 55 MB were counted. The atlas is
+    the same to the byte, so the picture is. The phone's figure is
+    Simon's to read in Xcode.
+  - The budget, set anew as said: 80 MB stays, now as what the start
+    may take (the canvases are all there until the atlas is packed, and
+    no older phone has been tried), and the check also fails if a
+    sprite still holds a canvas afterwards. Raising it is cheaper than
+    it was, and still a line in the check and a line here.
+  - `tools/checks/atlas.mjs` builds its own art to compare, in a frame
+    of its own: `art/tower.js` keeps one random generator for the
+    page's life, so a second build in the same page has other bricks.
+    Left as it is: the game builds once.
+  - Simon played it on the iPhone Air: everything as before. The
+    memory's reading in Xcode is put off. Merged; the branch, whose
+    name says nothing, is not kept, and branches are named after what
+    is done on them from here on (`CLAUDE.md`).

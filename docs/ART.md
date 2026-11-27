@@ -78,11 +78,16 @@ sprite fit the rule.
 - Anything not mentioned above.
 
 ## What a sprite costs
-- Every sprite is drawn four times its art size on a canvas of its own,
-  which stays in memory: 64 bytes to an art pixel, 55 MB for all of them
-  (2026-11-27). That is what grows now, not the atlas (kept at art size,
-  1024 x 1009). `node tools/checks/atlas.mjs` prints both, says where the
-  size goes and fails past its budget of 80 MB.
+- Every sprite is drawn four times its art size on a canvas of its own:
+  64 bytes to an art pixel, 55 MB for all of them (2026-11-27). They are
+  all there together while the game starts and are given back once the
+  atlas is packed (kept at art size, 1024 x 1009), so a sprite costs at
+  the start, not in a round. `node tools/checks/atlas.mjs` prints both,
+  says where the size goes and fails past its budget of 80 MB at the
+  start, or if a sprite still holds its canvas afterwards.
+- A sprite's `canvas` is null once the game runs. What works on a
+  sprite's pixels (`flipH`, `tint`, a cut-out) does so while the art is
+  built, in its `build*` function.
 - The size is in big tiles and in variants: the tower's wall areas are a
   fifth of everything, the trees a seventh. Before another whole tile:
   can it be a small piece laid over a shared one (as the wall's fixtures

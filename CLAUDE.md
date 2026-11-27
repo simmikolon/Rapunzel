@@ -17,6 +17,10 @@ which only copies the two folders together). The design document
   effect, mechanic) is built and tuned there first; levels come later.
 - One short branch per element (`element/<name>`), merged into `master`
   when it is fun. `master` deploys to Vercel; branches get preview URLs.
+- A branch's name says what is done on it, as the existing ones do
+  (`element/weather`, `docs/atlas-budget`): Simon finds them again by
+  name. Where a session is handed a made-up name (`claude/...`), open
+  one with a telling name instead and work there.
 - An element is a module: a spawn rule in `web/src/level.js` (tier chance
   x pacing x zone multiplier in `ZONES`), its art in `web/src/art/` (in
   the sprite style below), its sound in `web/src/audio.js`, and either bot
@@ -29,8 +33,8 @@ which only copies the two folders together). The design document
   stay in English.
 - Merge into `master` only when Simon says so, each time anew (`master`
   is the live site). Use a merge commit, and never delete a branch: they
-  and their preview URLs are kept for his videos. No pull request unless
-  he asks for one.
+  and their preview URLs are kept for his videos (unless he says of one
+  that it can go). No pull request unless he asks for one.
 - He plays on his iPhone and says what he saw, often at length and by
   voice. Nothing here can be played on a phone, Swift cannot be compiled
   here, and sound cannot be heard: say plainly what was only seen in

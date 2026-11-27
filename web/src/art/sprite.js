@@ -4,7 +4,9 @@ import { PX } from '../config.js';
 // offscreen canvas at PX logical pixels per art pixel. A sprite carries its
 // anchor (ax, ay) in logical pixels from the top-left so the renderer can
 // place it by foot / surface / center. At start-up gfx/atlas.js packs all
-// sprite canvases into one WebGL texture and adds a `tex` property to each.
+// sprite canvases into one WebGL texture, adds a `tex` property to each and
+// gives the canvases back (`canvas` is null from then on): what works on a
+// sprite's pixels (flipH, tint, a cut-out) does so while the art is built.
 //
 // The atlas keeps a sprite at art size, one texel to an art pixel, so what
 // is drawn here has to stay on the art grid: `p` and the tools below do,
