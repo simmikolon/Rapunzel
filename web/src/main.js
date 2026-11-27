@@ -14,7 +14,6 @@ import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
 import { Story, STORY } from './story.js';
 import { Perf, RES } from './perf.js';
-import { LORD } from './sidekick.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -74,7 +73,6 @@ class Game {
       this.world.stormFirst = Math.max(0, +this.dev.storm);
       this.world.stormClock.dur = this.world.stormFirst;      // (the round under way too: ?at= starts in it)
     }
-    if (this.dev.lord != null && this.dev.lord !== '' && isFinite(+this.dev.lord)) { LORD.on = +this.dev.lord > 0; if (LORD.on) LORD.delay = Math.min(1.5, +this.dev.lord); }      // ?lord= for this visit
     this.world.gusts = true;                                                          // a storm's gusts lean on the prince (weather.js)
     this.loadSave();
     if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit

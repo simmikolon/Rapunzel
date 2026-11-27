@@ -254,19 +254,31 @@ Everything proposed so far, by family. Status marks what exists; the rest
 is a pool to draw from, not a promise.
 
 **Companions**
-- ❓ Lord Springalot, the prince's sidekick (tried as a follower on
-  `element/springalot` and found confusing, see the decision log; `web/src/sidekick.js`, `web/src/art/lord.js`): a
-  child on a pogo pony of his own who does everything the prince does a
-  third of a second later, the same hops, boosts and somersaults, in
-  both modes and in both places. He has what the prince has, home-made:
-  a cooking pot for the crown, a towel for the cape, a piebald pony's
-  head on the stick. For the eye only: he stands on nothing, nothing
-  meets him, he asks no random number (the simulator's reports are as
-  they were), and he has no sound yet. `?lord=0.5` sets how far behind
-  he is, `?lord=0` leaves him at home. 💡 later: a choice on the title
-  of who leads (the other one follows); a small deed of his own. Lives
-  are not his: they are kept for the good fairy (💡 a short scene when
-  a life is lost in stages, she brings it and says "don't give up").
+- 🔜 Lord Springalot, the prince's sidekick, and his chimney (a trial on
+  `element/springalot-chimney`; `web/src/chimney.js`,
+  `web/src/art/chimney.js`, `web/src/art/lord.js`): a child on a pogo
+  pony of his own, with what the prince has, home-made (a cooking pot
+  for the crown, a towel for the cape). He is never in the picture
+  beside a prince who is steered: he has rooms of his own, and in them
+  he is the one played. The first is the chimney: a fireplace inside
+  the tower (he waits on its mantel), from its hearth a brick shaft
+  half as wide as the tower and 20 m high with walls that stop him,
+  ledges, kettles on the pot chain and iron dampers that are a ceiling
+  from below, and at the top a soot door back into the tower, where the
+  prince goes on that much higher. His hops are short and quick (0.68
+  of the prince's push: an apex of 3 m, a hop every 1.1 s). A room like
+  the treasury to the world: nobody in it, nothing crumbles, a bubble
+  for one who drops out of the picture, the suns count. For now a
+  fireplace stands only where `?place=inside&at=50&spawn=chimney` puts
+  one: no spawn rule yet, so the simulator's reports are as they were
+  and its bots do not know the room. No sound of its own yet.
+  💡 next: a spawn rule (and the stages), a second room, a choice on
+  the title of who climbs the tower. Lives are not his: they are kept
+  for the good fairy (💡 a short scene when a life is lost in stages,
+  she brings it and says "don't give up").
+  Tried before and dropped: the lord as a follower who copies the
+  prince a third of a second later (`element/springalot`, see the
+  decision log).
 
 **Enemies**
 - ✅ crow, ✅ spider, ✅ witch (dodge; deflected by a boost).
@@ -2968,3 +2980,49 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     the prince's kind in the picture while one of them is steered. What
     comes next for the lord is open: a place of his own, or a choice
     on the title.
+- 2026-11-27: Lord Springalot's chimney, a trial
+  (`element/springalot-chimney`). Simon, after the follower: what works
+  is a room only the lord can play, because he is small; begin with a
+  chimney.
+  - The treasury was the pattern, and the chimney is one to the world:
+    the place CHIMNEY has `vault` set, `world.vault` is the room (with
+    `chimney` and `half`, the walls), the doors are gates with `gold`
+    in and out and `chimney`. So the camera, the bubble, the ceiling,
+    "nobody in here" and the way back into the tower are the
+    treasury's code, and the stages will know the room once a door
+    stands in one.
+  - Who is played is the player's figure (`player.js` FIGURES, `be()`):
+    height, body width, and `jump`, which scales a platform's push and
+    the boost. For the prince it is 1, and a round with him is
+    bit for bit what it was. Gravity is the same for both: less push
+    under the same gravity is what makes a hop both shorter and
+    quicker (measured: apex 295 px, a hop every 1.13 s; the prince
+    648 px and 1.57 s).
+  - The shaft is written down by hand (`chimney.js` SHAFT), a hop and a
+    half between things (140 to 170 px under an apex of 295), mirrored
+    or not. Walls stop him (no way round the picture's edge in a
+    shaft). A damper reaches across more than half of it and is the
+    swing's rule (`solidBelow`): the way is up past its end. Nothing
+    hurts in there.
+  - The way in is a fireplace and not a small door: it says chimney by
+    itself, and a boy who climbs into the fireplace is the joke. He
+    waits on its mantel, hopping, and stands by the soot door once
+    they are out.
+  - Looks: brick as a ramp of its own; the first walls were too red and
+    too bright beside the shaft (they are half the picture) and were
+    taken down twice; ledges are the tower's pale stone so that what
+    he stands on reads; the iron was lost on the soot and is a step
+    lighter. The atlas grew from 1024 x 1021 to 1024 x 1056, the
+    sprites' own canvases at the start from 56 to 57 MB of the 80.
+  - A new check, `tools/checks/chimney.mjs`: in by the fireplace, the
+    hop, the wall, the damper, the bubble, up the shaft with a small
+    bot (13 s; it took 29 of 31 suns), out as the prince.
+  - The simulator's five reports on fixed seeds are exactly as they
+    were (`identity.sh`); `flow`, `stages`, `story`, `settings`,
+    `atlas`, `treasury_exit` and `treasury_camera` pass.
+  - The follower is not on this branch (`sidekick.js`, `?lord=`): it
+    stays on `element/springalot`.
+  - Seen in still pictures of a headless browser only. Nothing was
+    played: whether the short hop feels good, whether the shaft is too
+    easy or too short (20 m), whether the dampers are fun or a
+    nuisance, and how the walls look on the phone are Simon's to say.

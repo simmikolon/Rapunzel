@@ -13,6 +13,7 @@
 //   ?spawn=dark      (inside) with ?at: a dark stretch begins five metres above the start
 //   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
 //   ?spawn=vault     (inside) with ?at: a golden door to the treasury right above the start (vault1 to vault6: the room begins with that section)
+//   ?spawn=chimney   (inside) with ?at: a fireplace right above the start, the way into Lord Springalot's chimney (chimney.js)
 //   ?spawn=stairs    (inside) with ?at: a flight of stairs right above the start
 //   ?spawn=cat       (inside) the witch's cat on the next healthy ledge above the prince
 //   ?spawn=ghost     (inside) a ghost with its candle a few metres above the prince
@@ -35,7 +36,6 @@
 //   ?weather=snow    the weather outside for this visit: rain, storm, snow, blizzard, golden or clear (weather.js)
 //   ?storm=8         the endless tower's first storm draws up after so many seconds of the round (weather.js STORM_CLOCK)
 //   ?season=winter   as around Christmas, the lawn and the title snowed in (summer: not, whatever the date)
-//   ?lord=0.5        how far behind the prince Lord Springalot hops, in seconds (0: he stays at home; sidekick.js LORD)
 //   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
@@ -52,7 +52,7 @@ import { POWERS } from './powerups.js';
 export function devParams() {
   const q = new URLSearchParams(location.search);
   return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '',
-    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '', px: q.get('px') || '', weather: q.get('weather') || '', season: q.get('season') || '', storm: q.get('storm'), lord: q.get('lord') };
+    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '', px: q.get('px') || '', weather: q.get('weather') || '', season: q.get('season') || '', storm: q.get('storm') };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
@@ -69,6 +69,7 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
   const vault = /^vault(\d)?$/.exec(spawn);
   if (vault && world.place.inside) { world.level.nextVaultY = y + 100; if (vault[1]) world.level.forcePlan = +vault[1] - 1; }   // the first row above the start has a golden door
   else world.level.nextVaultY = Math.max(world.level.nextVaultY, y + 2500);              // not on top of the start
+  if (spawn === 'chimney' && world.place.inside) world.level.nextChimneyY = y + 100;   // the first row above the start has a fireplace: the way into the chimney
   if (spawn === 'stairs' && world.place.inside) world.level.forceLayout = 'stairsR';   // the row above the start is a flight of stairs
   // the flock a dozen metres up (so its stream is whole before he gets there), and no braid cut in its way
   if (spawn === 'flock') { world.level.nextFlockY = y + 1200; world.level.nextCutY = Math.max(world.level.nextCutY, y + 5000); }

@@ -75,6 +75,12 @@ export const PLAYER_W = 104;
 export const PLAYER_H = 232;
 export const PLAYER_BODY_W = 40;      // narrow collision box like the original (30 pt)
 export const PLAYER_FOOT_INSET = 0;   // pogo tip is the sprite bottom
+// Lord Springalot, who is played in his own rooms (chimney.js): smaller, and
+// his hops are short and quick (the same gravity, less push: 0.68 of the
+// prince's is an apex of 3 m instead of 6.5 and a hop a second).
+export const LORD_H = 168;
+export const LORD_BODY_W = 32;
+export const LORD_JUMP = 0.68;        // of the prince's push off a platform, and of his boost
 
 // Boost meter: 3 charges, refilled by landing on platforms and lanterns.
 // While boosting the prince is shielded: enemies he touches are knocked

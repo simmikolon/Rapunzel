@@ -1,13 +1,24 @@
 import {
   W, GRAVITY, JUMP_VY, BOOST_VY, MAX_FALL_SPEED, BONK_VY, HURT_VY,
   MOVE_SPEED, MOVE_ACCEL, MOVE_DECEL, TILT_SPEED,
-  PLAYER_W, PLAYER_H, PLAYER_BODY_W, BOOST_CHARGES, BOOST_REFILL_PER_LANDING, BOOST_COOLDOWN, BOOST_SHIELD_TIME,
+  PLAYER_W, PLAYER_H, PLAYER_BODY_W, LORD_H, LORD_BODY_W, LORD_JUMP, BOOST_CHARGES, BOOST_REFILL_PER_LANDING, BOOST_COOLDOWN, BOOST_SHIELD_TIME,
   MAX_HEARTS, INVULNERABLE_TIME, STOMP_VY, PX,
   POWER_TIME, POWER_WARN, POWER_GRACE, SUPER_JUMP_MUL, SUPER_BOOST_VY, SUPER_MAX_VY, SALTO_TIME,
   FEATHER_GRAVITY, FEATHER_MAX_FALL, CARRY_ABOVE, CARRY_VY, CARRY_VX,
 } from './config.js';
 import { approach, clamp, moveToward, sign, easeInOutCubic, TAU } from './util.js';
 import { rainbow, POWER_FX } from './powerups.js';
+
+// Who is played: the prince, or in his own rooms (chimney.js) Lord
+// Springalot, who is smaller and hops shorter and quicker. `jump` scales
+// what pushes him up (a platform's bounce, a boost).
+export const FIGURES = {
+  prince: { h: PLAYER_H, bodyW: PLAYER_BODY_W, jump: 1 },
+  lord: { h: LORD_H, bodyW: LORD_BODY_W, jump: LORD_JUMP },
+};
+// The lord's sprites (art/lord.js) for the poses below: he has no hurt frame, a bump on the head is wide eyes.
+const LORD_POSE = { standing: 'standing', bounceDown: 'bounceDown', bounceUp: 'bounceUp', jumpUp: 'jumpUp', falling: 'falling', boosting: 'boosting', hurt: 'falling' };
+const LORD_DRAW = { sx: 1, sy: 1, rot: 0, flip: false, alpha: 1 };
 
 // The prince. Position (x, y) is the tip of the pogo stick (feet), world
 // coordinates with y up. The state machine mirrors the original
@@ -16,8 +27,12 @@ import { rainbow, POWER_FX } from './powerups.js';
 export class Player {
   constructor(world) {
     this.world = world;
+    this.be('prince');
     this.reset(0, 0);
   }
+
+  // Who he is from now on (FIGURES): the world says so at a room's door.
+  be(who) { this.who = who; this.fig = FIGURES[who]; this.h = this.fig.h; this.bodyW = this.fig.bodyW; }
 
   reset(x, y) {
     this.x = x; this.y = y; this.prevY = y;
@@ -56,10 +71,10 @@ export class Player {
   }
 
   get feetY() { return this.y; }
-  get headY() { return this.y + PLAYER_H; }
-  get bodyLeft() { return this.x - PLAYER_BODY_W / 2; }
-  get bodyRight() { return this.x + PLAYER_BODY_W / 2; }
-  get rect() { return { x: this.bodyLeft, y: this.y + 8, w: PLAYER_BODY_W, h: PLAYER_H - 24 }; }
+  get headY() { return this.y + this.h; }
+  get bodyLeft() { return this.x - this.bodyW / 2; }
+  get bodyRight() { return this.x + this.bodyW / 2; }
+  get rect() { return { x: this.bodyLeft, y: this.y + 8, w: this.bodyW, h: this.h - 24 }; }
   get alive() { return this.state !== 'dead'; }
   // Knocks away what he touches: for a moment after a boost, and all through the star.
   get shielded() { return (this.shield > 0 || this.power === 'star') && this.state !== 'dead'; }
@@ -170,8 +185,10 @@ export class Player {
     // A storm's gust carries him along while it blows (weather.js; world.js windPush says how fast, 0 without gusts).
     const wind = this.world.windPush ? this.world.windPush() : 0;
     if (wind && this.state !== 'dead' && this.state !== 'standing') this.x += wind * dt;
-    // Screen wrap-around like the original (checkIfPlayerIsOutOfScreen).
-    if (this.x < -W / 2) this.x += W;
+    // Screen wrap-around like the original (checkIfPlayerIsOutOfScreen); a room with walls (the chimney) stops him at them.
+    const wall = this.world.walls;
+    if (wall) { const lim = wall - this.bodyW / 2; if (this.x < -lim) { this.x = -lim; if (this.vx < 0) this.vx = 0; } else if (this.x > lim) { this.x = lim; if (this.vx > 0) this.vx = 0; } }
+    else if (this.x < -W / 2) this.x += W;
     else if (this.x > W / 2) this.x -= W;
 
     if (this.y > this.maxY) this.maxY = this.y;
@@ -280,7 +297,7 @@ export class Player {
     this.world.onPowerEnd(this, kind);
   }
   // The golden spring makes every push-off stronger (a bow spring only up to SUPER_MAX_VY).
-  jumpVy(v) { return this.power === 'spring' ? Math.max(v, Math.min(v * SUPER_JUMP_MUL, SUPER_MAX_VY)) : v; }
+  jumpVy(v) { v *= this.fig.jump; return this.power === 'spring' ? Math.max(v, Math.min(v * SUPER_JUMP_MUL, SUPER_MAX_VY)) : v; }
   startSalto(dur) { this.salto = { t: 0, dur, dir: this.facing < 0 ? -1 : 1 }; }
 
   // What the power leaves in the air around him (looks only, so Math.random is fine).
@@ -309,7 +326,7 @@ export class Player {
     this.boost -= 1;
     this.boostCooldown = BOOST_COOLDOWN;
     const spring = this.power === 'spring';
-    this.vy = Math.max(this.vy, 0) * 0.45 + (spring ? SUPER_BOOST_VY : BOOST_VY);
+    this.vy = Math.max(this.vy, 0) * 0.45 + (spring ? SUPER_BOOST_VY : BOOST_VY) * this.fig.jump;
     this.landedOn = null;
     this.shield = BOOST_SHIELD_TIME;
     this.setState('boosting');
@@ -336,7 +353,7 @@ export class Player {
 
   // Head hit the underside of a plank swing.
   bonk(platform) {
-    this.y = platform.bottom - PLAYER_H;
+    this.y = platform.bottom - this.h;
     this.vy = BONK_VY;
     this.gentle = false;
     this.setState('bonk');
@@ -352,7 +369,7 @@ export class Player {
   // front of a trunk, at the screen's edge) the birds sweep him back over it,
   // so being turned back is never a fall.
   shoo(bottom, span = 0) {
-    const y = bottom - PLAYER_H;
+    const y = bottom - this.h;
     if (this.y - y < 70) this.y = Math.min(this.y, y);
     if (span && Math.abs(this.x) > span - 30) { this.x = Math.sign(this.x) * (span - 30); this.vx = 0; }
     this.vy = Math.min(this.vy, BONK_VY);
@@ -422,9 +439,10 @@ export class Player {
 
   // Where the sprite goes when it is turned by `flip`: it pivots at the feet,
   // so they are moved for the turn to go about the body's centre.
-  flipOffset(flip) { const r = PLAYER_H * 0.5; return flip ? [-Math.sin(flip) * r, Math.cos(flip) * r - r] : [0, 0]; }
+  flipOffset(flip) { const r = this.h * 0.5; return flip ? [-Math.sin(flip) * r, Math.cos(flip) * r - r] : [0, 0]; }
 
   draw(g, cam, art) {
+    if (this.who === 'lord') return this.drawLord(g, cam, art);
     const s = this.currentSprite(art);
     const t = this.idleT;
     const blink = this.invuln > 0 && this.state !== 'dead' && Math.floor(this.invuln * 14) % 2 === 0;
@@ -483,6 +501,18 @@ export class Player {
     // Draw the wrap-around twin when near the screen edge.
     if (this.x < -W / 2 + PLAYER_W) body(W);
     else if (this.x > W / 2 - PLAYER_W) body(-W);
+  }
+
+  // Lord Springalot, where he is the one played (his rooms have walls and
+  // nobody in them: no twin at the picture's edge, no power-up's look).
+  drawLord(g, cam, art) {
+    const o = LORD_DRAW, dead = this.state === 'dead';
+    const bob = this.state === 'standing' ? Math.sin(this.idleT * 3) * 0.03 : 0;
+    const [ox, oy] = this.flipOffset(dead ? 0 : this.flip);
+    const sx = cam.sx(this.x), sy = cam.sy(this.y);
+    if (this.shield > 0 && !dead) g.halo(sx, sy - this.h * 0.5, 110, '#ffc864', 0.5 * this.shield / BOOST_SHIELD_TIME, { glow: 1 });
+    o.sx = this.sx; o.sy = this.sy + bob; o.rot = dead ? this.spin : this.flip; o.flip = this.facing < 0;
+    g.blit(art.lord[LORD_POSE[this.pose()]], sx + ox, sy + oy, o);
   }
 }
 
