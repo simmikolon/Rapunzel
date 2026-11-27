@@ -265,7 +265,12 @@ is a pool to draw from, not a promise.
   half as wide as the tower and 20 m high with walls that stop him,
   ledges, kettles on the pot chain and iron dampers that are a ceiling
   from below, and at the top a soot door back into the tower, where the
-  prince goes on that much higher. His hops are short and quick (0.68
+  prince goes on that much higher. It is dark in there, and what is
+  seen has a light: his own, the two fires on the hearth, candle ends
+  in the walls' niches, the suns, the day at the top, and eyes. Who
+  lives in a chimney is shy, not dangerous: an owl whose eyes follow
+  him, a mouse that hides when he comes close, chicks that cheep, a
+  stork looking down from its nest on top. His hops are short and quick (0.68
   of the prince's push: an apex of 3 m, a hop every 1.1 s). A room like
   the treasury to the world: nobody in it, nothing crumbles, a bubble
   for one who drops out of the picture, the suns count. For now a
@@ -3026,3 +3031,54 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     played: whether the short hop feels good, whether the shaft is too
     easy or too short (20 m), whether the dampers are fun or a
     nuisance, and how the walls look on the phone are Simon's to say.
+- 2026-11-27: The chimney's looks (`element/springalot-chimney`). Simon
+  on the first pictures: not too massive, but loveless; nothing of what
+  is in a chimney, no detail, the walls reach far into the picture and
+  show it most; it could be darker; animals hiding in the shadow.
+  - Dark, with lights. The room has a darkness of its own
+    (`CHIMNEY.dark` 0.66, the dark rooms' pass in `world.js`
+    drawDarkness, which a room may now ask for) and the lord's light
+    is smaller in there (`CHIMNEY.lamp` 0.72). So the walls fall away
+    toward the picture's edges by themselves, and every light is a
+    place: two fires on firedogs on the hearth with sparks, candle
+    ends in niches, the suns, the day in the throat.
+  - Who lives there is shy, not dangerous, and never a bat or a
+    spider: those bite in the tower, and an ornament must not look
+    like one. An owl in a niche whose pupils follow him (the
+    painter's, as in the tower's pictures), a mouse with cheese that
+    is two eyes at the back of its niche when he comes close, chicks
+    that cheep when he passes, eyes in a hole where a brick is gone
+    that shut when he is near, and a pair nobody can put a name to.
+    At the top a stork looks down from the nest it has built on the
+    chimney, and nods.
+  - What is in a chimney: sausages and a ham on a rod in the smoke,
+    the sweep's brush forgotten on its rope (first drawn with
+    bristles as spikes: it read as a morning star, a hazard; now a
+    soft head of straw), iron rungs, a child's chalk on the soot (a
+    tally, a crown under the sun, a hobby horse and a heart), a
+    teddy bear somebody hid (one to a chimney; around Christmas a
+    stocking hangs beside it), cobwebs under ledges, steam over the
+    kettles, smoke and soot on their way up.
+  - The walls: brick smoked black toward the shaft, along a line that
+    is not ruled; the corners built of dressed stone, long and short
+    in turn (a step darker than the ledges, so that what he stands on
+    still reads); four tiles, mostly the plain one, so that the crack,
+    the iron tie and the mended patch do not come round like
+    wallpaper. The back has three (plain, bricks gone, a stripe the
+    brush has cleaned).
+  - What is where is written down when the room is furnished
+    (`backPieces`, `wallNiches`: a hash of the floor's height, no
+    random number): never the same twice running on a side, and
+    nothing on the back behind a thing he stands on. The first try
+    drew sausages right under a ledge.
+  - Everything is drawn by the room's painter and changes nothing a
+    round does: the simulator's reports are exactly as they were
+    (`identity.sh`), and the other checks pass, `chimney.mjs` among
+    them. The chimney's art is 41 sprites, 4 % of what is there at
+    the start: the atlas is 1024 x 1073 now (1056 before), the
+    sprites' own canvases 59 MB of the 80.
+  - Seen in still pictures only. For Simon to say on the phone:
+    whether it is dark enough or too dark outdoors, whether the eyes
+    and the animals are seen at a glance or only by looking for them,
+    and whether anything of it reads as something to stand on or to
+    fear.

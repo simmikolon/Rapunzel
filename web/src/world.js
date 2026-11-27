@@ -1046,14 +1046,15 @@ export class World {
   // of a dark stretch are out and register none); what one picks up
   // glimmers; and every creature has a light of its own, so nothing that
   // bites comes out of the black.
-  get darkness() { return this.place.inside && !this.vault ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }
+  get darkness() { return this.vault ? this.vault.dark || 0 : this.place.inside ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }      // (a room has its own: the chimney is dark, the treasury is not)
   drawDarkness(g) {
     const dk = this.darkness;
     if (dk <= 0.01) return;
     const cam = this.cam, pl = this.player;
     g.dark(dk * DARK_DEPTH, DARK_COLOR);
-    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 560, '#ffe6c4', 0.4);
-    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 340, '#fff0da', 0.9);
+    const mid = pl.who === 'lord' ? pl.h * 0.5 : 120, k = (this.vault && this.vault.lamp) || 1;      // (a room may make his light smaller)
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 560 * k, '#ffe6c4', 0.4);
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 340 * k, '#fff0da', 0.9);
     for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);
     for (const p of this.platforms) {
       if (p.y < cam.y - 200 || p.y > cam.top + 200) continue;
