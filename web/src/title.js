@@ -2,7 +2,7 @@ import { W, H } from './config.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
 import { tagButton, ribbonButton, drawBest, iconButton, speakerIcon, ZONES, SIGNS, signTravel, signShift, shiftZone } from './hud.js';
-import { drawSign, paint } from './sign.js';
+import { drawSign, paint, drawPlankTag } from './sign.js';
 import { WORD_ADVANCE } from './art/logo.js';
 
 // The title screen: a wooden sign over the idle world where the prince hops
@@ -50,11 +50,18 @@ export function drawTitle(g, game, t, o = {}) {
   tagButton(g, zone(ZONES.placeIn), 'INSIDE', { alpha, size: 12, on: climb === 'inside', icon: (gg, x, y, a) => gg.blit(art.sign.door, x - 12, y, { alpha: a }) });
   // controls, painted on the board below in one line: how the chosen steering goes
   const steer = game.settings.v.steer;
-  const how = !input.isTouch ? 'arrows steer, space boosts, T / O / I picks the climb'
-    : steer === 'tilt' && input.tiltEnabled ? 'lean the phone to steer, tap to boost'
-      : steer === 'swipe' ? 'slide a finger to steer, tap to boost' : 'hold a side to steer, tap the flame to boost';
+  const rocket = game.who === 'lord';      // (his boost is a rocket: it is held, not tapped)
+  const how = !input.isTouch ? `arrows steer, ${rocket ? 'hold space to fly' : 'space boosts'}, T O I climb, C who`
+    : steer === 'tilt' && input.tiltEnabled ? `lean the phone to steer, ${rocket ? 'hold to fly' : 'tap to boost'}`
+      : steer === 'swipe' ? `slide a finger to steer, ${rocket ? 'hold a second to fly' : 'tap to boost'}` : `hold a side to steer, ${rocket ? 'hold the flame to fly' : 'tap the flame to boost'}`;
   paint(g, how, W / 2, Y(660), 13, 'center', { alpha });
-  // the bottom row: the settings (steering, effects, sound, settings.js), and sound on or off beside them
+  // the bottom row: who climbs, a head on a board each, the chosen one with the gold rim; then the settings
+  // (steering, effects, sound, settings.js), and sound on or off
+  for (const [z, who] of [[ZONES.whoPrince, 'prince'], [ZONES.whoLord, 'lord']]) {
+    const q = zone(z), A = art[who], k = 0.56;      // (both heads at one scale: the prince's comes with his shoulders, so his picture is the wider)
+    drawPlankTag(g, q.x, q.y, q.w, q.h, { alpha, on: game.who === who, nails: false });
+    g.blit(A.life, q.x + q.w / 2 + (who === 'prince' ? -4 : 0), q.y + q.h - (who === 'prince' ? 3 : 9), { alpha, sx: k, sy: k });
+  }
   tagButton(g, zone(ZONES.settings), 'SETTINGS', { alpha, size: 14, icon: (gg, x, y, a) => gg.blit(art.sign.sparkle, x, y, { alpha: a }) });
   iconButton(g, zone(ZONES.titleSound), speakerIcon(game), alpha);
 }

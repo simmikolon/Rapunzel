@@ -1,4 +1,5 @@
-// Lord Springalot and his rocket, in the browser (?who=lord): he stands on the title's lawn and climbs the tower
+// Lord Springalot and his rocket, in the browser. The title's switch chooses who climbs (two boards, a head on each),
+// the choice is kept, and each has his own best heights. With ?who=lord he stands on the title's lawn and climbs the tower
 // with the prince's jump; the boost held down burns the rocket for as long as it is held, on the boost's charges
 // (a charge in half a second, and a charge burnt from rest lifts him some 9 m);
 // let go, it is out; a tap is a short burn; with nothing in the tank nothing burns; a landing brings half a charge
@@ -45,6 +46,7 @@ const start = async (page) => {
         if (air) t += 1 / 120;
         inp.boostHeld = air && t > from && t <= from + hold;
         inp.axis = 0; pl.x = p.x;
+        for (const q of w.pickups) if (q.kind === 'lantern') q.alive = false;      // (a lantern on his way would fill the tank again)
         w.update(1 / 120); w.enemies.length = 0;
         if (pl.thrusting) { burnt++; pose = pl.pose(); if (pl.shielded) shielded++; vyMax = Math.max(vyMax, pl.vy); }
         top = Math.max(top, pl.y - p.y);
@@ -67,10 +69,35 @@ const start = async (page) => {
   });
 };
 
+// --- the title's switch
+const tapZone = async (page, id) => {
+  const z = await page.evaluate((id) => { const g = window.game; g.hud.layout(g.mode); const z = g.input.buttonZones.find((q) => q.id === id); const r = g.canvas ? g.canvas.getBoundingClientRect() : document.getElementById('game').getBoundingClientRect(); return z ? [r.left + (z.x + z.w / 2) / 768 * r.width, r.top + (z.y + z.h / 2) / (768 * r.height / r.width) * r.height] : null; }, id);
+  if (!z) return false;
+  await page.mouse.click(z[0], z[1]);
+  await page.waitForTimeout(350);
+  return true;
+};
+const who = (page) => page.evaluate(() => { const g = window.game; return { who: g.who, onLawn: g.world.player.who, best: g.best, saved: JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => /bounce/i.test(k)) || '') || '{}').who || 'prince' }; });
+let page = await open('');
+await page.evaluate(() => { const g = window.game; g.allBests.prince.stages = 123; g.save(); });
+const first = await who(page);
+await tapZone(page, 'whoLord');
+const picked = await who(page);
+await page.screenshot({ path: `${OUT}/rocket_0switch.png` });
+await page.reload();      // (the same page: a new one has a store of its own)
+await page.waitForFunction(() => window.game && window.game.mode === 'title', null, { timeout: 30000 });
+await page.waitForTimeout(400);
+const kept = await who(page);
+await tapZone(page, 'whoPrince');
+const back = await who(page);
+check('the title\'s switch: the prince first, a tap and the lord is on the lawn, with his own best; kept at the next start; a tap back', first.who === 'prince' && first.best === 123 && picked.who === 'lord' && picked.onLawn === 'lord' && picked.best === 0 && picked.saved === 'lord' && kept.who === 'lord' && kept.onLawn === 'lord' && kept.best === 0 && back.who === 'prince' && back.onLawn === 'prince' && back.best === 123 && back.saved === 'prince', { first, picked, kept, back });
+await page.evaluate(() => localStorage.clear());
+await page.close();
+
 // --- the lord
-let page = await open('who=lord');
+page = await open('who=lord');
 const title = await page.evaluate(() => { const w = window.game.world, p = w.player; return { who: p.who, h: p.h, rocket: !!p.fig.rocket, jump: p.fig.jump }; });
-check('with ?who=lord it is the lord on the lawn: smaller, the same jump, a rocket', title.who === 'lord' && title.h === 168 && title.rocket && title.jump === 1, title);
+check('with ?who=lord it is the lord on the lawn: smaller, the same jump, a rocket', title.who === 'lord' && title.h === 184 && title.rocket && title.jump === 1, title);
 await page.screenshot({ path: `${OUT}/rocket_0title.png` });
 await page.close();
 

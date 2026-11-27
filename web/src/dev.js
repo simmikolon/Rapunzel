@@ -36,8 +36,7 @@
 //   ?weather=snow    the weather outside for this visit: rain, storm, snow, blizzard, golden or clear (weather.js)
 //   ?storm=8         the endless tower's first storm draws up after so many seconds of the round (weather.js STORM_CLOCK)
 //   ?season=winter   as around Christmas, the lawn and the title snowed in (summer: not, whatever the date)
-//   ?who=lord        Lord Springalot climbs the tower: the prince's jump, and a rocket for his boost (hold it; player.js FIGURES)
-//   ?build=tall      Lord Springalot's other build: taller, with longer legs and body under the same head (art/lord.js BUILDS), to choose by
+//   ?who=lord        Lord Springalot climbs the tower on this visit, whatever the title's switch says (prince: the prince; player.js FIGURES)
 //   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';

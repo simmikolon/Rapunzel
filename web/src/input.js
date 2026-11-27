@@ -56,6 +56,7 @@ export class Input {
     this.muteQueued = 0;
     this.fxQueued = 0;
     this.placeQueued = null;    // 'stages' | 'outside' | 'inside': T, O / I or left / right on the title
+    this.whoQueued = false;     // C on the title: the other one climbs
     this.anyInteraction = null; // callback for unlocking audio
     // Regions where a touch acts as a button rather than steering. Set by HUD.
     this.buttonZones = [];      // {id, x, y, w, h}
@@ -80,6 +81,7 @@ export class Input {
       if (e.code === 'Escape' || e.code === 'KeyP') this.pauseQueued++;
       if (e.code === 'KeyM') this.muteQueued++;
       if (e.code === 'KeyF') this.fxQueued++;
+      if (e.code === 'KeyC') this.whoQueued = true;
       if (e.code === 'KeyT') this.placeQueued = 'stages';
       if (e.code === 'KeyO' || e.code === 'ArrowLeft') this.placeQueued = 'outside';
       if (e.code === 'KeyI' || e.code === 'ArrowRight') this.placeQueued = 'inside';
@@ -236,6 +238,7 @@ export class Input {
   consumeMute() { const v = this.muteQueued > 0; this.muteQueued = 0; return v; }
   consumeFx() { const v = this.fxQueued > 0; this.fxQueued = 0; return v; }
   consumePlace() { const v = this.placeQueued; this.placeQueued = null; return v; }
+  consumeWho() { const v = this.whoQueued; this.whoQueued = false; return v; }
   consumeButton(id) {
     const i = this.buttonHits.indexOf(id);
     if (i < 0) return false;
@@ -245,5 +248,5 @@ export class Input {
   // Per-frame flags are cleared here. The boost queue is not: it is consumed
   // by the physics step that fires it, so a tap that arrives in a frame which
   // runs no step (high refresh rates) still counts in the next one.
-  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; this.placeQueued = null; }
+  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; this.placeQueued = null; this.whoQueued = false; }
 }

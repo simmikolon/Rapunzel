@@ -1,7 +1,8 @@
 # Working on Sir Bouncealot
 
 A prince on a pogo stick climbs Rapunzel's tower by her braid: he bounces
-by himself, the player steers and boosts. What is on `master`, what is
+by himself, the player steers and boosts (or his son does, Lord
+Springalot, with a rocket for the boost). What is on `master`, what is
 open and what nobody has tried yet is at the end of this file (Where we
 are, `docs/STATUS.md`): read it first.
 
@@ -140,10 +141,9 @@ which only copies the two folders together). The design document
   backing pixels per logical pixel, `?px=hard` scales the picture up
   with hard pixels, `?letters=0` has the browser paint every text as
   before the letter sheets (to compare).
-  Lord Springalot (a trial, `web/src/player.js` FIGURES): `?who=lord` has
-  him climb the tower instead of the prince, with the same jump and a
-  rocket for the boost (hold it). `?build=tall` shows his
-  other build (taller, older), to choose by.
+  Who climbs (`web/src/player.js` FIGURES; the title's switch): `?who=lord`
+  has Lord Springalot climb the tower on a visit, with the prince's jump and
+  a rocket for the boost (hold it); `?who=prince` the prince.
   The chimney (a hidden room, `web/src/chimney.js`):
   `?place=inside&at=50&spawn=chimney` puts a fireplace above the start;
   through it somebody small is played, up the shaft and out by its soot door.

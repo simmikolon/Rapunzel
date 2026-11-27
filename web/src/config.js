@@ -85,7 +85,7 @@ export const PLAYER_FOOT_INSET = 0;   // pogo tip is the sprite bottom
 // takes its time. The numbers are the simulator's (docs/DESIGN.md, the
 // decision log): with a weaker rocket or a narrower body its bots fell far
 // more often than with the prince.
-export const LORD_H = 168;
+export const LORD_H = 184;             // (his sprite's, art/lord.js)
 export const LORD_BODY_W = 40;        // what can be hit and what lands: as wide as the prince's, so a branch is the same branch for both
 export const LORD_W = 80;
 export const ROCKET_ACCEL = 3000;     // upward, over and above gravity, while it burns (px/s^2)

@@ -13,22 +13,20 @@ import { PAL as C } from '../palette.js';
 //
 // How he came to look like this is in docs/DESIGN.md (the decision log):
 // he was a small boy with a cooking pot on his head and a gap in his teeth
-// first. Two builds are drawn (BUILDS): `boy`, 20 x 42 art px, three
-// quarters of the prince's height with a head nearly as big; and `tall`,
-// 20 x 46, on a pogo stick as long as his father's, with longer legs and a
-// longer body under the same head, which is what makes him older and not
-// only bigger. The game has `boy` until Simon has chosen; ?build=tall shows
-// the other.
+// first, three quarters of the prince's height with a head nearly as big.
+// Now 20 x 46 art px (the prince is 26 x 58), on a pogo stick as long as
+// his father's, with long legs and a long body under a head no bigger
+// than a child's: that is what makes him sixteen and not only bigger.
+// Standing he is 43 px tall, the prince 50.
 //   H, coils     the sprite's height, the coils of the spring
 //   legH, bodyH  his legs and his body (art px)
 //   handle       the handlebar, this far under his shoulders
 //   rocket       the rocket's tip, this far over them
 //   buttons      where his tunic's gold buttons sit
-// and what player.js needs to know of him (px): halo, wingX, wingY (FIGURES).
-export const BUILDS = {
-  boy: { H: 42, coils: 4, legH: 4, bodyH: 8, handle: 3, rocket: 3, buttons: [2], halo: 116, wingX: 13, wingY: 100 },
-  tall: { H: 46, coils: 5, legH: 6, bodyH: 10, handle: 4, rocket: 2, buttons: [2, 5], halo: 126, wingX: 13, wingY: 114 },
-};
+// His height in the game is config.js LORD_H (H x 4), and where the rocket's
+// nozzle is while it burns is player.js FIGURES.lord.nozzleY: if he is
+// drawn anew, they follow.
+const B = { H: 46, coils: 5, legH: 6, bodyH: 10, handle: 4, rocket: 2, buttons: [2, 5] };
 const LORD = {
   shirt: '#d8503a', shirtDark: '#a53328',
   jeans: '#2865bf', jeansDark: '#143fa0',
@@ -42,7 +40,7 @@ const LORD = {
 
 // Where the rows of a pose are: the spring's top, the foot peg, his boots,
 // legs, body and head, from the build and how far the spring is extended.
-function rows(B, gap, legBend) {
+function rows(gap, legBend) {
   const bottom = B.H - 1, springTop = bottom - 3 - (B.coils - 1) * gap, pegY = springTop - 2, bootTop = pegY - 2;
   const legH = B.legH - legBend, legTop = bootTop - legH, bodyTop = legTop - B.bodyH;
   return { bottom, springTop, pegY, bootTop, legH, legTop, bodyTop, headTop: bodyTop - 9, handleY: bodyTop + B.handle, rocketTop: bodyTop - B.rocket };
@@ -53,10 +51,10 @@ function rows(B, gap, legBend) {
 // cape fly, where the goggles sit (lift: -2 pulled over his eyes, -1
 // slipped half over them, 0 on his forehead, up to 2 lifted into his
 // hair), and the rocket's flame (flame: 1 or 2, two lengths of it).
-function drawLord(t, B, o) {
+function drawLord(t, o) {
   const { p, line, poly } = t;
   const gap = o.springGap ?? 2;
-  const { bottom, springTop, pegY, bootTop, legH, legTop, bodyTop, headTop, handleY, rocketTop } = rows(B, gap, o.legBend ?? 0);
+  const { bottom, springTop, pegY, bootTop, legH, legTop, bodyTop, headTop, handleY, rocketTop } = rows(gap, o.legBend ?? 0);
 
   // --- Pogo stick: rubber tip and spring ---------------------------------
   p(8, bottom - 1, 4, 2, C.rubber);
@@ -193,12 +191,11 @@ function drawLord(t, B, o) {
 // on the draw call (`flip` here says so to player.js), which halves what he
 // costs. The same set as the prince's (art/prince.js), and two frames of
 // the rocket burning; every pose once more as a flat white shape for the
-// rims the power-ups draw. `life` is his head, for the lives in the HUD.
-// `fig` is what player.js needs of this build (FIGURES): his height, where
-// the rocket's nozzle is over his feet while it burns, the halo, the wings.
-export function buildLord(build = 'boy') {
-  const B = BUILDS[build] || BUILDS.boy, W = 20, H = B.H;
-  const mk = (o) => makeSprite(W, H, (t) => drawLord(t, B, o));
+// rims the power-ups draw. `life` is his head, for the lives in the HUD
+// and the title's switch.
+export function buildLord() {
+  const W = 20, H = B.H;
+  const mk = (o) => makeSprite(W, H, (t) => drawLord(t, o));
   const burn = (flame) => mk({ springGap: 3, lift: -2, hair: 'down', cape: 'side', eyes: 'squint', mouth: 'grit', flame });
   const right = {
     standing: mk({ springGap: 2, eyes: 'open', mouth: 'smile' }),
@@ -212,9 +209,7 @@ export function buildLord(build = 'boy') {
   const rightSil = {};
   for (const k of Object.keys(right)) rightSil[k] = tint(right[k], '#ffffff', 1);
   // his head: from over his hair down to his collar, out of his standing sprite (on the art grid)
-  const st = rows(B, 2, 0), y0 = st.headTop - 3, n = 13, life = makeCanvas(W * 4, n * 4);
+  const y0 = rows(2, 0).headTop - 3, n = 13, life = makeCanvas(W * 4, n * 4);
   life.getContext('2d').drawImage(right.standing.canvas, 0, y0 * 4, W * 4, n * 4, 0, 0, W * 4, n * 4);
-  const lit = rows(B, 3, 0);
-  const fig = { h: H * 4, nozzleY: (lit.bottom - (lit.rocketTop + 9)) * 4, halo: B.halo, wingX: B.wingX, wingY: B.wingY };
-  return { right, rightSil, flip: true, life: { canvas: life, w: W * 4, h: n * 4, ax: W * 2, ay: n * 4 }, lifeScale: 0.7, fig };
+  return { right, rightSil, flip: true, life: { canvas: life, w: W * 4, h: n * 4, ax: W * 2, ay: n * 4 }, lifeScale: 0.7 };
 }

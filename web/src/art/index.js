@@ -31,13 +31,12 @@ function lifeIcon(prince) {
   return { canvas, w, h, ax: w / 2, ay: h };
 }
 
-// `opts.build`: which of Lord Springalot's builds is drawn (art/lord.js BUILDS), for trying the other.
-export function buildAllArt(opts = {}) {
+export function buildAllArt() {
   const prince = buildPrince();
   prince.life = lifeIcon(prince);
   return {
     prince,
-    lord: buildLord(opts.build),
+    lord: buildLord(),
     chimney: buildChimney(),
     platforms: buildPlatforms(),
     creatures: buildCreatures(),

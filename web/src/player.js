@@ -19,14 +19,17 @@ import { rainbow, POWER_FX } from './powerups.js';
 //   h, bodyW, w   his height, the width of what can be hit, his sprite's width (px)
 //   jump    scales what pushes him up (a platform's bounce, a boost)
 //   halo, wingX, wingY   the boost shield's radius, where the feather's wings sit
-//   nozzleY  where his rocket's nozzle is over his feet while it burns (the lord's size is his sprites': art/lord.js `fig`)
+//   nozzleY  where his rocket's nozzle is over his feet while it burns (art/lord.js: its row in the burning pose)
 //   rocket  null, or his rocket's numbers (config.js ROCKET_*): accel, maxVy, burn, tap, shield
 const ROCKET = { accel: ROCKET_ACCEL, maxVy: ROCKET_MAX_VY, burn: ROCKET_BURN, tap: ROCKET_TAP, shield: ROCKET_SHIELD };
 export const FIGURES = {
   prince: { art: 'prince', h: PLAYER_H, bodyW: PLAYER_BODY_W, w: PLAYER_W, jump: 1, rocket: null, halo: 150, wingX: 16, wingY: 138 },
-  lord: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: 1, rocket: ROCKET, halo: 116, wingX: 13, wingY: 100, nozzleY: 88 },
-  kid: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: KID_JUMP, rocket: null, halo: 116, wingX: 13, wingY: 100, nozzleY: 88 },
+  lord: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: 1, rocket: ROCKET, halo: 126, wingX: 13, wingY: 114, nozzleY: 112 },
+  kid: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: KID_JUMP, rocket: null, halo: 126, wingX: 13, wingY: 114, nozzleY: 112 },
 };
+
+// Those of them who climb the tower: the title's switch chooses between them.
+export const CLIMBERS = ['prince', 'lord'];
 
 // The prince. Position (x, y) is the tip of the pogo stick (feet), world
 // coordinates with y up. The state machine mirrors the original

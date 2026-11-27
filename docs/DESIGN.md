@@ -256,35 +256,35 @@ is a pool to draw from, not a promise.
 **Who climbs**
 - ✅ Sir Bouncealot, the prince: his master ability is the boost, a tap
   that takes a charge and throws him up at once, with a shield.
-- 🔜 Lord Springalot (a trial on `element/springalot-rocket`;
-  `web/src/player.js` FIGURES, `web/src/art/lord.js`; `?who=lord`): a
-  second main character, the prince's son on a pogo pony of his own:
-  blond, his father's colours the other way round (a red tunic, a blue
-  cape), a flyer's goggles pushed up into his hair that he pulls over
-  his eyes when the rocket burns. He is sixteen; two builds are drawn
-  (`art/lord.js` BUILDS): the one in the game, three quarters of the
-  prince's height, and a taller one with longer legs and body under
-  the same head (`?build=tall`), for Simon to choose. The same jump as
-  the prince, so the tower is the same
-  tower for both; his master ability is a rocket, a firework tied to
-  his back. It burns for as long as the boost is held (a tap is a short
-  burn) on the boost's three charges, one in half a second, refilled as
-  the boost is (half a charge a landing, the lanterns). It pushes him
-  up at 3000 px/s² over gravity to 1500 px/s at the most, and while it
-  burns he knocks away what he touches. A charge burnt from rest lifts
-  him 9 m (a boost: 5.3 m), a full tank 24 m; but it is no sudden push:
-  out of a fall the boost is the stronger. Smaller to look at, as wide
-  as the prince where it counts (what lands, what is hit). In the
-  simulator a good bold run with him ends a little lower than with the
-  prince (median 350 m against 435 m outside, 424 m against 500 m
-  inside), with fewer hits (0.8 against 1.0 per 100 m) and more of
-  the deaths a fall (57 % against 42 %); a kid gets a little further
-  with him (see the decision log). No title choice yet, no unlocking,
-  no sound of its own (the boost's, when it is lit).
-  💡 next: the choice on the title and how he is unlocked; a third
-  later, the mother, Lady Sparkalot. Lives are nobody's ability: they
-  are kept for the good fairy (💡 a short scene when a life is lost in
-  stages, she brings it and says "don't give up").
+- ✅ Lord Springalot (`web/src/player.js` FIGURES, `web/src/art/lord.js`;
+  `element/springalot-rocket`): the second main character, the prince's
+  son, sixteen, on a pogo pony of his own: blond, his father's colours
+  the other way round (a red tunic, a blue cape), a flyer's goggles
+  pushed up into his hair that he pulls over his eyes when the rocket
+  burns. A little smaller than the prince (43 art px standing against
+  50), as wide where it counts (what lands, what is hit). The title's
+  switch chooses who climbs (two boards, a head on each, in the bottom
+  row; C on a keyboard; `?who=lord` for a visit); the choice is kept,
+  and each has his own best heights. The same jump as the prince, so
+  the tower is the same tower for both; his master ability is a rocket,
+  a firework tied to his back. It burns for as long as the boost is
+  held (a tap is a short burn) on the boost's three charges, one in
+  half a second, refilled as the boost is (half a charge a landing, the
+  lanterns). It pushes him up at 3000 px/s² over gravity to 1500 px/s
+  at the most, and while it burns he knocks away what he touches. A
+  charge burnt from rest lifts him 9 m (a boost: 5.3 m), a full tank
+  24 m; but it is no sudden push: out of a fall the boost is the
+  stronger. In the simulator he is the prince's match: a good bold run
+  ends at a median of 411 m outside (the prince 435 m) and 505 m inside
+  (500 m), with fewer hits (0.8 against 1.0 per 100 m) and a few more
+  of the deaths a fall (half of them against 42 %); a cautious kid gets
+  further with him (115 m against 72 m). See the decision log.
+  🔜 open: he is free to choose for now, to be unlocked once the game's
+  shape is settled; no sound of his own (the boost's when the rocket is
+  lit, nothing while it burns). 💡 a third later, the mother, Lady
+  Sparkalot. Lives are nobody's ability: they are kept for the good
+  fairy (💡 a short scene when a life is lost in stages, she brings it
+  and says "don't give up").
 - ❓ The chimney (`web/src/chimney.js`, `web/src/art/chimney.js`;
   `?place=inside&at=50&spawn=chimney`): a hidden room, built as Lord
   Springalot's and played: cool and funny for a moment, no fun as his
@@ -3228,3 +3228,45 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   - If the tall one is taken: his height for what hits him grows from
     168 to 184 px, so the simulator's numbers for the lord have to be
     read again (the prince's do not move).
+- 2026-11-27: Lord Springalot on master: the taller build, and a
+  switch on the title (`element/springalot-rocket`, merged). Simon: yes
+  to the taller build; a switch on the menu for who is played, plain for
+  now (unlocking comes when the game's shape is settled); then merge,
+  the branch stays.
+  - The tall build is him: `boy`, the choice of builds and `?build=`
+    are gone. His height in the game is 184 px (it was 168).
+  - The switch: two boards in the title's bottom row, a head on each
+    (the prince with his crown, the lord with his goggles), the chosen
+    one with the gold rim, as the climb's boards have it. Not a board
+    with a name: the row is full, and a head says it. The settings'
+    board gave up 16 px for them. A tap and he is on the lawn at once;
+    C on a keyboard. The choice is in the save (`who`), and each has
+    best heights of his own (`lord: { best, ... }` in the save, the
+    prince's where they were): a rocket's 600 m is not a boost's.
+  - What changes with him on screen: the line under the climb's boards
+    says how his boost goes ("hold the flame to fly"), and the HUD's
+    label over the flames reads `rocket`.
+  - The simulator again, with the taller figure, the same seeds as
+    before: outside a good bold run a median of 413 and 409 m (mean
+    530 and 535), 0.84 and 0.79 hits per 100 m, falls 46 % and 55 % of
+    the deaths (the prince: 447 and 424 m, mean 526 and 473, 0.98 and
+    1.03 hits, falls 47 % and 36 %). Inside, 120 runs: 505 m (mean
+    615), 0.8 hits, falls 49 % (the prince 500 m, 1.06, 24 %). A
+    cautious kid outside 115 m (72 m); a bold kid in stages into the
+    third stage 53 % (55 %). The taller figure fell less than the small
+    one had (359 and 342 m then): a fall is over when his head is out
+    of the bottom of the picture, and a taller head is out later. So
+    the two are a match for a good player, and the lord is the kinder
+    one to a weak one, who can hold himself in the air.
+  - Checks: the prince's five reports on fixed seeds are exactly as
+    they were; `rocket.mjs` plays the switch too (a tap, the lawn, the
+    save, the next start, a tap back, the bests apart). All the
+    others pass. The atlas is 1024 x 1087, the sprites' canvases at
+    the start 59 MB of the 80.
+  - Open, and on the status page: unlocking; the rocket's own sound;
+    who is played in the chimney (it is behind `?spawn=chimney` only,
+    and the figure in it is drawn as the lord); Lady Sparkalot.
+  - One commit of this line of branches (`b1e6cc7`, the follower's
+    first) carries a model's name in its trailer, against the rule in
+    `CLAUDE.md`; mending it would have meant rewriting a pushed branch,
+    which was refused. It is in master's history with the merge.
