@@ -14,7 +14,7 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
-import { frontAt, isWinter } from './weather.js';
+import { frontAt, isWinter, stormStage } from './weather.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
 import { stageAt } from './stages.js';
@@ -142,7 +142,12 @@ export class World {
   weatherKind() {
     if (this.place.inside) return 'clear';
     if (this.forceWeather) return this.forceWeather;
-    if (this.route) { const st = this.level.stage; return (st && st.weather) || (st && st.key === 'lawn' && this.winter ? 'snow' : 'clear'); }
+    if (this.route) {
+      const st = this.level.stage;
+      if (!st) return 'clear';
+      if (stormStage(this.weatherSeed || 0, st.n)) return 'storm';      // a storm comes over a stage now and then
+      return st.weather || (st.key === 'lawn' && this.winter ? 'snow' : 'clear');
+    }
     return frontAt(this.weatherSeed || 0, this.cam.y, this.winter);
   }
   get winter() { if (this._winter == null) this._winter = this.forceSeason ? this.forceSeason === 'winter' : isWinter(); return this._winter; }

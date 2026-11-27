@@ -706,7 +706,9 @@ is a pool to draw from, not a promise.
   `art/weather.js`), a first cut for the eye and the ear: rain (slanting
   streaks, a grey veil, a darker light, drops splashing on what one
   stands on), a storm (harder rain, gusts that come as white curls with
-  a line of wind and lean the rain over, sheet lightning and thunder),
+  a line of wind and lean the rain over, the colours taken half out of
+  the picture, and lightning that turns it black and white for an
+  instant, with thunder),
   snow (flakes swaying down, big ones close by, snow lying on branches,
   balconies, swings and the lawn) and the golden hour (a low sun behind
   the tower, its rays across the picture, dust shining in them). Each
@@ -714,15 +716,17 @@ is a pool to draw from, not a promise.
   and what falls is in three depths that go by at different speeds when
   the camera climbs. A stage has its weather (the rose wall the golden
   hour, the ivy wall and the deep forest rain, the masons' site and the
-  night sky snow, the crumbling tower a storm); the endless tower has
-  fronts, bands of 90 m with a weather or none, by the round's seed and
+  night sky snow, the crumbling tower a storm), and from the third
+  stage on a storm comes over an outside stage now and then, whatever
+  its own weather (three in ten, never two running); the endless tower
+  has fronts, bands of 90 m with a weather or none, by the round's seed and
   by what the height is like. `?weather=rain|storm|snow|golden|clear`
   for a visit. None inside the tower yet. Around Christmas (the first
   of December to Epiphany; `?season=winter` for a visit) the lawn is
   snowed in: the first stage, the endless tower's first band, the
   title, and the opening story all the way down her tower. For the eye
   and the ear but one thing: a storm's gust carries the prince
-  sideways while it blows, up to 180 px/s (his own steering is 560),
+  sideways while it blows, up to 230 px/s (his own steering is 560),
   and the curls show 0.9 s before it does. That is in the game's world
   only: the simulator's bots are not blown about yet, on purpose, so
   its reports stand until the push has been played and is measured.
@@ -1120,7 +1124,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
-| The weather | rain: 90 / 96 / 30 streaks far, mid, near (a storm half as many again); snow: 200 / 160 / 42 flakes; layers go by at 0.7, 0.95 and 1.25 to 1.3 of the camera's climb; a weather fades out and in over 2.2 s; a storm's gust: 3.5 to 6.5 s calm, 0.9 s in which the curls already show, 1.8 to 2.8 s of blow that carries the prince at up to 180 px/s (160 to 250 px a gust, by its length, if he does not steer against it); lightning every 5 to 14 s; winter: 1 December to 6 January; fronts in the endless tower are 90 m high, the first always clear |
+| The weather | rain: 90 / 96 / 30 streaks far, mid, near (a storm half as many again); snow: 200 / 160 / 42 flakes; layers go by at 0.7, 0.95 and 1.25 to 1.3 of the camera's climb; a weather fades out and in over 2.2 s; a storm's gust: 3.5 to 6.5 s calm, 0.9 s in which the curls already show, 1.8 to 2.8 s of blow that carries the prince at up to 230 px/s (200 to 320 px a gust, by its length, if he does not steer against it); a storm takes half the colour out of the picture; lightning every 5 to 14 s, black and white for some 0.2 s; a storm over an outside stage from the third on with a chance of 0.3; winter: 1 December to 6 January; fronts in the endless tower are 90 m high, the first always clear |
 | The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world; told again at a start: in the app every start, in a browser never (`STORY.again`, hours since it was last told) |
 | Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
 | The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
@@ -2704,3 +2708,29 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     weather of the lawn it ends on. A thin white edge on a green lawn
     did not read as snow: the whole lawn is white, with humps along
     its edge, hollows, and a few tufts of grass still showing.
+- 2026-11-27: The storm is the weather that plays (`element/weather`).
+  Simon, after playing it at length: the storm is the best of them,
+  because it is part of the game; it should come at random among the
+  stages now and then. Rain, snow and the rest stay. The wind on the
+  prince was right and could be a little more. When lightning strikes
+  the picture could go black and white for a moment; and a storm
+  should take the colour down, as grey weather does. Are the raindrops
+  single sprites? Decisions:
+  - A storm comes over an outside stage with a chance of three in ten,
+    from the third stage on, by the round's seed, never over two
+    outside stages running; so most rounds that get five outside
+    stages far meet one (77 of 100). In the endless tower storms are
+    in the fronts of every zone from 180 m on.
+  - The push goes from 180 to 230 px/s.
+  - The mood is a pass over the whole frame (`MoodFilter`): it takes
+    half the colour out while a storm is there, and in the lightning's
+    instant it turns the picture black and white and bright. Graded,
+    not stark: a first cut pulled light and dark apart so far that
+    nothing could be told for those frames. The pass is in the chain
+    only while a storm is, so it costs nothing the rest of the time;
+    during a storm it is one more full picture drawn, to be watched
+    on the phone.
+  - The rain: yes, every streak is a sprite, a white rectangle turned
+    the wind's way, in one batch with the rest (some 250 a frame, 400
+    in a storm). If the phone shows it, the streaks can be painted
+    once onto a few tiles that scroll, three sprites a layer.

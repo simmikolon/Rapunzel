@@ -11,8 +11,10 @@ import { nightAlpha, hash } from './altitude.js';
 // nothing hides a hazard).
 //
 //   rain    slanting streaks, a grey veil, a cooler, darker light
-//   storm   harder rain, gusts that come as white curls and lean the rain
-//           over, sheet lightning
+//   storm   harder rain, gusts that come as white curls, lean the rain over
+//           and carry the prince along, the colours taken half out of the
+//           picture, and lightning that turns it black and white for an
+//           instant
 //   snow    flakes swaying down, big ones close by, and snow lying on what
 //           one stands on and on the lawn
 //   golden  a low sun, its rays across the picture, dust shining in them
@@ -27,7 +29,7 @@ import { nightAlpha, hash } from './altitude.js';
 export const WEATHER = {
   clear: {},
   rain: { rain: 1, breeze: 0.22, sky: ['#2e3f4a', '#5b6e76'], skyMix: 0.6, light: ['#93a9bb', 0.2], haze: ['#6f8794', 0.1] },
-  storm: { rain: 1.5, breeze: 0.4, gusts: true, lightning: true, sky: ['#18212b', '#3b4954'], skyMix: 0.8, light: ['#7389a3', 0.32], haze: ['#4f6272', 0.13] },
+  storm: { rain: 1.5, breeze: 0.4, gusts: true, lightning: true, grey: 0.5, sky: ['#18212b', '#3b4954'], skyMix: 0.8, light: ['#7389a3', 0.32], haze: ['#4f6272', 0.13] },
   snow: { snow: 1, breeze: 0.12, caps: true, sky: ['#56677f', '#b4c2d2'], skyMix: 0.55, light: ['#d9e6ff', 0.12], haze: ['#c5d2e2', 0.07] },
   golden: { sun: true, sky: ['#5d6db0', '#ffbf6b'], skyMix: 0.75, light: ['#ffc481', 0.3] },
 };
@@ -53,7 +55,14 @@ const LAWN = { body: '#e7eef9', far: '#d6e2f2', hollow: '#bccde3', grass: '#3f8a
 const SUN = { x: 0.8, y: 0.3 };
 // A storm's gusts: so long calm, a moment in which the curls already show, then the blow.
 // `push`: how fast the blow carries the prince sideways at its height, px/s (his own steering is 560).
-export const GUSTS = { calm: [3.5, 6.5], warn: 0.9, blow: [1.8, 2.8], push: 180 };
+export const GUSTS = { calm: [3.5, 6.5], warn: 0.9, blow: [1.8, 2.8], push: 230 };
+
+// A storm comes over a stage now and then (the tower in stages): from the third stage on, an outside stage is a
+// stormy one with this chance, by the round's seed, whatever its own weather would be; never two outside stages
+// running. (The crumbling tower always has its storm.)
+export const STORMS = { from: 2, chance: 0.3 };
+const stormRoll = (seed, n) => n >= STORMS.from && (hash(seed + n * 977) % 1000) / 1000 < STORMS.chance;
+export const stormStage = (seed, n) => stormRoll(seed, n) && !stormRoll(seed, n - 2);
 
 // Around Christmas the lawn is snowed in, and the title with it: from the first of December to Epiphany.
 // (?season=winter|summer says which it is for a visit.)
@@ -75,10 +84,11 @@ export function frontAt(seed, y, winter) {
   const k = Math.floor(y / FRONT);
   if (k < 1) return winter ? 'snow' : 'clear';
   const r = hash(seed + k * 101) % 100, mid = (k + 0.5) * FRONT;
-  if (mid < 42000) return r < 22 ? 'rain' : r < 32 ? 'golden' : 'clear';
-  if (mid < 56000) return r < 16 ? 'rain' : r < 32 ? 'storm' : r < 46 ? 'golden' : 'clear';
-  if (mid < 70000) return r < 65 ? 'golden' : 'clear';
-  return r < 45 ? 'snow' : r < 55 ? 'storm' : 'clear';
+  const storm = k >= 2 ? 1 : 0;      // (no storm in the first 180 m)
+  if (mid < 42000) return r < 18 ? 'rain' : r < 18 + 14 * storm ? 'storm' : r < 42 ? 'golden' : 'clear';
+  if (mid < 56000) return r < 12 ? 'rain' : r < 34 ? 'storm' : r < 48 ? 'golden' : 'clear';
+  if (mid < 70000) return r < 55 ? 'golden' : r < 67 ? 'storm' : 'clear';
+  return r < 40 ? 'snow' : r < 56 ? 'storm' : 'clear';
 }
 
 export class Weather {
@@ -305,12 +315,15 @@ export class Weather {
     if (def.rain) this.rain(g, 2, cam, time, def.rain);
     if (def.snow) this.snow(g, 2, cam, time, def.snow);
     if (def.gusts) this.curls(g, time, true);
-    if (this.flash > 0) { const f = this.flash, a = (f > 0.75 ? 1 : f > 0.6 ? 0.25 : f / 0.6) * 0.4 * k; g.rect(0, 0, W, H, '#eaf2ff', a); }
+    // (the lightning itself is the mood's: drawLight)
   }
   // The weather's light over everything, on top of the time of day's.
   drawLight(g) {
     const def = this.def;
     if (def.light && this.amount > 0) g.lighting(def.light[0], def.light[1] * this.amount * (1 - 0.5 * clamp(this.flash, 0, 1)));
+    // the storm's grey, and the lightning: black and white for an instant, twice (a flicker, then the flash)
+    const f = this.flash, bolt = f > 0.75 ? 1 : f > 0.62 ? 0.15 : f / 0.62;
+    if (def.grey || f > 0) g.mood((def.grey || 0) * this.amount, f > 0 ? bolt * Math.min(1, this.amount * 1.5) : 0);
   }
 }
 // What snow lies on, and how far in from the landing box's ends.

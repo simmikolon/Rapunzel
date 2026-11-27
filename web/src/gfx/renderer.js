@@ -2,7 +2,7 @@ import { Application, Container, Sprite, Graphics, Text, TextStyle, Rectangle, C
 import { W, H, PX } from '../config.js';
 import { makeCanvas } from '../art/sprite.js';
 import { buildAtlas, makeGlowTexture, makeBeamTexture, makeFogTexture, canvasTexture } from './atlas.js';
-import { BloomFilter, CRTFilter } from './filters.js';
+import { BloomFilter, CRTFilter, MoodFilter } from './filters.js';
 
 // WebGL renderer (PixiJS) behind an immediate-mode facade. The game keeps
 // drawing everything every frame with calls like `g.blit(sprite, x, y)`; the
@@ -124,6 +124,9 @@ export class Renderer {
     this.layers.glow.c.filterArea = SCREEN();
     this.bloom = new BloomFilter(fx.bloom);
     this.crt = new CRTFilter(fx.crt);
+    this.moodFilter = new MoodFilter();      // the weather's mood (mood()): in the chain only while it is asked for
+    this.moodOn = false; this.linesOn = false;
+    this.moodGrey = 0; this.moodFlash = 0;
     this.cur = this.layers.bg;
     this.setPreset(DEFAULT_PRESET);
   }
@@ -138,10 +141,22 @@ export class Renderer {
   setFx(glow, lines) {
     this.layers.glow.c.visible = !!glow;
     this.layers.glow.c.filters = glow ? [this.bloom] : null;
-    this.root.filters = lines ? [this.crt] : null;
+    this.linesOn = !!lines;
+    this._rootFilters();
     this.preset = glow ? (lines ? 'full' : 'bloom') : lines ? 'lines' : 'off';
     return this.preset;
   }
+  // The passes over the whole frame: the weather's mood while there is one, then the scan lines.
+  _rootFilters() {
+    const f = [];
+    if (this.moodOn) f.push(this.moodFilter);
+    if (this.linesOn) f.push(this.crt);
+    this.root.filters = f.length ? f : null;
+  }
+  // The weather's mood for this frame: `grey` takes the colours out (0..1), `flash` is the lightning's instant of
+  // stark black and white (0..1). Asked for every frame it is wanted; a frame that does not ask has none, and
+  // the pass costs nothing then.
+  mood(grey, flash = 0) { this.moodGrey = Math.max(this.moodGrey, grey); this.moodFlash = Math.max(this.moodFlash, flash); }
   nextPreset() { return this.setPreset(PRESETS[(PRESETS.indexOf(this.preset) + 1) % PRESETS.length]); }
 
   // Backing store = logical size x scale (device pixels per logical pixel).
@@ -163,6 +178,7 @@ export class Renderer {
     // which the browser has to paint and hand to the GPU again
     this.stats.sprites = this.count.sprites; this.stats.texts = this.count.texts; this.stats.rasters = this.count.rasters;
     this.count.sprites = 0; this.count.texts = 0; this.count.rasters = 0;
+    this.moodGrey = 0; this.moodFlash = 0;
     this._keepSheets();
     for (const L of this.all) {
       L.ns = 0; L.ng = 0; L.z = 0; L.cur = null;
@@ -182,7 +198,10 @@ export class Renderer {
       for (let i = L.ng; i < L.gfx.length; i++) L.gfx[i].visible = false;
       for (const p of L.texts.values()) for (let i = p.n; i < p.list.length; i++) p.list[i].visible = false;
     }
-    if (this.preset === 'full') {
+    const mood = this.moodGrey > 0.004 || this.moodFlash > 0.004;
+    if (mood !== this.moodOn) { this.moodOn = mood; this._rootFilters(); }
+    if (mood) { const u = this.moodFilter.uniforms; u.uGrey = Math.min(1, this.moodGrey); u.uFlash = Math.min(1, this.moodFlash); }
+    if (this.linesOn) {
       // One scanline per art pixel row, but never finer than 4 device pixels
       // (a sub-3-px period only moires with the art); the phosphor mask is a
       // sub-pixel effect that only reads well at retina densities.
