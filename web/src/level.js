@@ -185,6 +185,7 @@ export class Level {
     this.gates = true;           // false: a tower without gates (the simulator's baseline)
     this.rngVault = rng;         // where the golden doors are, and which room is behind one
     this.vaults = true;          // false: a tower without treasuries (the simulator's baseline)
+    this.nextChimneyY = Infinity; // dev: a fireplace, the way into the chimney (chimney.js), in the first row from this height on
     this.forcePlan = null;       // dev: every treasury begins with this section (vault.js SECTIONS)
     this.route = null;           // the tower in stages (stages.js; the world sets it before reset()); null: the endless game
     this.stage = null;           // the stage being built: { n, place, from, to, end } with `end` its floor and door once they stand
@@ -535,7 +536,8 @@ export class Level {
     // A gate: its landing on one side, a healthy branch on the other.
     const gateRow = !flockRow && !this.flockPlan && !this.cutPlan && !dark && y >= this.nextGateY && y < GATE_TO;
     // A golden door: the same row as a gate's, on its own plan.
-    const vaultRow = !gateRow && !flockRow && !endRow && !doorRow && !this.flockPlan && !this.cutPlan && !dark && this.place.inside && y >= this.nextVaultY;
+    const hearth = y >= this.nextChimneyY;      // (a fireplace, the way into the chimney: a golden door's row, not on its plan)
+    const vaultRow = !gateRow && !flockRow && !endRow && !doorRow && !this.flockPlan && !this.cutPlan && !dark && this.place.inside && (hearth || y >= this.nextVaultY);
     const P = solid || doorRow || gateRow || vaultRow ? { ...P0, dry: 0, short: 0, enemy: 0 }      // a flock's floors, a gate's row, a stage's end: nothing crumbles, nothing small, nobody on them
       : dark ? { ...P0, dry: 0, short: 0, enemy: P0.enemy * 0.7, lantern: P0.lantern * 2.2 }   // in the dark: nothing crumbles, nothing small, fewer creatures, more lanterns
       : this.inCut(y) ? { ...P0, dry: 0 } : P0;                      // no crumbling branch where the ribbons will go
@@ -543,7 +545,12 @@ export class Level {
     if (this.inCut(y) && braidOnly(layout)) layout = this.pickLayout(T, y);   // chosen before the plan existed
     if (solid) layout = floorLayout(y, this.place);
     if (gateRow) { layout = this.rngGates.chance(0.5) ? 'gateL+branchR' : 'branchL+gateR'; this.nextGateY = y + this.rngGates.range(GATE_EVERY[0], GATE_EVERY[1]); this.nextVaultY = Math.max(this.nextVaultY, y + 1500); }
-    if (vaultRow) {
+    if (vaultRow && hearth) {
+      layout = 'vaultL+branchR'; this.hearthNext = true;
+      this.nextChimneyY = Infinity;
+      this.nextVaultY = Math.max(this.nextVaultY, y + 1500);
+      this.nextGateY = Math.max(this.nextGateY, y + 1500);
+    } else if (vaultRow) {
       layout = this.rngVault.chance(0.5) ? 'vaultL+branchR' : 'branchL+vaultR';
       this.nextVaultY = y + VAULT.rise + this.rngVault.range(VAULT_EVERY[0], VAULT_EVERY[1]);
       this.nextGateY = Math.max(this.nextGateY, y + 1500);        // two doors are not side by side
@@ -637,6 +644,7 @@ export class Level {
         // a gate in gold: it leads into the treasury
         kind = 'gate';
         opts.gold = 'in';
+        if (this.hearthNext) { opts.chimney = true; this.hearthNext = false; }      // not gold: a fireplace
         opts.side = slot[5];
         opts.x = opts.side === 'L' ? -GATE_X : GATE_X;
       }

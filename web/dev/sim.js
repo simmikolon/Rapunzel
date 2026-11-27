@@ -2,6 +2,7 @@
 // scripted player and collects attrition statistics. No rendering.
 import { buildAllArt } from '../src/art/index.js';
 import { World } from '../src/world.js';
+import { FIGURES } from '../src/player.js';
 import { GRAVITY, W, PX_PER_METER } from '../src/config.js';
 import { RNG } from '../src/util.js';
 import { startAt } from '../src/dev.js';
@@ -18,8 +19,18 @@ const SKILLS = {
 };
 
 class BotInput {
-  constructor() { this.axis = 0; this.usingTilt = false; this.boostQueued = 0; }
+  constructor() { this.axis = 0; this.usingTilt = false; this.boostQueued = 0; this.boostHeld = false; this.rocket = false; this.holdT = 0; }
   consumeBoost() { const v = this.boostQueued > 0; this.boostQueued = 0; return v; }
+  // Lord Springalot's rocket burns while the boost is held. Where the bot
+  // means "boost now" it holds instead: for as long as it takes to be on
+  // the way up at the rocket's top speed (longer the faster he falls), most
+  // of a charge at the least. Caught in a web its taps are taps, as the prince's.
+  tick(dt, p) {
+    if (!this.rocket || p.heldBy) return;
+    if (this.boostQueued > 0) { this.boostQueued = 0; this.holdT = Math.max(this.holdT, Math.min(1.4, Math.max(0.35, (1300 - p.vy) / 2100))); }
+    this.boostHeld = this.holdT > 0;
+    if (this.holdT > 0) this.holdT -= dt;
+  }
 }
 
 // The scripted player: steers toward the next platform, dodges enemies in
@@ -179,10 +190,24 @@ class Bot {
       } else if (canPunch) this.input.boostQueued++;
       else axis = threat.dx > 0 ? -1 : 1;               // steer away
     }
-    // Save a fall: nothing landable below in view.
-    if (p.vy < -300 && p.boost >= 1 && !below && p.boostCooldown <= 0) this.input.boostQueued++;
-    // Reach a platform that is just out of bounce range.
-    if (p.vy > 0 && p.vy < 500 && above && !below && above.y - p.y > apexLeft + 40 && p.boost >= 1) this.input.boostQueued++;
+    if (this.input.rocket) {
+      // With the lord's rocket (it is no sudden push: it has to be lit in time, and it can hold him in the air).
+      // Save a fall: nothing landable below in view, and he has begun to come down.
+      if (p.vy < -60 && p.boost >= 0.5 && !below && this.input.holdT <= 0) this.input.boostQueued++;
+      // Coming down beside what he aims for, too far off to steer onto it in the time left: a burn buys the time.
+      else if (p.vy < -200 && p.boost >= 0.5 && below && target === below && this.input.holdT <= 0) {
+        let dx = below.x - p.x; if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+        const dy = p.y - below.y, tl = (p.vy + Math.sqrt(p.vy * p.vy + 2 * GRAVITY * dy)) / GRAVITY;      // (vy is negative: the time until he is down at its height)
+        if (Math.abs(dx) - below.w / 2 > 440 * Math.max(0, tl) + 10) this.input.boostQueued++;
+      }
+      // Reach a platform that is just out of bounce range.
+      if (p.vy > 0 && p.vy < 500 && above && !below && above.y - p.y > apexLeft + 40 && p.boost >= 0.5 && this.input.holdT <= 0) this.input.boostQueued++;
+    } else {
+      // Save a fall: nothing landable below in view.
+      if (p.vy < -300 && p.boost >= 1 && !below && p.boostCooldown <= 0) this.input.boostQueued++;
+      // Reach a platform that is just out of bounce range.
+      if (p.vy > 0 && p.vy < 500 && above && !below && above.y - p.y > apexLeft + 40 && p.boost >= 1) this.input.boostQueued++;
+    }
     this.input.axis = axis;
   }
 }
@@ -192,9 +217,11 @@ function makeWorld(input) {
   return new World({ art, input, best: 0 });
 }
 
-export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null } = {}) {
+export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, maxTime = 900, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null, who = 'prince' } = {}) {
   const input = new BotInput();
   const world = makeWorld(input);
+  world.who = who;                  // who climbs: 'prince', or 'lord' with his rocket (player.js FIGURES)
+  input.rocket = who === 'lord';
   world.level.gates = gates;        // false: the tower without gates between outside and inside (the baseline)
   world.level.vaults = vaults;      // false: the tower without treasuries (the baseline before them)
   if (stages) world.route = { ...STAGES, lives: lives == null ? STAGES.lives : lives };   // the tower in stages (stages.js); `lives`: another number of them than the game's (Infinity: he goes on for ever)
@@ -239,6 +266,7 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   world.onRetry = (pl, st, cause) => { const k = st.n + 1; stats.retries++; stats.retriesByStage[k] = (stats.retriesByStage[k] || 0) + 1; stats.retryCauses[cause] = (stats.retryCauses[cause] || 0) + 1; };
   while (!world.over && t < maxTime && world.heightM < cap) {
     bot.step(STEP);
+    input.tick(STEP, world.player);
     world.update(STEP);
     t += STEP;
     if (world.player.power) stats.powerTime += STEP;
@@ -270,14 +298,20 @@ export function runOne({ seed = 1, skill = 'good', policy = 'bold', cap = 1500, 
   return stats;
 }
 
-export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null } = {}) {
+// `tune` tries other numbers for the one who climbs, for these runs: { bodyW, h, ... } of his figure (player.js FIGURES)
+// and `rocket: { accel, maxVy, burn, ... }` of his rocket. The report names them.
+export function runSims({ runs = 30, skill = 'good', policy = 'bold', cap = 1500, seedBase = 1, startM = 0, place = 'outside', gates = true, vaults = true, stages = false, lives = null, who = 'prince', tune = null } = {}) {
+  const fig = FIGURES[who], was = tune && { ...fig, rocket: fig.rocket && { ...fig.rocket } };
+  if (tune) { const { rocket, ...rest } = tune; Object.assign(fig, rest); if (rocket && fig.rocket) Object.assign(fig.rocket, rocket); }
   const all = [];
-  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates, vaults, stages, lives }));
+  for (let i = 0; i < runs; i++) all.push(runOne({ seed: seedBase + i, skill, policy, cap, startM, place, gates, vaults, stages, lives, who }));
   // the place is named in the report only when it is not the outside, so the outside's reports read as they always did
   const cfg = place === 'outside' ? { runs, skill, policy, cap, startM } : { runs, skill, policy, cap, startM, place };
   if (!gates) cfg.gates = false;
   if (!vaults && (place !== 'outside' || gates)) cfg.vaults = false;      // (the outside without gates has none to switch off)
   if (stages) cfg.stages = `${lives == null ? STAGES.lives : lives} lives`;
+  if (who !== 'prince') cfg.who = who;      // (named only when it is not the prince, so his reports read as they always did)
+  if (tune) { cfg.tune = tune; const { rocket, ...rest } = was; Object.assign(fig, rest); if (rocket) Object.assign(fig.rocket, rocket); }
   return summarize(all, cfg);
 }
 

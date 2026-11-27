@@ -1,4 +1,6 @@
 import { buildPrince } from './prince.js';
+import { buildLord } from './lord.js';
+import { buildChimney } from './chimney.js';
 import { makeCanvas } from './sprite.js';
 import { buildPlatforms } from './platforms.js';
 import { buildCreatures } from './creatures.js';
@@ -34,6 +36,8 @@ export function buildAllArt() {
   prince.life = lifeIcon(prince);
   return {
     prince,
+    lord: buildLord(),
+    chimney: buildChimney(),
     platforms: buildPlatforms(),
     creatures: buildCreatures(),
     tiles: buildTiles(),

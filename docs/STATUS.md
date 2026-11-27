@@ -6,14 +6,16 @@ why of everything is in `docs/DESIGN.md` (the catalogue of elements in
 section 7, the numbers in section 10, the decision log in section 12,
 newest last). Bring this page up to date with every merge into `master`.
 
-As of 2026-11-27, `master` at "Merge element/hud-pixel" (the round's
-controls in pixels).
+As of 2026-11-27, `master` at "Merge element/springalot-rocket" (Lord
+Springalot, a second main character with a rocket).
 
 ## The game
 
 Sir Bouncealot, a prince on a pogo stick, climbs Rapunzel's tower by her
 braid: he bounces by himself, the player steers and boosts. Three hearts,
-enemies to stomp or dodge, power-ups in soap bubbles, suns to collect. The
+enemies to stomp or dodge, power-ups in soap bubbles, suns to collect. Who
+climbs is a switch on the title: the prince, or his son Lord Springalot,
+who has a rocket for the boost. The
 title offers three climbs: TOWER (the tower in stages, in and out through
 its doors, with three lives; the default), OUTSIDE and INSIDE (endless, in
 one place). Live at <https://www.bouncealot.de> (landing page at `/`, the
@@ -22,6 +24,18 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
 
 ## On master, newest first
 
+- **Lord Springalot** (`player.js` FIGURES, `art/lord.js`): a second main
+  character with the prince's jump and a master ability of his own, a
+  rocket that burns while the boost is held, on the boost's three charges
+  (the HUD's flames are the tank). The title's switch (two heads in its
+  bottom row) chooses who climbs; the choice and each one's best heights
+  are kept. In the simulator the two are a match (`tools/analyze.mjs` takes
+  who climbs as its twelfth argument). Simon played him and chose his
+  looks: sixteen, blond, goggles.
+- **The chimney, hidden** (`chimney.js`): a room behind a fireplace inside
+  the tower, dark, with a figure that hops short and quick. No spawn rule:
+  only `?place=inside&at=50&spawn=chimney` builds one. Played, and found no
+  fun as Lord Springalot's part; kept as an extra for somebody else.
 - **The round's controls in pixels** (`art/hud.js`, `drawBoost` in
   `hud.js`): the boost's charges as three flames (burning, half, out),
   its button a wooden hoop around a dark glass with the big flame, sound
@@ -41,7 +55,7 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   device in a browser, at every launch in the app.
 - **Performance** (`docs/plans/performance.md`): letters from sheets, the
   picture drawn at one backing pixel per logical pixel, lines as sprites,
-  the atlas at art size (1024 x 1021), the sprites' own canvases given
+  the atlas at art size (1024 x 1087 now), the sprites' own canvases given
   back once it is packed. On the iPhone Air frames over 20 ms went from
   6.1 % to 1.8 % of a round; `?perf=1` shows a readout.
 - **The tower in stages** (`stages.js`): thirteen themes with their own
@@ -50,13 +64,22 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
 
 ## Open
 
+- **Lord Springalot, what is left:** he is free to choose; Simon wants the
+  characters unlocked once the game's shape is settled. The rocket has no
+  sound of its own (the boost's when it is lit, nothing while it burns).
+  A third character is thought of, the mother, Lady Sparkalot; and a good
+  fairy who brings a life in stages. The figure in the chimney is drawn as
+  the lord and is to be somebody else (a chimney sweep was suggested).
+- **`stages.mjs` can fail by chance** (once in five runs here): its prince
+  sometimes hops through the stage's door by himself before the check
+  looks at the camera. Run it again; the check wants mending.
 - **The simulator does not know the wind.** A storm's gust pushes the
   prince in the game's world only (`world.gusts`); the bots are not blown
   about, so the reports in `tools/checks/baseline/` and every hits-per-100 m
   figure leave storms out. To do: switch it on in `web/dev/sim.js`, teach
   the bots to hold against it, measure, and set the baselines anew on
   purpose.
-- **Performance, what is left:** the sprites' own canvases (55 MB) are
+- **Performance, what is left:** the sprites' own canvases (59 MB) are
   given back once the atlas is packed, but are all there while the game
   starts (`tools/checks/atlas.mjs` keeps a budget of 80 MB on that), and
   what the phone gains was not read (Xcode's memory gauge, before and
@@ -76,6 +99,9 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
 ## Not tried, or only by eye
 
 - Only the iPhone Air has been played and measured; no older phone.
+- Lord Springalot's rocket was played by Simon on the phone and found
+  good; its numbers are the simulator's, whose bots are poor pilots. The
+  title's switch and his taller build were seen in still pictures only.
 - The weather's sounds and the settings were written without a device to
   hear or hold; Simon has played them and found them good, nothing was
   measured.

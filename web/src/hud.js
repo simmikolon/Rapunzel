@@ -77,9 +77,12 @@ export const ZONES = {
   placeTour: { id: 'placeTour', x: W / 2 - 268, y: 580, w: 168, h: 52 },
   placeOut: { id: 'placeOut', x: W / 2 - 84, y: 580, w: 168, h: 52 },
   placeIn: { id: 'placeIn', x: W / 2 + 100, y: 580, w: 168, h: 52 },
-  // the bottom row: the settings' sign (settings.js), and sound on or off beside it
-  settings: { id: 'settings', x: W / 2 - 188, y: 688, w: 300, h: 56 },
-  titleSound: { id: 'sound', x: W / 2 + 132, y: 688, w: 56, h: 56 },
+  // the bottom row: who climbs (two boards, a head on each: the prince, Lord Springalot), the settings' sign
+  // (settings.js), and sound on or off
+  whoPrince: { id: 'whoPrince', x: W / 2 - 254, y: 688, w: 64, h: 56 },
+  whoLord: { id: 'whoLord', x: W / 2 - 182, y: 688, w: 64, h: 56 },
+  settings: { id: 'settings', x: W / 2 - 102, y: 688, w: 284, h: 56 },
+  titleSound: { id: 'sound', x: W / 2 + 198, y: 688, w: 56, h: 56 },
   // on the game over's and the pause's sign
   again: { id: 'again', x: W / 2 - 272, y: 684, w: 544, h: 88 },
   menu: { id: 'menu', x: W / 2 - 112, y: 808, w: 224, h: 56 },
@@ -144,7 +147,7 @@ export class HUD {
     if (mode === 'title') {
       // (the settings' sign, while it is open, hangs in the title's place with boards of its own)
       if (this.game.settings.open) zones.push(...this.game.settings.zones());
-      else zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.settings), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn), shiftZone(ZONES.story));
+      else zones.push(shiftZone(ZONES.play), shiftZone(ZONES.titleSound), shiftZone(ZONES.settings), shiftZone(ZONES.placeTour), shiftZone(ZONES.placeOut), shiftZone(ZONES.placeIn), shiftZone(ZONES.story), shiftZone(ZONES.whoPrince), shiftZone(ZONES.whoLord));
     }
     if (mode === 'gameover') zones.push(ZONES.sound, shiftZone(ZONES.again), shiftZone(ZONES.menu));
     input.buttonZones = zones;
@@ -163,7 +166,7 @@ export class HUD {
     if (stage) {
       g.text(`stage ${stage.n}`, 28, top + 196, 16, '#cfe8e3');
       // and his lives: a little prince for each he still has, this one included
-      if (isFinite(world.lives)) for (let i = 0; i < world.lives; i++) g.blit(art.prince.life, 44 + i * 44, top + 258, { sx: 0.5, sy: 0.5 });
+      if (isFinite(world.lives)) for (let i = 0, A = art[world.who === 'lord' ? 'lord' : 'prince'], k = A.lifeScale || 0.5; i < world.lives; i++) g.blit(A.life, 44 + i * 44, top + 258, { sx: k, sy: k });      // (his head, whoever climbs)
     }
     // Hearts
     for (let i = 0; i < MAX_HEARTS; i++) {
@@ -216,17 +219,17 @@ export class HUD {
     const denied = pl.boostDenied > 0;
     const shake = denied ? (Math.floor(pl.boostDenied * 30) % 2 ? 4 : -4) : 0;
     const bx = 28, by = H - 52 - SAFE.bottom;
-    g.text('boost', bx, by - 64, 14, denied ? '#ff9ab8' : '#cfe8e3');
+    g.text(pl.fig.rocket ? 'rocket' : 'boost', bx, by - 64, 14, denied ? '#ff9ab8' : '#cfe8e3');
     for (let i = 0; i < BOOST_CHARGES; i++) {
       const part = pl.boost - i, x = bx + 20 + i * 48;
-      if (part >= 1) {
+      if (part >= 0.75) {      // (the prince's charges come in halves; the lord's rocket burns them down by degrees)
         const hop = t - f.lit[i] < 0.14;
         g.blit(A.flame[Math.floor(t * 5 + i * 0.7) % 2], x, by - (hop ? 8 : 0), { glow: hop ? 1 : 0.5 });
-      } else if (part > 0) g.blit(A.flameHalf, x + shake, by, { glow: 0.2 });
+      } else if (part >= 0.25) g.blit(A.flameHalf, x + shake, by, { glow: 0.2 });
       else g.blit(A.flameOff, x + shake, by);
     }
     if (!this.game.input.isTouch) return;
-    const z = ZONES.boost, can = pl.boost >= 1;
+    const z = ZONES.boost, can = pl.fig.rocket ? pl.boost > 0.02 : pl.boost >= 1;
     const down = pl.boostCooldown > 0;
     const cx = z.x + z.w / 2 + (can ? 0 : shake), cy = z.y + z.h / 2 + (down ? 4 : 0);
     if (!down) g.blit(A.hoop, cx + 4, cy + 8, { tint: '#000000', alpha: 0.25 });

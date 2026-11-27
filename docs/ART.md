@@ -12,8 +12,8 @@ it, change the rule here and log it in `docs/DESIGN.md`. Don't make the
 sprite fit the rule.
 
 ## Reference and counterexample
-- Reference: the prince, Rapunzel (the sign portrait), the braid, the bows
-  and ribbons, the spider, the squirrel, the cloud platforms.
+- Reference: the prince, Lord Springalot, Rapunzel (the sign portrait), the
+  braid, the bows and ribbons, the spider, the squirrel, the cloud platforms.
 - Counterexample: the first stork and sky lanterns (redrawn on 2026-11-17,
   see the decision log). The stork had realistic proportions (long neck,
   long legs, thin wings), no face (a one-pixel eye), a big white body
@@ -35,9 +35,10 @@ sprite fit the rule.
 - Every sprite reads against the dark teal and night backgrounds by its
   brightness and colour alone. A dark sprite (crow, spider, witch) needs a
   lighter highlight plane. A hazard must read as a hazard at a glance.
-- The prince (26 x 58) is the scale. Creatures are smaller (squirrel
-  18 x 15, crow 18 x 14, spider 16 x 12). Only a threat his own size (the
-  guard, the witch) is as big as he is.
+- The prince (26 x 58) is the scale; his son Lord Springalot (20 x 46) is
+  a little smaller. Creatures are smaller (squirrel 18 x 15, crow 18 x 14,
+  spider 16 x 12). Only a threat his own size (the guard, the witch) is as
+  big as he is.
 - One light per sprite: top edges lit, undersides shaded. Side light
   follows the scene: the tower is lit from the upper left, tree trunks from
   their inner edge. No pillow shading.
@@ -79,9 +80,9 @@ sprite fit the rule.
 
 ## What a sprite costs
 - Every sprite is drawn four times its art size on a canvas of its own:
-  64 bytes to an art pixel, 55 MB for all of them (2026-11-27). They are
+  64 bytes to an art pixel, 59 MB for all of them (2026-11-27). They are
   all there together while the game starts and are given back once the
-  atlas is packed (kept at art size, 1024 x 1021), so a sprite costs at
+  atlas is packed (kept at art size, 1024 x 1087), so a sprite costs at
   the start, not in a round. `node tools/checks/atlas.mjs` prints both,
   says where the size goes and fails past its budget of 80 MB at the
   start, or if a sprite still holds its canvas afterwards.

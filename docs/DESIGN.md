@@ -253,6 +253,53 @@ build them. Each zone: elements, look, set piece.
 Everything proposed so far, by family. Status marks what exists; the rest
 is a pool to draw from, not a promise.
 
+**Who climbs**
+- ✅ Sir Bouncealot, the prince: his master ability is the boost, a tap
+  that takes a charge and throws him up at once, with a shield.
+- ✅ Lord Springalot (`web/src/player.js` FIGURES, `web/src/art/lord.js`;
+  `element/springalot-rocket`): the second main character, the prince's
+  son, sixteen, on a pogo pony of his own: blond, his father's colours
+  the other way round (a red tunic, a blue cape), a flyer's goggles
+  pushed up into his hair that he pulls over his eyes when the rocket
+  burns. A little smaller than the prince (43 art px standing against
+  50), as wide where it counts (what lands, what is hit). The title's
+  switch chooses who climbs (two boards, a head on each, in the bottom
+  row; C on a keyboard; `?who=lord` for a visit); the choice is kept,
+  and each has his own best heights. The same jump as the prince, so
+  the tower is the same tower for both; his master ability is a rocket,
+  a firework tied to his back. It burns for as long as the boost is
+  held (a tap is a short burn) on the boost's three charges, one in
+  half a second, refilled as the boost is (half a charge a landing, the
+  lanterns). It pushes him up at 3000 px/s² over gravity to 1500 px/s
+  at the most, and while it burns he knocks away what he touches. A
+  charge burnt from rest lifts him 9 m (a boost: 5.3 m), a full tank
+  24 m; but it is no sudden push: out of a fall the boost is the
+  stronger. In the simulator he is the prince's match: a good bold run
+  ends at a median of 411 m outside (the prince 435 m) and 505 m inside
+  (500 m), with fewer hits (0.8 against 1.0 per 100 m) and a few more
+  of the deaths a fall (half of them against 42 %); a cautious kid gets
+  further with him (115 m against 72 m). See the decision log.
+  🔜 open: he is free to choose for now, to be unlocked once the game's
+  shape is settled; no sound of his own (the boost's when the rocket is
+  lit, nothing while it burns). 💡 a third later, the mother, Lady
+  Sparkalot. Lives are nobody's ability: they are kept for the good
+  fairy (💡 a short scene when a life is lost in stages, she brings it
+  and says "don't give up").
+- ❓ The chimney (`web/src/chimney.js`, `web/src/art/chimney.js`;
+  `?place=inside&at=50&spawn=chimney`): a hidden room, built as Lord
+  Springalot's and played: cool and funny for a moment, no fun as his
+  part (see the decision log). It stays, for somebody else: a
+  fireplace inside the tower, from its hearth a brick shaft half as
+  wide as the tower and 20 m high, dark, with walls that stop him,
+  ledges, kettles on the pot chain and iron dampers that are a ceiling
+  from below, and a soot door back into the tower that much higher.
+  Who is played in it hops short and quick (0.68 of the prince's push)
+  and is drawn as the lord for now (`kid` in FIGURES); who that is to
+  be is open (💡 a little chimney sweep). No spawn rule, so the
+  simulator's bots do not know the room.
+  Tried before and dropped: the lord as a follower who copies the
+  prince a third of a second later (`element/springalot`).
+
 **Enemies**
 - ✅ crow, ✅ spider, ✅ witch (dodge; deflected by a boost).
 - ✅ squirrel: sits on a healthy branch nibbling an acorn, patrols it,
@@ -2902,3 +2949,324 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     was seen: the flicker's pace, the hop and the shake are Simon's to
     judge on the phone. The atlas grew from 1024 x 1009 to 1024 x 1021.
   - Simon looked at it: all good as it is. Merged.
+- 2026-11-27: Lord Springalot, a trial (`element/springalot`). Simon:
+  the game began with his daughter (Rapunzel) and himself (the prince);
+  his son is to be in it as the prince's sidekick, Lord Springalot, on a
+  pogo horse like his father's.
+  - Three ways were weighed: a companion who climbs by himself (own
+    physics: he needs a way through the rows, takes dry branches away,
+    and "which one am I" on 768 px), a choice on the title (cheap, but
+    then he replaces the prince and is never beside him), stages of his
+    own (the doors are there for a handover, but the player loses the
+    choice and every stage is tuned twice).
+  - Tried first on paper: he catches the prince once when he falls,
+    called by 100 suns. Simon: that competes with the lives of the
+    stages, and lives are meant for a good fairy later. Dropped.
+  - Built: he copies. The prince's way is written down step by step
+    (typed arrays, 256 steps, nothing allocated) and the lord is drawn
+    where the prince was 0.34 s ago in the pose he had there. That
+    needs no way-finding and no rule of its own in either mode, he
+    never falls beside a branch, and who the player is stays plain: the
+    one in front, the bigger one. Put somewhere else (a door, a lost
+    life, a new round) the prince is more than 320 px from his last
+    step, and the lord is there with him.
+  - So the two are not one figure when they hop on the spot, he keeps
+    34 px behind the prince's back in the round and stands 96 px beside
+    him on the lawn before it. Where the prince is hurt or knocked out
+    the lord does not copy that: wide eyes, the pot off his head.
+    Under the cloak he is as pale as the prince; the star's rim and the
+    feather's wings are the prince's alone.
+  - The sprite (20 x 42 art px, six poses, drawn to the left with
+    `flip`): what moves is the pot, slipped over his eyes on a landing
+    and off his head in a fall, its handle and the towel. The pony was
+    brown at first and was lost on the red shirt: piebald now.
+  - The simulator's five reports on fixed seeds are exactly as they
+    were (`identity.sh`); `flow`, `stages`, `story`, `settings` and
+    `atlas` pass. The atlas is 1024 x 1021 as before, the sprites' own
+    canvases 56 MB of the 80 at the start.
+  - Seen in still pictures of a headless browser only: the title, a
+    round outside (the rose wall, the deep forest), the dark rooms, the
+    cloak, the golden spring, a stage with a fall back to its door.
+    Nothing moving was seen. Simon's to judge on the phone: whether two
+    hoppers make the picture richer or restless, whether 0.34 s is the
+    right distance, how it looks when he lands on a dry branch that has
+    just crumbled under the prince, and in the treasury's bubble (he
+    rises beside it without one).
+  - Simon played it: the mechanism works and the sprite is good, but it
+    does not work as a game. With two pogo figures in the picture one
+    no longer knows which of them one is, and plays worse for it. The
+    copying sidekick is dropped (it stays on this branch to look at;
+    `?lord=0` plays without him). What it taught: never two figures of
+    the prince's kind in the picture while one of them is steered. What
+    comes next for the lord is open: a place of his own, or a choice
+    on the title.
+- 2026-11-27: Lord Springalot's chimney, a trial
+  (`element/springalot-chimney`). Simon, after the follower: what works
+  is a room only the lord can play, because he is small; begin with a
+  chimney.
+  - The treasury was the pattern, and the chimney is one to the world:
+    the place CHIMNEY has `vault` set, `world.vault` is the room (with
+    `chimney` and `half`, the walls), the doors are gates with `gold`
+    in and out and `chimney`. So the camera, the bubble, the ceiling,
+    "nobody in here" and the way back into the tower are the
+    treasury's code, and the stages will know the room once a door
+    stands in one.
+  - Who is played is the player's figure (`player.js` FIGURES, `be()`):
+    height, body width, and `jump`, which scales a platform's push and
+    the boost. For the prince it is 1, and a round with him is
+    bit for bit what it was. Gravity is the same for both: less push
+    under the same gravity is what makes a hop both shorter and
+    quicker (measured: apex 295 px, a hop every 1.13 s; the prince
+    648 px and 1.57 s).
+  - The shaft is written down by hand (`chimney.js` SHAFT), a hop and a
+    half between things (140 to 170 px under an apex of 295), mirrored
+    or not. Walls stop him (no way round the picture's edge in a
+    shaft). A damper reaches across more than half of it and is the
+    swing's rule (`solidBelow`): the way is up past its end. Nothing
+    hurts in there.
+  - The way in is a fireplace and not a small door: it says chimney by
+    itself, and a boy who climbs into the fireplace is the joke. He
+    waits on its mantel, hopping, and stands by the soot door once
+    they are out.
+  - Looks: brick as a ramp of its own; the first walls were too red and
+    too bright beside the shaft (they are half the picture) and were
+    taken down twice; ledges are the tower's pale stone so that what
+    he stands on reads; the iron was lost on the soot and is a step
+    lighter. The atlas grew from 1024 x 1021 to 1024 x 1056, the
+    sprites' own canvases at the start from 56 to 57 MB of the 80.
+  - A new check, `tools/checks/chimney.mjs`: in by the fireplace, the
+    hop, the wall, the damper, the bubble, up the shaft with a small
+    bot (13 s; it took 29 of 31 suns), out as the prince.
+  - The simulator's five reports on fixed seeds are exactly as they
+    were (`identity.sh`); `flow`, `stages`, `story`, `settings`,
+    `atlas`, `treasury_exit` and `treasury_camera` pass.
+  - The follower is not on this branch (`sidekick.js`, `?lord=`): it
+    stays on `element/springalot`.
+  - Seen in still pictures of a headless browser only. Nothing was
+    played: whether the short hop feels good, whether the shaft is too
+    easy or too short (20 m), whether the dampers are fun or a
+    nuisance, and how the walls look on the phone are Simon's to say.
+- 2026-11-27: The chimney's looks (`element/springalot-chimney`). Simon
+  on the first pictures: not too massive, but loveless; nothing of what
+  is in a chimney, no detail, the walls reach far into the picture and
+  show it most; it could be darker; animals hiding in the shadow.
+  - Dark, with lights. The room has a darkness of its own
+    (`CHIMNEY.dark` 0.66, the dark rooms' pass in `world.js`
+    drawDarkness, which a room may now ask for) and the lord's light
+    is smaller in there (`CHIMNEY.lamp` 0.72). So the walls fall away
+    toward the picture's edges by themselves, and every light is a
+    place: two fires on firedogs on the hearth with sparks, candle
+    ends in niches, the suns, the day in the throat.
+  - Who lives there is shy, not dangerous, and never a bat or a
+    spider: those bite in the tower, and an ornament must not look
+    like one. An owl in a niche whose pupils follow him (the
+    painter's, as in the tower's pictures), a mouse with cheese that
+    is two eyes at the back of its niche when he comes close, chicks
+    that cheep when he passes, eyes in a hole where a brick is gone
+    that shut when he is near, and a pair nobody can put a name to.
+    At the top a stork looks down from the nest it has built on the
+    chimney, and nods.
+  - What is in a chimney: sausages and a ham on a rod in the smoke,
+    the sweep's brush forgotten on its rope (first drawn with
+    bristles as spikes: it read as a morning star, a hazard; now a
+    soft head of straw), iron rungs, a child's chalk on the soot (a
+    tally, a crown under the sun, a hobby horse and a heart), a
+    teddy bear somebody hid (one to a chimney; around Christmas a
+    stocking hangs beside it), cobwebs under ledges, steam over the
+    kettles, smoke and soot on their way up.
+  - The walls: brick smoked black toward the shaft, along a line that
+    is not ruled; the corners built of dressed stone, long and short
+    in turn (a step darker than the ledges, so that what he stands on
+    still reads); four tiles, mostly the plain one, so that the crack,
+    the iron tie and the mended patch do not come round like
+    wallpaper. The back has three (plain, bricks gone, a stripe the
+    brush has cleaned).
+  - What is where is written down when the room is furnished
+    (`backPieces`, `wallNiches`: a hash of the floor's height, no
+    random number): never the same twice running on a side, and
+    nothing on the back behind a thing he stands on. The first try
+    drew sausages right under a ledge.
+  - Everything is drawn by the room's painter and changes nothing a
+    round does: the simulator's reports are exactly as they were
+    (`identity.sh`), and the other checks pass, `chimney.mjs` among
+    them. The chimney's art is 41 sprites, 4 % of what is there at
+    the start: the atlas is 1024 x 1073 now (1056 before), the
+    sprites' own canvases 59 MB of the 80.
+  - Seen in still pictures only. For Simon to say on the phone:
+    whether it is dark enough or too dark outdoors, whether the eyes
+    and the animals are seen at a glance or only by looking for them,
+    and whether anything of it reads as something to stand on or to
+    fear.
+- 2026-11-27: The chimney, played (`element/springalot-chimney`). Simon:
+  it can all stay as it is, as an extra, hidden element; it is cool and
+  funny for a moment. But no fun comes of playing it with the little
+  lord, and as his part in the game it is rather an insult to Lord
+  Springalot.
+  - The chimney stays (on this branch, behind `?spawn=chimney`: no
+    spawn rule), but it is not the lord's: somebody else is to be
+    played in it. Who, is open.
+  - What it taught: a figure whose own thing is that he can do less
+    (smaller hops in a narrow room) is no part for a main character.
+  - Simon's next idea, not built: Sir Bouncealot and Lord Springalot
+    as two main characters with the same jump (so the tower is the
+    same for both) and a master ability each. The prince keeps the
+    boost; the lord gets a rocket that burns for as long as the boost
+    is held, on fuel; or another special move. A character can be
+    unlocked. A third later: the mother, Lady Sparkalot.
+- 2026-11-27: Lord Springalot's rocket, a trial
+  (`element/springalot-rocket`). Simon: two main characters with the
+  same jump and a master ability each; the lord's a rocket that burns
+  while the boost is held, on fuel. Built as the smallest thing to
+  play: `?who=lord`, no title choice, no unlocking.
+  - Who is played is the player's figure (`player.js` FIGURES): whose
+    sprites, his size, and his `rocket`'s numbers or none. One drawing
+    path for all of them now (the power-ups' rims, wings and
+    after-images, the hurt frame, the twin at the picture's edge), so
+    the lord has everything the prince has; his sprites are drawn one
+    way round and mirrored on the draw call. A third figure is a row
+    in that table and a set of sprites. The chimney's figure is `kid`
+    (smaller hops, the boost), drawn as the lord for now.
+  - The rocket spends what the boost spends: the three charges, a
+    charge in half a second, the same refill. So the HUD's three
+    flames are the tank (a flame burns down through its three states),
+    lanterns and landings mean the same for both, and nothing new has
+    to be learned to read it. While it burns he has the boost's
+    shield: that is how he gets through a flock.
+  - Held, not tapped: input knows now whether the boost is held (a
+    key, the boost's button, the finger that boosts in the two other
+    ways to steer). A tap is a burn of 0.14 s. Faster than its top
+    speed it only holds him against gravity.
+  - The numbers are the simulator's. The first set made a charge worth
+    a boost's height from rest (2100 px/s² to 1300 px/s, a body 32 px
+    wide like his sprite): with the prince's bot, which lit it like a
+    boost, a good bold run ended at a median of 109 m (the prince
+    447 m), every death a fall. The rocket is no sudden push: the
+    prince's boost turns a fall round at once whatever its speed, the
+    rocket takes its time. A bot that lights it as soon as he comes
+    down over nothing, holds it until he is on the way up at speed,
+    and burns to buy time when he comes down beside what he aims for:
+    282 m. A body as wide as the prince's: 326 m. 3000 px/s²: 255 m;
+    both: 312 m; and a top speed of 1500 px/s: 359 m. Those are the
+    numbers now.
+  - With them, 40 runs each on two sets of seeds, outside without
+    gates, a good bold run: the prince median 447 and 424 m (mean 526
+    and 473), 0.98 and 1.03 hits per 100 m, falls 47 % and 36 % of
+    the deaths; the lord 359 and 342 m (mean 444 and 440), 0.82 and
+    0.86 hits, falls 55 % and 59 %. Inside, 120 runs: the prince 500 m
+    (mean 589), 1.06 hits, falls 24 %; the lord 424 m (mean 563), 0.76
+    hits, falls 56 %. A cautious kid outside: the prince 72 m, the
+    lord 108 m. A bold kid in stages with three lives, to 300 m: into
+    the third stage 55 % with the prince, 65 % with the lord. So he
+    is no easy mode and no hard one: he is hit less and falls more.
+    A bot is a poor pilot, and what a hand does with a rocket it can
+    hold is not in these numbers.
+  - The prince is bit for bit what he was: the five reports on fixed
+    seeds are the same (`identity.sh`). `tools/analyze.mjs` takes who
+    climbs as a twelfth argument and `TUNE=` to try numbers; a new
+    check, `tools/checks/rocket.mjs`; the others pass. The atlas is
+    1024 x 1085 (1073 before), the sprites' canvases at the start
+    59 MB of the 80.
+  - Seen in still pictures only, and no sound was heard (it is the
+    boost's sound when the rocket is lit, nothing while it burns).
+    For Simon on the phone: whether holding feels right in each way to
+    steer (hold a side: the flame's button; slide: a second finger;
+    tilt: anywhere), whether a full tank's 24 m is too much, whether
+    one sees the tank go down, and whether he is fun.
+- 2026-11-27: Lord Springalot, played, and his head
+  (`element/springalot-rocket`). Simon played him with the rocket:
+  clearly better than the other ways. To change: he is blond; what he
+  has on his head looks like a pot and has to be something else; he
+  seems a little small, which can stay for now.
+  - It was a pot. The boy playing knight with what he finds at home (a
+    pot, a towel) was the sidekick's idea, and it does not carry a
+    main character: he is the prince's son now and dressed as one.
+    Blond hair (a mop, a tuft that will not lie down; it flies as the
+    prince's does), and his father's colours the other way round: a
+    red tunic and a blue cape, where the towel was yellow and would
+    have been one yellow with the hair.
+  - On his head, three things were drawn to choose from (`art/lord.js`
+    HATS; `?hat=coronet|cap` to see the others in the game): a flyer's
+    goggles, a small silver coronet with a blue stone, a green cap
+    with a feather. The goggles are in the game: they belong to the
+    rocket, they leave the hair to be seen, and they are what the pot
+    was for the eye, something that moves (on his forehead; slipped
+    half over his eyes on a landing; pulled right over them while the
+    rocket burns; lifted into his hair in a fall). The coronet makes
+    him a small prince; the cap has the strongest outline and hides
+    half the hair. Simon's to say.
+  - Art only: the simulator's reports are as they were (`identity.sh`),
+    and the atlas is the size it was (1024 x 1085). `stages.mjs` failed
+    once in the run of checks and passed three times after, and once
+    on the commit before: on that run its prince had hopped through
+    the stage's door by himself before the check looked at the camera
+    (a round's seed is random there). A flaw of the check, not of this
+    change; not mended here.
+- 2026-11-27: Lord Springalot is sixteen (`element/springalot-rocket`).
+  Simon: the goggles are it. And: his son is not three but sixteen, so
+  no gap in his teeth; he looks a little childish, and he is as tall as
+  his father. Whether that needs another pass he left open ("he can be
+  a little smaller; what do you think?").
+  - The coronet and the cap are gone from the code, and `?hat=` with
+    them: the goggles were chosen. They sit pushed up into his hair
+    now and not on his forehead, where they read as spectacles once
+    his eyes had moved up.
+  - His face, in both builds: no gap in his teeth, a mouth with its
+    corners up as the prince's has, and his eyes a row higher. A small
+    child's eyes sit low under a big forehead; that row was most of
+    what made him three.
+  - His build. Recommended to Simon: yes, another pass, for the reason
+    the pot went (he was drawn as the small boy who plays knight, and
+    he is a main character and nearly a man). Drawn to choose from,
+    not put into the game: `tall`, 20 x 46 art px against 20 x 42, on
+    a pogo stick as long as his father's (five coils), with legs of 6
+    and a body of 10 where the boy has 4 and 8, under the same head.
+    The same head on a longer body is what makes him older and not
+    only bigger: standing he is 43 px tall, the boy 37, the prince 50.
+    `?who=lord&build=tall` plays him (his height, the rocket's nozzle,
+    the halo and the wings follow his sprites: `art/lord.js` `fig`).
+    The game keeps the boy's build until Simon says.
+  - If the tall one is taken: his height for what hits him grows from
+    168 to 184 px, so the simulator's numbers for the lord have to be
+    read again (the prince's do not move).
+- 2026-11-27: Lord Springalot on master: the taller build, and a
+  switch on the title (`element/springalot-rocket`, merged). Simon: yes
+  to the taller build; a switch on the menu for who is played, plain for
+  now (unlocking comes when the game's shape is settled); then merge,
+  the branch stays.
+  - The tall build is him: `boy`, the choice of builds and `?build=`
+    are gone. His height in the game is 184 px (it was 168).
+  - The switch: two boards in the title's bottom row, a head on each
+    (the prince with his crown, the lord with his goggles), the chosen
+    one with the gold rim, as the climb's boards have it. Not a board
+    with a name: the row is full, and a head says it. The settings'
+    board gave up 16 px for them. A tap and he is on the lawn at once;
+    C on a keyboard. The choice is in the save (`who`), and each has
+    best heights of his own (`lord: { best, ... }` in the save, the
+    prince's where they were): a rocket's 600 m is not a boost's.
+  - What changes with him on screen: the line under the climb's boards
+    says how his boost goes ("hold the flame to fly"), and the HUD's
+    label over the flames reads `rocket`.
+  - The simulator again, with the taller figure, the same seeds as
+    before: outside a good bold run a median of 413 and 409 m (mean
+    530 and 535), 0.84 and 0.79 hits per 100 m, falls 46 % and 55 % of
+    the deaths (the prince: 447 and 424 m, mean 526 and 473, 0.98 and
+    1.03 hits, falls 47 % and 36 %). Inside, 120 runs: 505 m (mean
+    615), 0.8 hits, falls 49 % (the prince 500 m, 1.06, 24 %). A
+    cautious kid outside 115 m (72 m); a bold kid in stages into the
+    third stage 53 % (55 %). The taller figure fell less than the small
+    one had (359 and 342 m then): a fall is over when his head is out
+    of the bottom of the picture, and a taller head is out later. So
+    the two are a match for a good player, and the lord is the kinder
+    one to a weak one, who can hold himself in the air.
+  - Checks: the prince's five reports on fixed seeds are exactly as
+    they were; `rocket.mjs` plays the switch too (a tap, the lawn, the
+    save, the next start, a tap back, the bests apart). All the
+    others pass. The atlas is 1024 x 1087, the sprites' canvases at
+    the start 59 MB of the 80.
+  - Open, and on the status page: unlocking; the rocket's own sound;
+    who is played in the chimney (it is behind `?spawn=chimney` only,
+    and the figure in it is drawn as the lord); Lady Sparkalot.
+  - One commit of this line of branches (`b1e6cc7`, the follower's
+    first) carries a model's name in its trailer, against the rule in
+    `CLAUDE.md`; mending it would have meant rewriting a pushed branch,
+    which was refused. It is in master's history with the merge.

@@ -18,9 +18,11 @@ import { frontAt, isWinter, stormSpan, STORM_CLOCK } from './weather.js';
 import { nightAlpha } from './altitude.js';
 import { CAMERA_PLAYER_OFFSET } from './config.js';
 import { POWERS, RAINBOW } from './powerups.js';
-import { placeOf, TREASURY } from './places.js';
+import { placeOf, TREASURY, CHIMNEY } from './places.js';
 import { stageAt } from './stages.js';
 import { furnishVault, CHEST_SUNS } from './vault.js';
+import { furnishChimney } from './chimney.js';
+import { CHIMNEY_LOOK } from './art/chimney.js';
 import { VAULT_LOOK } from './art/vault.js';
 import { STONE_STYLE, INSIDE } from './art/interior.js';
 
@@ -37,8 +39,10 @@ const CEILING = { hitFromBelow() {} };
 // the lowest thing he can stand on that is at least this far above its bottom edge.
 const RESCUE_MIN = 100;
 
+const LORD_LEFT = { flip: true }, LORD_ON_MANTEL = 112;      // (the mantel's top over the fireplace's landing, art/chimney.js)
+
 // Before the round starts the prince hops on the lawn by himself.
-const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
+const IDLE_INPUT = { axis: 0, usingTilt: false, boostHeld: false, consumeBoost: () => false };
 
 // One round of the game: entities, collisions, generation, FX callbacks.
 export class World {
@@ -55,13 +59,14 @@ export class World {
     this.rng = new RNG();
     this.level = new Level(this, this.rng);
     this.placeName = (game.round && game.round.place) || 'outside';
+    this.who = 'prince';          // who climbs this tower (player.js FIGURES): the prince, or Lord Springalot; set before reset() like the route
     this.route = null;            // the tower in stages (stages.js): set before reset() by whoever starts the round; null is the endless game
     this.reset();
   }
 
   // A fresh round from `seed`, in `place` (places.js; the one it was in when none is named).
   reset(seed, place = this.placeName) {
-    if (place === TREASURY.name) place = (this.vault && this.vault.from) || 'inside';   // a round is never begun in the treasury
+    if (place === TREASURY.name || place === CHIMNEY.name) place = (this.vault && this.vault.from) || 'inside';   // a round is never begun in the treasury, or in the chimney
     if (this.route) place = stageAt(this.route, 0).place;                                // the route says where a round in stages begins
     this.level.route = this.route;
     this.placeName = place;
@@ -101,6 +106,7 @@ export class World {
     this.braidCut = { ly: -Infinity, pieces: [] };   // where the braid ends now, and the pieces falling away
     this.particles.clear();
     this.cam.reset();
+    this.player.be(this.who);
     this.player.reset(0, 0);
     this.level.reset();
     if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
@@ -181,6 +187,8 @@ export class World {
   set season(v) { this.forceSeason = v || null; this._winter = null; }      // ?season=winter|summer for a visit
   // How fast a storm's gust carries the prince sideways now, px/s. Only where the world has gusts (`gusts`: the
   // game's world; the simulator's and the opening story's have none, so the bots are not blown about yet).
+  // A room with walls (the chimney): how far they are from its middle; 0 where the picture's edges lead to each other.
+  get walls() { return this.vault && this.vault.half ? this.vault.half : 0; }
   windPush() { return this.gusts && !this.place.inside ? this.bg.weather.push : 0; }
   get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: st.name } : null; }
 
@@ -290,7 +298,7 @@ export class World {
     } else if (pl.vy > 0) {
       for (const p of this.platforms) {
         if (!p.solidBelow || !p.landable) continue;
-        const prevHead = pl.prevY + PLAYER_H, head = pl.headY;
+        const prevHead = pl.prevY + pl.h, head = pl.headY;
         if (prevHead <= p.bottom && head >= p.bottom && xOverlap(p)) { pl.bonk(p); break; }
       }
       // the treasury has a ceiling
@@ -353,7 +361,7 @@ export class World {
     gate.used = true;
     this.passage = { gate, t: 0, switched: false };
     this.player.frozen = true;
-    if (gate.gold) this.audio.goldDoor(); else this.audio.gate();
+    if (gate.gold && !gate.chimney) this.audio.goldDoor(); else this.audio.gate();
   }
   updatePassage(dt) {
     const ps = this.passage, pl = this.player;
@@ -508,23 +516,25 @@ export class World {
   // floor as at a round's lawn (camera.js), and the power-up he brought
   // waits (player.js).
   enterVault(gate) {
-    const pl = this.player, from = this.placeName;
+    const pl = this.player, from = this.placeName, chimney = !!gate.chimney;      // (a fireplace: the room behind it is the chimney, and the lord is played in it)
     if (this.route) { this.level.stage.vaulted = true; this.level.clearStageEnd(); this.cam.cap = null; }      // one treasury to a stage; what stood of the stage above goes with the tower
-    this.setPlace(TREASURY.name);
+    this.setPlace(chimney ? CHIMNEY.name : TREASURY.name);
     this.platforms = this.platforms.filter((p) => p.kind === 'ground');
     this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
     this.particles.clear();
-    const room = furnishVault(this, pl.y, gate.side, this.level.child(this.level.rngVault), this.level.forcePlan);
+    const room = chimney ? furnishChimney(this, pl.y, new RNG(hash(Math.round(pl.y) + 77))) : furnishVault(this, pl.y, gate.side, this.level.child(this.level.rngVault), this.level.forcePlan);
+    if (chimney) pl.be('kid');
     this.vault = { ...room, from, entryY: pl.y, suns0: this.suns, hearts0: pl.hearts, t0: this.time };
     pl.landedOn = this.platforms.find((p) => p.kind === 'vaultFloor');
     this.cam.setRoom({ lo: room.camLo, hi: room.camHi });
-    this.toast(this.place.arrive, VAULT_LOOK.doorLight, 2.2);
+    this.toast(this.place.arrive, chimney ? CHIMNEY_LOOK.emberLight : VAULT_LOOK.doorLight, 2.2);
     this.onVaultEnter(pl, this.vault);
   }
   // Out by the door at the top: the tower again, from this height on, and
   // the door he came out of shut behind him.
   leaveVault(gate) {
     const pl = this.player, v = this.vault;
+    pl.be(this.who);      // out of the chimney it is the one who climbs the tower again
     this.setPlace(v.from);
     this.platforms = this.platforms.filter((p) => p === gate || p.kind === 'ground');
     this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
@@ -535,7 +545,8 @@ export class World {
     this.level.generateUpTo(this.cam.top + 900);
     this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
     const got = this.suns - v.suns0;
-    this.toast(got ? `${got} suns from the hoard!` : 'Back into the tower!', VAULT_LOOK.doorLight, 2.4);
+    if (v.chimney) this.toast(got ? `${got} suns from the chimney!` : 'Out of the chimney!', CHIMNEY_LOOK.emberLight, 2.4);
+    else this.toast(got ? `${got} suns from the hoard!` : 'Back into the tower!', VAULT_LOOK.doorLight, 2.4);
     this.vault = null;
     this.onVaultLeave(pl, { suns: got, of: v.suns, hearts: pl.hearts - v.hearts0, time: this.time - v.t0 });
   }
@@ -906,12 +917,17 @@ export class World {
       case 'gate': {
         const open = this.passage && this.passage.gate === p ? 1 : 0;
         if (!p.gold) { s = I.gate[this.place.inside ? 'out' : 'in'][open]; break; }      // it shows where it leads
+        // the chimney's: the fireplace that leads into it, the soot door out of it, and that door from the tower's side
+        if (p.chimney) { const D = this.art.chimney; s = p.gold === 'in' ? D.fireplace[open] : this.vault ? D.hatch[open] : D.hatchSpent; break; }
         // a golden door: into the treasury, out of it, or (in the tower, gone through) shut for good
         const V = this.art.vault.door;
         s = p.gold === 'in' ? V.in[open] : this.vault ? V.out[open] : V.spent;
         break;
       }
       case 'chest': s = this.art.vault.chest[p.opened ? 1 : 0]; break;
+      case 'flue': s = this.art.chimney.ledge; if (p.side === 'R') opts.flip = true; break;
+      case 'damper': s = this.art.chimney.damper; if (p.side === 'R') opts.flip = true; break;
+      case 'kettle': s = this.art.chimney.kettle; opts.rot = this.chainLean(p.y) * 0.5; break;
       case 'step': if (!p.flight) return; s = I.stairs[p.side]; if (this.vault) opts.tint = VAULT_LOOK.stone; break;      // the flight is one piece, drawn for its lowest tread (in the treasury, in its warmer stone)
       case 'ribbon': s = p.squash > 0.4 ? A.ribbonSquash : A.ribbon; break;
       case 'bow': s = p.squash > 0.4 ? A.bowSquash : A.bow; break;
@@ -978,7 +994,8 @@ export class World {
       this.bg.interior.glow(sx, sy + 10, 180, '#b9a0ff', 0.1);
       opts.rot = this.chainLean(p.y) * 0.5;
     }
-    if (p.kind === 'gate' && p.gold && (p.gold === 'in' || this.vault)) {
+    if (p.kind === 'gate' && p.chimney) this.drawHearthGlow(g, p);
+    else if (p.kind === 'gate' && p.gold && (p.gold === 'in' || this.vault)) {
       // a golden door that still leads somewhere shines, and glints
       const sx = cam.sx(p.x), sy = cam.sy(p.y), t = this.time;
       g.halo(sx, sy - 92, 150, VAULT_LOOK.doorLight, 0.3 + 0.08 * Math.sin(t * 2.6 + p.id), { glow: 0.5 });
@@ -1001,6 +1018,25 @@ export class World {
       opts.rot = this.chainLean(p.y) * 0.5 + (dt < 3 ? Math.sin(dt * 13) * 0.2 * Math.exp(-dt * 1.8) : 0);
     }
     g.blit(s, cam.sx(p.x), cam.sy(p.y) + dip, Object.keys(opts).length ? opts : undefined);
+    if (p.kind === 'gate' && p.chimney) this.drawLordAt(g, p);
+  }
+
+  // The coals in the chimney's fireplace light the wall around it.
+  drawHearthGlow(g, p) {
+    if (p.gold !== 'in') return;
+    const sx = this.cam.sx(p.x), sy = this.cam.sy(p.y);
+    g.halo(sx, sy - 30, 110, CHIMNEY_LOOK.emberLight, 0.22 + 0.06 * Math.sin(this.time * 7 + p.id), { glow: 0.4 });
+    this.bg.interior.glow(sx, sy - 40, 240, CHIMNEY_LOOK.emberLight, 0.16);
+  }
+  // Lord Springalot at a door of his chimney, while it is the prince who is
+  // played: on the fireplace's mantel until the prince has come (he hops on
+  // the spot, he cannot wait), and on the soot door's landing once they are
+  // out of it. In the chimney he is the one played.
+  drawLordAt(g, p) {
+    if (this.vault) return;
+    const cam = this.cam, out = p.side === 'L' ? 1 : -1;                           // toward the room
+    const hop = Math.abs(Math.sin(this.time * 4.2 + p.id)), L = this.art.lord, hearth = p.gold === 'in';
+    g.blit(hop > 0.75 ? L.right.jumpUp : hop < 0.12 ? L.right.bounceDown : L.right.standing, cam.sx(p.x + out * (hearth ? 50 : 62)), cam.sy(p.y + (hearth ? LORD_ON_MANTEL : 0)) - hop * 26, p.side === 'R' ? LORD_LEFT : undefined);
   }
 
   // Where the lights are out (level.js, the dark stretches): the picture is
@@ -1011,14 +1047,15 @@ export class World {
   // of a dark stretch are out and register none); what one picks up
   // glimmers; and every creature has a light of its own, so nothing that
   // bites comes out of the black.
-  get darkness() { return this.place.inside && !this.vault ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }
+  get darkness() { return this.vault ? this.vault.dark || 0 : this.place.inside ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }      // (a room has its own: the chimney is dark, the treasury is not)
   drawDarkness(g) {
     const dk = this.darkness;
     if (dk <= 0.01) return;
     const cam = this.cam, pl = this.player;
     g.dark(dk * DARK_DEPTH, DARK_COLOR);
-    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 560, '#ffe6c4', 0.4);
-    g.lamp(cam.sx(pl.x), cam.sy(pl.y + 120), 340, '#fff0da', 0.9);
+    const mid = pl.who === 'prince' ? 120 : pl.h * 0.5, k = (this.vault && this.vault.lamp) || 1;      // (a room may make his light smaller)
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 560 * k, '#ffe6c4', 0.4);
+    g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 340 * k, '#fff0da', 0.9);
     for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);
     for (const p of this.platforms) {
       if (p.y < cam.y - 200 || p.y > cam.top + 200) continue;
@@ -1062,10 +1099,10 @@ export class World {
     this.player.draw(g, cam, this.art);
     if (this.player.carried) {
       // the bubble that carries him (the treasury's rescue): the power-ups' soap bubble at his size, in gold
-      const V = this.art.vault, bx = cam.sx(this.player.x), by = cam.sy(this.player.y + PLAYER_H * 0.5), wob = Math.sin(this.time * 5) * 0.03;
-      g.halo(bx, by, 200, VAULT_LOOK.goldLight, 0.3, { glow: 0.4 });
-      g.blit(V.bubbleFill, bx, by, { sx: 1 + wob, sy: 1 - wob, alpha: 0.16, tint: VAULT_LOOK.goldLight });
-      g.blit(V.bubble, bx, by, { sx: 1 + wob, sy: 1 - wob, alpha: 0.95, glow: 0.2 });
+      const V = this.art.vault, bx = cam.sx(this.player.x), by = cam.sy(this.player.y + this.player.h * 0.5), wob = Math.sin(this.time * 5) * 0.03, sc = this.player.h / PLAYER_H;
+      g.halo(bx, by, 200 * sc, VAULT_LOOK.goldLight, 0.3, { glow: 0.4 });
+      g.blit(V.bubbleFill, bx, by, { sx: (1 + wob) * sc, sy: (1 - wob) * sc, alpha: 0.16, tint: VAULT_LOOK.goldLight });
+      g.blit(V.bubble, bx, by, { sx: (1 + wob) * sc, sy: (1 - wob) * sc, alpha: 0.95, glow: 0.2 });
     }
     this.particles.draw(g, cam);
     this.bg.drawFront(g, cam, this.time);
@@ -1077,7 +1114,7 @@ export class World {
     // going through a gate: the picture closes in on the prince and opens again
     const k = this.iris;
     if (k > 0) {
-      const cx = clamp(cam.sx(this.player.x), 0, W), cy = clamp(cam.sy(this.player.y + PLAYER_H * 0.5), 0, H);
+      const cx = clamp(cam.sx(this.player.x), 0, W), cy = clamp(cam.sy(this.player.y + this.player.h * 0.5), 0, H);
       const e = k * k * (3 - 2 * k), l = cx * e, r = W - (W - cx) * e, t = cy * e, b = H - (H - cy) * e;
       g.rect(0, 0, W, t, '#0b0a12'); g.rect(0, b, W, H - b, '#0b0a12'); g.rect(0, t, l, b - t, '#0b0a12'); g.rect(r, t, W - r, b - t, '#0b0a12');
     }

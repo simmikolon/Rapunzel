@@ -5,6 +5,7 @@ import { mixHex, lerp, invLerp, smoothstep } from './util.js';
 import { INSIDE, PICTURES } from './art/interior.js';
 import { pillarTile, hasDoor, PILLAR_X, TORCH_Y, TORCH } from './pillars.js';
 import { drawVaultBack, vaultLighting } from './vault.js';
+import { drawChimneyBack, chimneyLighting } from './chimney.js';
 
 // The painter for the inside of the tower (places.js); the background hands
 // over to it when the round is climbed in there. Back to front:
@@ -170,6 +171,7 @@ export class Interior {
     this.bg = bg;                // the outside's painter: its sky, forest and braid are what the windows show
     this.glows = [];             // this frame's light pools: [sx, sy, radius, colour, alpha]
     this.vault = false;          // this frame is the treasury's (vault.js draws it)
+    this.chimney = false;        // or the chimney's (chimney.js)
     this.darkAt = NO_DARK;
   }
 
@@ -430,6 +432,8 @@ export class Interior {
     this.glows.length = 0;
     // in the treasury the room is another (vault.js)
     this.vault = !!(world && world.vault && world.place.vault);
+    this.chimney = this.vault && !!world.place.chimney;      // or the chimney's (chimney.js)
+    if (this.chimney) return drawChimneyBack(this, g, cam, time, world);
     if (this.vault) return drawVaultBack(this, g, cam, time, world);
     bg.drawSky(g, cam);
     bg.drawFar(g, cam, time);
@@ -446,7 +450,8 @@ export class Interior {
   // The room's dusk (a little deeper once it is night outside), then its lamps.
   drawLighting(g, cam) {
     const f = floorsAt(cam.y + H / 2), A = FLOORS[f.a], B = FLOORS[f.b];
-    if (this.vault) vaultLighting(g);
+    if (this.chimney) chimneyLighting(g);
+    else if (this.vault) vaultLighting(g);
     else g.lighting(f.t > 0 ? mixHex(A.ambient, B.ambient, f.t) : A.ambient, lerp(A.dim, B.dim, f.t) + 0.12 * nightAlpha(cam.y));
     for (const [x, y, r, color, a] of this.glows) g.puff(x, y, r, r, color, a, { soft: true, blend: 'add' });
   }

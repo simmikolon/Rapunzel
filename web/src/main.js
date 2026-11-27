@@ -14,6 +14,7 @@ import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
 import { Story, STORY } from './story.js';
 import { Perf, RES } from './perf.js';
+import { CLIMBERS } from './player.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -45,8 +46,8 @@ class Game {
     this.modeT = 0;
     // What startRound() plays: the mode ('stages': the tower in stages, in and out through its doors, stages.js;
     // 'endless': one place all the way up) and, for the endless game, where (places.js); a tower with its seed later.
-    this.round = { mode: 'stages', place: 'outside' };
-    this.bests = { outside: 0, inside: 0, stages: 0 };     // a best height per climb; `best` is the one of the climb chosen
+    this.round = { mode: 'stages', place: 'outside', who: 'prince' };      // (who: who climbs, player.js FIGURES: the title's switch)
+    this.allBests = { prince: { outside: 0, inside: 0, stages: 0 }, lord: { outside: 0, inside: 0, stages: 0 } };     // a best height per climb for each of them; `best` is the one of the climb and the climber chosen
     this.bestBeaten = false;  // this round has already beaten it (in stages it is kept at every door)
     this.isNewBest = false;
     this.noticeText = '';
@@ -76,6 +77,7 @@ class Game {
     this.world.gusts = true;                                                          // a storm's gusts lean on the prince (weather.js)
     this.loadSave();
     if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit
+    if (CLIMBERS.includes(this.dev.who)) this.round.who = this.dev.who;               // ?who= for this visit
     // ?stages=1|0 picks the mode for this visit, ?stage=3 starts at that stage; the helpers that put something into
     // the endless tower (?place=, ?at=, ?spawn=) mean the endless game unless stages are asked for.
     if (this.dev.stages === '1' || this.dev.stage) this.round.mode = 'stages';
@@ -91,7 +93,7 @@ class Game {
     this.tellStory = this.dev.story === '1' || (this.dev.story !== '0' && due && this.climb !== 'inside');
     this.world.onStage = () => this.keepBest();
     this.world.onRetry = () => this.keepBest();
-    if (this.staged || this.round.place !== this.world.placeName) this.resetWorld();
+    if (this.staged || this.round.place !== this.world.placeName || this.round.who !== this.world.who) this.resetWorld();
     // ?fx=off|bloom|lines|full forces the effects for this visit; otherwise they are the player's settings.
     const param = new URLSearchParams(location.search).get('fx');
     if (PRESETS.includes(param)) { this.fxForced = true; this.gfx.setPreset(param); }
@@ -124,11 +126,14 @@ class Game {
   get muted() { return audio.muted; }
   get staged() { return this.round.mode === 'stages'; }
   get climb() { return this.staged ? 'stages' : this.round.place; }      // which of the title's three boards is chosen
+  get who() { return this.round.who || 'prince'; }                      // who climbs: the title's switch
+  get bests() { return this.allBests[this.who]; }
   get best() { return this.bests[this.climb] || 0; }
   set best(v) { this.bests[this.climb] = v; }
 
   // A fresh world for the round chosen: in stages the route says where it begins.
   resetWorld(seed) {
+    this.world.who = this.who;
     this.world.route = this.staged ? this.route : null;
     this.world.reset(seed, this.round.place);
   }
@@ -138,6 +143,16 @@ class Game {
   setClimb(name) {
     if (name === this.climb || (name !== 'stages' && !PLACES[name])) return;
     this.round = name === 'stages' ? { ...this.round, mode: 'stages' } : { ...this.round, mode: 'endless', place: name };
+    this.resetWorld();
+    this.world.hop();
+    this.save();
+    audio.click();
+  }
+  // The title's switch: who climbs, the prince or Lord Springalot. He is on
+  // the lawn at once; the choice is kept, and each has his own best heights.
+  setWho(name) {
+    if (name === this.who || !CLIMBERS.includes(name)) return;
+    this.round = { ...this.round, who: name };
     this.resetWorld();
     this.world.hop();
     this.save();
@@ -157,18 +172,20 @@ class Game {
   loadSave() {
     try {
       const s = JSON.parse(platform.storage.get(STORAGE_KEY) || platform.storage.get(LEGACY_STORAGE_KEY) || '{}');
-      this.bests = { outside: s.best || 0, inside: s.bestInside || 0, stages: s.bestStages || 0 };
+      this.allBests = { prince: { outside: s.best || 0, inside: s.bestInside || 0, stages: s.bestStages || 0 }, lord: { outside: +(s.lord && s.lord.best) || 0, inside: +(s.lord && s.lord.bestInside) || 0, stages: +(s.lord && s.lord.bestStages) || 0 } };
       if (PLACES[s.place]) this.round.place = s.place;
+      if (CLIMBERS.includes(s.who)) this.round.who = s.who;
       this.seenStory = !!s.story;
       this.storyAt = +s.storyAt || 0;
       if (s.mode === 'endless' || s.mode === 'stages') this.round.mode = s.mode;      // (a save from before the stages has none: the stages it is)
       // (An effects preset from before the settings, `fx` or `fxPick`, is not read: the effects are off until
       // they are switched on there.)
       this.settings.load(s.set);
-    } catch (_) { this.bests = { outside: 0, inside: 0, stages: 0 }; }
+    } catch (_) { this.allBests = { prince: { outside: 0, inside: 0, stages: 0 }, lord: { outside: 0, inside: 0, stages: 0 } }; }
   }
   save() {
-    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: this.bests.outside, bestInside: this.bests.inside || undefined, bestStages: this.bests.stages || undefined, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, storyAt: this.storyAt || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, set: this.settings.toSave() })); } catch (_) { /* ignore */ }
+    const P = this.allBests.prince, L = this.allBests.lord, lord = L.outside || L.inside || L.stages ? { best: L.outside || undefined, bestInside: L.inside || undefined, bestStages: L.stages || undefined } : undefined;
+    try { platform.storage.set(STORAGE_KEY, JSON.stringify({ best: P.outside, bestInside: P.inside || undefined, bestStages: P.stages || undefined, lord, who: this.who === 'prince' ? undefined : this.who, mode: this.round.mode === 'stages' ? undefined : this.round.mode, story: this.seenStory ? 1 : undefined, storyAt: this.storyAt || undefined, place: this.round.place === 'outside' ? undefined : this.round.place, set: this.settings.toSave() })); } catch (_) { /* ignore */ }
   }
   recordBest() {
     this.isNewBest = this.world.heightM > this.best || this.bestBeaten;
@@ -243,7 +260,7 @@ class Game {
   startRound(config = this.round) {
     this.round = config;
     this.bestBeaten = false;
-    if (this.world.started || !!this.world.route !== this.staged || (!this.staged && this.world.placeName !== config.place)) this.resetWorld(config.seed);
+    if (this.world.started || !!this.world.route !== this.staged || (!this.staged && this.world.placeName !== config.place) || this.world.who !== this.who) this.resetWorld(config.seed);
     if (this.staged && this.dev.stage) {
       // the dev start at a stage skips the countdown, like the teleport below
       startStage(this.world, this.dev.stage - 1);
@@ -373,6 +390,8 @@ class Game {
         if (input.consumeButton('settings')) { this.settings.show(); audio.click(); break; }
         const play = input.consumeButton('play');
         const pick = input.consumeButton('placeTour') ? 'stages' : input.consumeButton('placeOut') ? 'outside' : input.consumeButton('placeIn') ? 'inside' : input.consumePlace();
+        const who = input.consumeButton('whoPrince') ? 'prince' : input.consumeButton('whoLord') ? 'lord' : input.consumeWho() ? (this.who === 'prince' ? 'lord' : 'prince') : null;
+        if (who) this.setWho(who);
         if (pick) this.setClimb(pick);
         else if (input.consumeButton('story') && !this.world.place.inside) { this.tellStory = true; audio.click(); this.setMode('intro'); }      // a tap on Rapunzel: she tells it again
         else if (this.modeT > 0.3 && (play || tapOutsideButtons())) this.startRound();

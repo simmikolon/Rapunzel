@@ -50,11 +50,13 @@ export class Input {
     this.pointers = new Map();  // pointerId -> {x, y, role}
     this.taps = [];             // {x, y} logical coords, consumed each frame
     this.boostQueued = 0;
+    this.boostHeld = false;     // the boost is being held down (a key, the boost's button, the finger that boosts): the lord's rocket burns for as long
     this.tapQueued = 0;
     this.pauseQueued = 0;
     this.muteQueued = 0;
     this.fxQueued = 0;
     this.placeQueued = null;    // 'stages' | 'outside' | 'inside': T, O / I or left / right on the title
+    this.whoQueued = false;     // C on the title: the other one climbs
     this.anyInteraction = null; // callback for unlocking audio
     // Regions where a touch acts as a button rather than steering. Set by HUD.
     this.buttonZones = [];      // {id, x, y, w, h}
@@ -79,6 +81,7 @@ export class Input {
       if (e.code === 'Escape' || e.code === 'KeyP') this.pauseQueued++;
       if (e.code === 'KeyM') this.muteQueued++;
       if (e.code === 'KeyF') this.fxQueued++;
+      if (e.code === 'KeyC') this.whoQueued = true;
       if (e.code === 'KeyT') this.placeQueued = 'stages';
       if (e.code === 'KeyO' || e.code === 'ArrowLeft') this.placeQueued = 'outside';
       if (e.code === 'KeyI' || e.code === 'ArrowRight') this.placeQueued = 'inside';
@@ -102,7 +105,7 @@ export class Input {
         for (const q of this.pointers.values()) if (q.role === 'slide') sliding = true;
         role = sliding ? 'boost' : 'slide';
       }
-      this.pointers.set(e.pointerId, { x: p.x, y: p.y, role, x0: p.x, sx: p.x, sy: p.y, far: 0, t0: performance.now() });
+      this.pointers.set(e.pointerId, { x: p.x, y: p.y, role, zone: zone ? zone.id : null, x0: p.x, sx: p.x, sy: p.y, far: 0, t0: performance.now() });
       this.taps.push(p);
       this.tapQueued++;
       if (role === 'boost') this.boostQueued++;
@@ -207,7 +210,9 @@ export class Input {
     // a finger sliding away from where it was set down.
     let ta = 0, sliding = false;
     this.slideAxis = 0;
+    this.boostHeld = this.keys.has('Space') || this.keys.has('ArrowUp') || this.keys.has('KeyW') || this.keys.has('Enter');
     for (const pt of this.pointers.values()) {
+      if (pt.role === 'boost' || pt.zone === 'boost') this.boostHeld = true;
       if (pt.role === 'steer') ta += pt.x < W / 2 ? -1 : 1;
       else if (pt.role === 'slide') {
         sliding = true;
@@ -233,6 +238,7 @@ export class Input {
   consumeMute() { const v = this.muteQueued > 0; this.muteQueued = 0; return v; }
   consumeFx() { const v = this.fxQueued > 0; this.fxQueued = 0; return v; }
   consumePlace() { const v = this.placeQueued; this.placeQueued = null; return v; }
+  consumeWho() { const v = this.whoQueued; this.whoQueued = false; return v; }
   consumeButton(id) {
     const i = this.buttonHits.indexOf(id);
     if (i < 0) return false;
@@ -242,5 +248,5 @@ export class Input {
   // Per-frame flags are cleared here. The boost queue is not: it is consumed
   // by the physics step that fires it, so a tap that arrives in a frame which
   // runs no step (high refresh rates) still counts in the next one.
-  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; this.placeQueued = null; }
+  endFrame() { this.taps.length = 0; this.buttonHits.length = 0; this.tapQueued = 0; this.pauseQueued = 0; this.muteQueued = 0; this.fxQueued = 0; this.placeQueued = null; this.whoQueued = false; }
 }

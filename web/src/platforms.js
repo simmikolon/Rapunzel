@@ -57,6 +57,12 @@ export const KIND = {
   // time and throws its suns out, and the room's floor from pillar to pillar.
   chest:   { w: 96, cx: 0, surface: 0, bounce: JUMP_VY, chest: true },
   vaultFloor: { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, floor: true },
+  // The chimney (chimney.js), Lord Springalot's room: a ledge of brick out
+  // of a wall of the shaft, a kettle on the pot chain down its middle, and
+  // an iron damper out of a wall, which is a ceiling from below.
+  flue:    { w: 104, cx: 0, surface: 0, bounce: JUMP_VY },
+  kettle:  { w: 84, cx: 0, surface: 0, bounce: JUMP_VY, onChain: true },
+  damper:  { w: 168, cx: 0, surface: 0, bounce: JUMP_VY, solidBelow: true, thickness: 24 },
   ground:  { w: 2400, cx: 0, surface: 0, bounce: JUMP_VY, ground: true },
 };
 export const GALLERY_X = 204;
@@ -124,6 +130,7 @@ export class Platform {
     this.rungAt = -10;                // the bell: when it was last landed on (world time)
     this.unlit = !!opts.unlit;        // a chandelier where the lights are out: dark until he lands on it
     this.gold = opts.gold || null;    // a gate: 'in' is a golden door into the treasury, 'out' the one out of it
+    this.chimney = !!opts.chimney;    // such a door, but the room behind it is the chimney (chimney.js): a fireplace in, a soot door out
     this.opened = false;              // a chest: landed on once, its suns are out
     this.openedAt = -10;              // and when (world time)
     this.prevX = this.x;

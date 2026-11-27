@@ -19,4 +19,8 @@ export const PLACES = {
 // the room's painter draws and its things are the tower's, and `vault`, for
 // everything that is different in there (no rows, no creatures, a floor).
 export const TREASURY = { name: 'vault', label: 'TREASURY', inside: true, vault: true, sky: false, witch: false, storks: false, arrive: 'The treasury!' };
-export const placeOf = (name) => PLACES[name] || (name === TREASURY.name ? TREASURY : PLACES.outside);
+// The chimney is such a room too (chimney.js): a fireplace leads into it and
+// a soot door out of it, and in it Lord Springalot is played. To everything
+// that asks, it is a treasury (`vault`); what is its own asks `chimney`.
+export const CHIMNEY = { name: 'chimney', label: 'CHIMNEY', inside: true, vault: true, chimney: true, sky: false, witch: false, storks: false, arrive: 'Up the chimney!' };
+export const placeOf = (name) => PLACES[name] || (name === TREASURY.name ? TREASURY : name === CHIMNEY.name ? CHIMNEY : PLACES.outside);

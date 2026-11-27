@@ -75,6 +75,27 @@ export const PLAYER_W = 104;
 export const PLAYER_H = 232;
 export const PLAYER_BODY_W = 40;      // narrow collision box like the original (30 pt)
 export const PLAYER_FOOT_INSET = 0;   // pogo tip is the sprite bottom
+// Lord Springalot, the second one who climbs the tower (player.js FIGURES):
+// smaller than the prince, the same jump, and a rocket for the prince's
+// boost. It burns for as long as the boost is held and what it burns are
+// the boost's charges, so the two spend the same thing: the prince a
+// charge at once, the lord as much of one as he likes. A charge burnt from
+// rest lifts him 9 m (a boost lifts the prince 5.3 m), but it is no sudden
+// push: out of a fall the boost turns the prince round at once, the rocket
+// takes its time. The numbers are the simulator's (docs/DESIGN.md, the
+// decision log): with a weaker rocket or a narrower body its bots fell far
+// more often than with the prince.
+export const LORD_H = 184;             // (his sprite's, art/lord.js)
+export const LORD_BODY_W = 40;        // what can be hit and what lands: as wide as the prince's, so a branch is the same branch for both
+export const LORD_W = 80;
+export const ROCKET_ACCEL = 3000;     // upward, over and above gravity, while it burns (px/s^2)
+export const ROCKET_MAX_VY = 1500;    // it pushes him no faster than this; above it, it only holds him against gravity
+export const ROCKET_BURN = 0.5;       // seconds a charge burns
+export const ROCKET_TAP = 0.14;       // a tap is a burn this long
+export const ROCKET_SHIELD = 0.15;    // while it burns, and this long after, he knocks away what he touches (the boost's shield)
+// Whoever is played in the chimney (chimney.js; drawn as the lord until somebody is): his hops are short and
+// quick (the same gravity, less push: 0.68 of the prince's is an apex of 3 m instead of 6.5 and a hop a second).
+export const KID_JUMP = 0.68;         // of the prince's push off a platform, and of his boost
 
 // Boost meter: 3 charges, refilled by landing on platforms and lanterns.
 // While boosting the prince is shielded: enemies he touches are knocked
