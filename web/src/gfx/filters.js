@@ -171,3 +171,40 @@ export class CRTFilter extends Filter {
 
   get uniforms() { return this.resources.crtUniforms.uniforms; }
 }
+
+// ---------------------------------------------------------------------- mood
+// The weather's mood over the whole frame (weather.js): `uGrey` takes the
+// colours out toward grey, as under a storm's sky; `uFlash` is the instant
+// of lightning, in which the picture is black and white and stark, light
+// and dark pulled apart. The pass is only in the chain while one of the two
+// is above nothing (renderer.js mood()).
+const MOOD_FRAG = /* glsl */`
+in vec2 vTextureCoord;
+out vec4 finalColor;
+uniform sampler2D uTexture;
+uniform float uGrey;
+uniform float uFlash;
+
+void main(void) {
+  vec4 c = texture(uTexture, vTextureCoord);
+  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+  vec3 col = mix(c.rgb, vec3(l), uGrey);
+  // (bright, but graded: what was dark stays dark, so that he and what he stands on can still be told)
+  float stark = smoothstep(0.04, 0.78, l) * 1.05 + 0.1;
+  col = mix(col, vec3(stark), uFlash);
+  finalColor = vec4(col, c.a);
+}
+`;
+
+export class MoodFilter extends Filter {
+  constructor() {
+    super({
+      glProgram: GlProgram.from({ vertex: defaultFilterVert, fragment: MOOD_FRAG, name: 'bouncealot-mood' }),
+      resources: { moodUniforms: { uGrey: { value: 0, type: 'f32' }, uFlash: { value: 0, type: 'f32' } } },
+      resolution: 'inherit',
+      padding: 0,
+    });
+  }
+
+  get uniforms() { return this.resources.moodUniforms.uniforms; }
+}

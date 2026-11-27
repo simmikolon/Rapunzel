@@ -93,6 +93,7 @@ export class Story {
     const real = this.real, game = this.game;
     const show = this.show = new World({ art: game.art, input: game.input, round: { place: 'outside' } });
     show.audio = QUIET;
+    show.forceWeather = this.real.weatherKind();      // the weather of the lawn it ends on, all the way down (around Christmas it snows on her tower too)
     show.reset((Math.random() * 0x7fffffff) | 0, 'outside');
     show.platforms = show.platforms.filter((p) => p.kind === 'ground');
     show.enemies.length = 0; show.pickups.length = 0; show.fields.length = 0;

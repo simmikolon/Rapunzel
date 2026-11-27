@@ -165,6 +165,9 @@ export class Player {
       this.y += this.vy * dt;
     }
     this.x += this.vx * dt;
+    // A storm's gust carries him along while it blows (weather.js; world.js windPush says how fast, 0 without gusts).
+    const wind = this.world.windPush ? this.world.windPush() : 0;
+    if (wind && this.state !== 'dead' && this.state !== 'standing') this.x += wind * dt;
     // Screen wrap-around like the original (checkIfPlayerIsOutOfScreen).
     if (this.x < -W / 2) this.x += W;
     else if (this.x > W / 2) this.x -= W;

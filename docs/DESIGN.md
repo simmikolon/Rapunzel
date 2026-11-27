@@ -702,6 +702,46 @@ is a pool to draw from, not a promise.
   the last ten metres it is the round's world itself that is drawn,
   so the picture the title opens on is the one the story ended on.
   Purely for the eye: nothing in the simulator.
+- 🔜 the weather outside (`src/weather.js`, sprites in
+  `art/weather.js`), a first cut for the eye and the ear: rain (slanting
+  streaks, a grey veil, a darker light, drops splashing on what one
+  stands on), a storm (harder rain, gusts that come as white curls with
+  a line of wind and lean the rain over, the colours taken half out of
+  the picture, and lightning that turns it black and white for an
+  instant, with thunder),
+  snow (flakes swaying down, big ones close by, snow lying on branches,
+  balconies, swings and the lawn) and the golden hour (a low sun behind
+  the tower, its rays across the picture, dust shining in them). Each
+  pulls the sky toward its colours and lays a light over everything,
+  and what falls is in three depths that go by at different speeds when
+  the camera climbs. A stage has its weather (the rose wall the golden
+  hour, the ivy wall and the deep forest rain, the masons' site and the
+  night sky snow), and from the third stage on a storm comes over an
+  outside stage now and then, whatever its own weather (three in ten,
+  never two running; the crumbling tower always has one). It is not
+  there when the stage begins: it draws up once he has climbed a
+  quarter to a half of the stage, is announced ("A storm is coming!",
+  a first thunder), blends in out of the stage's own weather, and has
+  passed 15 m under the stage's end, so that the door is found in
+  peace. Where it snows the storm is a blizzard: the flakes thick and
+  driven sideways, the same gusts, no lightning. After a storm the
+  sun comes out: the golden hour, where the weather would be clear
+  and it is not night. In the endless tower storms keep their own
+  time: 35 to 60 s into a round the first draws up, announced, stays
+  18 to 28 s and passes ("The storm has passed"), the sun is out for
+  16 to 24 s, and after 50 to 100 s of calm the next one comes; a
+  storm draws up and passes over 5 s. For the rest the endless tower
+  has fronts, bands of 90 m with a weather or none, by the round's seed and
+  by what the height is like. `?weather=rain|storm|snow|blizzard|golden|clear`
+  for a visit. None inside the tower yet. Around Christmas (the first
+  of December to Epiphany; `?season=winter` for a visit) the lawn is
+  snowed in: the first stage, the endless tower's first band, the
+  title, and the opening story all the way down her tower. For the eye
+  and the ear but one thing: a storm's gust carries the prince
+  sideways while it blows, up to 230 px/s (his own steering is 560),
+  and the curls show 0.9 s before it does. That is in the game's world
+  only: the simulator's bots are not blown about yet, on purpose, so
+  its reports stand until the push has been played and is measured.
 - 🔜 the tower in stages, a trial on `element/stages` (`src/stages.js`;
   the title's third board, TOWER, beside the endless climbs OUTSIDE
   and INSIDE): the climb is a row of stretches with a start and an
@@ -1096,6 +1136,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The dark (inside) | the first stretch between 150 and 210 m, then every 140–220 m of climb, 32–42 m long, fading in and out over 5.2 m; the picture multiplied down by 86 % toward `#07061a`; the prince's light 340 px (and a faint 560 px); in its rows no dry or short ledges, creatures × 0.7, lanterns × 2.2; chandeliers unlit until landed on |
 | The treasury | golden doors inside the tower only: the first between 40 and 70 m, then every 200–300 m above the last one's way out; never in the dark or at a swarm's floors, 15 m from a gate; a room is its floor, three of six sections (940 to 1250 px each) and its top: the door out 3950 to 4270 px above the floor, the ceiling 720 px over that (a bounce off the highest platform stays under it); some 80 suns, 20 cut stones (3 suns each), 8 goblets (5), the crown (10), three or four chests (8), one heart: about 220 suns' worth; the tower's camera, starting with the floor 100 px above the picture's bottom edge and stopping when 60 px of the ceiling show; the bubble takes a prince whose head is 10 px under the bottom edge (where the tower ends the round), carries him at 240–760 px/s to 130 px above the lowest platform that is at least 100 px above the edge and lets him go there |
 | The witch's cat | the squirrel's tier chance × pacing × 0 in the hall, 0.5 in the guard rooms, 1.0 in the library, 0.6 in the belfry; on a healthy normal or long ledge without a bat or a web; sees him within 210 px on or up to 3 m over its ledge; wiggle 0.55 s (0.4 s at the top), pounce 0.3 s over at most 150 px, 1.7 s (1.2 s) before the next; 60 × 56 px box |
+| The weather | rain: 90 / 96 / 30 streaks far, mid, near (a storm half as many again); snow: 200 / 160 / 42 flakes; layers go by at 0.7, 0.95 and 1.25 to 1.3 of the camera's climb; a weather fades out and in over 2.2 s; a storm's gust: 3.5 to 6.5 s calm, 0.9 s in which the curls already show, 1.8 to 2.8 s of blow that carries the prince at up to 230 px/s (200 to 320 px a gust, by its length, if he does not steer against it); a storm takes half the colour out of the picture; lightning every 5 to 14 s, black and white for some 0.2 s; a storm over an outside stage from the third on with a chance of 0.3, drawing up 25 to 50 % into the stage and gone 15 m under its end (some 45 to 50 m of storm); one weather goes over into the next in 3 s, a storm draws up and passes in 5; the endless tower's storms by the clock: first after 35 to 60 s, 18 to 28 s long, 16 to 24 s of sun after, 50 to 100 s calm between; winter: 1 December to 6 January; fronts in the endless tower are 90 m high, the first always clear |
 | The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world; told again at a start: in the app every start, in a browser never (`STORY.again`, hours since it was last told) |
 | Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
 | The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
@@ -2628,3 +2669,130 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   default), at 16 and at 12. The first cut of the row had 22 in the
   middle, between a gentler 30 and a quicker 15, under names that did
   not say what they set.
+- 2026-11-26: Weather (`element/weather`). Simon: weather outside, and
+  something like the golden hour; rain, a storm, perhaps one that
+  blows the player about, with wind drawn in pixel art; and snow, with
+  Christmas coming, falling in parallax as in the old pixel art games.
+  It has to look beautiful and fit the game; a free hand. Decisions:
+  - A weather is a look of the whole picture and something in the air:
+    the sky pulled toward the weather's colours, a light over
+    everything, and what falls in three depths (behind the tower,
+    before the wall, before everything; the nearest few and thin, so
+    that nothing hides a hazard).
+  - What falls is not kept as particles. A drop's place is worked out
+    each frame from the clock and the camera, from tables made once:
+    nothing is allocated, nothing has to be stepped, and it costs some
+    250 sprites in the rain and 400 in a storm (the first cut was half
+    of that and could hardly be seen).
+  - The wind is a white line that ends in a curl, as the old games drew
+    it. The curls already show a moment before a gust blows: that is
+    the warning the push will need when it comes.
+  - Snow lies: on what one stands on and on the lawn. That, more than
+    the flakes, makes it winter.
+  - Where: a stage has its weather, written in `stages.js` beside its
+    wall. The endless tower has fronts by height and seed. The first
+    stage and the first 90 m are always clear: the game opens as
+    everybody knows it.
+  - Sound: a bed of rain and one of wind, and thunder after the
+    lightning. Written without hearing them.
+  - Left for the next step: the gust pushing the prince (with the
+    simulator, measured), weather seen through the windows inside, and
+    whether the lawn is snowed in around Christmas.
+- 2026-11-26: The gust's push, denser snow, a white Christmas
+  (`element/weather`). Simon, having seen it move: fine; yes, let the
+  gust push the prince, without the simulator for now, he tries it
+  himself; yes, snow the lawn in around Christmas; and the snow may be
+  denser. Decisions:
+  - The gust carries the prince sideways while it blows: its envelope
+    times 180 px/s, added to where he is, not to his speed, so it does
+    not build up and steering against it works at once. Left alone he
+    is 160 to 250 px further over after a gust, by its length; holding
+    against it costs a third of his steering. The curls 0.9 s ahead are the warning.
+  - It is in the game's world only (`world.gusts`). The simulator's
+    worlds have none, so its reports stand and `identity.sh` is still
+    the same: the push is to be played first, then measured and the
+    bots taught, before it counts as done. Until then a storm is
+    harder for a player than the numbers say.
+  - Snow: 200 / 160 / 42 flakes where there were 120 / 96 / 26.
+  - Winter is the first of December to Epiphany. The first stage and
+    the endless tower's first 90 m, clear all year, are snowed in
+    then, and so are the title and the opening story, which takes the
+    weather of the lawn it ends on. A thin white edge on a green lawn
+    did not read as snow: the whole lawn is white, with humps along
+    its edge, hollows, and a few tufts of grass still showing.
+- 2026-11-27: The storm is the weather that plays (`element/weather`).
+  Simon, after playing it at length: the storm is the best of them,
+  because it is part of the game; it should come at random among the
+  stages now and then. Rain, snow and the rest stay. The wind on the
+  prince was right and could be a little more. When lightning strikes
+  the picture could go black and white for a moment; and a storm
+  should take the colour down, as grey weather does. Are the raindrops
+  single sprites? Decisions:
+  - A storm comes over an outside stage with a chance of three in ten,
+    from the third stage on, by the round's seed, never over two
+    outside stages running; so most rounds that get five outside
+    stages far meet one (77 of 100). In the endless tower storms are
+    in the fronts of every zone from 180 m on.
+  - The push goes from 180 to 230 px/s.
+  - The mood is a pass over the whole frame (`MoodFilter`): it takes
+    half the colour out while a storm is there, and in the lightning's
+    instant it turns the picture black and white and bright. Graded,
+    not stark: a first cut pulled light and dark apart so far that
+    nothing could be told for those frames. The pass is in the chain
+    only while a storm is, so it costs nothing the rest of the time;
+    during a storm it is one more full picture drawn, to be watched
+    on the phone.
+  - The rain: yes, every streak is a sprite, a white rectangle turned
+    the wind's way, in one batch with the rest (some 250 a frame, 400
+    in a storm). If the phone shows it, the streaks can be painted
+    once onto a few tiles that scroll, three sprites a layer.
+- 2026-11-27: The storm inside a stage (`element/weather`). Simon:
+  all of it stays as it is; the storm now has to be built into the
+  stages so that it does not come right at the beginning but later,
+  and a little at random; a free hand. Decisions:
+  - A stormy stage was stormy from its door. Now a stage begins in
+    its own weather and the storm draws up when he has climbed 25 to
+    50 % of it (by the round's seed), and it has passed 15 m under
+    the stage's end: calm, then the storm, then relief and the door.
+    That is the stage's own arc (calm behind the door, pressure
+    toward the end, a breather before the door) with the weather laid
+    over it. Some 45 to 50 m of storm in a stage of 100.
+  - It is keyed to how high he has climbed in the stage, not to the
+    clock: who stands still is not caught by it, and after a fall he
+    is at the door again in the weather the stage begins with.
+  - It is announced: a line, a first thunder, and the weather takes
+    3 s to go over; the first gust comes some seconds after that, with
+    its curls ahead of it as before.
+  - For the storm to draw up out of the rain and not replace it, a
+    change of weather is now a blend from one to the next (sky, light,
+    how much falls, how grey), where before one faded out to nothing
+    and the next in: snow lying on the branches went and came back.
+  - Where it snows the storm is a blizzard, not rain: thicker flakes
+    driven sideways and down faster in a gust, the same push, no
+    lightning.
+  - Which stages: unchanged, three in ten from the third on, never two
+    outside stages running, the crumbling tower always.
+- 2026-11-27: The endless tower's storms (`element/weather`). Simon:
+  the endless mode was forgotten; there a storm should turn up at
+  random now and then, with a short line that it is drawing up, come,
+  and after a while move off again, and the sun or the normal mood
+  comes back; the storm's grey should fade in and out, gently, and
+  perhaps the golden hour after it. Decisions:
+  - In the endless tower a storm had been a front like the others: a
+    band of 90 m, there as long as he was in it. It now keeps its own
+    time, from the round's start: calm, a storm, the sun, calm. It
+    comes whatever he does and it can be waited out, which a band of
+    height cannot; in stages it stays bound to the stage, where the
+    arc of the stage is the point.
+  - No storm in the first 35 s of a round; then one every minute or
+    two, 18 to 28 s long. The fronts keep rain, snow and the golden
+    hour and have no storms of their own any more.
+  - Said twice: "A storm is coming!" with a first thunder, and "The
+    storm has passed". A storm draws up and passes over 5 s where
+    other weathers change in 3: sky, light, the grey and the rain go
+    over together.
+  - After a storm the sun comes out (the golden hour) where the
+    weather would be clear, in the endless tower for 16 to 24 s and
+    in a stage for its last stretch to the door. Not at night, and
+    not where it rains or snows anyway.
+  - `?storm=8` brings the round's first storm after 8 s.

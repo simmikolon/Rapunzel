@@ -67,6 +67,13 @@ class Game {
     if (this.dev.len) { forceLen(this.world, this.dev.len); this.world.reset(); }   // regenerate with the forced class
     if (this.dev.veil != null && this.dev.veil !== '' && isFinite(+this.dev.veil)) this.world.bg.towerVeil.alpha = Math.max(0, Math.min(0.9, +this.dev.veil));   // ?veil= for this visit
     if (this.dev.wall) this.world.bg.forceWall = this.dev.wall;                       // ?wall= for this visit
+    if (this.dev.weather) this.world.forceWeather = this.dev.weather;                 // ?weather= for this visit
+    if (this.dev.season) this.world.season = this.dev.season;                         // ?season=winter|summer for this visit
+    if (this.dev.storm != null && this.dev.storm !== '' && isFinite(+this.dev.storm)) {      // ?storm=8: the endless tower's first storm after 8 s
+      this.world.stormFirst = Math.max(0, +this.dev.storm);
+      this.world.stormClock.dur = this.world.stormFirst;      // (the round under way too: ?at= starts in it)
+    }
+    this.world.gusts = true;                                                          // a storm's gusts lean on the prince (weather.js)
     this.loadSave();
     if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit
     // ?stages=1|0 picks the mode for this visit, ?stage=3 starts at that stage; the helpers that put something into

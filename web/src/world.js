@@ -14,6 +14,9 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
+import { frontAt, isWinter, stormSpan, STORM_CLOCK } from './weather.js';
+import { nightAlpha } from './altitude.js';
+import { CAMERA_PLAYER_OFFSET } from './config.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
 import { stageAt } from './stages.js';
@@ -101,6 +104,14 @@ export class World {
     this.player.reset(0, 0);
     this.level.reset();
     if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
+    // the weather (weather.js): its fronts in the endless tower and its gusts come from the round's seed
+    this.weatherSeed = seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 10);
+    this._winter = null;      // (a round begun on the first of December finds the lawn snowed in)
+    this.bg.weather.reset(new RNG(seed == null ? undefined : hash(seed + 11)));
+    // the endless tower's storms keep their own time (stepStorm): calm, a storm, the sun after it
+    this.rngStorm = new RNG(seed == null ? undefined : hash(seed + 12));
+    this.stormClock = { phase: 'calm', t: 0, dur: this.stormFirst != null ? this.stormFirst : this.rngStorm.range(STORM_CLOCK.first[0], STORM_CLOCK.first[1]) };
+    this.bg.weather.want(this.weatherKind(), true);
     this.suns = 0;
     this.stomps = 0;
     this.nextWitchY = 12000;
@@ -130,6 +141,47 @@ export class World {
   get scoreY() { return this.scoreBase + Math.max(this.topY, this.player.maxY) - this.scoreFrom; }
   get heightM() { return Math.max(0, Math.floor(this.scoreY / PX_PER_METER)); }
   // In stages: the stage he is in (its number from 1, its name), or null.
+  // The weather here (weather.js): none inside; a stage has its own (stages.js THEMES); the endless tower has
+  // fronts by height. ?weather= sets one for a visit (forceWeather).
+  // Around Christmas the lawn is snowed in: the first stage, and the endless tower's first band.
+  weatherKind() {
+    if (this.place.inside) return 'clear';
+    if (this.forceWeather) return this.forceWeather;
+    if (this.route) {
+      const st = this.level.stage;
+      if (!st) return 'clear';
+      // the stage's own weather; a storm that comes over it (now and then, and always over the crumbling tower)
+      // is not there when the stage begins: it draws up once he has climbed into its span, and it passes before
+      // the stage's end (weather.js stormSpan). Where it snows, it is a blizzard.
+      const own = st.weather && st.weather !== 'storm' ? st.weather : st.key === 'lawn' && this.winter ? 'snow' : 'clear';
+      const span = stormSpan(this.weatherSeed || 0, st), h = this.cam.y + CAMERA_PLAYER_OFFSET - st.y0;
+      if (span && h >= span.from && h < span.to) return own === 'snow' ? 'blizzard' : 'storm';
+      return span && h >= span.to ? this.afterStorm(own) : own;
+    }
+    // the endless tower: the front of this height, and over it the storm when its time has come
+    const own = frontAt(this.weatherSeed || 0, this.cam.y, this.winter), c = this.stormClock;
+    if (c && c.phase === 'storm') return own === 'snow' ? 'blizzard' : 'storm';
+    return c && c.phase === 'after' ? this.afterStorm(own) : own;
+  }
+  // After a storm the sun comes out: the golden hour, where the weather would be clear and it is not night.
+  afterStorm(own) { return (own === 'clear' || own === 'golden') && nightAlpha(this.cam.y) < 0.5 ? 'golden' : own; }
+  // The endless tower's storm keeps its own time (weather.js STORM_CLOCK): so long calm, then a storm draws up,
+  // stays a while and passes, and the sun is out for a bit. From the round's start, whatever he does: it can be
+  // waited out. (In stages the storm belongs to the stage instead, by how far he has climbed in it.)
+  stepStorm(dt) {
+    if (this.route || !this.started || this.over) return;
+    const c = this.stormClock;
+    c.t += dt;
+    if (c.t < c.dur) return;
+    c.phase = c.phase === 'calm' ? 'storm' : c.phase === 'storm' ? 'after' : 'calm';
+    c.dur = this.rngStorm.range(STORM_CLOCK[c.phase][0], STORM_CLOCK[c.phase][1]);
+    c.t = 0;
+  }
+  get winter() { if (this._winter == null) this._winter = this.forceSeason ? this.forceSeason === 'winter' : isWinter(); return this._winter; }
+  set season(v) { this.forceSeason = v || null; this._winter = null; }      // ?season=winter|summer for a visit
+  // How fast a storm's gust carries the prince sideways now, px/s. Only where the world has gusts (`gusts`: the
+  // game's world; the simulator's and the opening story's have none, so the bots are not blown about yet).
+  windPush() { return this.gusts && !this.place.inside ? this.bg.weather.push : 0; }
   get stageInfo() { const st = this.route && this.level.stage; return st ? { n: st.n + 1, name: st.name } : null; }
 
   start() {
@@ -163,6 +215,7 @@ export class World {
   update(dt) {
     this.time += dt;
     this.countT += dt;
+    this.stepStorm(dt);
     // Ribbons ride on the braid, so a wilder braid is the 'moving platform' mechanic.
     this.bg.swayAmp = 12 + clamp(this.level.difficulty.index, 0, 4) * 14;
     this.bg.updateFireflies(dt, this.cam, this.time, this);
@@ -357,6 +410,7 @@ export class World {
     this.particles.clear();
     this.level.restartFrom(gate.y, BEAT * 0.9);
     this.level.generateUpTo(this.cam.top + 900);
+    this.bg.weather.want(this.weatherKind(), true);      // through a gate: the weather out there is there when the picture opens
     this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
     this.floorName = zoneAt(pl.maxY, this.level.zones).name;      // the place is said, not the floor
     this.toast(this.place.arrive, '#fff2a8', 2);
@@ -390,6 +444,7 @@ export class World {
     this.scoreBase = base; this.scoreFrom = y; this.topY = y;
     this.bg.setWall(st.wall, this.cam, st.n, st.roses);
     this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
+    this.bg.weather.want(this.weatherKind(), true);      // the next stage's weather is there when the picture opens
     this.level.generateUpTo(this.cam.top + 900);
     this.nextWitchY = Math.max(12000, y + 3000);      // she and the storks keep to the heights they have in the endless tower
     this.nextStorkY = Math.max(47000, y + 400);
@@ -439,6 +494,7 @@ export class World {
     this.over = false; this.overT = 0;
     this.level.retryStage(y, door ? BEAT * 0.9 : 300);
     this.level.generateUpTo(this.cam.top + 900);
+    this.bg.weather.want(this.weatherKind(), true);      // at the door again: the weather the stage begins with
     this.nextWitchY = Math.max(this.nextWitchY, y + 3000);
     this.toast(this.lives === 1 ? 'Last life!' : `${this.lives} lives left`, this.lives === 1 ? '#ff9ab0' : '#fff2a8', 2.2);
     this.onRetry(pl, this.level.stage, cause);
@@ -999,6 +1055,7 @@ export class World {
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);
+    if (!this.place.inside) this.bg.weather.drawCaps(g, cam, visible, this.time);      // rain splashes and snow lies on what one stands on
     for (const [x, y, a, sc] of this.sparkles) g.blit(this.art.sign.sparkle, x, y, { alpha: a, sx: sc, sy: sc, glow: 0.5 });   // the golden doors' glints, over everything one stands on
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);
