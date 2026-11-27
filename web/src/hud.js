@@ -12,24 +12,25 @@ import { audio } from './audio.js';
 // H): what hangs from the top or stands on the bottom keeps out of the safe
 // area (SAFE), and the sign screens, laid out for 768 x 1364, sit centred.
 
-export function button(g, zone, label, opts = {}) {
-  const { x, y, w, h } = zone;
-  g.roundRect(x, y, w, h, 14, { fill: opts.fill || 'rgba(16,32,36,0.72)', stroke: opts.stroke || C.uiLine, width: 4, alpha: opts.alpha });
-  if (label) g.text(label, x + w / 2, y + h / 2 + 2, opts.size || 22, opts.color || '#fff', 'center', false, { alpha: opts.alpha });
-  if (opts.glyph) opts.glyph(g, x + w / 2, y + h / 2);
-}
-
 // A small button on a sign: a light board nailed on, the label painted in
 // ink, a symbol left of it when opts.icon(g, x, y, alpha) is given.
-// opts: alpha, on, size, icon
+// opts: alpha, on, size, icon, nails (false: a board too small for them)
 export function tagButton(g, zone, label, opts = {}) {
   const { x, y, w, h } = zone;
   const a = opts.alpha == null ? 1 : opts.alpha;
-  drawPlankTag(g, x, y, w, h, { alpha: a, on: opts.on });
+  drawPlankTag(g, x, y, w, h, { alpha: a, on: opts.on, nails: opts.nails });
   const cx = x + w / 2, cy = y + h / 2;
   if (opts.icon) opts.icon(g, label ? x + 40 : cx, cy, a);
   if (label) paint(g, label, opts.icon ? x + 68 : cx, cy + 1, opts.size || 14, opts.icon ? 'left' : 'center', { alpha: a });
 }
+
+// The same board, square and with nothing but a symbol in ink (art/hud.js):
+// sound and pause, in a round and on the title.
+export function iconButton(g, zone, sprite, alpha = 1) {
+  drawPlankTag(g, zone.x, zone.y, zone.w, zone.h, { alpha, nails: false });
+  g.blit(sprite, zone.x + zone.w / 2, zone.y + zone.h / 2, { alpha });
+}
+export const speakerIcon = (game) => (game.muted ? game.art.hud.speakerOff : game.art.hud.speaker);
 
 // The main button: a ribbon banner with the word in gold letters.
 // opts: alpha, t (the ribbon's tails flutter)
@@ -85,40 +86,6 @@ export const ZONES = {
   pauseMenu: { id: 'menu', x: W / 2 - 112, y: 720, w: 224, h: 60 },
 };
 
-export function drawSpeaker(g, cx, cy, muted, color = '#fff') {
-  g.path((p) => {
-    p.moveTo(cx - 16, cy - 7); p.lineTo(cx - 6, cy - 7); p.lineTo(cx + 6, cy - 17); p.lineTo(cx + 6, cy + 17);
-    p.lineTo(cx - 6, cy + 7); p.lineTo(cx - 16, cy + 7); p.closePath();
-  }, { fill: color });
-  if (muted) {
-    g.path((p) => { p.moveTo(cx + 10, cy - 10); p.lineTo(cx + 22, cy + 10); p.moveTo(cx + 22, cy - 10); p.lineTo(cx + 10, cy + 10); }, { stroke: '#ff6b6b', width: 4 });
-  } else {
-    g.path((p) => p.arc(cx + 8, cy, 12, -0.9, 0.9), { stroke: color, width: 4 });
-    g.path((p) => p.arc(cx + 8, cy, 20, -0.9, 0.9), { stroke: color, width: 4 });
-  }
-}
-
-export function drawPauseGlyph(g, cx, cy) {
-  g.rect(cx - 14, cy - 16, 10, 32, '#fff');
-  g.rect(cx + 4, cy - 16, 10, 32, '#fff');
-}
-
-export function drawFlame(g, cx, cy, s = 1, alpha = 1, glow = 0.8) {
-  g.path((p) => {
-    p.moveTo(cx, cy - 30 * s);
-    p.quadraticCurveTo(cx + 26 * s, cy - 4 * s, cx + 14 * s, cy + 22 * s);
-    p.quadraticCurveTo(cx, cy + 34 * s, cx - 14 * s, cy + 22 * s);
-    p.quadraticCurveTo(cx - 26 * s, cy - 4 * s, cx, cy - 30 * s);
-  }, { fill: C.flame3, alpha, glow });
-  g.path((p) => {
-    p.moveTo(cx, cy - 12 * s);
-    p.quadraticCurveTo(cx + 14 * s, cy + 4 * s, cx + 8 * s, cy + 20 * s);
-    p.quadraticCurveTo(cx, cy + 28 * s, cx - 8 * s, cy + 20 * s);
-    p.quadraticCurveTo(cx - 14 * s, cy + 4 * s, cx, cy - 12 * s);
-  }, { fill: C.flame2, alpha, glow });
-  g.circle(cx, cy + 14 * s, 6 * s, { fill: C.flame1, alpha, glow });
-}
-
 // The game-over summary: once the sign hangs, the height counts up with
 // ticks, then the suns (a pickup chime each), then the stomps (a thud
 // each), then the best height or NEW BEST!; the buttons wake after that.
@@ -138,7 +105,11 @@ const wordWidthGold = (L, str) => wordWidth(L.gold2, str);
 const rowValue = (row, t) => (row.dur > 0 ? row.n * clamp((t - row.from) / row.dur, 0, 1) : t >= row.from ? row.n : 0);
 
 export class HUD {
-  constructor(game) { this.game = game; this.summary = null; }
+  constructor(game) {
+    this.game = game; this.summary = null;
+    // the boost's flames: the round they were last drawn for, its charge then, and when each one was lit
+    this.flames = { world: null, last: 0, lit: new Array(BOOST_CHARGES).fill(-9) };
+  }
 
   beginSummary(world, isNewBest) {
     this.summary = { plan: summaryPlan(world, isNewBest), isNewBest, played: { climbed: 0, suns: 0, stomps: 0, best: false }, tickT: -1 };
@@ -199,37 +170,23 @@ export class HUD {
       const full = i < pl.hearts;
       g.blit(full ? art.creatures.heart : art.creatures.heartEmpty, W - 48 - i * 50, top + 60, full ? { glow: 0.35 } : undefined);
     }
-    // The power-up that runs: its picture and the time left as a bar, top
-    // centre; it blinks through its last moments like the effect on the prince.
+    // The power-up that runs: its picture and the time left as a bar on a
+    // board, top centre, rimmed in its colour; it blinks through its last
+    // moments like the effect on the prince.
     if (pl.power && pl.alive) {
       const P = POWERS[pl.power], k = clamp(pl.powerT / pl.powerMax, 0, 1);
       const cx = W / 2, cy = top + 62;
       const on = pl.powerT > POWER_WARN || Math.floor(pl.powerT * 9) % 2 === 0;
-      g.roundRect(cx - 84, cy - 34, 168, 68, 12, { fill: 'rgba(16,32,36,0.6)', stroke: on ? P.color : C.uiLine, width: 3 });
-      const icon = art.powerups[pl.power][0];
-      g.blit(icon, cx - 48, cy, { glow: 0.2, alpha: on ? 1 : 0.5 });
-      g.rect(cx - 12, cy - 8, 80, 16, C.uiDark, 0.8);
-      g.rect(cx - 12, cy - 8, Math.round(80 * k / 4) * 4, 16, P.color, on ? 1 : 0.5, { glow: 0.2 });
+      drawPlankTag(g, cx - 84, cy - 34, 168, 68, { nails: false, rim: on ? P.color : null });
+      g.blit(art.powerups[pl.power][0], cx - 44, cy, { glow: 0.2, alpha: on ? 1 : 0.5 });
+      g.rect(cx - 12, cy - 12, 80, 24, C.barkShadow);
+      g.rect(cx - 8, cy - 8, 72, 16, C.plankDark);
+      g.rect(cx - 8, cy - 8, Math.round(72 * k / 4) * 4, 16, P.color, on ? 1 : 0.5, { glow: 0.2 });
     }
-    // Boost charges
-    const bx = 28, by = H - 78 - bottom;
-    g.text('boost', bx, by - 36, 14, '#cfe8e3');
-    for (let i = 0; i < BOOST_CHARGES; i++) {
-      const full = pl.boost >= i + 1;
-      const part = clamp(pl.boost - i, 0, 1);
-      const x = bx + i * 56;
-      g.roundRect(x, by - 20, 44, 44, 8, { fill: 'rgba(16,32,36,0.6)', stroke: full ? C.gold : C.uiLine, width: 3 });
-      if (part > 0) drawFlame(g, x + 22, by + 2, 0.55 * (0.5 + 0.5 * part), full ? 1 : 0.5, full ? 0.8 : 0.3);
-    }
+    this.drawBoost(g, world);
     // Buttons
-    button(g, ZONES.pause, null, { glyph: drawPauseGlyph });
-    button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
-    if (this.game.input.isTouch) {
-      const z = ZONES.boost;
-      const can = pl.boost >= 1;
-      g.circle(z.x + z.w / 2, z.y + z.h / 2, z.w / 2, { fill: can ? 'rgba(255,170,60,0.28)' : 'rgba(16,32,36,0.5)', stroke: can ? C.gold : C.uiLine, width: 5 });
-      drawFlame(g, z.x + z.w / 2, z.y + z.h / 2, 1.3, can ? 1 : 0.4, can ? 0.8 : 0.2);
-    }
+    iconButton(g, ZONES.pause, art.hud.pause);
+    iconButton(g, ZONES.sound, speakerIcon(this.game));
     // Toasts
     let ty = H * 0.3;
     for (const t of world.toasts) {
@@ -240,6 +197,45 @@ export class HUD {
       g.text(t.text, W / 2, ty, size, t.color, 'center', true, { alpha: a, scale: pop, glow: 0.35 });
       ty += 46;
     }
+  }
+
+  // The boost. Bottom left a flame for each charge, as the hearts are: it
+  // burns (two frames, each flame in its own time) while the charge is whole,
+  // is a small flame at the foot of the unlit one at half a charge (a landing
+  // brings half), and is out when spent; a flame that has just caught hops.
+  // On a touch screen the button, bottom right: a wooden hoop around a dark
+  // glass the game shows through, the big flame in it. With a boost to give
+  // it has the gold rim of a chosen board and burns; just used, it is pressed
+  // in for the moment the next one has to wait; with none, the flame is out,
+  // and a tap all the same shakes what is empty (the label goes red).
+  drawBoost(g, world) {
+    const pl = world.player, A = this.game.art.hud, t = world.time, f = this.flames;
+    if (f.world !== world) { f.world = world; f.last = pl.boost; f.lit.fill(-9); }
+    for (let i = 0; i < BOOST_CHARGES; i++) if (pl.boost >= i + 1 && f.last < i + 1) f.lit[i] = t;
+    f.last = pl.boost;
+    const denied = pl.boostDenied > 0;
+    const shake = denied ? (Math.floor(pl.boostDenied * 30) % 2 ? 4 : -4) : 0;
+    const bx = 28, by = H - 52 - SAFE.bottom;
+    g.text('boost', bx, by - 64, 14, denied ? '#ff9ab8' : '#cfe8e3');
+    for (let i = 0; i < BOOST_CHARGES; i++) {
+      const part = pl.boost - i, x = bx + 20 + i * 48;
+      if (part >= 1) {
+        const hop = t - f.lit[i] < 0.14;
+        g.blit(A.flame[Math.floor(t * 5 + i * 0.7) % 2], x, by - (hop ? 8 : 0), { glow: hop ? 1 : 0.5 });
+      } else if (part > 0) g.blit(A.flameHalf, x + shake, by, { glow: 0.2 });
+      else g.blit(A.flameOff, x + shake, by);
+    }
+    if (!this.game.input.isTouch) return;
+    const z = ZONES.boost, can = pl.boost >= 1;
+    const down = pl.boostCooldown > 0;
+    const cx = z.x + z.w / 2 + (can ? 0 : shake), cy = z.y + z.h / 2 + (down ? 4 : 0);
+    if (!down) g.blit(A.hoop, cx + 4, cy + 8, { tint: '#000000', alpha: 0.25 });
+    g.blit(A.lens, cx, cy, { tint: C.uiDark, alpha: 0.6 });
+    if (can) g.blit(A.lens, cx, cy, { tint: C.flame3, alpha: 0.22 });
+    g.blit(A.hoop, cx, cy);
+    if (can) g.blit(A.rim, cx, cy, { glow: 0.4 });
+    if (can) g.blit(A.bigFlame[Math.floor(t * (down ? 14 : 5)) % 2], cx, cy + 44, { glow: down ? 1 : 0.6 });
+    else g.blit(pl.boost > 0 ? A.bigFlameHalf : A.bigFlameOff, cx, cy + 44, pl.boost > 0 ? { glow: 0.2 } : undefined);
   }
 
   // One-line message at the top, used for device hints (e.g. iOS silent switch).
@@ -258,8 +254,8 @@ export class HUD {
     drawWord(g, art.logo.gold2, 'PAUSED', W / 2, sy + 118, { glow: 0.3 });
     paint(g, this.game.input.isTouch ? 'tap to continue' : 'tap or press P to continue', W / 2, sy + 164, 14, 'center');
     tagButton(g, shiftZone(ZONES.pauseMenu), 'MENU');
-    button(g, ZONES.pause, null, { glyph: drawPauseGlyph });
-    button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
+    iconButton(g, ZONES.pause, art.hud.pause);
+    iconButton(g, ZONES.sound, speakerIcon(this.game));
   }
 
   // The sign is lowered in from above with the verdict, then the summary
@@ -306,6 +302,6 @@ export class HUD {
     const ready = clamp((t - plan.ready) / 0.3, 0, 1);
     ribbonButton(g, art, shift(ZONES.again), 'TRY AGAIN', { alpha: ready, t: world.time });
     tagButton(g, shift(ZONES.menu), 'MENU', { alpha: ready });
-    button(g, ZONES.sound, null, { glyph: (gg, x, y) => drawSpeaker(gg, x, y, this.game.muted) });
+    iconButton(g, ZONES.sound, speakerIcon(this.game));
   }
 }

@@ -30,6 +30,7 @@ export class Player {
     this.hearts = MAX_HEARTS;
     this.boost = BOOST_CHARGES;
     this.boostCooldown = 0;
+    this.boostDenied = 0;          // a tap with no boost to give: the HUD shakes what is empty for this long
     this.combo = 0;
     this.sx = 1; this.sy = 1;      // squash / stretch
     this.spin = 0;
@@ -87,6 +88,7 @@ export class Player {
     if (this.invuln > 0) this.invuln -= dt;
     if (this.shield > 0) this.shield -= dt;
     if (this.boostCooldown > 0) this.boostCooldown -= dt;
+    if (this.boostDenied > 0) this.boostDenied -= dt;
     // In the treasury the power-up he brought waits (there is nothing to use it on); the magnet he finds there runs.
     if (this.power && !(this.world.vault && this.power !== 'magnet')) this.updatePower(dt);
     this.prevY = this.y;
@@ -303,7 +305,7 @@ export class Player {
 
   tryBoost() {
     if (this.boostCooldown > 0) return;
-    if (this.boost < 1) { this.world.audio.boostEmpty(); return; }
+    if (this.boost < 1) { this.world.audio.boostEmpty(); this.boostDenied = 0.3; return; }
     this.boost -= 1;
     this.boostCooldown = BOOST_COOLDOWN;
     const spring = this.power === 'spring';

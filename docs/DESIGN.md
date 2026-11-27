@@ -839,6 +839,18 @@ is a pool to draw from, not a promise.
   (the sign is lowered again, no ride). `Game.startRound(config)` is the one way into
   a round, so a mode or tower selection can sit between PLAY and the
   countdown later.
+- ✅ the round's own controls in the signs' wood (`art/hud.js`,
+  `drawBoost` in `hud.js`): the boost's charges bottom left as three
+  flames, kin of the hearts (burning in two frames, a small flame at
+  the foot of the unlit one at half a charge, out when spent; one that
+  has just caught hops); on a touch screen the boost's button bottom
+  right, a wooden hoop with a nail left and right around a dark glass
+  the game shows through, the big flame in it, a gold rim while a boost
+  is ready, pressed in for the moment after one, and a tap with none
+  shakes what is empty; sound and pause on small boards with their
+  symbols in ink (the title's sound board is the same one); the
+  power-up that runs on a board rimmed in its colour, its time a bar in
+  a slot. Purely visual: the simulator has no HUD.
 - ✅ light shafts through the canopy (additive soft beams, slow sway) on
   the forest floor and in the deep forest, with dust motes drifting down
   the beams; passing clouds dim and restore the sun over 10–20 s.
@@ -2851,3 +2863,41 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     memory's reading in Xcode is put off. Merged; the branch, whose
     name says nothing, is not kept, and branches are named after what
     is done on them from here on (`CLAUDE.md`).
+- 2026-11-27: The round's controls in pixels (`element/hud-pixel`).
+  Simon: the boost's button and its charges are not pixel art and do
+  not look like the game; look, think, be creative, a free hand. They
+  were vector shapes (a smooth circle, a flame of curves, boxes with
+  round corners), and so were sound, pause and the power-up's box.
+  Decisions:
+  - The flame stays the boost's sign (it is what comes out of the pogo
+    stick, and the title says "tap the flame"), now drawn on the grid:
+    pale core, yellow, orange, a red foot (`flame4`, a fourth step of
+    the flame's ramp), the tip leaning one way and the other in two
+    frames, a lick off one side.
+  - The charges are flames beside nothing, as the hearts are hearts
+    beside nothing: no boxes. A landing brings half a charge and a
+    boost takes a whole one, so a charge has exactly three states and
+    each is a sprite: burning, a small flame at the foot of the unlit
+    one, out. The unlit flame is the HUD's dark with an edge (`uiMid`
+    between `uiDark` and `uiLine`), brighter where the light falls; the
+    empty heart's mesh was tried first and was noise at this shape.
+  - The button is of the signs' wood, a hoop (light planks, the dark
+    outline, nails as the small boards have them), and what it holds is
+    a dark glass at 60 %: it stands where things are played, so the
+    game shows through as it did. "Ready" is the gold rim a chosen
+    board has. No fourth display on the button: with less than a whole
+    charge it shows what the next one lacks (out, or the small flame).
+  - Sound, pause and the power-up's box are the title's small boards
+    (`drawPlankTag`, now also without nails and with a rim in any
+    colour) with symbols in ink as sprites; the title's sound board
+    takes the same sprite. `g.roundRect`, `g.path` and `g.circle` are
+    gone from the HUD: every piece is a sprite of the one atlas.
+  - Feedback that was missing: a flame that has just caught hops, the
+    button is pressed in while the next boost has to wait
+    (`boostCooldown`), and a tap with no boost shakes what is empty and
+    reddens the label (`boostDenied` on the player, a timer nothing in
+    the game reads: the simulator's reports are as they were).
+  - Seen in still pictures of a headless browser only (a phone's shape,
+    outside by day, inside, in stages). Not played, and nothing moving
+    was seen: the flicker's pace, the hop and the shake are Simon's to
+    judge on the phone. The atlas grew from 1024 x 1009 to 1024 x 1021.

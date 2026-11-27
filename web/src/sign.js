@@ -108,7 +108,7 @@ const TAG_HI = '#f1d3a8';
 const RIB_EDGE = '#73213f';
 const BRASS = C.goldDark, BRASS_HI = C.gold, BRASS_LO = '#7d5c1a';
 
-// o: alpha, on (a gold rim inside the edge)
+// o: alpha, on (a gold rim inside the edge), rim (that rim in another colour), nails (false: none)
 export function drawPlankTag(g, x, y, w, h, o = {}) {
   const a = o.alpha == null ? 1 : o.alpha;
   const r = (xx, yy, ww, hh, c) => g.rect(xx, yy, ww, hh, c, a);
@@ -117,7 +117,9 @@ export function drawPlankTag(g, x, y, w, h, o = {}) {
   r(x + 4, y + 4, w - 8, h - 8, C.plankHi);
   r(x + 8, y + 4, w - 16, 4, TAG_HI);
   r(x + 4, y + h - 12, w - 8, 8, C.plank);
-  if (o.on) { r(x + 8, y + 8, w - 16, 4, C.gold); r(x + 8, y + h - 12, w - 16, 4, C.gold); r(x + 8, y + 12, 4, h - 24, C.gold); r(x + w - 12, y + 12, 4, h - 24, C.gold); }
+  const rim = o.rim || (o.on ? C.gold : null);
+  if (rim) { r(x + 8, y + 8, w - 16, 4, rim); r(x + 8, y + h - 12, w - 16, 4, rim); r(x + 8, y + 12, 4, h - 24, rim); r(x + w - 12, y + 12, 4, h - 24, rim); }
+  if (o.nails === false) return;
   const ny = y + Math.floor(h / 8) * 4 - 4;
   for (const nx of [x + 8, x + w - 16]) { r(nx, ny, 8, 8, C.pole); r(nx, ny, 4, 4, C.poleHi); }
 }
