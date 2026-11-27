@@ -2,6 +2,7 @@ import { W, H, PX_PER_METER, PLAYER_H, PUNCH_SUNS, PARALLAX_TOWER, HOP_VY, SHOWO
 import { Camera } from './camera.js';
 import { Particles } from './particles.js';
 import { Player } from './player.js';
+import { Sidekick, LORD } from './sidekick.js';
 import { Platform, fallDist } from './platforms.js';
 import { cloudAmount } from './altitude.js';
 import { Updraft } from './updraft.js';
@@ -52,6 +53,7 @@ export class World {
     this.cam = new Camera();
     this.bg = new Background(this.art);
     this.player = new Player(this);
+    this.lord = new Sidekick();   // Lord Springalot, who does what the prince does a moment later (sidekick.js): for the eye only
     this.rng = new RNG();
     this.level = new Level(this, this.rng);
     this.placeName = (game.round && game.round.place) || 'outside';
@@ -102,6 +104,7 @@ export class World {
     this.particles.clear();
     this.cam.reset();
     this.player.reset(0, 0);
+    this.lord.reset();
     this.level.reset();
     if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
     // the weather (weather.js): its fronts in the endless tower and its gusts come from the round's seed
@@ -232,6 +235,7 @@ export class World {
     if (this.showoff) { this.showoff.t += dt; pl.flip = clamp(this.showoff.t / this.showoff.dur, 0, 1) * TAU; }
     if (pl.alive && !pl.frozen && !pl.carried) this.collide();
     if (this.passage) this.updatePassage(dt);
+    if (LORD.on) this.lord.update(dt, pl, this.started);
 
     for (const e of this.enemies) e.update(dt, this);
     for (const f of this.fields) f.update(dt, this);
@@ -1059,6 +1063,7 @@ export class World {
     for (const [x, y, a, sc] of this.sparkles) g.blit(this.art.sign.sparkle, x, y, { alpha: a, sx: sc, sy: sc, glow: 0.5 });   // the golden doors' glints, over everything one stands on
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);
+    if (LORD.on) this.lord.draw(g, cam, this.art, this.player);      // behind the prince
     this.player.draw(g, cam, this.art);
     if (this.player.carried) {
       // the bubble that carries him (the treasury's rescue): the power-ups' soap bubble at his size, in gold

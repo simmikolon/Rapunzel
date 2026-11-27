@@ -64,8 +64,9 @@ which only copies the two folders together). The design document
 - `main.js` the game's loop and modes (intro, title, countdown, playing,
   paused, game over); `world.js` a round: platforms, enemies, pickups, the
   prince, the weather's choice, stages and retries; `level.js` what is
-  built where (tiers, pacing, `ZONES`); `player.js`, `enemies.js`,
-  `platforms.js`, `pickups.js`, `powerups.js`.
+  built where (tiers, pacing, `ZONES`); `player.js`, `sidekick.js` (Lord Springalot, who
+  copies the prince), `enemies.js`, `platforms.js`, `pickups.js`,
+  `powerups.js`.
 - `background.js` sky, tower, forest, trees and the drawing order;
   `atmosphere.js` fog, leaves, forest life; `weather.js` rain, snow,
   storm, golden hour; `interior.js` the inside of the tower;
@@ -138,6 +139,9 @@ which only copies the two folders together). The design document
   backing pixels per logical pixel, `?px=hard` scales the picture up
   with hard pixels, `?letters=0` has the browser paint every text as
   before the letter sheets (to compare).
+  Lord Springalot, the prince's sidekick (a trial, `web/src/sidekick.js`):
+  `?lord=0.5` sets how far behind the prince he hops, in seconds, `?lord=0`
+  leaves him at home.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark

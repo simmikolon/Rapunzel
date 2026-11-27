@@ -253,6 +253,21 @@ build them. Each zone: elements, look, set piece.
 Everything proposed so far, by family. Status marks what exists; the rest
 is a pool to draw from, not a promise.
 
+**Companions**
+- 🔜 Lord Springalot, the prince's sidekick (a trial on
+  `element/springalot`; `web/src/sidekick.js`, `web/src/art/lord.js`): a
+  child on a pogo pony of his own who does everything the prince does a
+  third of a second later, the same hops, boosts and somersaults, in
+  both modes and in both places. He has what the prince has, home-made:
+  a cooking pot for the crown, a towel for the cape, a piebald pony's
+  head on the stick. For the eye only: he stands on nothing, nothing
+  meets him, he asks no random number (the simulator's reports are as
+  they were), and he has no sound yet. `?lord=0.5` sets how far behind
+  he is, `?lord=0` leaves him at home. 💡 later: a choice on the title
+  of who leads (the other one follows); a small deed of his own. Lives
+  are not his: they are kept for the good fairy (💡 a short scene when
+  a life is lost in stages, she brings it and says "don't give up").
+
 **Enemies**
 - ✅ crow, ✅ spider, ✅ witch (dodge; deflected by a boost).
 - ✅ squirrel: sits on a healthy branch nibbling an acorn, patrols it,
@@ -2902,3 +2917,46 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     was seen: the flicker's pace, the hop and the shake are Simon's to
     judge on the phone. The atlas grew from 1024 x 1009 to 1024 x 1021.
   - Simon looked at it: all good as it is. Merged.
+- 2026-11-27: Lord Springalot, a trial (`element/springalot`). Simon:
+  the game began with his daughter (Rapunzel) and himself (the prince);
+  his son is to be in it as the prince's sidekick, Lord Springalot, on a
+  pogo horse like his father's.
+  - Three ways were weighed: a companion who climbs by himself (own
+    physics: he needs a way through the rows, takes dry branches away,
+    and "which one am I" on 768 px), a choice on the title (cheap, but
+    then he replaces the prince and is never beside him), stages of his
+    own (the doors are there for a handover, but the player loses the
+    choice and every stage is tuned twice).
+  - Tried first on paper: he catches the prince once when he falls,
+    called by 100 suns. Simon: that competes with the lives of the
+    stages, and lives are meant for a good fairy later. Dropped.
+  - Built: he copies. The prince's way is written down step by step
+    (typed arrays, 256 steps, nothing allocated) and the lord is drawn
+    where the prince was 0.34 s ago in the pose he had there. That
+    needs no way-finding and no rule of its own in either mode, he
+    never falls beside a branch, and who the player is stays plain: the
+    one in front, the bigger one. Put somewhere else (a door, a lost
+    life, a new round) the prince is more than 320 px from his last
+    step, and the lord is there with him.
+  - So the two are not one figure when they hop on the spot, he keeps
+    34 px behind the prince's back in the round and stands 96 px beside
+    him on the lawn before it. Where the prince is hurt or knocked out
+    the lord does not copy that: wide eyes, the pot off his head.
+    Under the cloak he is as pale as the prince; the star's rim and the
+    feather's wings are the prince's alone.
+  - The sprite (20 x 42 art px, six poses, drawn to the left with
+    `flip`): what moves is the pot, slipped over his eyes on a landing
+    and off his head in a fall, its handle and the towel. The pony was
+    brown at first and was lost on the red shirt: piebald now.
+  - The simulator's five reports on fixed seeds are exactly as they
+    were (`identity.sh`); `flow`, `stages`, `story`, `settings` and
+    `atlas` pass. The atlas is 1024 x 1021 as before, the sprites' own
+    canvases 56 MB of the 80 at the start.
+  - Seen in still pictures of a headless browser only: the title, a
+    round outside (the rose wall, the deep forest), the dark rooms, the
+    cloak, the golden spring, a stage with a fall back to its door.
+    Nothing moving was seen. Simon's to judge on the phone: whether two
+    hoppers make the picture richer or restless, whether 0.34 s is the
+    right distance, how it looks when he lands on a dry branch that has
+    just crumbled under the prince, and in the treasury's bubble (he
+    rises beside it without one).

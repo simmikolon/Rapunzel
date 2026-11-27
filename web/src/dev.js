@@ -35,6 +35,7 @@
 //   ?weather=snow    the weather outside for this visit: rain, storm, snow, blizzard, golden or clear (weather.js)
 //   ?storm=8         the endless tower's first storm draws up after so many seconds of the round (weather.js STORM_CLOCK)
 //   ?season=winter   as around Christmas, the lawn and the title snowed in (summer: not, whatever the date)
+//   ?lord=0.5        how far behind the prince Lord Springalot hops, in seconds (0: he stays at home; sidekick.js LORD)
 //   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';
 import { Platform, BRANCH_LEN, GALLERY_X } from './platforms.js';
@@ -51,7 +52,7 @@ import { POWERS } from './powerups.js';
 export function devParams() {
   const q = new URLSearchParams(location.search);
   return { at: +q.get('at') || 0, spawn: q.get('spawn') || '', dev: q.get('dev') === '1', len: q.get('len') || '', place: q.get('place') || '', veil: q.get('veil'), wall: q.get('wall') || '',
-    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '', px: q.get('px') || '', weather: q.get('weather') || '', season: q.get('season') || '', storm: q.get('storm') };
+    stages: q.get('stages') || '', stage: Math.max(0, Math.floor(+q.get('stage') || 0)), lives: q.get('lives') || '', story: q.get('story') || '', perf: q.get('perf') || '', res: q.get('res') || '', letters: q.get('letters') || '', px: q.get('px') || '', weather: q.get('weather') || '', season: q.get('season') || '', storm: q.get('storm'), lord: q.get('lord') };
 }
 
 // Teleport a fresh round to an altitude (in metres) before it starts.
