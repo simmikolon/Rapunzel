@@ -31,12 +31,13 @@ function lifeIcon(prince) {
   return { canvas, w, h, ax: w / 2, ay: h };
 }
 
-export function buildAllArt() {
+// `opts.hat`: what Lord Springalot wears on his head (art/lord.js HATS), for trying the others.
+export function buildAllArt(opts = {}) {
   const prince = buildPrince();
   prince.life = lifeIcon(prince);
   return {
     prince,
-    lord: buildLord(),
+    lord: buildLord(opts.hat),
     chimney: buildChimney(),
     platforms: buildPlatforms(),
     creatures: buildCreatures(),

@@ -476,7 +476,7 @@ const boot = async () => {
   const canvas = document.getElementById('game');
   try {
     measureViewport(canvas);     // H must be known before the renderer and the world exist
-    const art = buildAllArt();
+    const art = buildAllArt({ hat: new URLSearchParams(location.search).get('hat') || undefined });      // (?hat=: what the lord wears, dev.js)
     let gfx;
     try {
       gfx = await createRenderer(canvas, art, FX);

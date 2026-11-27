@@ -258,9 +258,11 @@ is a pool to draw from, not a promise.
   that takes a charge and throws him up at once, with a shield.
 - 🔜 Lord Springalot (a trial on `element/springalot-rocket`;
   `web/src/player.js` FIGURES, `web/src/art/lord.js`; `?who=lord`): a
-  second main character, a child on a pogo pony of his own, with what
-  the prince has, home-made (a cooking pot for the crown, a towel for
-  the cape). The same jump as the prince, so the tower is the same
+  second main character, the prince's son on a pogo pony of his own:
+  blond, his father's colours the other way round (a red tunic, a blue
+  cape), a flyer's goggles on his forehead that he pulls over his eyes
+  when the rocket burns (`?hat=coronet|cap` shows the two other things
+  drawn for his head). The same jump as the prince, so the tower is the same
   tower for both; his master ability is a rocket, a firework tied to
   his back. It burns for as long as the boost is held (a tap is a short
   burn) on the boost's three charges, one in half a second, refilled as
@@ -3167,3 +3169,32 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     steer (hold a side: the flame's button; slide: a second finger;
     tilt: anywhere), whether a full tank's 24 m is too much, whether
     one sees the tank go down, and whether he is fun.
+- 2026-11-27: Lord Springalot, played, and his head
+  (`element/springalot-rocket`). Simon played him with the rocket:
+  clearly better than the other ways. To change: he is blond; what he
+  has on his head looks like a pot and has to be something else; he
+  seems a little small, which can stay for now.
+  - It was a pot. The boy playing knight with what he finds at home (a
+    pot, a towel) was the sidekick's idea, and it does not carry a
+    main character: he is the prince's son now and dressed as one.
+    Blond hair (a mop, a tuft that will not lie down; it flies as the
+    prince's does), and his father's colours the other way round: a
+    red tunic and a blue cape, where the towel was yellow and would
+    have been one yellow with the hair.
+  - On his head, three things were drawn to choose from (`art/lord.js`
+    HATS; `?hat=coronet|cap` to see the others in the game): a flyer's
+    goggles, a small silver coronet with a blue stone, a green cap
+    with a feather. The goggles are in the game: they belong to the
+    rocket, they leave the hair to be seen, and they are what the pot
+    was for the eye, something that moves (on his forehead; slipped
+    half over his eyes on a landing; pulled right over them while the
+    rocket burns; lifted into his hair in a fall). The coronet makes
+    him a small prince; the cap has the strongest outline and hides
+    half the hair. Simon's to say.
+  - Art only: the simulator's reports are as they were (`identity.sh`),
+    and the atlas is the size it was (1024 x 1085). `stages.mjs` failed
+    once in the run of checks and passed three times after, and once
+    on the commit before: on that run its prince had hopped through
+    the stage's door by himself before the check looked at the camera
+    (a round's seed is random there). A flaw of the check, not of this
+    change; not mended here.

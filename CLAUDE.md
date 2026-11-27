@@ -142,7 +142,8 @@ which only copies the two folders together). The design document
   before the letter sheets (to compare).
   Lord Springalot (a trial, `web/src/player.js` FIGURES): `?who=lord` has
   him climb the tower instead of the prince, with the same jump and a
-  rocket for the boost (hold it).
+  rocket for the boost (hold it). `?hat=coronet|cap` shows him with what
+  else was drawn for his head (he wears goggles).
   The chimney (a hidden room, `web/src/chimney.js`):
   `?place=inside&at=50&spawn=chimney` puts a fireplace above the start;
   through it somebody small is played, up the shaft and out by its soot door.
