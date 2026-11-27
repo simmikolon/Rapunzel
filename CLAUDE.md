@@ -110,6 +110,8 @@ which only copies the two folders together). The design document
 - The project is generated: edit `ios/project.yml`, run `xcodegen generate`
   in `ios/`, commit both. Version and build number are in
   `ios/Version.xcconfig` (bump the build before every upload).
+- TestFlight: `tools/ios_upload.sh` archives and uploads from the checkout
+  (master, committed); `ios/README.md` has the sign-in fallbacks.
 - The game talks to the shell only through `web/src/platform.js` (storage,
   tilt, haptics, pause, safe area); in a browser every call there is the
   plain web API, so the web version must stay byte-for-byte the same in

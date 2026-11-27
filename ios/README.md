@@ -103,11 +103,23 @@ plutil -p "$(xcrun simctl get_app_container booted com.simonkemper.sirbouncealot
 
 ## TestFlight
 
-1. App Store Connect: create the app record for `com.simonkemper.sirbouncealot`
-   (name "Sir Bouncealot") and an internal testing group.
-2. Xcode: destination "Any iOS Device (arm64)", Product > Archive,
-   Distribute App > TestFlight Internal Only, upload.
-3. Next upload: bump `CURRENT_PROJECT_VERSION` in `Version.xcconfig`.
+The app record in App Store Connect is `com.simonkemper.sirbouncealot`
+("Sir Bouncealot", team `7KRY479XMN`; the bundle ID is registered as an
+explicit App ID, the Debug builds only use the wildcard profile).
+
+1. Bump `CURRENT_PROJECT_VERSION` in `Version.xcconfig` and commit it
+   (App Store Connect takes every build number once).
+2. With master checked out: `tools/ios_upload.sh`. It archives the Release
+   app (the archive shows in Xcode's Organizer), signs it for App Store
+   Connect (`ExportOptions.plist`) and uploads it. `--no-upload` stops at
+   the signed `.ipa` in `ios/build/`.
+3. After a few minutes of processing the build is in TestFlight.
+
+The upload signs in with the Apple ID in Xcode. If that fails with "App
+Store Connect Credentials Error", use an App Store Connect API key (see the
+head of `tools/ios_upload.sh`), or upload the archive from the Organizer:
+Distribute App > App Store Connect. Not "TestFlight Internal Only": such a
+build can never go to the App Store.
 
 Export compliance is answered in the Info.plist (no non-exempt encryption)
 and `PrivacyInfo.xcprivacy` declares the one required-reason API
