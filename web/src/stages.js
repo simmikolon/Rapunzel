@@ -28,8 +28,10 @@ import { clamp } from './util.js';
 //   dark    (inside) the lights are out for the whole stage; in the others
 //           they stay on
 //   vault   (inside) a golden door to the treasury stands in it
-//   weather (outside) the stage's weather (weather.js): 'rain', 'storm',
-//           'snow' or 'golden' (the golden hour); none: clear
+//   weather (outside) the stage's weather (weather.js): 'rain', 'snow' or
+//           'golden' (the golden hour); none: clear. 'storm': a storm
+//           always comes over this stage (over the others now and then),
+//           drawing up after its first part and gone before its end
 // How hard a stage is does not come from `at` but from how far he has come
 // (level.js tierOf), so a theme can come again later and be harder then.
 export const THEMES = {

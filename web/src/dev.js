@@ -32,7 +32,7 @@
 //   ?res=1.5         the drawing resolution in pixels per logical pixel (1.5, 1.25, 1, 0.75 or 0.5; screen: the screen's own;
 //                    none given: config.js RESOLUTION)
 //   ?px=hard         the screen scales the picture up with hard pixels, not smoothly (what keeps a resolution below 1 sharp)
-//   ?weather=snow    the weather outside for this visit: rain, storm, snow, golden or clear (weather.js)
+//   ?weather=snow    the weather outside for this visit: rain, storm, snow, blizzard, golden or clear (weather.js)
 //   ?season=winter   as around Christmas, the lawn and the title snowed in (summer: not, whatever the date)
 //   ?letters=0       paint every text with the browser as before the letter sheets (gfx/renderer.js _sheet), to compare
 import { PX_PER_METER, PARALLAX_TOWER } from './config.js';

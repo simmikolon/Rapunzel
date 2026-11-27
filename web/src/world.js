@@ -14,7 +14,8 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
-import { frontAt, isWinter, stormStage } from './weather.js';
+import { frontAt, isWinter, stormSpan } from './weather.js';
+import { CAMERA_PLAYER_OFFSET } from './config.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
 import { stageAt } from './stages.js';
@@ -145,8 +146,12 @@ export class World {
     if (this.route) {
       const st = this.level.stage;
       if (!st) return 'clear';
-      if (stormStage(this.weatherSeed || 0, st.n)) return 'storm';      // a storm comes over a stage now and then
-      return st.weather || (st.key === 'lawn' && this.winter ? 'snow' : 'clear');
+      // the stage's own weather; a storm that comes over it (now and then, and always over the crumbling tower)
+      // is not there when the stage begins: it draws up once he has climbed into its span, and it passes before
+      // the stage's end (weather.js stormSpan). Where it snows, it is a blizzard.
+      const own = st.weather && st.weather !== 'storm' ? st.weather : st.key === 'lawn' && this.winter ? 'snow' : 'clear';
+      const span = stormSpan(this.weatherSeed || 0, st), h = this.cam.y + CAMERA_PLAYER_OFFSET - st.y0;
+      return span && h >= span.from && h < span.to ? (own === 'snow' ? 'blizzard' : 'storm') : own;
     }
     return frontAt(this.weatherSeed || 0, this.cam.y, this.winter);
   }
@@ -465,6 +470,7 @@ export class World {
     this.over = false; this.overT = 0;
     this.level.retryStage(y, door ? BEAT * 0.9 : 300);
     this.level.generateUpTo(this.cam.top + 900);
+    this.bg.weather.want(this.weatherKind(), true);      // at the door again: the weather the stage begins with
     this.nextWitchY = Math.max(this.nextWitchY, y + 3000);
     this.toast(this.lives === 1 ? 'Last life!' : `${this.lives} lives left`, this.lives === 1 ? '#ff9ab0' : '#fff2a8', 2.2);
     this.onRetry(pl, this.level.stage, cause);

@@ -9,7 +9,7 @@ import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
 import { Atmosphere } from './atmosphere.js';
-import { Weather } from './weather.js';
+import { Weather, WEATHER } from './weather.js';
 import { StringLights } from './lights.js';
 import { Interior } from './interior.js';
 import { windowsBetween } from './windows.js';
@@ -553,7 +553,10 @@ export class Background {
   updateAtmosphere(dt, cam, time, world) {
     if (this.inside) { if (world && world.audio && world.audio.weather) world.audio.weather(0, 0); return; }      // (its rain and wind are not heard in here)
     this.atmo.update(dt, cam, time, world);
-    this.weather.want(world && world.weatherKind ? world.weatherKind() : 'clear');
+    const kind = world && world.weatherKind ? world.weatherKind() : 'clear';
+    // a storm draws up: it is said, and a first thunder rolls, well before its first gust
+    if (world && world.toast && WEATHER[kind] && WEATHER[kind].gusts && !this.weather.b.gusts) { world.toast('A storm is coming!', '#cfe0ff', 2.6); if (world.audio && world.audio.thunder) world.audio.thunder(); }
+    this.weather.want(kind);
     this.weather.update(dt, time, world && world.audio);
     this.lights.update(dt, cam, time, world, this.atmo.gustEnv());
   }
