@@ -254,8 +254,10 @@ Everything proposed so far, by family. Status marks what exists; the rest
 is a pool to draw from, not a promise.
 
 **Companions**
-- 🔜 Lord Springalot, the prince's sidekick, and his chimney (a trial on
-  `element/springalot-chimney`; `web/src/chimney.js`,
+- ❓ Lord Springalot, the prince's sidekick, and the chimney (a trial on
+  `element/springalot-chimney`, played and found no fun as the lord's
+  room, see the decision log: the chimney stays as a hidden room for
+  somebody else, the lord is to be a second main character; `web/src/chimney.js`,
   `web/src/art/chimney.js`, `web/src/art/lord.js`): a child on a pogo
   pony of his own, with what the prince has, home-made (a cooking pot
   for the crown, a towel for the cape). He is never in the picture
@@ -3082,3 +3084,19 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     and the animals are seen at a glance or only by looking for them,
     and whether anything of it reads as something to stand on or to
     fear.
+- 2026-11-27: The chimney, played (`element/springalot-chimney`). Simon:
+  it can all stay as it is, as an extra, hidden element; it is cool and
+  funny for a moment. But no fun comes of playing it with the little
+  lord, and as his part in the game it is rather an insult to Lord
+  Springalot.
+  - The chimney stays (on this branch, behind `?spawn=chimney`: no
+    spawn rule), but it is not the lord's: somebody else is to be
+    played in it. Who, is open.
+  - What it taught: a figure whose own thing is that he can do less
+    (smaller hops in a narrow room) is no part for a main character.
+  - Simon's next idea, not built: Sir Bouncealot and Lord Springalot
+    as two main characters with the same jump (so the tower is the
+    same for both) and a master ability each. The prince keeps the
+    boost; the lord gets a rocket that burns for as long as the boost
+    is held, on fuel; or another special move. A character can be
+    unlocked. A third later: the mother, Lady Sparkalot.
