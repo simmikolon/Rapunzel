@@ -19,6 +19,13 @@ import { PX } from '../config.js';
 // pixels, or it says `fine: true`) goes onto a second sheet at full size.
 // tools/checks/atlas.mjs looks at every sprite: one that is off the grid
 // without saying so would lose what is between the art pixels.
+//
+// Once the sheets are painted the sprites' own canvases are given back
+// (release): they are four times the art's size each way, 55 MB in all,
+// and from here on everything is drawn from the atlas. A sprite keeps its
+// size, its anchor and `tex`; its `canvas` is null. Whoever needs a
+// sprite's pixels after that builds the art anew (buildAllArt()), as the
+// landing page, the sprite sheet page and the check do.
 
 const SIDES = [1024, 2048, 4096];   // the sheet's width in texels: the first at which it is no higher than MAX
 const MAX = 4096;                   // the texture limit of older phones
@@ -33,8 +40,18 @@ function collect(obj, out, seen) {
   for (const k of Object.keys(obj)) {
     const v = obj[k];
     if (!v || typeof v !== 'object') continue;
-    if (v.canvas) { if (!seen.has(v)) { seen.add(v); out.push(v); } }
+    if ('canvas' in v) { if (!seen.has(v)) { seen.add(v); out.push(v); } }
     else collect(v, out, seen);
+  }
+}
+
+// Gives the sprites' canvases back. Setting a canvas to no size frees its pixels at once; one that is only let
+// go of keeps them until it is collected, and a phone's browser counts live canvases against a limit of its own.
+function release(items) {
+  for (const s of items) {
+    const c = s.canvas;
+    if (c && c.getContext) { c.width = 0; c.height = 0; }
+    s.canvas = null;
   }
 }
 
@@ -55,6 +72,7 @@ function shelves(list, width, gutter, unit) {
 export function buildAtlas(art) {
   const items = [];
   collect(art, items, new Set());
+  if (items.some((s) => !s.canvas)) throw new Error('buildAtlas: this art has been packed before and its canvases are gone; build it anew (buildAllArt())');
 
   // A solid white block for rectangles, lines and particles: three art pixels square, of which the frame is the
   // middle of the middle one, so that no sampling ever reaches the transparent gutter.
@@ -92,6 +110,7 @@ export function buildAtlas(art) {
     fineSheet = { canvas: fc, source: fs, count: fine.length };
   }
   for (const s of items) { delete s._x; delete s._y; }
+  release(items);
   return { canvas, source, white: white.tex, count: items.length, fine: fineSheet };
 }
 
