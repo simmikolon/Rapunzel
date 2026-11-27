@@ -155,7 +155,9 @@ which only copies the two folders together). The design document
   browser flow and the landing page, `stages.mjs` through a stage's end,
   its door and a fall, `story.mjs` through the opening story, `settings.mjs` through the
   settings' sign and the ways to steer, `shots.mjs outside 20,180,420` takes
-  pictures at heights.
+  pictures at heights. After any change to the art, `atlas.mjs`: every
+  sprite on the art grid, and the art within its budget (it says where
+  the size goes).
 - Headless browser checks need Playwright (on this machine:
   `/opt/node-tools/node_modules/playwright`, Chromium with
   `--enable-unsafe-swiftshader` for WebGL). Software WebGL is slow, so

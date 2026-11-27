@@ -1148,7 +1148,8 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 ## 11. Tools
 
 - Checks in `tools/checks/` (Playwright, headless Chromium), run before
-  every push: the browser flow and the landing page, the atlas's size,
+  every push: the browser flow and the landing page, the atlas (its
+  size, every sprite on the art grid, and a budget for the art),
   pictures at heights, the treasury's camera and way out, and
   `identity.sh`, which compares the simulator's reports on fixed seeds
   with the ones kept in `tools/checks/baseline/`. They catch exceptions
@@ -2796,3 +2797,25 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     in a stage for its last stretch to the door. Not at night, and
     not where it rains or snows anyway.
   - `?storm=8` brings the round's first storm after 8 s.
+- 2026-11-27: A budget for the art (`docs/atlas-budget`). Simon: the
+  atlas was brought down, and the documents on the sprites' style
+  should say what keeps it from growing out of hand again. What was
+  there: the grid as a fixed rule, and a check that names a sprite off
+  it. What was missing: what a sprite costs, and a limit before the
+  hard one. Decisions:
+  - The atlas itself is no longer what grows (1024 x 1009 at art size,
+    room for sixteen times as much). The sprites' own canvases are:
+    drawn four times their art size and kept, 64 bytes to an art
+    pixel, 55 MB today. The budget is on those: 80 MB, and two sprites
+    off the grid. `tools/checks/atlas.mjs` fails past it and says where
+    the size goes; raising it is a line in that file and a line here.
+  - Where the size is today: the tower's wall areas 22 %, the trees'
+    styles 15 %, the inside's wall 6 %, then the logo's letters, the
+    backdrop and the prince at 5 % each. Variants and whole tiles, not
+    characters.
+  - `docs/ART.md` has it as a short section (What a sprite costs): a
+    piece over a shared tile, a tint or a flip at draw time, before a
+    second sprite.
+  - Freeing the canvases after the atlas is packed (the open point of
+    the performance plan) would take most of the 55 MB away; the
+    budget is to be set anew then.

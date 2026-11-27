@@ -50,7 +50,8 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   the bots to hold against it, measure, and set the baselines anew on
   purpose.
 - **Performance, what is left:** the sprites' own canvases (55 MB) stay in
-  memory after the atlas is packed; a whole round's reading to 300 m and
+  memory after the atlas is packed (`tools/checks/atlas.mjs` keeps a
+  budget of 80 MB on them until that is done); a whole round's reading to 300 m and
   beyond is missing; a storm adds a full-screen pass and some 400 sprites
   (if a phone shows it: paint the rain onto a few scrolling tiles).
 - **Weather:** nothing of it inside the tower (it could show through the
