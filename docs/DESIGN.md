@@ -2901,3 +2901,4 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     outside by day, inside, in stages). Not played, and nothing moving
     was seen: the flicker's pace, the hop and the shake are Simon's to
     judge on the phone. The atlas grew from 1024 x 1009 to 1024 x 1021.
+  - Simon looked at it: all good as it is. Merged.
