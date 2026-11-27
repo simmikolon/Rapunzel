@@ -22,7 +22,7 @@ export const PAL = {
   cape: '#8e2727', capeHi: '#b83a3a',
   horse: '#ffffff', horseShade: '#d9d9e3', mane: '#cc7642', rein: '#cc7642',
   pole: '#8c8c96', poleHi: '#c4c4cc', spring: '#b8b8c2', springHi: '#ececf2', rubber: '#2e2e36', grip: '#3a3a44',
-  flame1: '#fff8c2', flame2: '#ffd04a', flame3: '#ff8a3d',
+  flame1: '#fff8c2', flame2: '#ffd04a', flame3: '#ff8a3d', flame4: '#d9482b',
   // rapunzel's hair & ribbons
   braid: '#f7d35b', braidHi: '#fff1a8', braidShade: '#d9a62c', braidDark: '#a87a1c',
   ribbon: '#e85d8a', ribbonHi: '#ff9ab8', ribbonDark: '#a83a62',
@@ -47,5 +47,5 @@ export const PAL = {
   lanternPinkHi: '#ffe0ea', lanternPink: '#ffb0c8', lanternPinkShade: '#e07aa0', lanternPinkDeep: '#b04f78',
   heart: '#ff4d6d', heartHi: '#ff93a8', heartDark: '#b31b3b',
   // ui
-  white: '#ffffff', black: '#000000', uiDark: '#102024', uiLine: '#8fd1c7',
+  white: '#ffffff', black: '#000000', uiDark: '#102024', uiMid: '#3d6b6a', uiLine: '#8fd1c7',
 };

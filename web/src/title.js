@@ -1,8 +1,8 @@
 import { W, H } from './config.js';
 import { PAL as C } from './palette.js';
 import { clamp, easeOutBack } from './util.js';
-import { tagButton, ribbonButton, drawBest, drawSpeaker, ZONES, SIGNS, signTravel, signShift, shiftZone } from './hud.js';
-import { drawSign, paint, INK } from './sign.js';
+import { tagButton, ribbonButton, drawBest, iconButton, speakerIcon, ZONES, SIGNS, signTravel, signShift, shiftZone } from './hud.js';
+import { drawSign, paint } from './sign.js';
 import { WORD_ADVANCE } from './art/logo.js';
 
 // The title screen: a wooden sign over the idle world where the prince hops
@@ -56,7 +56,7 @@ export function drawTitle(g, game, t, o = {}) {
   paint(g, how, W / 2, Y(660), 13, 'center', { alpha });
   // the bottom row: the settings (steering, effects, sound, settings.js), and sound on or off beside them
   tagButton(g, zone(ZONES.settings), 'SETTINGS', { alpha, size: 14, icon: (gg, x, y, a) => gg.blit(art.sign.sparkle, x, y, { alpha: a }) });
-  tagButton(g, zone(ZONES.titleSound), null, { alpha, icon: (gg, x, y, a) => drawSpeaker(gg, x, y, game.muted, INK) });
+  iconButton(g, zone(ZONES.titleSound), speakerIcon(game), alpha);
 }
 
 // Rapunzel peeks over the sign's top-right corner, holding on. Her braid

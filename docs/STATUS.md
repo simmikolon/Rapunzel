@@ -6,8 +6,8 @@ why of everything is in `docs/DESIGN.md` (the catalogue of elements in
 section 7, the numbers in section 10, the decision log in section 12,
 newest last). Bring this page up to date with every merge into `master`.
 
-As of 2026-11-27, `master` at "Merge claude/dazzling-hopper-ytoqgp"
-(the sprites' canvases given back).
+As of 2026-11-27, `master` at "Merge element/hud-pixel" (the round's
+controls in pixels).
 
 ## The game
 
@@ -22,6 +22,11 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
 
 ## On master, newest first
 
+- **The round's controls in pixels** (`art/hud.js`, `drawBoost` in
+  `hud.js`): the boost's charges as three flames (burning, half, out),
+  its button a wooden hoop around a dark glass with the big flame, sound
+  and pause on small boards with symbols in ink, the running power-up on
+  a board rimmed in its colour. No vector shape is left in the HUD.
 - **Weather** (`weather.js`): rain, snow that lies, the golden hour, and
   storms with gusts that carry the prince sideways, a grey mood and
   lightning in black and white. In stages a storm draws up inside a stage
@@ -36,7 +41,7 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   device in a browser, at every launch in the app.
 - **Performance** (`docs/plans/performance.md`): letters from sheets, the
   picture drawn at one backing pixel per logical pixel, lines as sprites,
-  the atlas at art size (1024 x 1009), the sprites' own canvases given
+  the atlas at art size (1024 x 1021), the sprites' own canvases given
   back once it is packed. On the iPhone Air frames over 20 ms went from
   6.1 % to 1.8 % of a round; `?perf=1` shows a readout.
 - **The tower in stages** (`stages.js`): thirteen themes with their own
