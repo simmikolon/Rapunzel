@@ -1078,7 +1078,7 @@ launch count (suggestion: forest, snow, night sky); exact star criteria.
 | 6 | Store and scenes | Suns as currency, upgrades, cosmetics; rescue, intro and kidnapping scenes; light bridge | 💡 |
 | 7 | Tower two | Snow zones with their own roster; endless chains them automatically | 💡 |
 | next | Inside the tower | A second place, chosen on the title sign. ✅ the switch, the room (pillars, windows with the outside behind them, the hall, ledges, chandeliers and the bell on the chain, scaffold boards, galleries, bats and guards, its light); 🔜 its own things (stairs, web, ghost, bat swarm), floors, gates. Plan in `docs/plans/tower-interior.md` | in progress |
-| later | Weather and seasons as effects (rain, snow), vines in the deep forest, selectable worlds, Christmas, FX preset auto-fallback | 💡 |
+| later | ✅ weather (rain, snow, storms that push, the golden hour, the lawn snowed in around Christmas: `weather.js`), ✅ vines in the deep forest; selectable worlds, FX preset auto-fallback | 💡 |
 
 Mode-independent polish (super jump portal, god rays, hit-stop) slots in
 wherever it fits.
