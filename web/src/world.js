@@ -14,7 +14,8 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
-import { frontAt, isWinter, stormSpan } from './weather.js';
+import { frontAt, isWinter, stormSpan, STORM_CLOCK } from './weather.js';
+import { nightAlpha } from './altitude.js';
 import { CAMERA_PLAYER_OFFSET } from './config.js';
 import { POWERS, RAINBOW } from './powerups.js';
 import { placeOf, TREASURY } from './places.js';
@@ -107,6 +108,9 @@ export class World {
     this.weatherSeed = seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 10);
     this._winter = null;      // (a round begun on the first of December finds the lawn snowed in)
     this.bg.weather.reset(new RNG(seed == null ? undefined : hash(seed + 11)));
+    // the endless tower's storms keep their own time (stepStorm): calm, a storm, the sun after it
+    this.rngStorm = new RNG(seed == null ? undefined : hash(seed + 12));
+    this.stormClock = { phase: 'calm', t: 0, dur: this.stormFirst != null ? this.stormFirst : this.rngStorm.range(STORM_CLOCK.first[0], STORM_CLOCK.first[1]) };
     this.bg.weather.want(this.weatherKind(), true);
     this.suns = 0;
     this.stomps = 0;
@@ -151,9 +155,27 @@ export class World {
       // the stage's end (weather.js stormSpan). Where it snows, it is a blizzard.
       const own = st.weather && st.weather !== 'storm' ? st.weather : st.key === 'lawn' && this.winter ? 'snow' : 'clear';
       const span = stormSpan(this.weatherSeed || 0, st), h = this.cam.y + CAMERA_PLAYER_OFFSET - st.y0;
-      return span && h >= span.from && h < span.to ? (own === 'snow' ? 'blizzard' : 'storm') : own;
+      if (span && h >= span.from && h < span.to) return own === 'snow' ? 'blizzard' : 'storm';
+      return span && h >= span.to ? this.afterStorm(own) : own;
     }
-    return frontAt(this.weatherSeed || 0, this.cam.y, this.winter);
+    // the endless tower: the front of this height, and over it the storm when its time has come
+    const own = frontAt(this.weatherSeed || 0, this.cam.y, this.winter), c = this.stormClock;
+    if (c && c.phase === 'storm') return own === 'snow' ? 'blizzard' : 'storm';
+    return c && c.phase === 'after' ? this.afterStorm(own) : own;
+  }
+  // After a storm the sun comes out: the golden hour, where the weather would be clear and it is not night.
+  afterStorm(own) { return (own === 'clear' || own === 'golden') && nightAlpha(this.cam.y) < 0.5 ? 'golden' : own; }
+  // The endless tower's storm keeps its own time (weather.js STORM_CLOCK): so long calm, then a storm draws up,
+  // stays a while and passes, and the sun is out for a bit. From the round's start, whatever he does: it can be
+  // waited out. (In stages the storm belongs to the stage instead, by how far he has climbed in it.)
+  stepStorm(dt) {
+    if (this.route || !this.started || this.over) return;
+    const c = this.stormClock;
+    c.t += dt;
+    if (c.t < c.dur) return;
+    c.phase = c.phase === 'calm' ? 'storm' : c.phase === 'storm' ? 'after' : 'calm';
+    c.dur = this.rngStorm.range(STORM_CLOCK[c.phase][0], STORM_CLOCK[c.phase][1]);
+    c.t = 0;
   }
   get winter() { if (this._winter == null) this._winter = this.forceSeason ? this.forceSeason === 'winter' : isWinter(); return this._winter; }
   set season(v) { this.forceSeason = v || null; this._winter = null; }      // ?season=winter|summer for a visit
@@ -193,6 +215,7 @@ export class World {
   update(dt) {
     this.time += dt;
     this.countT += dt;
+    this.stepStorm(dt);
     // Ribbons ride on the braid, so a wilder braid is the 'moving platform' mechanic.
     this.bg.swayAmp = 12 + clamp(this.level.difficulty.index, 0, 4) * 14;
     this.bg.updateFireflies(dt, this.cam, this.time, this);
@@ -387,6 +410,7 @@ export class World {
     this.particles.clear();
     this.level.restartFrom(gate.y, BEAT * 0.9);
     this.level.generateUpTo(this.cam.top + 900);
+    this.bg.weather.want(this.weatherKind(), true);      // through a gate: the weather out there is there when the picture opens
     this.nextWitchY = Math.max(this.nextWitchY, pl.maxY + 3000);
     this.floorName = zoneAt(pl.maxY, this.level.zones).name;      // the place is said, not the floor
     this.toast(this.place.arrive, '#fff2a8', 2);

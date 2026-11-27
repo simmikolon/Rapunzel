@@ -556,6 +556,8 @@ export class Background {
     const kind = world && world.weatherKind ? world.weatherKind() : 'clear';
     // a storm draws up: it is said, and a first thunder rolls, well before its first gust
     if (world && world.toast && WEATHER[kind] && WEATHER[kind].gusts && !this.weather.b.gusts) { world.toast('A storm is coming!', '#cfe0ff', 2.6); if (world.audio && world.audio.thunder) world.audio.thunder(); }
+    // ... and that it has passed
+    else if (world && world.toast && WEATHER[kind] && !WEATHER[kind].gusts && this.weather.b.gusts) world.toast('The storm has passed', '#ffe9a8', 2.2);
     this.weather.want(kind);
     this.weather.update(dt, time, world && world.audio);
     this.lights.update(dt, cam, time, world, this.atmo.gustEnv());

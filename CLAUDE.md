@@ -56,7 +56,8 @@ which only copies the two folders together). The design document
   `?place=inside&at=200&spawn=dark` puts the lights out above the start.
   `?weather=rain|storm|snow|blizzard|golden|clear` sets the weather outside for a
   visit (`web/src/weather.js`), `?season=winter|summer` whether the lawn
-  is snowed in as around Christmas.
+  is snowed in as around Christmas, `?storm=8` brings the endless tower's
+  first storm after 8 s.
   The tower in stages (a trial; the title's TOWER board): what each stage is
   (place, the height it is taken from, length, wall, weather, dark, golden door) and
   their order are written down in `web/src/stages.js` (`THEMES`, `STAGES`).

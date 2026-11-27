@@ -37,7 +37,8 @@ export const WEATHER = {
   blizzard: { snow: 1.6, breeze: 0.5, gusts: true, grey: 0.35, caps: true, sky: ['#3d4a5e', '#8793a6'], skyMix: 0.7, light: ['#b9c8e6', 0.24], haze: ['#aebbd0', 0.14] },
   golden: { sun: true, sky: ['#5d6db0', '#ffbf6b'], skyMix: 0.75, light: ['#ffc481', 0.3] },
 };
-const FADE = 3;              // seconds one weather takes to go over into the next
+const FADE = 3;              // seconds one weather takes to go over into the next,
+const FADE_STORM = 5;        // ... and a storm to draw up or to pass
 const CLEAR = WEATHER.clear;
 
 // What falls, far to near: how many, how fast the layer goes by (the tower's
@@ -92,19 +93,25 @@ const mod = (v, m) => ((v % m) + m) % m;
 
 // In the endless tower the weather comes in fronts: bands of the height,
 // each with its own weather or none, by the round's seed and by what the
-// height is like (rain in the forest, storms above the trees, the golden
-// hour toward sunset, snow at night). The first band is always clear, or in
-// winter snowed in.
+// height is like (rain in the forest and above the trees, the golden hour
+// most of all toward sunset, snow at night). The first band is always
+// clear, or in winter snowed in. Storms are not in the fronts: they keep
+// their own time (STORM_CLOCK).
+// The endless tower's storms: so many seconds of calm (the first stretch
+// of a round, and every one after), then a storm draws up, stays so long
+// and passes, and for so long after it the sun is out (the golden hour,
+// where the weather would be clear and it is not night). world.js keeps
+// the clock, on a stream of the round's seed.
+export const STORM_CLOCK = { first: [35, 60], calm: [50, 100], storm: [18, 28], after: [16, 24] };
 const FRONT = 9000;
 export function frontAt(seed, y, winter) {
   const k = Math.floor(y / FRONT);
   if (k < 1) return winter ? 'snow' : 'clear';
   const r = hash(seed + k * 101) % 100, mid = (k + 0.5) * FRONT;
-  const storm = k >= 2 ? 1 : 0;      // (no storm in the first 180 m)
-  if (mid < 42000) return r < 18 ? 'rain' : r < 18 + 14 * storm ? 'storm' : r < 42 ? 'golden' : 'clear';
-  if (mid < 56000) return r < 12 ? 'rain' : r < 34 ? 'storm' : r < 48 ? 'golden' : 'clear';
-  if (mid < 70000) return r < 55 ? 'golden' : r < 67 ? 'storm' : 'clear';
-  return r < 40 ? 'snow' : r < 56 ? 'storm' : 'clear';
+  if (mid < 42000) return r < 22 ? 'rain' : r < 34 ? 'golden' : 'clear';
+  if (mid < 56000) return r < 18 ? 'rain' : r < 34 ? 'golden' : 'clear';
+  if (mid < 70000) return r < 60 ? 'golden' : 'clear';
+  return r < 45 ? 'snow' : 'clear';
 }
 
 export class Weather {
@@ -113,6 +120,7 @@ export class Weather {
     this.kind = 'clear';      // the weather it is, or is going over into
     this.from = 'clear';      // ... and the one it comes from
     this.t = 1;               // how far it has gone over, 0..1
+    this.fade = FADE;         // ... and in how many seconds it does
     this.slant = 0;           // how far the rain leans: px sideways per px down
     this.flash = 0;           // lightning, 1 fading to 0
     this.flashIn = 6;
@@ -148,6 +156,7 @@ export class Weather {
     if (snap) { this.kind = this.from = kind; this.t = 1; return; }
     if (kind === this.kind) return;
     // (a change in the middle of a change starts from whichever of the two it was nearer to)
+    this.fade = WEATHER[kind].gusts || this.b.gusts ? FADE_STORM : FADE;
     this.from = this.t >= 0.5 ? this.kind : this.from;
     this.kind = kind;
     this.t = 0;
@@ -161,7 +170,7 @@ export class Weather {
 
   // `sound`: the world's audio (the opening story's world has a silent one).
   update(dt, time, sound) {
-    if (this.t < 1) this.t = Math.min(1, this.t + dt / FADE);
+    if (this.t < 1) this.t = Math.min(1, this.t + dt / this.fade);
     // gusts: calm, the warning, the blow (only once the storm is mostly there, and no new one as it goes)
     const g = this.gust, gusty = this.b.gusts && this.t > 0.6;
     g.t += dt;
