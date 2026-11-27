@@ -6,7 +6,7 @@ why of everything is in `docs/DESIGN.md` (the catalogue of elements in
 section 7, the numbers in section 10, the decision log in section 12,
 newest last). Bring this page up to date with every merge into `master`.
 
-As of 2026-11-27, `master` at "Merge element/weather".
+As of 2026-11-27, `master` at "Merge docs/atlas-budget".
 
 ## The game
 
