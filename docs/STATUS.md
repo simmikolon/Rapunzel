@@ -6,7 +6,7 @@ why of everything is in `docs/DESIGN.md` (the catalogue of elements in
 section 7, the numbers in section 10, the decision log in section 12,
 newest last). Bring this page up to date with every merge into `master`.
 
-As of 2026-11-27, `master` at "Merge element/weather".
+As of 2026-11-27, `master` at "Merge docs/atlas-budget".
 
 ## The game
 
@@ -50,7 +50,8 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   the bots to hold against it, measure, and set the baselines anew on
   purpose.
 - **Performance, what is left:** the sprites' own canvases (55 MB) stay in
-  memory after the atlas is packed; a whole round's reading to 300 m and
+  memory after the atlas is packed (`tools/checks/atlas.mjs` keeps a
+  budget of 80 MB on them until that is done); a whole round's reading to 300 m and
   beyond is missing; a storm adds a full-screen pass and some 400 sprites
   (if a phone shows it: paint the rain onto a few scrolling tiles).
 - **Weather:** nothing of it inside the tower (it could show through the

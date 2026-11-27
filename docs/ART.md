@@ -77,7 +77,21 @@ sprite fit the rule.
   on its back).
 - Anything not mentioned above.
 
+## What a sprite costs
+- Every sprite is drawn four times its art size on a canvas of its own,
+  which stays in memory: 64 bytes to an art pixel, 55 MB for all of them
+  (2026-11-27). That is what grows now, not the atlas (kept at art size,
+  1024 x 1009). `node tools/checks/atlas.mjs` prints both, says where the
+  size goes and fails past its budget of 80 MB.
+- The size is in big tiles and in variants: the tower's wall areas are a
+  fifth of everything, the trees a seventh. Before another whole tile:
+  can it be a small piece laid over a shared one (as the wall's fixtures
+  are), or a `tint` or `flip` on the draw call instead of a second sprite?
+- A sprite off the grid (`fine: true`) costs sixteen times its art in the
+  atlas: only with a reason, and the reason goes into the decision log.
+
 ## Checking a new sprite
+- `node tools/checks/atlas.mjs`: it is on the grid, and within the budget.
 - In `web/dev/sprites.html` next to the prince and the squirrel.
 - In the game at its zone and its time of day (`?at=`, `?spawn=`): the
   background decides whether it reads.
