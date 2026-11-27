@@ -2847,3 +2847,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     of its own: `art/tower.js` keeps one random generator for the
     page's life, so a second build in the same page has other bricks.
     Left as it is: the game builds once.
+  - Simon played it on the iPhone Air: everything as before. The
+    memory's reading in Xcode is put off. Merged; the branch, whose
+    name says nothing, is not kept, and branches are named after what
+    is done on them from here on (`CLAUDE.md`).

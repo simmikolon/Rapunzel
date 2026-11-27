@@ -6,7 +6,8 @@ why of everything is in `docs/DESIGN.md` (the catalogue of elements in
 section 7, the numbers in section 10, the decision log in section 12,
 newest last). Bring this page up to date with every merge into `master`.
 
-As of 2026-11-27, `master` at "Merge docs/atlas-budget".
+As of 2026-11-27, `master` at "Merge claude/dazzling-hopper-ytoqgp"
+(the sprites' canvases given back).
 
 ## The game
 
@@ -54,8 +55,9 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   given back once the atlas is packed, but are all there while the game
   starts (`tools/checks/atlas.mjs` keeps a budget of 80 MB on that), and
   what the phone gains was not read (Xcode's memory gauge, before and
-  after; a headless browser gave back 103 MB); a whole round's reading to 300 m and
-  beyond is missing; a storm adds a full-screen pass and some 400 sprites
+  after; a headless browser gave back 103 MB; Simon has played it on
+  the iPhone Air and all was as before); a whole round's reading to
+  300 m and beyond is missing; a storm adds a full-screen pass and some 400 sprites
   (if a phone shows it: paint the rain onto a few scrolling tiles).
 - **Weather:** nothing of it inside the tower (it could show through the
   windows).
