@@ -260,9 +260,12 @@ is a pool to draw from, not a promise.
   `web/src/player.js` FIGURES, `web/src/art/lord.js`; `?who=lord`): a
   second main character, the prince's son on a pogo pony of his own:
   blond, his father's colours the other way round (a red tunic, a blue
-  cape), a flyer's goggles on his forehead that he pulls over his eyes
-  when the rocket burns (`?hat=coronet|cap` shows the two other things
-  drawn for his head). The same jump as the prince, so the tower is the same
+  cape), a flyer's goggles pushed up into his hair that he pulls over
+  his eyes when the rocket burns. He is sixteen; two builds are drawn
+  (`art/lord.js` BUILDS): the one in the game, three quarters of the
+  prince's height, and a taller one with longer legs and body under
+  the same head (`?build=tall`), for Simon to choose. The same jump as
+  the prince, so the tower is the same
   tower for both; his master ability is a rocket, a firework tied to
   his back. It burns for as long as the boost is held (a tap is a short
   burn) on the boost's three charges, one in half a second, refilled as
@@ -3198,3 +3201,30 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     the stage's door by himself before the check looked at the camera
     (a round's seed is random there). A flaw of the check, not of this
     change; not mended here.
+- 2026-11-27: Lord Springalot is sixteen (`element/springalot-rocket`).
+  Simon: the goggles are it. And: his son is not three but sixteen, so
+  no gap in his teeth; he looks a little childish, and he is as tall as
+  his father. Whether that needs another pass he left open ("he can be
+  a little smaller; what do you think?").
+  - The coronet and the cap are gone from the code, and `?hat=` with
+    them: the goggles were chosen. They sit pushed up into his hair
+    now and not on his forehead, where they read as spectacles once
+    his eyes had moved up.
+  - His face, in both builds: no gap in his teeth, a mouth with its
+    corners up as the prince's has, and his eyes a row higher. A small
+    child's eyes sit low under a big forehead; that row was most of
+    what made him three.
+  - His build. Recommended to Simon: yes, another pass, for the reason
+    the pot went (he was drawn as the small boy who plays knight, and
+    he is a main character and nearly a man). Drawn to choose from,
+    not put into the game: `tall`, 20 x 46 art px against 20 x 42, on
+    a pogo stick as long as his father's (five coils), with legs of 6
+    and a body of 10 where the boy has 4 and 8, under the same head.
+    The same head on a longer body is what makes him older and not
+    only bigger: standing he is 43 px tall, the boy 37, the prince 50.
+    `?who=lord&build=tall` plays him (his height, the rocket's nozzle,
+    the halo and the wings follow his sprites: `art/lord.js` `fig`).
+    The game keeps the boy's build until Simon says.
+  - If the tall one is taken: his height for what hits him grows from
+    168 to 184 px, so the simulator's numbers for the lord have to be
+    read again (the prince's do not move).

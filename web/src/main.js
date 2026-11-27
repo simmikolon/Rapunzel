@@ -14,6 +14,7 @@ import { PLACES } from './places.js';
 import { STAGES } from './stages.js';
 import { Story, STORY } from './story.js';
 import { Perf, RES } from './perf.js';
+import { FIGURES } from './player.js';
 
 // Sir Bouncealot - browser port of the SpriteKit prototype (which was called Rapunzel).
 // Logical resolution is fixed at 768 x 1364 (portrait phone); CSS scales the
@@ -476,7 +477,8 @@ const boot = async () => {
   const canvas = document.getElementById('game');
   try {
     measureViewport(canvas);     // H must be known before the renderer and the world exist
-    const art = buildAllArt({ hat: new URLSearchParams(location.search).get('hat') || undefined });      // (?hat=: what the lord wears, dev.js)
+    const art = buildAllArt({ build: new URLSearchParams(location.search).get('build') || undefined });      // (?build=: how the lord is built, dev.js)
+    Object.assign(FIGURES.lord, art.lord.fig); Object.assign(FIGURES.kid, art.lord.fig);                         // his size is his sprites'
     let gfx;
     try {
       gfx = await createRenderer(canvas, art, FX);

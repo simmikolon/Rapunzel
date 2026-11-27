@@ -19,12 +19,13 @@ import { rainbow, POWER_FX } from './powerups.js';
 //   h, bodyW, w   his height, the width of what can be hit, his sprite's width (px)
 //   jump    scales what pushes him up (a platform's bounce, a boost)
 //   halo, wingX, wingY   the boost shield's radius, where the feather's wings sit
+//   nozzleY  where his rocket's nozzle is over his feet while it burns (the lord's size is his sprites': art/lord.js `fig`)
 //   rocket  null, or his rocket's numbers (config.js ROCKET_*): accel, maxVy, burn, tap, shield
 const ROCKET = { accel: ROCKET_ACCEL, maxVy: ROCKET_MAX_VY, burn: ROCKET_BURN, tap: ROCKET_TAP, shield: ROCKET_SHIELD };
 export const FIGURES = {
   prince: { art: 'prince', h: PLAYER_H, bodyW: PLAYER_BODY_W, w: PLAYER_W, jump: 1, rocket: null, halo: 150, wingX: 16, wingY: 138 },
-  lord: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: 1, rocket: ROCKET, halo: 116, wingX: 13, wingY: 100 },
-  kid: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: KID_JUMP, rocket: null, halo: 116, wingX: 13, wingY: 100 },
+  lord: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: 1, rocket: ROCKET, halo: 116, wingX: 13, wingY: 100, nozzleY: 88 },
+  kid: { art: 'lord', h: LORD_H, bodyW: LORD_BODY_W, w: LORD_W, jump: KID_JUMP, rocket: null, halo: 116, wingX: 13, wingY: 100, nozzleY: 88 },
 };
 
 // The prince. Position (x, y) is the tip of the pogo stick (feet), world
@@ -384,7 +385,7 @@ export class Player {
     this.boostCooldown = Math.max(this.boostCooldown, 0.06);                        // (the HUD's button is pressed in while it burns)
     this.landedOn = null;
     this.trailT -= dt;
-    if (this.trailT <= 0) { this.trailT = 1 / 40; this.world.particles.boostTrail(this.x - this.facing * 26, this.y + 46); }
+    if (this.trailT <= 0) { this.trailT = 1 / 40; this.world.particles.boostTrail(this.x - this.facing * 26, this.y + this.fig.nozzleY - 42); }
   }
 
   // World detected the feet crossing a platform surface while falling.
@@ -525,7 +526,7 @@ export class Player {
 
     if (this.thrusting && F.rocket && this.state !== 'dead') {
       // the rocket's flame, out of the nozzle on his back, and its glow
-      const nx = sx - this.facing * 26 * this.sx, ny = sy - 84 * this.sy;
+      const nx = sx - this.facing * 26 * this.sx, ny = sy - (F.nozzleY - 4) * this.sy;
       g.halo(nx, ny + 34, 76, '#ffb347', 0.55, { glow: 1 });
       g.blit(art.hud.flame[Math.floor(t * 18) % 2], nx, ny, { rot: Math.PI, sy: 1.25 + 0.2 * Math.sin(t * 40), alpha, glow: 1 });
     }
