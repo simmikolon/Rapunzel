@@ -73,6 +73,7 @@ class Game {
       this.world.stormFirst = Math.max(0, +this.dev.storm);
       this.world.stormClock.dur = this.world.stormFirst;      // (the round under way too: ?at= starts in it)
     }
+    if (this.dev.who === 'lord') { this.world.who = 'lord'; this.world.player.be('lord'); }      // ?who=lord for this visit
     this.world.gusts = true;                                                          // a storm's gusts lean on the prince (weather.js)
     this.loadSave();
     if (PLACES[this.dev.place]) this.round.place = this.dev.place;                    // ?place= for this visit

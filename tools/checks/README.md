@@ -20,7 +20,8 @@ machine has it (`lib.mjs`). Pictures go to `check-out/` (ignored by git;
 | `shots.mjs` | Pictures of the game frozen at given heights, outside or inside: `node tools/checks/shots.mjs outside 20,180,420`. |
 | `treasury_camera.mjs` | Climbs a treasury (the section it begins with, `1` to `6`, as its argument), counts the frames in which the camera goes down (there must be none), then drops the prince out of the picture and watches the bubble set him down. |
 | `treasury_exit.mjs` | The top of a treasury and the way out by its door. |
-| `chimney.mjs` | Lord Springalot's chimney (`web/src/chimney.js`): a fireplace above the start leads into it and the lord is the one played; his hops are his own, the walls stop him, a damper is a ceiling, one who drops out of the picture is carried back up; a small bot climbs the shaft, and out of the soot door the prince goes on. Pictures of each step. |
+| `rocket.mjs` | Lord Springalot and his rocket (`?who=lord`; `web/src/player.js` FIGURES): he is on the title's lawn and climbs with the prince's jump; the boost held burns the rocket on the boost's charges for as long as it is held (a charge in half a second, about 9 m from rest, no faster than its top speed), a tap is a short burn, an empty tank burns nothing, a landing brings half a charge, and while it burns he is shielded; the prince's boost is the tap it was. Pictures. |
+| `chimney.mjs` | The chimney (`web/src/chimney.js`): a fireplace above the start leads into it and somebody small is the one played; his hops are his own, the walls stop him, a damper is a ceiling, one who drops out of the picture is carried back up; a small bot climbs the shaft, and out of the soot door the prince goes on. Pictures of each step. |
 | `treasury_room.mjs`, `stitch.py` | A whole treasury in one picture, floor to ceiling. |
 
 For gameplay numbers there is the simulator itself (`tools/analyze.mjs`,

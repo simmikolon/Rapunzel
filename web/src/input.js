@@ -50,6 +50,7 @@ export class Input {
     this.pointers = new Map();  // pointerId -> {x, y, role}
     this.taps = [];             // {x, y} logical coords, consumed each frame
     this.boostQueued = 0;
+    this.boostHeld = false;     // the boost is being held down (a key, the boost's button, the finger that boosts): the lord's rocket burns for as long
     this.tapQueued = 0;
     this.pauseQueued = 0;
     this.muteQueued = 0;
@@ -102,7 +103,7 @@ export class Input {
         for (const q of this.pointers.values()) if (q.role === 'slide') sliding = true;
         role = sliding ? 'boost' : 'slide';
       }
-      this.pointers.set(e.pointerId, { x: p.x, y: p.y, role, x0: p.x, sx: p.x, sy: p.y, far: 0, t0: performance.now() });
+      this.pointers.set(e.pointerId, { x: p.x, y: p.y, role, zone: zone ? zone.id : null, x0: p.x, sx: p.x, sy: p.y, far: 0, t0: performance.now() });
       this.taps.push(p);
       this.tapQueued++;
       if (role === 'boost') this.boostQueued++;
@@ -207,7 +208,9 @@ export class Input {
     // a finger sliding away from where it was set down.
     let ta = 0, sliding = false;
     this.slideAxis = 0;
+    this.boostHeld = this.keys.has('Space') || this.keys.has('ArrowUp') || this.keys.has('KeyW') || this.keys.has('Enter');
     for (const pt of this.pointers.values()) {
+      if (pt.role === 'boost' || pt.zone === 'boost') this.boostHeld = true;
       if (pt.role === 'steer') ta += pt.x < W / 2 ? -1 : 1;
       else if (pt.role === 'slide') {
         sliding = true;

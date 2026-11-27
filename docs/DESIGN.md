@@ -253,39 +253,47 @@ build them. Each zone: elements, look, set piece.
 Everything proposed so far, by family. Status marks what exists; the rest
 is a pool to draw from, not a promise.
 
-**Companions**
-- ❓ Lord Springalot, the prince's sidekick, and the chimney (a trial on
-  `element/springalot-chimney`, played and found no fun as the lord's
-  room, see the decision log: the chimney stays as a hidden room for
-  somebody else, the lord is to be a second main character; `web/src/chimney.js`,
-  `web/src/art/chimney.js`, `web/src/art/lord.js`): a child on a pogo
-  pony of his own, with what the prince has, home-made (a cooking pot
-  for the crown, a towel for the cape). He is never in the picture
-  beside a prince who is steered: he has rooms of his own, and in them
-  he is the one played. The first is the chimney: a fireplace inside
-  the tower (he waits on its mantel), from its hearth a brick shaft
-  half as wide as the tower and 20 m high with walls that stop him,
+**Who climbs**
+- ✅ Sir Bouncealot, the prince: his master ability is the boost, a tap
+  that takes a charge and throws him up at once, with a shield.
+- 🔜 Lord Springalot (a trial on `element/springalot-rocket`;
+  `web/src/player.js` FIGURES, `web/src/art/lord.js`; `?who=lord`): a
+  second main character, a child on a pogo pony of his own, with what
+  the prince has, home-made (a cooking pot for the crown, a towel for
+  the cape). The same jump as the prince, so the tower is the same
+  tower for both; his master ability is a rocket, a firework tied to
+  his back. It burns for as long as the boost is held (a tap is a short
+  burn) on the boost's three charges, one in half a second, refilled as
+  the boost is (half a charge a landing, the lanterns). It pushes him
+  up at 3000 px/s² over gravity to 1500 px/s at the most, and while it
+  burns he knocks away what he touches. A charge burnt from rest lifts
+  him 9 m (a boost: 5.3 m), a full tank 24 m; but it is no sudden push:
+  out of a fall the boost is the stronger. Smaller to look at, as wide
+  as the prince where it counts (what lands, what is hit). In the
+  simulator a good bold run with him ends a little lower than with the
+  prince (median 350 m against 435 m outside, 424 m against 500 m
+  inside), with fewer hits (0.8 against 1.0 per 100 m) and more of
+  the deaths a fall (57 % against 42 %); a kid gets a little further
+  with him (see the decision log). No title choice yet, no unlocking,
+  no sound of its own (the boost's, when it is lit).
+  💡 next: the choice on the title and how he is unlocked; a third
+  later, the mother, Lady Sparkalot. Lives are nobody's ability: they
+  are kept for the good fairy (💡 a short scene when a life is lost in
+  stages, she brings it and says "don't give up").
+- ❓ The chimney (`web/src/chimney.js`, `web/src/art/chimney.js`;
+  `?place=inside&at=50&spawn=chimney`): a hidden room, built as Lord
+  Springalot's and played: cool and funny for a moment, no fun as his
+  part (see the decision log). It stays, for somebody else: a
+  fireplace inside the tower, from its hearth a brick shaft half as
+  wide as the tower and 20 m high, dark, with walls that stop him,
   ledges, kettles on the pot chain and iron dampers that are a ceiling
-  from below, and at the top a soot door back into the tower, where the
-  prince goes on that much higher. It is dark in there, and what is
-  seen has a light: his own, the two fires on the hearth, candle ends
-  in the walls' niches, the suns, the day at the top, and eyes. Who
-  lives in a chimney is shy, not dangerous: an owl whose eyes follow
-  him, a mouse that hides when he comes close, chicks that cheep, a
-  stork looking down from its nest on top. His hops are short and quick (0.68
-  of the prince's push: an apex of 3 m, a hop every 1.1 s). A room like
-  the treasury to the world: nobody in it, nothing crumbles, a bubble
-  for one who drops out of the picture, the suns count. For now a
-  fireplace stands only where `?place=inside&at=50&spawn=chimney` puts
-  one: no spawn rule yet, so the simulator's reports are as they were
-  and its bots do not know the room. No sound of its own yet.
-  💡 next: a spawn rule (and the stages), a second room, a choice on
-  the title of who climbs the tower. Lives are not his: they are kept
-  for the good fairy (💡 a short scene when a life is lost in stages,
-  she brings it and says "don't give up").
+  from below, and a soot door back into the tower that much higher.
+  Who is played in it hops short and quick (0.68 of the prince's push)
+  and is drawn as the lord for now (`kid` in FIGURES); who that is to
+  be is open (💡 a little chimney sweep). No spawn rule, so the
+  simulator's bots do not know the room.
   Tried before and dropped: the lord as a follower who copies the
-  prince a third of a second later (`element/springalot`, see the
-  decision log).
+  prince a third of a second later (`element/springalot`).
 
 **Enemies**
 - ✅ crow, ✅ spider, ✅ witch (dodge; deflected by a boost).
@@ -3100,3 +3108,62 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     boost; the lord gets a rocket that burns for as long as the boost
     is held, on fuel; or another special move. A character can be
     unlocked. A third later: the mother, Lady Sparkalot.
+- 2026-11-27: Lord Springalot's rocket, a trial
+  (`element/springalot-rocket`). Simon: two main characters with the
+  same jump and a master ability each; the lord's a rocket that burns
+  while the boost is held, on fuel. Built as the smallest thing to
+  play: `?who=lord`, no title choice, no unlocking.
+  - Who is played is the player's figure (`player.js` FIGURES): whose
+    sprites, his size, and his `rocket`'s numbers or none. One drawing
+    path for all of them now (the power-ups' rims, wings and
+    after-images, the hurt frame, the twin at the picture's edge), so
+    the lord has everything the prince has; his sprites are drawn one
+    way round and mirrored on the draw call. A third figure is a row
+    in that table and a set of sprites. The chimney's figure is `kid`
+    (smaller hops, the boost), drawn as the lord for now.
+  - The rocket spends what the boost spends: the three charges, a
+    charge in half a second, the same refill. So the HUD's three
+    flames are the tank (a flame burns down through its three states),
+    lanterns and landings mean the same for both, and nothing new has
+    to be learned to read it. While it burns he has the boost's
+    shield: that is how he gets through a flock.
+  - Held, not tapped: input knows now whether the boost is held (a
+    key, the boost's button, the finger that boosts in the two other
+    ways to steer). A tap is a burn of 0.14 s. Faster than its top
+    speed it only holds him against gravity.
+  - The numbers are the simulator's. The first set made a charge worth
+    a boost's height from rest (2100 px/s² to 1300 px/s, a body 32 px
+    wide like his sprite): with the prince's bot, which lit it like a
+    boost, a good bold run ended at a median of 109 m (the prince
+    447 m), every death a fall. The rocket is no sudden push: the
+    prince's boost turns a fall round at once whatever its speed, the
+    rocket takes its time. A bot that lights it as soon as he comes
+    down over nothing, holds it until he is on the way up at speed,
+    and burns to buy time when he comes down beside what he aims for:
+    282 m. A body as wide as the prince's: 326 m. 3000 px/s²: 255 m;
+    both: 312 m; and a top speed of 1500 px/s: 359 m. Those are the
+    numbers now.
+  - With them, 40 runs each on two sets of seeds, outside without
+    gates, a good bold run: the prince median 447 and 424 m (mean 526
+    and 473), 0.98 and 1.03 hits per 100 m, falls 47 % and 36 % of
+    the deaths; the lord 359 and 342 m (mean 444 and 440), 0.82 and
+    0.86 hits, falls 55 % and 59 %. Inside, 120 runs: the prince 500 m
+    (mean 589), 1.06 hits, falls 24 %; the lord 424 m (mean 563), 0.76
+    hits, falls 56 %. A cautious kid outside: the prince 72 m, the
+    lord 108 m. A bold kid in stages with three lives, to 300 m: into
+    the third stage 55 % with the prince, 65 % with the lord. So he
+    is no easy mode and no hard one: he is hit less and falls more.
+    A bot is a poor pilot, and what a hand does with a rocket it can
+    hold is not in these numbers.
+  - The prince is bit for bit what he was: the five reports on fixed
+    seeds are the same (`identity.sh`). `tools/analyze.mjs` takes who
+    climbs as a twelfth argument and `TUNE=` to try numbers; a new
+    check, `tools/checks/rocket.mjs`; the others pass. The atlas is
+    1024 x 1085 (1073 before), the sprites' canvases at the start
+    59 MB of the 80.
+  - Seen in still pictures only, and no sound was heard (it is the
+    boost's sound when the rocket is lit, nothing while it burns).
+    For Simon on the phone: whether holding feels right in each way to
+    steer (hold a side: the flame's button; slide: a second finger;
+    tilt: anywhere), whether a full tank's 24 m is too much, whether
+    one sees the tank go down, and whether he is fun.

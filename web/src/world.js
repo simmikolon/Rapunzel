@@ -42,7 +42,7 @@ const RESCUE_MIN = 100;
 const LORD_LEFT = { flip: true }, LORD_ON_MANTEL = 112;      // (the mantel's top over the fireplace's landing, art/chimney.js)
 
 // Before the round starts the prince hops on the lawn by himself.
-const IDLE_INPUT = { axis: 0, usingTilt: false, consumeBoost: () => false };
+const IDLE_INPUT = { axis: 0, usingTilt: false, boostHeld: false, consumeBoost: () => false };
 
 // One round of the game: entities, collisions, generation, FX callbacks.
 export class World {
@@ -59,6 +59,7 @@ export class World {
     this.rng = new RNG();
     this.level = new Level(this, this.rng);
     this.placeName = (game.round && game.round.place) || 'outside';
+    this.who = 'prince';          // who climbs this tower (player.js FIGURES): the prince, or Lord Springalot; set before reset() like the route
     this.route = null;            // the tower in stages (stages.js): set before reset() by whoever starts the round; null is the endless game
     this.reset();
   }
@@ -105,7 +106,7 @@ export class World {
     this.braidCut = { ly: -Infinity, pieces: [] };   // where the braid ends now, and the pieces falling away
     this.particles.clear();
     this.cam.reset();
-    this.player.be('prince');
+    this.player.be(this.who);
     this.player.reset(0, 0);
     this.level.reset();
     if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
@@ -522,7 +523,7 @@ export class World {
     this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
     this.particles.clear();
     const room = chimney ? furnishChimney(this, pl.y, new RNG(hash(Math.round(pl.y) + 77))) : furnishVault(this, pl.y, gate.side, this.level.child(this.level.rngVault), this.level.forcePlan);
-    if (chimney) pl.be('lord');
+    if (chimney) pl.be('kid');
     this.vault = { ...room, from, entryY: pl.y, suns0: this.suns, hearts0: pl.hearts, t0: this.time };
     pl.landedOn = this.platforms.find((p) => p.kind === 'vaultFloor');
     this.cam.setRoom({ lo: room.camLo, hi: room.camHi });
@@ -533,7 +534,7 @@ export class World {
   // the door he came out of shut behind him.
   leaveVault(gate) {
     const pl = this.player, v = this.vault;
-    pl.be('prince');      // out of the chimney it is the prince again
+    pl.be(this.who);      // out of the chimney it is the one who climbs the tower again
     this.setPlace(v.from);
     this.platforms = this.platforms.filter((p) => p === gate || p.kind === 'ground');
     this.enemies.length = 0; this.fields.length = 0; this.pickups.length = 0;
@@ -1035,7 +1036,7 @@ export class World {
     if (this.vault) return;
     const cam = this.cam, out = p.side === 'L' ? 1 : -1;                           // toward the room
     const hop = Math.abs(Math.sin(this.time * 4.2 + p.id)), L = this.art.lord, hearth = p.gold === 'in';
-    g.blit(hop > 0.75 ? L.jumpUp : hop < 0.12 ? L.bounceDown : L.standing, cam.sx(p.x + out * (hearth ? 50 : 62)), cam.sy(p.y + (hearth ? LORD_ON_MANTEL : 0)) - hop * 26, p.side === 'R' ? LORD_LEFT : undefined);
+    g.blit(hop > 0.75 ? L.right.jumpUp : hop < 0.12 ? L.right.bounceDown : L.right.standing, cam.sx(p.x + out * (hearth ? 50 : 62)), cam.sy(p.y + (hearth ? LORD_ON_MANTEL : 0)) - hop * 26, p.side === 'R' ? LORD_LEFT : undefined);
   }
 
   // Where the lights are out (level.js, the dark stretches): the picture is
@@ -1052,7 +1053,7 @@ export class World {
     if (dk <= 0.01) return;
     const cam = this.cam, pl = this.player;
     g.dark(dk * DARK_DEPTH, DARK_COLOR);
-    const mid = pl.who === 'lord' ? pl.h * 0.5 : 120, k = (this.vault && this.vault.lamp) || 1;      // (a room may make his light smaller)
+    const mid = pl.who === 'prince' ? 120 : pl.h * 0.5, k = (this.vault && this.vault.lamp) || 1;      // (a room may make his light smaller)
     g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 560 * k, '#ffe6c4', 0.4);
     g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 340 * k, '#fff0da', 0.9);
     for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);

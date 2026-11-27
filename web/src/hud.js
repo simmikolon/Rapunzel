@@ -163,7 +163,7 @@ export class HUD {
     if (stage) {
       g.text(`stage ${stage.n}`, 28, top + 196, 16, '#cfe8e3');
       // and his lives: a little prince for each he still has, this one included
-      if (isFinite(world.lives)) for (let i = 0; i < world.lives; i++) g.blit(art.prince.life, 44 + i * 44, top + 258, { sx: 0.5, sy: 0.5 });
+      if (isFinite(world.lives)) for (let i = 0, A = art[world.who === 'lord' ? 'lord' : 'prince'], k = A.lifeScale || 0.5; i < world.lives; i++) g.blit(A.life, 44 + i * 44, top + 258, { sx: k, sy: k });      // (his head, whoever climbs)
     }
     // Hearts
     for (let i = 0; i < MAX_HEARTS; i++) {
@@ -219,14 +219,14 @@ export class HUD {
     g.text('boost', bx, by - 64, 14, denied ? '#ff9ab8' : '#cfe8e3');
     for (let i = 0; i < BOOST_CHARGES; i++) {
       const part = pl.boost - i, x = bx + 20 + i * 48;
-      if (part >= 1) {
+      if (part >= 0.75) {      // (the prince's charges come in halves; the lord's rocket burns them down by degrees)
         const hop = t - f.lit[i] < 0.14;
         g.blit(A.flame[Math.floor(t * 5 + i * 0.7) % 2], x, by - (hop ? 8 : 0), { glow: hop ? 1 : 0.5 });
-      } else if (part > 0) g.blit(A.flameHalf, x + shake, by, { glow: 0.2 });
+      } else if (part >= 0.25) g.blit(A.flameHalf, x + shake, by, { glow: 0.2 });
       else g.blit(A.flameOff, x + shake, by);
     }
     if (!this.game.input.isTouch) return;
-    const z = ZONES.boost, can = pl.boost >= 1;
+    const z = ZONES.boost, can = pl.fig.rocket ? pl.boost > 0.02 : pl.boost >= 1;
     const down = pl.boostCooldown > 0;
     const cx = z.x + z.w / 2 + (can ? 0 : shake), cy = z.y + z.h / 2 + (down ? 4 : 0);
     if (!down) g.blit(A.hoop, cx + 4, cy + 8, { tint: '#000000', alpha: 0.25 });

@@ -31,15 +31,17 @@ check('a fireplace stands above the start, and the prince is played', !!door && 
 await shot('0fireplace');
 
 const into = await page.evaluate(() => {
-  const w = window.game.world, pl = w.player, gt = w.platforms.find((p) => p.kind === 'gate' && p.chimney), suns = w.suns;
+  const w = window.game.world, pl = w.player, gt = w.platforms.find((p) => p.kind === 'gate' && p.chimney);
   pl.x = gt.x; pl.y = gt.y + 120; pl.prevY = pl.y + 4; pl.vx = 0; pl.vy = -100; pl.setState('falling');
-  let n = 0; while (!w.vault && n++ < 900) w.update(1 / 120);
+  let n = 0; while (!w.passage && n++ < 300) w.update(1 / 120);
+  const suns = w.suns;      // (what he has when the fireplace takes him: a sun may hang right over its landing)
+  while (!w.vault && n++ < 900) w.update(1 / 120);
   while (w.passage && n++ < 1200) w.update(1 / 120);
   w.toasts.length = 0;
   const v = w.vault;
   return { place: w.place.name, who: pl.who, h: pl.h, walls: w.walls, room: v && { up: Math.round(v.exitY - v.floor), worth: v.suns }, things: w.platforms.filter((p) => ['flue', 'kettle', 'damper'].includes(p.kind)).length, sunsKept: w.suns === suns };
 });
-check('through it the lord stands on the hearth of the chimney', into.place === 'chimney' && into.who === 'lord' && into.walls > 0 && into.things > 10 && into.sunsKept, into);
+check('through it somebody small stands on the hearth of the chimney', into.place === 'chimney' && into.who === 'kid' && into.walls > 0 && into.things > 10 && into.sunsKept, into);
 await shot('1hearth');
 
 const hop = await page.evaluate(() => {
@@ -124,7 +126,7 @@ const down = await page.evaluate(() => {
   for (let k = 0; k < 400; k++) { w.input.axis = 0; w.update(1 / 120); }
   return { carried: !!pl.carried, alive: pl.alive, inPicture: pl.y > w.cam.y, who: pl.who };
 });
-check('one who drops out of the picture is carried back up and set down', carried.carried && carried.alive && !down.carried && down.alive && down.inPicture && down.who === 'lord', { ...drop, ...carried, down });
+check('one who drops out of the picture is carried back up and set down', carried.carried && carried.alive && !down.carried && down.alive && down.inPicture && down.who === 'kid', { ...drop, ...carried, down });
 
 check('no errors', errors.length === 0, [...new Set(errors)]);
 console.log(failed ? `${failed} failed` : 'all ok');

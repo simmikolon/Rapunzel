@@ -64,8 +64,9 @@ which only copies the two folders together). The design document
 - `main.js` the game's loop and modes (intro, title, countdown, playing,
   paused, game over); `world.js` a round: platforms, enemies, pickups, the
   prince, the weather's choice, stages and retries; `level.js` what is
-  built where (tiers, pacing, `ZONES`); `player.js` (the prince, and Lord Springalot where
-  he is played), `chimney.js` (the lord's room), `enemies.js`,
+  built where (tiers, pacing, `ZONES`); `player.js` (who is played: the prince with his
+  boost, Lord Springalot with his rocket; `FIGURES`), `chimney.js` (a hidden
+  room), `enemies.js`,
   `platforms.js`, `pickups.js`, `powerups.js`.
 - `background.js` sky, tower, forest, trees and the drawing order;
   `atmosphere.js` fog, leaves, forest life; `weather.js` rain, snow,
@@ -139,9 +140,12 @@ which only copies the two folders together). The design document
   backing pixels per logical pixel, `?px=hard` scales the picture up
   with hard pixels, `?letters=0` has the browser paint every text as
   before the letter sheets (to compare).
-  Lord Springalot's chimney (a trial, `web/src/chimney.js`):
+  Lord Springalot (a trial, `web/src/player.js` FIGURES): `?who=lord` has
+  him climb the tower instead of the prince, with the same jump and a
+  rocket for the boost (hold it).
+  The chimney (a hidden room, `web/src/chimney.js`):
   `?place=inside&at=50&spawn=chimney` puts a fireplace above the start;
-  through it the lord is played, up the shaft and out by its soot door.
+  through it somebody small is played, up the shaft and out by its soot door.
 - Sprite sheet: `web/dev/sprites.html`. A drawn picture can be brought onto
   the art grid with `python3 tools/pixelate.py <src.png> <out.png> --width 150`
   (one image pixel = one art pixel); the title uses the procedural wordmark
@@ -153,7 +157,9 @@ which only copies the two folders together). The design document
   for `<gates>` runs the tower without gates, a second `off` without
   treasuries: `... inside off off` is the inside's baseline; an eleventh argument
   `on` (or a number of lives, or `inf`) climbs the tower in stages:
-  `... 40 kid bold 300 1 0 outside on on on`). Target for
+  `... 40 kid bold 300 1 0 outside on on on`; a twelfth says who climbs,
+  `prince` or `lord`: `... 40 good bold 1500 1 0 outside off on off lord`,
+  and `TUNE='{"rocket":{"accel":2500}}'` before it tries other numbers for him). Target for
   a good bold run: 0.8 to 1.5 hits per 100 m in every zone, median height
   not collapsing, falls not above half the deaths.
 - Checks before a push: `tools/checks/` (its README says what each does).
