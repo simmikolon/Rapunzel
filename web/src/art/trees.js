@@ -1,6 +1,7 @@
 import { makeSprite, flipH } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { RNG, mixHex } from '../util.js';
+import { PX } from '../config.js';
 import { BRANCH_LEN } from '../platforms.js';
 
 // Trees: one look per zone (oak on the forest floor, mossy giants in the
@@ -288,28 +289,104 @@ function drawFungus(t, big) {
 }
 function drawLichen(t) { const { p } = t; p(1, 1, 3, 2, '#b7c9a8'); p(4, 2, 2, 2, '#b7c9a8'); p(0, 3, 2, 1, '#b7c9a8'); p(2, 1, 1, 1, '#dfe7d0'); p(5, 2, 1, 1, '#dfe7d0'); }
 function drawBurl(t) { const { disc, p } = t; disc(2, 4, 3, C.barkMid); disc(3, 4, 2, C.barkLight); p(5, 3, 1, 3, C.barkDeep); p(1, 1, 2, 1, C.barkDark); p(1, 7, 2, 1, C.barkDark); }
-// The foot of the LEFT trunk on the lawn, 34 x 30 art px, the anchor its
-// bottom left (laid over the trunk's inner edge): the trunk flares out into
-// a buttress root, its bark's furrows turning with it, its top catching
-// the light; a second root runs on along the ground, moss in the fork.
-function drawRoots(t) {
-  const { p, line } = t;
-  const W = 34, H = 30, B = TREE_STYLES[0].bark, T = barkTones(B);
-  // how far the flare reaches at height h above the ground (0 at the top of the sprite's reach)
-  const reach = (h) => Math.round(10 + 22 * Math.pow(1 - h / H, 2.4));
-  for (let y = 0; y < H; y++) {
-    const h = H - 1 - y, r = reach(h);
-    p(0, y, r, 1, T[3]);
-    p(Math.max(0, r - 3), y, 3, 1, T[4]);            // the slope's lit top
-    p(r - 1, y, 1, 1, T[5]);
-    if (r > 14) p(0, y, 4, 1, T[2]);                 // in shade where it joins the trunk
+// --- the foot of a tree -----------------------------------------------------------
+// Where a trunk stands on the lawn, TREE_FOOT.w x TREE_FOOT.h art px: the
+// LEFT tree's, the anchor at the picture's border on the lawn's line. It
+// lies over the trunk's lowest tile (and is drawn after what climbs and
+// hangs on the trunk, so a vine comes out from behind a root).
+// The trunk's own bark, widening: its planes of light and its furrows are
+// the trunk's where the sprite begins and swing out with the flank on the
+// way down, so the ridges between them become the roots. At the lawn they
+// part into toes with dark hollows between, the innermost runs on along
+// the ground, dives into the grass and comes up once more as a knee. A
+// slope that faces up is lit and has no dark edge; grass stands in front
+// of all of it (drawTreeFootGrass), and moss sits on its shoulders.
+// Two looks, so the two trees are not one tree mirrored: 0 has a small
+// door between two roots with a light in the window beside it (somebody
+// lives there) and mushrooms on the lawn before it, 1 a fern in the fork.
+export const TREE_FOOT = { w: 70, h: 50, sink: 1, from: 42, reach: [23, 21], window: [20, 5] };      // (`from`: the height the flank begins to widen at; `reach`: how far it swings out, by look; `window`: the lit window's lower left corner in the first look, art px right of the border and up from the lawn)
+const FUNGUS = { hi: C.furHi, base: C.fur, dark: C.furDark, stem: C.belly, spot: C.white };      // the mushrooms at the left tree's foot: the squirrel's orange, which shows before grey stone and green
+function drawTreeFoot(t, look) {
+  const { p, ctx } = t;
+  const F = TREE_FOOT, B = TREE_STYLES[0].bark, T = barkTones(B), r = new RNG(900 + look * 7);
+  const S = ctx.canvas.width / F.w, top = F.h - F.sink;
+  // by height above the lawn: (x, h) is the art pixel in column x whose lower edge is h above the lawn's line
+  const q = (x, h, col, w = 1, n = 1) => p(x, top - h - n, w, n, col);
+  const clear = (x, h, w = 1, n = 1) => ctx.clearRect(x * S, (top - h - n) * S, w * S, n * S);
+  const edge = (h) => 24 + Math.round(F.reach[look] * Math.pow(Math.max(0, 1 - h / F.from), 2.3));      // the flank's last column at height h
+  const stretch = (h) => (edge(h) - TRUNK.axis) / (24 - TRUNK.axis);
+  const cols = furrows(9), hTop = F.h - F.sink - 1;
+  const plate = cols.map(() => r.int(6, 14));
+  for (let h = hTop; h >= -F.sink; h--) {
+    const e = edge(h), s = stretch(h), above = h < hTop ? edge(h + 1) : e;
+    // the bark's planes, swung out with the flank
+    for (let x = 0; x <= e; x++) q(x, h, T[trunkPlane(Math.min(24, TRUNK.axis + (x - TRUNK.axis) / s))]);
+    // its furrows, the lit side of each ridge, and the gaps between the bark's plates
+    cols.forEach((c, i) => {
+      const x = Math.round(TRUNK.axis + (c - TRUNK.axis) * s), plane = trunkPlane(c);
+      q(x, h, plane >= 3 ? B.deep : B.shadow);
+      if (x - 1 > 0 && s < 1.5) q(x - 1, h, T[Math.min(5, plane + 1)]);
+      if (h === hTop - plate[i]) { const x2 = i + 1 < cols.length ? Math.round(TRUNK.axis + (cols[i + 1] - TRUNK.axis) * s) : e; if (x2 - x > 2) q(x + 1, h, T[Math.max(0, plane - 2)], x2 - x - 1); plate[i] += r.int(7, 14); }
+    });
+    // its edge: dark toward the sky where it is steep, as the trunk's is; lit where it faces up
+    if (e - above >= 2) { q(above + 1, h, T[5], e - above); q(above + 1, h - 1, T[4], e - above); }
+    else q(e, h, B.deep);
   }
-  // furrows that fan out with the flare
-  for (const f of [0.3, 0.55, 0.78]) for (let y = 4; y < H; y++) { const h = H - 1 - y, x = Math.round(reach(h) * f); if (x > 1) p(x, y, 1, 1, f > 0.6 ? B.deep : B.shadow); }
-  // the root that runs on, and moss
-  p(26, H - 4, 8, 3, T[3]); p(26, H - 4, 8, 1, T[5]); p(26, H - 1, 8, 1, B.deep); p(33, H - 3, 1, 2, T[2]);
-  p(12, H - 9, 3, 1, C.moss); p(11, H - 8, 5, 1, C.mossDark); p(22, H - 5, 2, 1, C.moss); p(21, H - 4, 4, 1, C.mossDark); p(5, H - 16, 2, 1, C.mossDark);
-  line(3, 6, 4, 14, B.shadow);
+  // the toes: hollows between the roots at the lawn, each a wedge of dark with the grass showing at its foot
+  const base = edge(0), toes = look === 0 ? [[8, 4, 6], [15, 4, 7], [39, 4, 6]] : [[8, 5, 7], [19, 4, 9], [30, 6, 10], [39, 3, 5]];
+  for (const [x0, w0, n] of toes) {
+    for (let h = -F.sink; h < n; h++) {
+      const w = Math.max(1, Math.round(w0 * (1 - Math.max(0, h) / n))), x = x0 + Math.floor((w0 - w) / 2);
+      if (x + w > base) continue;
+      if (h < 1) clear(x, h, w); else q(x, h, h < 3 ? B.deep : B.shadow, w);
+      q(x - 1, h, T[4]); q(x + w, h, T[1]);                                      // the root left of it faces the light, the one right of it is in its own shade
+    }
+    q(x0 + Math.floor(w0 / 2) - 1, n, T[1], 2);
+  }
+  // the root that runs on: along the ground from the flank's foot, into the grass, and a knee of it further on
+  const run = look === 0 ? 7 : 14;
+  for (let i = 1; i <= run; i++) {
+    const x = base + i, n = Math.max(1, Math.round(5 * (1 - i / (run + 1)) + 0.4));
+    q(x, -F.sink, T[2], 1, n + F.sink); q(x, n - 1, T[5]); if (n > 2) q(x, n - 2, T[4]); if (n > 3) q(x, 0, T[1]);
+  }
+  if (look === 1) { const x = base + run + 4;
+    q(x, 0, T[2], 2, 1); q(x + 5, 0, T[1], 2, 1); q(x, 1, T[3], 7, 1); q(x + 1, 2, T[5], 5, 1); q(x + 2, 1, T[4], 3, 1); q(x + 2, 0, B.shadow, 3, 1); clear(x - 1, -F.sink, 9, F.sink); q(x, -F.sink, T[2], 2, F.sink); q(x + 5, -F.sink, T[1], 2, F.sink); }
+  // moss on its shoulders
+  const moss = (x, h, w) => { q(x, h, C.mossDark, w, 2); q(x + 1, h + 2, C.mossDark, w - 2); q(x, h + 1, C.moss, w - 1); q(x + 1, h + 2, C.moss, Math.max(1, w - 3)); };
+  for (const [f, h, w] of look === 0 ? [[0.72, 17, 5], [0.45, 30, 4], [0.9, 7, 4]] : [[0.8, 13, 6], [0.3, 24, 4], [0.6, 36, 3]]) moss(Math.round(edge(h) * f), h, w);
+  moss(base + (look === 0 ? 5 : 8), look === 0 ? 3 : 2, 4);
+  if (look === 0) {
+    // somebody's house: a round-topped door of planks between two roots, its doorstep, and beside it a window with a light on
+    const x = 25, [wx, wy] = F.window;
+    q(x, 0, B.shadow, 9, 10); q(x + 1, 10, B.shadow, 7); q(x + 2, 11, B.shadow, 5); q(x - 1, 0, T[4], 1, 9); q(x + 9, 0, T[1], 1, 9);
+    q(x + 1, 1, C.plank, 7, 7); q(x + 2, 8, C.plank, 5); q(x + 3, 9, C.plank, 3);
+    q(x + 1, 1, C.plankHi, 1, 7); q(x + 2, 8, C.plankHi); q(x + 3, 9, C.plankHi, 2); q(x + 3, 1, C.plankDark, 1, 8); q(x + 5, 1, C.plankDark, 1, 8); q(x + 7, 1, C.plankDark, 1, 7);
+    q(x + 1, 6, B.deep, 7); q(x + 1, 2, B.deep, 7);                              // its two bands
+    q(x + 6, 4, C.gold);                                                         // its knob
+    q(x - 1, 0, C.stoneLight, 11); q(x - 1, 0, C.stoneHi, 5);                    // the doorstep
+    q(wx - 1, wy - 1, B.shadow, 4, 5); q(wx, wy, C.lanternGlow, 2, 3); q(wx, wy + 2, C.lanternHi); q(wx - 1, wy - 2, T[5], 4);      // the window, its sill catching the light
+    // and a few mushrooms on the lawn in front of the house, the biggest in the middle: a cap lit on its upper left, pale spots, a pale stem
+    const cap = (x, h, w) => { q(x, h, FUNGUS.dark, w); q(x, h + 1, FUNGUS.base, w, w > 5 ? 2 : 1); const up = h + (w > 5 ? 3 : 2); q(x + 1, up, FUNGUS.base, w - 2); q(x + 1, up, FUNGUS.hi, Math.ceil((w - 2) / 2)); q(x, up - 1, FUNGUS.hi, 2); q(x + w - 3, up - 1, FUNGUS.spot); if (w > 5) q(x + 2, up - 2, FUNGUS.spot); };
+    for (const [x, n, w] of [[56, 3, 5], [60, 5, 7], [65, 1, 4]]) { q(x + Math.floor(w / 2) - (w > 5 ? 1 : 0), 0, FUNGUS.stem, w > 5 ? 2 : 1, n); cap(x, n, w); }
+  } else {
+    // a fern in the fork: three fronds arching out of one place, each a stem with leaflets either side that get shorter toward its tip
+    const fx = base + 1, fronds = [[-1, 12, -0.75], [0.3, 13, 0.2], [1, 11, 1.05]];
+    for (const [lean, len, bend] of fronds) for (let i = 0; i < len; i++) {
+      const f = i / (len - 1), x = Math.round(fx + lean * 1.5 + bend * 9 * f * f), h = 3 + Math.round(i * (1 - 0.35 * f * Math.abs(bend)));
+      q(x, h, i > len - 3 ? C.grassLight : C.leaf);
+      if (i > 1 && i % 2 === 0 && i < len - 1) { const n = f < 0.6 ? 2 : 1; q(x - n, h, C.grass, n); q(x + 1, h, bend > 0.5 ? C.grassLight : C.grass, n); q(x - n, h - 1, C.leafDark); }
+    }
+    q(fx - 1, 1, C.leafDark, 4, 2);
+  }
+}
+// The grass that stands in front of a tree's foot, TREE_FOOT.w x 4 art px with the same anchor: blades over where it
+// meets the lawn, more of them than on the open lawn. A sprite of its own, because under snow there is none (background.js).
+function drawTreeFootGrass(t, look) {
+  const F = TREE_FOOT, r = new RNG(950 + look * 7);
+  for (let x = 0; x < F.w; x++) {
+    if (look === 0 && ((x >= 24 && x <= 34) || x >= 56)) continue;               // (the doorstep is kept clear, and the mushrooms)
+    if (r.chance(0.55)) { const n = F.sink + r.int(1, 3); t.p(x, 4 - n, 1, n, r.chance(0.5) ? C.grassLight : C.grass); }
+  }
 }
 
 export function buildTrees() {
@@ -326,7 +403,8 @@ export function buildTrees() {
   });
   const branchRDry = { normal: branch(50, 0, (t) => drawDryBranch(t, 50)), long: branch(76, 0, (t) => drawDryBranch(t, 76)) };
   const burlL = makeSprite(6, 9, (t) => drawBurl(t), { ax: 0, ay: 0.5 });
-  const rootsL = makeSprite(34, 30, (t) => drawRoots(t), { ax: 0, ay: 1 });
+  const feet = [0, 1].map((look) => makeSprite(TREE_FOOT.w, TREE_FOOT.h, (t) => drawTreeFoot(t, look), { ax: 0, ay: 1 }, { ayPx: (TREE_FOOT.h - TREE_FOOT.sink) * PX }));      // (the right tree's is the second, mirrored when drawn)
+  const feetGrass = [0, 1].map((look) => makeSprite(TREE_FOOT.w, 4, (t) => drawTreeFootGrass(t, look), { ax: 0, ay: 1 }, { ayPx: (4 - TREE_FOOT.sink) * PX }));
   const overlays = {
     moss: [0, 1, 2].map((s) => makeSprite(5 + s * 3, 4 + s * 2, (t) => drawMoss(t, s), { ax: 0.5, ay: 0.5 })),
     crack: makeSprite(3, 10, (t) => drawCrack(t), { ax: 0.5, ay: 0.5 }),
@@ -334,8 +412,7 @@ export function buildTrees() {
     fungus: [0, 1].map((b) => makeSprite(b ? 10 : 6, 5, (t) => drawFungus(t, b), { ax: 0.5, ay: 0.5 })),
     lichen: makeSprite(7, 5, (t) => drawLichen(t), { ax: 0.5, ay: 0.5 }),
     burlL, burlR: flipH(burlL),
-    rootsL,
   };
   const crownL = makeSprite(25, 48, (t) => drawCrown(t, TREE_STYLES[3]), { ax: 0, ay: 1 });
-  return { styles, branchRDry, overlays, crownL };
+  return { styles, branchRDry, overlays, crownL, feet, feetGrass };
 }

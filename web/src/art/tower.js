@@ -1,7 +1,7 @@
 import { makeSprite } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { PX } from '../config.js';
-import { RNG } from '../util.js';
+import { RNG, mixHex } from '../util.js';
 
 // The tower's wall, outside: its plain tiles, the string course, and the
 // areas that take turns with the plain wall on the way up (overgrown with
@@ -729,6 +729,167 @@ function drawMended(t, j, fix) {
   for (const [x, y, which] of S.signs) fix.push({ what: 'sign', sign: which, x, y, plane: planeOf(x + 7) });      // (null: whichever sign this place on the tower gets)
 }
 
+// --- the tower's foot ----------------------------------------------------------------------
+// Where the tower stands on the lawn: one sprite that background.js lays
+// over the lowest tiles (under the veil, as the windows are), FOOT_W x
+// FOOT_H art px, the anchor the middle of the lawn's line.
+// A plinth: two courses of big stones, each standing out further than what
+// is above it, and a moulding of dressed stone where the wall begins. It
+// is round as the wall is (narrower blocks toward the edges, the same
+// planes of light). In its middle the witch's gate: a round arch of dressed
+// stone on a worn threshold, set back into the wall (its reveal lit on the
+// right, in shade on the left and under the arch), a door of dark planks
+// deep in it, a portcullis let down in front and a chain across that with
+// a brass padlock. Nobody goes in here, which is why he climbs. The braid
+// hangs down the gate's middle, so everything that says "shut" is at its
+// sides: the bars, the lock, and left and right of the gate her arms on a
+// shield, her hat before the full moon on violet.
+// The first string course (60 to 66 art px up) runs into the arch at either
+// side, and the keystone stands above it.
+export const FOOT = { out: 7, up: 70, down: 3, plinth: { out: 5, top: 15, slope: 3 } };      // how far the footing stands out at either side, how far the sprite reaches up from the lawn and down into it; the plinth: how far out, how high its face, the rows of its sloping top
+const FOOT_W = TOWER_A + 2 * FOOT.out, FOOT_H = FOOT.up + FOOT.down;
+const GATE = { half: 16, frame: 5, sill: 3, spring: 46 };      // the opening's half width, the arch's thickness, the threshold's height, where the arch begins
+const DRESSED = [...STONE_PLANES, 'mortar'];                    // dressed stone from its lightest to the dark of a joint
+const PLINTH = [[1, 0.4], [2, 0.8], [2, 0.45], [3, 0.8], [3, 0.35]];      // the plinth's blocks by plane of light: a step of DRESSED, and the share of blocks that are that one and not the next darker
+const IRON = { hi: '#b4bec2', base: '#737e86', dark: '#444d55' };
+const DOOR = { plank: mixHex(C.plankDark, C.wallDeep, 0.5), seam: mixHex(C.plankDark, C.wallDeep, 0.8) };      // the planks, seen in the dark of the gateway
+const ARMS = { rimHi: IRON.hi, rim: IRON.base, rimDark: IRON.dark, fieldHi: '#a57fc4', field: C.tights, fieldDark: C.tightsDark, moonHi: C.gold, moon: C.braid, moonShade: C.goldDark, hat: C.witchHat, buckle: C.sun2 };
+const SHIELD = [
+  '.......n.......',
+  '......iIi......',
+  '.rrrrrrrrrrrrr.',
+  'rVVVVVVVVvvvvwR',
+  'rVVVVVmmmvkkvwR',
+  'rVVVmmmmkkkvvwR',
+  'rVVVmmmkkkMvvwR',
+  'rVVmmmmkkMMMvwR',
+  'rVvmmmkkkMMMvwR',
+  'rvvmmmkkkkMovwR',
+  'rvvvmkkkkkovvwR',
+  'rvvvMkkykkovwwR',
+  'rvkkkkkkkkkkkwR',
+  'rvvvvvvvvvvwwwR',
+  '.rvvvvvvvvwwwRd',
+  '.rvvvvvvvwwwwRd',
+  '..rvvvvvvwwwRd.',
+  '...rvvvvwwwRd..',
+  '....rvvwwwRd...',
+  '.....rvwwRd....',
+  '......rRRd.....',
+  '.......Rd......',
+];
+function drawFoot(t) {
+  const { p } = t;
+  const r = new RNG(5200), E = ROUND.edge, mid = TOWER_A / 2;
+  // by height above the lawn: a block `w` wide and `n` high whose lower left corner is at (x, h); x counts from the wall's left edge
+  const b = (x, h, w, n, col) => p(x + FOOT.out, FOOT.up - h - n, w, n, col);
+  // --- the plinth: a course of blocks round the tower that stands `out` art px proud of the wall. Dressed stone like the
+  // gate's, a step lighter than the old stones behind it in every plane of light (PLINTH): smooth blocks, each one of its
+  // plane's two tones, lit along the top, with fine joints (`mould`: the lit, sloping top instead, a tone lighter still)
+  const course = (h, n, out, mould) => {
+    const X = (a) => mid + (mid + out) * Math.sin(a) / Math.sin(E);
+    let a = -E - (mould ? 0.4 : r.next()) * BRICK_ANGLE;
+    while (a < E) {
+      const wide = BRICK_ANGLE * (mould ? 2.6 : r.range(2, 3.3)), a0 = Math.max(a, -E), a1 = Math.min(a + wide, E);
+      const xa = Math.round(X(a0)), xb = Math.round(X(a1)), w = xb - xa, q = PLINTH[planeAt((a0 + a1) / 2)], k = (r.next() < q[1] ? q[0] : q[0] + 1) - (mould ? 1 : 0);
+      a += wide;
+      if (w < 1) continue;
+      const S = (i) => C[DRESSED[Math.max(0, Math.min(DRESSED.length - 1, i))]];
+      b(xa, h, w, n, S(k));
+      if (mould) { if (w >= 6) b(xa, h, 1, n, S(k + 1)); continue; }
+      b(xa, h + n - 1, w, 1, S(k - 1));                                         // lit along the top
+      b(xa, h, w, 1, S(k + 1)); if (w >= 4) b(xa, h + 1, 1, n - 1, S(k + 1));   // its bed and the fine joint at its left
+      if (w > 7 && r.chance(0.35)) b(xa + r.int(2, w - 3), h + r.int(2, n - 3), 2, 1, S(k + 1));      // a chip out of its face
+    }
+    b(Math.round(X(E)) - 1, h, 1, n, C.mortar);                                 // the far edge, dark as the wall's
+  };
+  const PL = FOOT.plinth;
+  course(-FOOT.down, FOOT.down + 3, FOOT.out);                                  // the footing, most of it in the grass
+  course(3, 6, PL.out); course(9, PL.top - 9, PL.out);                          // its face, two courses
+  for (let i = 0; i < PL.slope; i++) course(PL.top + i, 1, PL.out - 1 - i, true);      // and the slope the wall stands back on
+  // damp rising from the lawn, and moss where the ledges keep the wet: more of it away from the light
+  for (let i = 0; i < 9; i++) { const a = (r.next() * 1.9 - 0.95) * E, x = Math.round(mid + (mid + PL.out) * Math.sin(a) / Math.sin(E)); b(x, 3, 1, r.int(2, 6), C[DRESSED[Math.min(5, PLINTH[planeAt(a)][0] + 2)]]); }
+  for (let i = 0; i < 18; i++) {
+    const a = (r.next() * 1.75 - 0.8) * E, ledge = r.pick([[2, FOOT.out], [2, FOOT.out], [PL.top + PL.slope - 1, 1], [PL.top, PL.out - 1], [8, PL.out]]), g = MOSS[Math.min(2, Math.max(0, planeAt(a) - 1))];
+    const x = Math.round(mid + (mid + ledge[1]) * Math.sin(a) / Math.sin(E)), w = Math.max(1, Math.round(r.int(3, 7) * Math.cos(a)));
+    b(x, ledge[0], w, 1, g.base); if (w > 2) b(x + 1, ledge[0] + 1, w - 2, 1, g.hi); if (r.chance(0.5)) b(x + r.int(0, w - 1), ledge[0] - r.int(1, 3), 1, 3, g.dark);
+  }
+  // --- the gate
+  const G = GATE, R = G.half + G.frame, x0 = mid - G.half, x1 = mid + G.half;
+  const face = (x) => (x < mid + 9 ? C.stoneLight : C.stone), edge = (x) => (x < mid + 9 ? C.stoneHi : C.stoneLight);      // the dressed stone's two planes
+  const soffit = (x) => G.spring + Math.sqrt(Math.max(0, G.half * G.half - (x + 0.5 - mid) ** 2));                         // the arch's underside over column x
+  const back = (x) => G.spring + Math.sqrt(Math.max(0, R * R - (x + 0.5 - mid) ** 2));                                     // and its back
+  // the threshold: one worn slab, wider than the gate, its top catching the light
+  b(mid - 25, -FOOT.down, 50, FOOT.down + G.sill, C.stone); b(mid - 25, G.sill - 1, 50, 1, C.stoneHi); b(mid - 25, G.sill - 2, 50, 1, C.stoneLight);
+  b(mid - 25, -FOOT.down, 1, FOOT.down + G.sill - 1, C.stoneLight); b(mid + 24, -FOOT.down, 1, FOOT.down + G.sill, C.stoneDark);
+  for (const x of [mid - 9, mid + 8]) b(x, -FOOT.down, 1, FOOT.down + G.sill - 1, C.stoneDark);
+  b(mid - 4, G.sill - 1, 9, 1, C.stoneLight);                                                                             // worn hollow where everybody stepped
+  // the jambs: quoins, long and short in turn, toothed into the wall
+  for (let h = G.sill, i = 0; h < G.spring; h += 6, i++) {
+    const n = Math.min(6, G.spring - h), long = i % 2 === 0 ? 4 : 1;
+    for (const [xa, w] of [[x0 - G.frame - long, G.frame + long], [x1, G.frame + long]]) {
+      b(xa, h, w, n, face(xa + 2)); b(xa, h + n - 1, w, 1, edge(xa + 2)); b(xa, h, w, 1, C.stoneDark);
+      b(xa, h + 1, 1, n - 1, xa < mid ? edge(xa) : C.stoneDark); b(xa + w - 1, h + 1, 1, n - 2, xa < mid ? C.stone : C.stoneDark);
+    }
+  }
+  // the arch: its ring of wedge stones, lit along its back on the left
+  for (let h = G.spring; h < G.spring + R; h++) {
+    const dy = h - G.spring + 0.5, xo = Math.round(Math.sqrt(R * R - dy * dy)), xi = dy < G.half ? Math.round(Math.sqrt(G.half * G.half - dy * dy)) : 0;
+    for (let x = mid - xo; x < mid + xo; x++) if (x < mid - xi || x >= mid + xi) b(x, h, 1, 1, back(x) - h <= 1 ? edge(x) : face(x));
+  }
+  for (const deg of [16, 38, 60, 120, 142, 164]) {
+    const a = deg * Math.PI / 180;
+    for (let d = G.half + 0.5; d < R - 0.5; d += 0.5) b(Math.floor(mid + d * Math.cos(a)), Math.floor(G.spring + d * Math.sin(a)), 1, 1, deg < 90 ? C.stoneDark : C.stone);
+  }
+  // the imposts the arch stands on
+  b(x0 - G.frame - 1, G.spring - 2, G.frame + 1, 2, C.stoneLight); b(x0 - G.frame - 1, G.spring - 1, G.frame + 1, 1, C.stoneHi); b(x0 - G.frame - 1, G.spring - 3, G.frame + 1, 1, C.stoneDark);
+  b(x1, G.spring - 2, G.frame + 1, 2, C.stone); b(x1, G.spring - 1, G.frame + 1, 1, C.stoneLight); b(x1, G.spring - 3, G.frame + 1, 1, C.stoneDark);
+  // the gateway: its reveal, the shade in it, the door at its back
+  for (let h = G.sill; h < G.spring + G.half; h++) {
+    const dy = h - G.spring + 0.5, hw = dy < 0 ? G.half : Math.round(Math.sqrt(Math.max(0, G.half * G.half - dy * dy)));
+    for (let x = mid - hw; x < mid + hw; x++) {
+      const dl = x - (mid - hw), dr = mid + hw - 1 - x, du = soffit(x) - (h + 1);
+      let col;
+      if (dr < 2) col = C.stoneDark;                                             // the reveal the light reaches
+      else if (dl < 2 || du < 2) col = C.stoneShade;                             // and the one it does not, and the arch's underside
+      else if (dl < 5 || du < 5) col = C.wallDeep;                               // the shade they throw on the door
+      else if (x === mid - 1 || x === mid) col = C.wallDeep;                     // where its leaves meet
+      else if (h % 20 >= 9 && h % 20 < 12) col = h % 20 === 11 ? IRON.base : IRON.dark;      // its iron bands
+      else col = (x - mid + 100) % 5 === 2 ? DOOR.seam : DOOR.plank;
+      b(x, h, 1, 1, col);
+    }
+  }
+  // the portcullis, let down: upright bars with points that stand on the threshold, cross bars, a rivet where they meet
+  const bars = [3, 9, 15, 21, 27].map((d) => x0 + d), cross = [10, 20, 30, 40, 50];
+  for (const x of bars) for (let h = G.sill; h < soffit(x) - 1; h++) { b(x, h, 1, 1, IRON.base); if (h > G.sill) b(x + 1, h, 1, 1, IRON.dark); }
+  for (const h of cross) {
+    const dy = h - G.spring + 1.5, hw = dy < 0 ? G.half : Math.round(Math.sqrt(G.half * G.half - dy * dy));
+    b(mid - hw + 2, h + 1, hw * 2 - 4, 1, IRON.base); b(mid - hw + 2, h, hw * 2 - 4, 1, IRON.dark);
+    for (const x of bars) b(x, h + 1, 1, 1, IRON.hi);
+  }
+  // the chain across it, from a ring in either jamb, and the padlock on it (left of the braid, where one sees it)
+  const sag = (x) => Math.round(31 - 8 * (1 - ((x + 0.5 - mid) / (G.half + 1)) ** 2));
+  for (let x = x0; x < x1; x++) { b(x, sag(x), 1, 1, (x + 100) % 2 ? IRON.hi : IRON.base); b(x, sag(x) - 1, 1, 1, C.wallDeep); }
+  for (const x of [x0 - 3, x1]) { b(x, 30, 3, 3, IRON.dark); b(x + 1, 31, 1, 1, face(x)); b(x, 32, 2, 1, IRON.base); }
+  { const x = x0 + 4, h = sag(x0 + 6) - 7;
+    b(x + 1, h + 5, 1, 2, IRON.hi); b(x + 4, h + 5, 1, 2, IRON.base);                                                    // its shackle
+    b(x, h, 6, 5, C.goldDark); b(x, h + 4, 6, 1, C.gold); b(x, h + 1, 1, 3, C.gold); b(x + 5, h, 1, 4, C.braidDark); b(x, h, 6, 1, C.braidDark);
+    b(x + 2, h + 2, 2, 1, C.wallDeep); b(x + 3, h + 1, 1, 1, C.wallDeep); }                                                // and its keyhole
+  // the keystone: bigger than the rest and proud of them, standing above the string course
+  b(mid - 3, G.spring + G.half - 2, 6, G.frame + 2, C.stoneLight); b(mid - 4, FOOT.up - 3, 8, 3, C.stoneLight);
+  b(mid - 4, FOOT.up - 1, 8, 1, C.stoneHi); b(mid - 3, G.spring + G.half - 2, 1, G.frame + 2, C.stoneHi); b(mid - 4, FOOT.up - 3, 1, 3, C.stoneHi);
+  b(mid + 2, G.spring + G.half - 2, 1, G.frame + 2, C.stone); b(mid + 3, FOOT.up - 3, 1, 2, C.stone); b(mid - 3, G.spring + G.half - 2, 6, 1, C.stoneDark);
+  // --- her arms, left and right of the gate: the right one is round the tower from the light, and hangs a little lower
+  for (const [x, top, dim, mossy] of [[10, 56, 0, false], [86, 55, 0.3, true]]) {
+    const tone = (c) => (dim ? mixHex(c, C.mortar, dim) : c), A = ARMS;
+    stamp(t, x + FOOT.out, FOOT.up - top, SHIELD, {
+      n: tone(PAINT.nail), i: tone(IRON.dark), I: tone(IRON.base), d: CAST, r: tone(A.rimHi), R: tone(A.rimDark),
+      V: tone(A.fieldHi), v: tone(A.field), w: tone(A.fieldDark), m: tone(A.moonHi), M: tone(A.moon), o: tone(A.moonShade), k: tone(A.hat), y: tone(A.buckle),
+    });
+    if (mossy) { const g = MOSS[2]; b(x + 9, top - 3, 5, 1, g.base); b(x + 10, top - 2, 3, 1, g.hi); b(x + 13, top - 5, 1, 3, g.dark); b(x + 1, top - 14, 1, 2, g.base); }
+  }
+}
+
 const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss, mended: drawMended, briar: drawBriar };
 
 // The wall's sprites: its plain tiles, the string courses (`bands`: the
@@ -764,5 +925,6 @@ export function buildTower() {
     const free = fix.loop.flat().filter((f) => f.signs && f.sign == null);
     free.forEach((f, n) => { f.slot = n; f.slots = free.length; });
   }
-  return { plain, band, bandWorn, bands: { worn: bandWorn }, areas };
+  const foot = makeSprite(FOOT_W, FOOT_H, (t) => drawFoot(t), { ax: 0.5, ay: 0 }, { ayPx: FOOT.up * PX });
+  return { plain, band, bandWorn, bands: { worn: bandWorn }, areas, foot };
 }

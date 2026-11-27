@@ -1,13 +1,14 @@
-import { W, H, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js';
+import { W, H, PX, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js';
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
-import { TOWER_AREAS, ROSES, COURSE } from './art/tower.js';
+import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
 import { towerAreaAt, towerAreaForced, stageWall } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
+import { TREE_FOOT } from './art/trees.js';
 import { Atmosphere } from './atmosphere.js';
 import { Weather, WEATHER } from './weather.js';
 import { StringLights } from './lights.js';
@@ -106,6 +107,8 @@ const STRING_COURSE = 4;
 const HUNG_CLEAR = 8, HUNG_BELOW = 32;
 // Petals falling from the briar's roses: how many to a tile, how far each falls (layer px), how long that takes (s, from .. to).
 const PETALS = { each: 2, fall: 300, time: [6, 10] };
+// A liana's lower end keeps this far above the lawn (px): clear of the trees' feet.
+const LIANA_CLEAR = 150;
 
 export class Background {
   constructor(art) {
@@ -264,6 +267,8 @@ export class Background {
       g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy - up, o);
     }
     this.drawWindows(g, cam, camF, time, world);
+    // the tower's foot (art/tower.js): its plinth, the witch's gate and her arms, over the lowest tiles and the first string course
+    if (camF < FOOT.up * PX + 20) g.blit(t.towerFoot, W / 2 + cam.ox, H + camF + cam.oy);
     // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again
     for (let k = first; k <= last + 2; k++) {
       const a = areaAt(k);
@@ -347,9 +352,17 @@ export class Background {
       if (st.t > 0) { g.blit(T.styles[st.b].trunkL[vL], cam.ox, sy, { alpha: st.t }); g.blit(T.styles[st.b].trunkL[vR], W + cam.ox, sy, { alpha: st.t, flip: true }); }
       this.drawTrunkOverlays(g, cam, k, st.t < 0.5 ? st.a : st.b, sy);
     }
-    if (first === 0) { g.blit(T.overlays.rootsL, TRUNK_W - 10 + cam.ox, cam.sy(-2)); g.blit(T.overlays.rootsL, W - TRUNK_W + 10 + cam.ox, cam.sy(-2), { flip: true }); }
     this.drawVines(g, cam, time, gust, first, last);
     this.drawLianas(g, cam, time, gust, first, last);
+    // where they stand on the lawn (art/trees.js): each tree's own foot, over what climbs and hangs on it, and in one of
+    // them a light is on; in front of it grass, or the snow's edge where the lawn is snowed in
+    if (first === 0) {
+      const y = cam.sy(0), [wx, wy] = TREE_FOOT.window, fl = 0.75 + 0.25 * Math.sin(time * 7) * Math.sin(time * 2.1), wide = TREE_FOOT.w * PX;
+      g.blit(T.feet[0], cam.ox, y); g.blit(T.feet[1], W + cam.ox, y, { flip: true });
+      g.rect(wx * PX + cam.ox, y - (wy + 3) * PX, 2 * PX, 3 * PX, C.lanternHi, 0.5 * fl, { glow: 0.8 });
+      const snow = Math.max(this.weather.drawDrift(g, cam, 0, wide), this.weather.drawDrift(g, cam, W - wide, W));
+      if (snow < 1) { g.blit(T.feetGrass[0], cam.ox, y, { alpha: 1 - snow }); g.blit(T.feetGrass[1], W + cam.ox, y, { alpha: 1 - snow, flip: true }); }
+    }
   }
 
   // Hashed overlays per tile and side: moss, cracks, holes, fungus shelves,
@@ -401,7 +414,7 @@ export class Background {
         const col = kind === 'thorn' ? '#4a2a28' : kind === 'flower' ? '#3f6b3a' : C.leafDark;
         const step = 14;
         let prev = null;
-        const y0 = Math.max(startY, cam.y - 40), y1 = Math.min(endY, cam.top + 40);
+        const y0 = Math.max(startY, 0, cam.y - 40), y1 = Math.min(endY, cam.top + 40);      // (none below the lawn's line)
         for (let y = Math.floor(y0 / step) * step; y <= y1; y += step) {
           const taper = Math.min(1, (endY - y) / 120);                  // thins out at the top
           const x = baseX + Math.sin(y / 110 + phase) * amp + gust * Math.sin(y / 90 + time * 6) * 6 + cam.ox;
@@ -432,9 +445,10 @@ export class Background {
         const seed = hash(k * 41 + (side === 'L' ? 5 : 6));
         if ((seed % 100) >= style.lianas * 100) continue;
         const moss = style.name === 'giant' && (hash(seed + 9) % 2 === 0);
-        const len = moss ? 50 + (hash(seed + 1) % 60) : 130 + (hash(seed + 1) % 140);
         const x0 = (side === 'L' ? TRUNK_W - 4 - (seed % 10) : W - TRUNK_W + 4 + (seed % 10)) + cam.ox;
         const y0 = k * TILE_H + (hash(seed + 2) % TILE_H);
+        const len = Math.min(moss ? 50 + (hash(seed + 1) % 60) : 130 + (hash(seed + 1) % 140), y0 - LIANA_CLEAR);      // (one near the lawn ends above the roots)
+        if (len < 40) continue;
         if (y0 < cam.y - 20 || y0 - len > cam.top + 20) continue;
         const n = 7, col = moss ? '#7a9a6a' : C.leafDark;
         let px = x0, py = cam.sy(y0);
@@ -517,6 +531,7 @@ export class Background {
   drawGround(g, cam) {
     if (cam.y > 40) return;
     g.blit(this.art.tiles.ground, W / 2 + cam.ox, cam.sy(0));
+    g.blit(this.art.tiles.path, W / 2 + cam.ox, cam.sy(0) + PX);      // the stepping stones to the gate
     const top = cam.sy(0) + this.art.tiles.ground.h - this.art.tiles.ground.ay;
     if (top < H) g.rect(0, top, W, H - top, C.grassDark);
   }
