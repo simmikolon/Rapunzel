@@ -254,8 +254,8 @@ Everything proposed so far, by family. Status marks what exists; the rest
 is a pool to draw from, not a promise.
 
 **Companions**
-- 🔜 Lord Springalot, the prince's sidekick (a trial on
-  `element/springalot`; `web/src/sidekick.js`, `web/src/art/lord.js`): a
+- ❓ Lord Springalot, the prince's sidekick (tried as a follower on
+  `element/springalot` and found confusing, see the decision log; `web/src/sidekick.js`, `web/src/art/lord.js`): a
   child on a pogo pony of his own who does everything the prince does a
   third of a second later, the same hops, boosts and somersaults, in
   both modes and in both places. He has what the prince has, home-made:
@@ -2960,3 +2960,11 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     right distance, how it looks when he lands on a dry branch that has
     just crumbled under the prince, and in the treasury's bubble (he
     rises beside it without one).
+  - Simon played it: the mechanism works and the sprite is good, but it
+    does not work as a game. With two pogo figures in the picture one
+    no longer knows which of them one is, and plays worse for it. The
+    copying sidekick is dropped (it stays on this branch to look at;
+    `?lord=0` plays without him). What it taught: never two figures of
+    the prince's kind in the picture while one of them is steered. What
+    comes next for the lord is open: a place of his own, or a choice
+    on the title.
