@@ -76,23 +76,28 @@ home screen and runs full-screen in portrait.
 `ios/` is a small native shell (Swift, one `WKWebView`) around the same
 `web/` folder: open `ios/SirBouncealot.xcodeproj` in Xcode and Run on your
 phone. It loads the game from the app bundle, steers by CoreMotion without
-a permission prompt, keeps the best height in `UserDefaults`, adds light
-haptics and respects the ring/silent switch. See [`ios/README.md`](ios/README.md)
-for the dev launch arguments and the TestFlight steps.
+a permission prompt, keeps the best height and the settings in
+`UserDefaults`, adds haptics, tells the opening story at every launch, and
+sounds in silent mode unless the settings say otherwise. See
+[`ios/README.md`](ios/README.md) for the dev launch arguments and the
+TestFlight steps.
 
 ### Controls
 
 | | Steer | Boost | Pause |
 |---|---|---|---|
 | Keyboard | ← → or A D | Space, ↑, W or click | P / Esc |
-| Touch | hold the left or right half of the screen | the flame button | ⏸ |
-| Tilt | tilt the phone (enable on the title screen) | tap anywhere | ⏸ |
+| Touch: TAP | hold the left or right half of the screen | the flame button | ⏸ |
+| Touch: SWIPE | slide a finger from where it was set down | a tap, or a second finger | ⏸ |
+| Touch: TILT | lean the phone (three sensitivities) | tap anywhere | ⏸ |
 
 PLAY on the title screen (or a tap anywhere, or space) starts a short
 countdown on the knight's hops; MENU on the pause and game-over screens
-leads back to the title. `M` toggles sound, `F` (or the button on the
-title screen) cycles the screen effects (off to begin with). The best
-height and the effects the player picked are kept in `localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
+leads back to the title. SETTINGS on the title opens a sign with how a
+touch steers, the two screen effects (a glow and scan lines, both off to
+begin with; `F` goes through them), sound, and in the iOS app sound in
+silent mode and haptics. `M` toggles sound. The best heights and the
+settings are kept in `localStorage`. Development helpers in the URL: `?at=150` starts at 150 m,
 `?spawn=squirrel` puts one on the next branch, `?spawn=star` (or `cloak`,
 `spring`, `magnet`, `feather`) hangs that power-up above the knight,
 `?dev=1` shows altitude and zone.
@@ -158,6 +163,22 @@ custom engine instead of SpriteKit physics and GameplayKit:
   of it 40 m higher.
   `web/src/interior.js` paints it, `web/src/places.js` says what differs
   between the places.
+* **The tower in stages**: the title's first choice. The climb is a row
+  of stretches, each with a look of its own (the rose wall, the deep
+  forest, the masons' site, the dark rooms, the library ...), a floor at
+  its end and a door that leads to the next, outside and inside by turns.
+  Three hearts within a stage and three lives on top: a fall goes on from
+  the last door. `web/src/stages.js` says what each stage is.
+* **The opening story**: before the title, told in the game's own world:
+  Rapunzel at her window at the top of the tower at night, the witch on
+  her broom, "Rescue me!", and the braid let down, the picture following
+  its end all the way to the lawn. `web/src/story.js`.
+* **Weather**: rain, snow that lies on the branches, the golden hour, and
+  storms: gusts that come as white curls and carry the prince sideways,
+  the colours half gone, lightning that turns the picture black and white
+  for an instant. In stages a storm draws up inside a stage now and then;
+  in the endless tower storms keep their own time. Around Christmas the
+  lawn is snowed in. `web/src/weather.js`.
 * **FX**: squash and stretch, landing dust / leaves / petals, crumble
   debris, boost flames, feathers, screen shake, a swaying braid that moves
   the ribbons (harder with altitude), sky and lighting keyed to the zones
@@ -166,9 +187,9 @@ custom engine instead of SpriteKit physics and GameplayKit:
   sunset → starry night), toasts for milestones.
 * **Audio**: every sound is synthesized with WebAudio, so there are no
   audio files; mute is remembered.
-* **Shaders**: a real bloom on everything that glows (lanterns, sun drops,
-  fireflies, flames, stars, the moon) and a CRT pass with a curved tube,
-  scanlines, chromatic aberration and flicker. See below.
+* **Shaders**: a glow on everything that shines (lanterns, sun drops,
+  fireflies, flames, stars, the moon), scan lines, and the storm's mood.
+  The first two are settings and off to begin with. See below.
 * **Screens**: a ride down the tower on load, then the title, pause and
   game over on a wooden sign lowered in on ropes; best height saved.
 
@@ -193,7 +214,9 @@ Drawing goes through a small immediate-mode facade over PixiJS
 (`web/src/gfx/renderer.js`): the game still draws everything every frame
 with calls like `g.blit(sprite, x, y)`, `g.rect(...)` or `g.text(...)`, and
 the facade hands out pooled PixiJS sprites, vector shapes and text objects in
-call order (every object gets an increasing `zIndex`, so draw order is
+call order (a rectangle and a line are sprites too, and text in the game's
+font is put together from letter sheets, so that almost everything is one
+draw call) (every object gets an increasing `zIndex`, so draw order is
 z-order even when the three kinds interleave). Gameplay code never touches
 PixiJS directly. The stage is a stack of layers:
 
@@ -205,31 +228,35 @@ PixiJS directly. The stage is a stack of layers:
 | `glow` | emissive copies of glowing things, blurred by the bloom filter and added over the scene |
 | `hud`, `overlay` | score, hearts, boost meter, buttons, toasts; pause / game over / notices |
 
-Everything sits in a root container that carries the CRT filter.
+Everything sits in a root container that carries the passes over the whole
+frame: the scan lines, and the weather's mood while there is a storm.
 
 * **Bloom** (`web/src/gfx/filters.js`, `BloomFilter`) is selective: a draw
   call with a `glow` option is drawn a second time into the `glow` layer,
   which is rendered at half resolution, blurred with a separable 9-tap
   Gaussian (two iterations) and composited additively. There is no luminance
   threshold, so a bright daytime sky does not haze over.
-* **CRT** (`CRTFilter`) bends the picture into a slightly curved tube
-  (only the corners leave the screen), splits the colour channels a little
-  toward the edges, darkens every other art-pixel row into scanlines, adds a
-  faint phosphor triad at retina densities, shades the corners and flickers
-  by a few percent. Scanlines are counted in device pixels, so they stay
-  the same size whatever the window.
-* **Presets**: `full` (bloom + CRT), `bloom` and `off`; the game starts
-  with `off`. `F` or the title screen button cycle them, `?fx=full|bloom|off`
-  in the URL forces one for a visit. A preset the player picks is saved with
-  the best height (`fxPick`); the default is never saved.
+* **Scan lines** (`CRTFilter`) darken every other art-pixel row and add a
+  faint phosphor triad. The pass can also bend the picture into a curved
+  tube with colour fringes, shaded corners and flicker; those are set to
+  nothing (`FX.crt` in `web/src/config.js`).
+* **The mood** (`MoodFilter`) takes the colours half out of the picture
+  under a storm and turns it black and white for the instant of lightning.
+  It is in the chain only while a storm is.
+* **Two switches**, the glow and the scan lines, both off to begin with: on
+  the settings' sign, with `F`, or `?fx=off|bloom|lines|full` for a visit.
 * **Art** stays procedural: at start-up `web/src/gfx/atlas.js` packs every
-  sprite canvas into one 2048-px-wide texture with nearest-neighbour
-  sampling, so the whole scene batches into a handful of draw calls and the
-  chunky pixels stay crisp. `web/dev/sprites.html` keeps working because the
-  sprites keep their canvases.
-* The logical resolution is still 768 x 1364 and the backing store still
-  matches the CSS size in device pixels (`renderer.resize(W, H, scale)`), so
-  nothing changes for input or layout.
+  sprite into one texture at art size (one texel to an art pixel, 1024
+  wide) with nearest-neighbour sampling, so the whole scene batches into a
+  handful of draw calls and the chunky pixels stay crisp. A sprite therefore
+  has to be on the art grid; `tools/checks/atlas.mjs` names one that is not.
+  `web/dev/sprites.html` keeps working because the sprites keep their
+  canvases.
+* The logical resolution is 768 wide and as tall as the screen's shape
+  asks for. The picture is drawn at one backing pixel per logical pixel on
+  every screen (`RESOLUTION` in `web/src/config.js`) and scaled up by the
+  screen: on a phone that is a third of the pixels to fill, and it shows no
+  difference. `docs/plans/performance.md` has the measurements.
 * Browsers without WebGL get a short message instead of the game. The
   vendored `web/vendor/pixi.min.mjs` is the unmodified ESM bundle from the
   `pixi.js` npm package (sourcemap pointer stripped); see
@@ -242,12 +269,17 @@ runs the game logic headlessly with a scripted player; drive it with
 `node tools/analyze.mjs <url> <runs> <kid|good> <bold|cautious>` to get
 heights, deaths and hits per 100 m (see `docs/ANALYSIS-phase1.md`). Runs
 are reproducible: the same seed gives the same round, so builds are
-compared on paired seeds.
+compared on paired seeds. `tools/checks/` holds the checks run before a
+push (its README says what each does): the simulator's reports against
+kept ones, and a headless browser playing through the title, a stage's
+end, the opening story, the settings and the landing page. `?perf=1` puts
+a frame-time readout on the screen.
 
 ### Tuning
 
-All gameplay numbers live in `web/src/config.js`, with the bloom and CRT
-amounts in its `FX` block; difficulty tiers are at the top of
-`web/src/level.js`; sky and lighting keyframes are in
-`web/src/background.js`. Which things glow, and how much, is the `glow`
+All gameplay numbers live in `web/src/config.js`, with the glow's and the
+scan lines' amounts in its `FX` block; difficulty tiers are at the top of
+`web/src/level.js`; the stages and their order in `web/src/stages.js`; the
+weather's numbers at the top of `web/src/weather.js`; sky and lighting
+keyframes are in `web/src/background.js`. Which things glow, and how much, is the `glow`
 option on their draw calls (pickups, particles, background, HUD).

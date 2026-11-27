@@ -1,5 +1,10 @@
 # Working on Sir Bouncealot
 
+A prince on a pogo stick climbs Rapunzel's tower by her braid: he bounces
+by himself, the player steers and boosts. What is on `master`, what is
+open and what nobody has tried yet is at the end of this file (Where we
+are, `docs/STATUS.md`): read it first.
+
 Browser game (plain ES modules, WebGL via a vendored PixiJS, no build
 step) in `web/`; its landing page is `site/`. Deployed, the landing page
 is `/` and the game `/play/` (`vercel.json` runs `tools/build_site.sh`,
@@ -18,6 +23,61 @@ which only copies the two folders together). The design document
   support in `web/dev/sim.js` or a note that it is purely visual.
 - "Done" means: in the game, in its zone, in the simulator, one line in
   `docs/DESIGN.md` (status mark plus decision log).
+
+## Working with Simon
+- Answer in German. Code, comments, commit messages and the documents
+  stay in English.
+- Merge into `master` only when Simon says so, each time anew (`master`
+  is the live site). Use a merge commit, and never delete a branch: they
+  and their preview URLs are kept for his videos. No pull request unless
+  he asks for one.
+- He plays on his iPhone and says what he saw, often at length and by
+  voice. Nothing here can be played on a phone, Swift cannot be compiled
+  here, and sound cannot be heard: say plainly what was only seen in
+  still pictures or not tried at all, and what he should look at.
+- To a question, give an answer and a recommendation, then wait if the
+  choice is his. Given a free hand, build it and say what was decided.
+- Show pictures: the same frame before and after, enlarged where it
+  matters.
+- One chat per topic, as there is one branch per element: a new one when
+  a branch is merged and something else begins. `docs/STATUS.md` is the
+  handoff; bring it up to date with every merge.
+
+## A session on this machine
+- The checks need both servers, and a new session has neither:
+  `python3 tools/serve.py` (the game, port 8000) and
+  `python3 tools/serve.py --site 8002` (the landing page).
+- `identity.sh`, `flow.mjs`, `stages.mjs`, `story.mjs` and `settings.mjs`
+  take about ten minutes together: run them in the background and go on
+  with the documents.
+- Scripts and pictures for trying things out go to the scratch directory,
+  never into the repository.
+- Commit and push on the element's branch before a turn ends; if checks
+  are still running then, say so in the commit message and report their
+  result afterwards.
+
+## Where things are (`web/src/`)
+- `main.js` the game's loop and modes (intro, title, countdown, playing,
+  paused, game over); `world.js` a round: platforms, enemies, pickups, the
+  prince, the weather's choice, stages and retries; `level.js` what is
+  built where (tiers, pacing, `ZONES`); `player.js`, `enemies.js`,
+  `platforms.js`, `pickups.js`, `powerups.js`.
+- `background.js` sky, tower, forest, trees and the drawing order;
+  `atmosphere.js` fog, leaves, forest life; `weather.js` rain, snow,
+  storm, golden hour; `interior.js` the inside of the tower;
+  `towerwall.js` and `art/tower.js` the wall's looks.
+- `stages.js` the stages' themes and order; `story.js` the opening story;
+  `settings.js` the settings and their sign; `input.js` keys, touch
+  (hold, slide), tilt; `hud.js`, `title.js`, `sign.js` what is on screen
+  beside the game.
+- `gfx/renderer.js` the facade `g` (layers, pooled sprites, letter sheets,
+  the effects), `gfx/atlas.js` the sprite atlas, `gfx/filters.js` the
+  shaders; `art/` every sprite, drawn by code; `audio.js` every sound,
+  synthesised; `platform.js` the iOS shell's bridge; `perf.js` the
+  readout; `dev.js` the URL helpers.
+- `web/dev/sim.js` the simulator's bots; `tools/checks/` the checks;
+  `docs/DESIGN.md` is long (2800 lines): read the section that is needed,
+  not all of it.
 
 ## Run and test
 - Serve: `python3 tools/serve.py` (port 8000, caching off). A plain
@@ -132,6 +192,13 @@ which only copies the two folders together). The design document
 - Drawing goes through the renderer facade `g` (`web/src/gfx/renderer.js`);
   gameplay code never touches PixiJS. Pass `glow` on draw calls for bloom.
   `g.dark(amount)` makes a frame dark and `g.lamp(x, y, r)` lights it.
+  A rectangle, a line and a letter are sprites from the one atlas (one
+  draw call); a vector shape (`g.path`, `g.circle`) is built again every
+  frame, so none in anything that is drawn in numbers.
+- What a frame costs matters on the phone (`docs/plans/performance.md`):
+  nothing allocated per frame for what there is much of, no text whose
+  words change outside the game's font, no new full-screen pass that runs
+  all the time.
 - Keep kids in mind: hazards telegraphed, no trap without a way out.
 - Commit messages describe the change and the measured effect; no model
   names in commits, code or docs.
@@ -142,3 +209,8 @@ session starts with it (keep it to about a page, it costs context each
 time):
 
 @docs/ART.md
+
+## Where we are
+The handoff, imported so every session starts with it (keep it to a page):
+
+@docs/STATUS.md
