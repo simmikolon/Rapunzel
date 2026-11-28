@@ -14,6 +14,7 @@ import { audio } from './audio.js';
 import { PAL as C } from './palette.js';
 import { RNG, overlaps, clamp, TAU } from './util.js';
 import { hash } from './altitude.js';
+import { GLOW } from './art/darkwood.js';
 import { frontAt, isWinter, stormSpan, STORM_CLOCK } from './weather.js';
 import { nightAlpha } from './altitude.js';
 import { CAMERA_PLAYER_OFFSET } from './config.js';
@@ -29,6 +30,14 @@ import { STONE_STYLE, INSIDE } from './art/interior.js';
 // Where the lights are out: how far the picture goes down (1 would be
 // black: a ledge must still be a shape in it), and toward which colour.
 const DARK_DEPTH = 0.86, DARK_COLOR = '#07061a';
+// The dark wood (outside; background.js `wood` and woodLamps, art/darkwood.js): a stretch of the deep forest where no
+// light comes through the leaves, so the prince carries a lantern and one sees what has a light of its own. In the
+// endless tower it begins between `from` and is `len` long (px, by the round's seed); in stages it is the middle of a
+// stage whose theme says `gloom`, from `stage[0]` px above its door to `stage[1]` under its last breather. `depth`
+// and `color`: how dark the frame is made and toward what (less than in the tower's dark rooms: what is not lit is
+// still there as a shape). `lamp`: his lantern's two rings of light, each [radius, strength]; `hand`: where it hangs
+// from, as shares of his height forward and up; `creature`: the light every creature out there is given.
+const WOOD = { from: [14500, 17500], len: [4500, 5500], stage: [1500, 300], depth: 0.84, color: '#03100e', lamp: [[500, 0.38], [300, 0.92]], hand: [0.27, 0.6], creature: [120, 0.6] };
 
 // Through a gate: the door takes GATE_OPEN to open, then the picture closes
 // in on the prince and opens again, GATE_IRIS each way.
@@ -111,6 +120,8 @@ export class World {
     this.player.reset(0, 0);
     this.level.reset();
     this.bg.setWall(this.route ? this.level.stage : null, this.cam);      // a stage has a wall of its own
+    { const r = new RNG(seed == null ? undefined : hash(seed + 14)), from = r.range(WOOD.from[0], WOOD.from[1]); this.woodSpan = { from, to: from + r.range(WOOD.len[0], WOOD.len[1]) }; }      // the dark wood of this round (for the eye: a stream of its own)
+    this.setWood();
     // the weather (weather.js): its fronts in the endless tower and its gusts come from the round's seed
     this.weatherSeed = seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 10);
     this._winter = null;      // (a round begun on the first of December finds the lawn snowed in)
@@ -452,6 +463,7 @@ export class World {
     pl.x = door.x; pl.y = y; pl.prevY = y; pl.maxY = y; pl.landedOn = door;
     this.scoreBase = base; this.scoreFrom = y; this.topY = y;
     this.bg.setWall(st, this.cam);
+    this.setWood();
     this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
     this.bg.weather.want(this.weatherKind(), true);      // the next stage's weather is there when the picture opens
     this.level.generateUpTo(this.cam.top + 900);
@@ -509,6 +521,11 @@ export class World {
     this.onRetry(pl, this.level.stage, cause);
   }
   onDark(pl, d) {}                          // and here
+  // Where the dark wood is now: in stages the middle of a stage whose theme says so, else this round's own stretch.
+  setWood() {
+    const st = this.route && this.level.stage;
+    this.bg.setWood(st ? (st.gloom && st.place === 'outside' ? { from: st.from + WOOD.stage[0], to: st.to - this.route.calmBefore - WOOD.stage[1] } : null) : this.woodSpan);
+  }
 
   // --- The treasury (vault.js) --------------------------------------------------
   // Through a golden door: the tower is gone and he stands on the floor of
@@ -755,6 +772,9 @@ export class World {
         if (pl.maxY < d.to) { this.toast('The lights are out!', '#cfc8ff', 2.4); this.audio.lightsOut(); this.onDark(pl, d); }
       }
     }
+    // The dark wood says its name as he comes up to it.
+    const wood = !this.place.inside && this.bg.wood;
+    if (wood && !wood.said && pl.maxY > wood.from - 500 && pl.maxY < wood.to) { wood.said = true; this.toast('The dark wood', '#bff3e2', 2.4); }
     // A stage's end comes into view: where it goes on is said.
     const st = this.route && this.level.stage;
     if (st && st.end && !st.end.said && pl.maxY > st.end.floorY - 700) { st.end.said = true; this.toast('To the door!', '#fff2a8', 2); }
@@ -1048,16 +1068,24 @@ export class World {
   // of a dark stretch are out and register none); what one picks up
   // glimmers; and every creature has a light of its own, so nothing that
   // bites comes out of the black.
-  get darkness() { return this.vault ? this.vault.dark || 0 : this.place.inside ? this.level.darkAt(this.cam.y + H * 0.45) : 0; }      // (a room has its own: the chimney is dark, the treasury is not)
+  get darkness() { return this.vault ? this.vault.dark || 0 : this.place.inside ? this.level.darkAt(this.cam.y + H * 0.45) : this.bg.woodAt(this.cam.y + H * 0.45); }      // (a room has its own: the chimney is dark, the treasury is not)
   drawDarkness(g) {
     const dk = this.darkness;
     if (dk <= 0.01) return;
-    const cam = this.cam, pl = this.player;
-    g.dark(dk * DARK_DEPTH, DARK_COLOR);
+    const cam = this.cam, pl = this.player, wood = !this.vault && !this.place.inside;
+    g.dark(dk * (wood ? WOOD.depth : DARK_DEPTH), wood ? WOOD.color : DARK_COLOR);
     const mid = pl.who === 'prince' ? 120 : pl.h * 0.5, k = (this.vault && this.vault.lamp) || 1;      // (a room may make his light smaller)
-    g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 560 * k, '#ffe6c4', 0.4);
-    g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 340 * k, '#fff0da', 0.9);
-    for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);
+    if (wood) {
+      // the dark wood: his lantern's light (a breath of flicker in it), the wood's own lights, the mushrooms on the branches
+      const fl = 1 + 0.03 * Math.sin(this.time * 11) * Math.sin(this.time * 2.9);
+      for (const [r, a] of WOOD.lamp) g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), r * fl, '#ffe2b4', a);
+      this.bg.woodLamps(g, cam, this.time);
+      for (const p of this.platforms) if (p.y > cam.y - 120 && p.y < cam.top + 120) this.branchGlow(g, p, true);
+    } else {
+      g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 560 * k, '#ffe6c4', 0.4);
+      g.lamp(cam.sx(pl.x), cam.sy(pl.y + mid), 340 * k, '#fff0da', 0.9);
+      for (const [x, y, r, color, a] of this.bg.interior.glows) g.lamp(x, y, r * 1.15, color, a * 4.5);
+    }
     for (const p of this.platforms) {
       if (p.y < cam.y - 200 || p.y > cam.top + 200) continue;
       if (p.kind === 'gate') g.lamp(cam.sx(p.x), cam.sy(p.y + 90), 230, '#ffe2b0', 0.8);
@@ -1076,7 +1104,32 @@ export class World {
       else if (e.kind === 'guard') g.lamp(cam.sx(e.x), cam.sy(e.y), 190, '#ffd596', 0.7);                                                    // he has a lantern by him
       else if (e.kind === 'grabber') { if (e.head > 0) g.lamp(cam.sx(e.win.x), cam.sy(e.armY), 170, '#ffd596', 0.8 * e.head); }              // light from behind him as he looks out
       else if (e.kind === 'web') { if (!e.torn) g.lamp(cam.sx(e.x), cam.sy(e.y), 130, '#f6f3ff', 0.4); g.lamp(cam.sx(e.spX), cam.sy(e.spY), 60, '#ffb0b0', 0.5); }   // dew on the threads, the spider's eyes
+      else if (wood) g.lamp(cam.sx(e.x), cam.sy(e.y + (e.h || 0) * 0.5), WOOD.creature[0], '#fff0d0', WOOD.creature[1]);                    // out in the wood: whoever lives there is seen
     }
+  }
+
+  // In the dark wood glowing mushrooms stand on the branches (art/darkwood.js): one to three on each, where the
+  // branch's height puts them, so that the next branch is seen in the dark. `lamp`: not the mushrooms but their light.
+  branchGlow(g, p, lamp) {
+    if ((p.kind !== 'branchL' && p.kind !== 'branchR') || p.dry || p.state === 'breaking' || p.state === 'gone') return;
+    const a = this.bg.woodAt(p.y);
+    if (a <= 0.02) return;
+    const A = this.art.darkwood, cam = this.cam, h = hash(Math.round(p.y) * 3 + 1), n = 1 + (h % 3), span = p.right - p.left - 60;
+    for (let i = 0; i < n; i++) {
+      const hi = hash(h + i * 17), x = p.left + 30 + (span > 0 ? (hi % 1000) / 1000 * span : 0), sx = cam.sx(x), sy = cam.sy(p.y);
+      if (lamp) g.lamp(sx, sy - 12, 78, GLOW.light, 0.75 * a * (0.84 + 0.16 * Math.sin(this.time * 1.4 + (hi % 10))));
+      else g.blit(A.shrooms[(hi >>> 5) % A.shrooms.length], sx, sy + 4, { alpha: a, glow: 0.5, flip: (hi & 1) > 0 });
+    }
+  }
+  // The lantern he carries in the dark wood: it hangs from his forward hand, swings against the way he goes, and is
+  // there for as long as the wood is dark where he is.
+  drawHandLantern(g) {
+    const pl = this.player, a = this.place.inside || this.vault || !pl.alive ? 0 : this.bg.woodAt(pl.y + pl.h * 0.5);
+    if (a <= 0.02) return;
+    const cam = this.cam, x = cam.sx(pl.x + pl.facing * pl.h * WOOD.hand[0]), y = cam.sy(pl.y + pl.h * WOOD.hand[1]);
+    const rot = clamp(-pl.vx / 1500, -0.45, 0.45) + 0.1 * Math.sin(this.time * 5.3);
+    g.halo(x - Math.sin(rot) * 24, y + 26, 54, '#ffb347', 0.3 * a, { glow: 0.6 });
+    g.blit(this.art.darkwood.lantern, x, y, { rot, alpha: Math.min(1, a * 2), glow: 0.7 });
   }
 
   // `g` is the renderer facade (gfx/renderer.js); everything is drawn in
@@ -1093,11 +1146,13 @@ export class World {
     visible.sort((a, b) => (order[a.kind] || 0) - (order[b.kind] || 0));
     for (const f of this.fields) f.draw(g, cam, this.time, this.art);
     for (const p of visible) this.drawPlatform(g, p);
+    if (this.bg.wood && !this.place.inside) for (const p of visible) this.branchGlow(g, p, false);
     if (!this.place.inside) this.bg.weather.drawCaps(g, cam, visible, this.time);      // rain splashes and snow lies on what one stands on
     for (const [x, y, a, sc] of this.sparkles) g.blit(this.art.sign.sparkle, x, y, { alpha: a, sx: sc, sy: sc, glow: 0.5 });   // the golden doors' glints, over everything one stands on
     for (const k of this.pickups) if (k.y > cam.y - 100 && k.y < cam.top + 100) k.draw(g, cam, this.art);
     for (const e of this.enemies) e.draw(g, cam, this.art);
     this.player.draw(g, cam, this.art);
+    this.drawHandLantern(g);
     if (this.player.carried) {
       // the bubble that carries him (the treasury's rescue): the power-ups' soap bubble at his size, in gold
       const V = this.art.vault, bx = cam.sx(this.player.x), by = cam.sy(this.player.y + this.player.h * 0.5), wob = Math.sin(this.time * 5) * 0.03, sc = this.player.h / PLAYER_H;

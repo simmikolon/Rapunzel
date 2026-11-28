@@ -66,6 +66,7 @@ export function startAt(world, metres, spawn = '', overBranch = false) {
   const y = Math.max(0, metres) * PX_PER_METER;
   if (!y) return;
   if (spawn === 'scissors') world.level.nextCutY = y - 400;
+  if (spawn === 'dark' && !world.place.inside) world.bg.setWood({ from: y + 500, to: y + 5500 });   // outside: the dark wood begins five metres above the start
   if (spawn === 'dark' && world.place.inside) world.level.nextDarkY = y + 500;          // the lights go out five metres above the start
   else if (world.level.nextDarkY < y + 2500) world.level.nextDarkY = y + 2500 + world.level.rngDark.range(0, 6000);   // not on top of the start (a dark stretch that was due below it)
   if (spawn === 'gate') world.level.nextGateY = y + 100;                               // the first row above the start is a gate's
@@ -114,6 +115,7 @@ export function startStage(world, n) {
   startAt(world, st.from / PX_PER_METER, '', true);
   world.scoreBase = base; world.scoreFrom = st.from; world.topY = st.from;
   world.bg.setWall(st, world.cam);
+  world.setWood();
   world.nextMilestone = Math.floor(world.heightM / 100) * 100 + 100;
   // the branch startAt put under him stands in for the door
   const start = world.platforms.find((q) => q.kind !== 'ground' && Math.abs(q.y - (st.from - 10)) < 1);

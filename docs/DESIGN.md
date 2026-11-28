@@ -824,7 +824,7 @@ is a pool to draw from, not a promise.
   | 2 | the hall | inside | 4 m | 114 m | | golden door |
   | 3 | the rose wall | outside | 18 m | 95 m | briar, red roses | |
   | 4 | the guard rooms | inside | 124 m | 100 m | | |
-  | 5 | the deep forest | outside | 128 m | 105 m | old stone, moss; torches, gargoyles | |
+  | 5 | the deep forest | outside | 128 m | 105 m | old stone, moss; torches, gargoyles | its middle is the dark wood |
   | 6 | the dark rooms | inside | 136 m | 95 m | | the lights are out |
   | 7 | the masons' site | outside | 256 m | 100 m | mended; galleries | |
   | 8 | the library | inside | 254 m | 130 m | | golden door |
@@ -1087,6 +1087,31 @@ is a pool to draw from, not a promise.
   `?wall=both` (or `rings`, `oriels`). Purely for the eye: nothing in
   the simulator. 💡 a half-timbered storey that stands out all round;
   a dormer on the gallery's roof; pigeons on its ridge.
+- ✅ the dark wood (`world.js` WOOD and drawDarkness, `background.js`
+  `wood` and woodLamps, `art/darkwood.js`; `element/dark-wood`; a
+  trial): a stretch of the deep forest where no light comes through
+  the leaves. The frame is made dark as in the tower's dark rooms
+  (`g.dark`, a little less deep and toward green-black, so what is
+  not lit is still there as a shape) and brought back around every
+  light. The prince carries his own: a lantern that hangs from his
+  forward hand and swings against the way he goes. The wood has
+  lights too, and they draw it: mushrooms that glow stand on the
+  branches (one to three on each, so the next branch is seen) and
+  grow in shelves from the trees' inner sides, the string lights'
+  bulbs, the fireflies, the owls' eyes, the lit windows, the lanterns
+  and torches on the wall (lit there whatever the hour), what one
+  picks up, a shimmer down the braid, and every creature has a light
+  of its own. In the endless tower one stretch of 45 to 55 m begins
+  between 145 and 175 m, by the round's seed; in stages the middle of
+  the deep forest (theme `gloom`), from 15 m above its door to its
+  last breather. It says its name as he comes up to it.
+  `?at=150&spawn=dark` puts it above the start. Nothing is built
+  differently in it and the simulator's bots do not see: its numbers
+  are as they were, and what the dark does to somebody who plays is
+  not measured. No sound of its own. 💡 the lantern lit with a
+  little flare as he enters; eyes that open in the black between the
+  trees and close when his light comes near; moths round his lantern;
+  a second dark place above the trees (a night without a moon).
 - ✅ more of what the wall is made of (`art/cladding.js`,
   `art/hung.js`; `element/tower-material`): two skins, a growth and a
   thing that hangs, which the recipes take like the others. Slates:
@@ -3646,3 +3671,32 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     `story.mjs` and `settings.mjs` pass.
   - Seen in still pictures of a headless browser only; the flames, the
     sparks and the petals were not seen moving.
+- 2026-11-28: The dark wood (`element/dark-wood`, on top of
+  `element/tower-material`; a trial). Simon: "an area in the forest
+  that has no light, in the deep forest if you like; the prince would
+  carry his own light. What would that look like? You are free."
+  - What it rests on is there: the tower's dark rooms (`g.dark`,
+    `g.lamp`). Out here the same frame, less deep (0.84 for 0.86) and
+    toward green-black instead of violet.
+  - The dark is the light's chance, so the wood is given lights of its
+    own and they are what one sees it by: the best of them are the
+    mushrooms on the branches, which are for the eye and say where the
+    next branch is at the same time. Shelves of them on the trunks give
+    the trees a shape. The braid shimmers faintly all the way: the way
+    up is never lost.
+  - His light is a thing he carries (a lantern in his hand), not a
+    glow round him as in the dark rooms: Simon's word was "carry". It
+    was first 620 px wide, which lit most of the picture; 500 and 300
+    now, so that the wood's own lights matter.
+  - For the eye only on purpose: the stretch has a stream of its own
+    (`hash(seed + 14)`), nothing is built differently in it, and a
+    stage's `gloom` is not the inside's `dark` (which the generator
+    reads). `identity.sh` says the same for all five reports. But a
+    person who plays sees less: whether the flow holds in the dark is
+    for Simon to say on the phone.
+  - Every round of the endless tower has one for now, and the deep
+    forest's stage has it in its middle: it is there to be tried. How
+    often it should come is the rhythm's question, later.
+  - Cost: 8 small sprites; the dark is the full-screen pass the dark
+    rooms have, only while the wood is dark, and some 70 lamps.
+  - Seen in still pictures of a headless browser only.

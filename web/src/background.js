@@ -7,7 +7,7 @@ import { WISTERIA_PETAL } from './art/cladding.js';
 import { RING, ORIEL } from './art/outline.js';
 import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
 import { TowerPlan, stageWall, stageRecipe, forcedWall } from './towerwall.js';
-import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
+import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach, clamp } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
 import { TRUNK_W } from './art/tiles.js';
@@ -126,6 +126,12 @@ const FIRE = { up: 92, fps: 9, halo: [58, 0.1, 0.18], pool: [170, 0.24, 0.25, '#
 const SPOUT = { drops: 7, fall: 300, time: 0.62 };
 // A landmark (`mark`, art/outline.js): the light in an oriel's window once it is dark (its halo: how wide, how strong).
 const MARK = { halo: [90, 0.2] };
+// The dark wood (setWood; world.js says where it is and makes the frame dark): how far its dark fades in and out at
+// either end (px), the share of a trunk's tiles that have glowing shelves on them, and what the wood's own lights are
+// worth as lamps in the dark, each [radius, strength]: a shelf of mushrooms, a lit window, an owl's eyes, a bulb of the
+// string lights, a lantern and a torch on the wall, a firefly, and the braid's shimmer (one every `braidStep` px).
+const WOOD = { fade: 600, shelves: 0.62, shelf: [120, 0.8], window: [150, 0.7], owl: [64, 0.8], bulb: [130, 0.55], lantern: [210, 0.85], torch: [240, 0.9], firefly: [56, 0.6], braid: [84, 0.2], braidStep: 200 };
+const GLOWS = ['#8ff5dc', '#ffd596', '#ffd34a'];      // the colours of what goes into `glows`: mushrooms, a window, an owl
 const SIDES = [-1, 1], FLIP = { flip: true }, FLIP_SHADE = { flip: true, tint: '#a6b0b6' }, SOFT_ADD = { soft: true, blend: 'add' }, HALO_GLOW = { glow: 0.5 };      // (the right gargoyle is round the tower from the light)
 
 export class Background {
@@ -140,6 +146,10 @@ export class Background {
     this.fires = [];             // the wall's torches in this frame, three numbers each: where its flame's foot is, and its storey
     this.fireOpt = { flip: false, glow: 0.8 };
     this.fireTime = 0;
+    this.wood = null;            // the dark wood: { from, to } (px), the stretch of the forest where no light comes through the leaves; null: none (setWood)
+    this.gloom = 0;              // how dark the wood is where the camera is, 0..1
+    this.glows = [];             // what shines in the dark wood in this frame, five numbers each: where, how wide, how strong, which of GLOWS
+    this.shelfOpt = { alpha: 1, glow: 0.5 };
     this.dark = 0;               // how dark it is where the camera is, 0..1: lanterns and an oriel's window are lit by it (drawHung works it out)
     this.top = null;             // the opening story (story.js): where the tower ends, { ly: the wall's upper edge, sill: Rapunzel's window, look: { dy, blink } } (layer px); null: it has no end
     const r = new RNG(42);
@@ -171,6 +181,11 @@ export class Background {
   }
   // dev (?wall=stone+ivy+lanterns+gargoyles, ?wall=ivy, ?wall=plain): that recipe all the way up.
   forceRecipe(name) { this.forceWall = name ? forcedWall(name) : null; }
+  // The dark wood: the stretch of the forest between two heights (px) where no light comes through the leaves, so that
+  // one sees what has a light of its own (world.js drawDarkness); null: there is none.
+  setWood(span) { this.wood = span ? { from: span.from, to: span.to, said: false } : null; }
+  // How dark the wood is at a height, 0..1.
+  woodAt(y) { const w = this.wood; return w && !this.inside ? clamp(Math.min((y - w.from + WOOD.fade) / WOOD.fade, (w.to + WOOD.fade - y) / WOOD.fade), 0, 1) : 0; }
   // dev (?dev=1): the wall's recipe `up` px above the picture's lower edge, in words ('stone+ivy+lanterns', 'plain').
   wallName(cam, up) {
     const wall = this.forceWall || this.wall || this.plan, ly = cam.layerY(PARALLAX_TOWER) + up, k = Math.floor(ly / TILE_H), i = Math.round((ly - WINDOW_FIRST) / WINDOW_STOREY);
@@ -342,7 +357,7 @@ export class Background {
   drawHung(g, cam, camF, time, wall, blockers) {
     const A = this.art.hung, lamps = this.lamps, weather = this.weather;
     lamps.length = 0; this.fires.length = 0;
-    const dark = this.dark = Math.max(lanternAmount(cam.y), deepForestAmount(cam.y), Math.min(1, weather.num('grey') * 2));
+    const dark = this.dark = Math.max(lanternAmount(cam.y), deepForestAmount(cam.y), Math.min(1, weather.num('grey') * 2), this.gloom);
     const slant = weather.slant, wind = Math.min(1, Math.abs(slant) * 1.5 + this.atmo.gustEnv() * 0.55 + 0.1), caps = weather.has('caps');
     for (let i = Math.max(0, Math.floor((camF - 180 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY;
@@ -513,6 +528,7 @@ export class Background {
         const fl = 0.8 + 0.2 * Math.sin(time * 9 + w.i * 1.7) * Math.sin(time * 2.3 + w.i);
         g.rect(sx - 4, sy - 60, 8, 12, C.lanternGlow, fl, { glow: 0.8 });
         g.halo(sx, sy - 52, 64, '#ffb347', 0.16 * fl, { glow: 0.5 });
+        if (this.gloom > 0.01) this.glows.push(sx, sy - 52, WOOD.window[0], WOOD.window[1] * fl, 1);
       }
     }
   }
@@ -674,8 +690,43 @@ export class Background {
           g.rect(cx + dx - 4 + look, cy - 4, 8, 8, '#ffd34a', amount, { glow: 0.9 });
           g.rect(cx + dx - 1 + look, cy - 1, 3, 3, '#2a1a10', amount);
         }
+        if (this.gloom > 0.01) this.glows.push(cx, cy, WOOD.owl[0], WOOD.owl[1], 2);
       }
     }
+  }
+
+  // In the dark wood shelves of glowing mushrooms grow from the trees' inner sides (art/darkwood.js), on most of a
+  // trunk's tiles, each where its tile's number puts it: they give the trees a shape in the dark.
+  drawFungi(g, cam, time) {
+    if (!this.wood || this.inside) return;
+    const A = this.art.darkwood, o = this.shelfOpt;
+    for (let k = Math.max(0, Math.floor(cam.y / TILE_H) - 1); k <= Math.ceil(cam.top / TILE_H); k++) {
+      for (let side = 0; side < 2; side++) {
+        const h = hash(k * 29 + side * 7 + 3);
+        if (h % 100 >= WOOD.shelves * 100) continue;
+        const y = k * TILE_H + 24 + ((h >>> 8) % (TILE_H - 48)), a = this.woodAt(y);
+        if (a <= 0.02 || y > TREELINE_Y - 400) continue;
+        const sx = (side ? W - TRUNK_W + 8 : TRUNK_W - 8) + cam.ox, sy = cam.sy(y), pulse = 0.84 + 0.16 * Math.sin(time * 1.3 + (h % 10));
+        o.alpha = a;
+        g.blit((side ? A.shelfR : A.shelfL)[(h >>> 4) % A.shelfL.length], sx, sy, o);
+        this.glows.push(sx + (side ? -18 : 18), sy, WOOD.shelf[0], WOOD.shelf[1] * a * pulse, 0);
+      }
+    }
+  }
+  // The lights of the dark wood, for a frame that is dark (world.js drawDarkness has said g.dark): everything out here
+  // that shines brings the picture back around itself. The mushrooms, the lit windows and the owls' eyes of this frame
+  // (`glows`), the string lights' bulbs, the lanterns and torches on the wall, the fireflies, and a shimmer down the
+  // braid, whose gold catches what light there is: it shows the way up.
+  woodLamps(g, cam, time) {
+    const G = this.glows;
+    for (let n = 0; n < G.length; n += 5) g.lamp(G[n], G[n + 1], G[n + 2], GLOWS[G[n + 4]], G[n + 3]);
+    for (const b of this.lights.glows) g.lamp(b[0], b[1], WOOD.bulb[0], b[2], WOOD.bulb[1] * Math.min(1.3, b[3]));
+    const L = this.lamps, F = this.fires;
+    for (let n = 0; n < L.length; n += 5) g.lamp(L[n] + (L[n + 2] > 0 ? -1 : 1) * LANTERN.pane[0] * PX, L[n + 1] + (LANTERN.pane[1] - 5) * PX, WOOD.lantern[0], '#ffd596', WOOD.lantern[1] * L[n + 3]);
+    for (let n = 0; n < F.length; n += 3) g.lamp(F[n], F[n + 1] - 14, WOOD.torch[0], '#ffc27a', WOOD.torch[1]);
+    for (const f of this.fireflies) g.lamp(cam.sx(f.x), cam.sy(f.y), WOOD.firefly[0], '#d8ff9a', WOOD.firefly[1] * (0.25 + 0.75 * Math.abs(Math.sin(time * 1.6 * f.sp + f.ph))));
+    const camF = cam.layerY(PARALLAX_TOWER);
+    for (let ly = Math.floor(camF / WOOD.braidStep) * WOOD.braidStep; ly < camF + H + WOOD.braidStep; ly += WOOD.braidStep) g.lamp(W / 2 + this.braidX(ly, time) + cam.ox, H - (ly - camF) + cam.oy, WOOD.braid[0], '#ffe9a8', WOOD.braid[1]);
   }
 
   // The braid hangs down the tower, so it scrolls with the tower layer.
@@ -728,6 +779,7 @@ export class Background {
 
   drawBack(g, cam, time, world) {
     if (this.inside) return this.interior.drawBack(g, cam, time, world);
+    this.glows.length = 0; this.gloom = this.woodAt(cam.y + H * 0.45);
     this.drawSky(g, cam);
     this.drawFar(g, cam, time);
     this.drawForest(g, cam);
@@ -745,6 +797,7 @@ export class Background {
     this.weather.drawGround(g, cam);
     this.atmo.drawLawnMist(g, cam, time);
     this.drawTrees(g, cam, time);
+    this.drawFungi(g, cam, time);
     this.drawOwls(g, cam, time);
     this.lights.draw(g, cam, time, this.atmo.gustEnv());
     this.atmo.drawLife(g, cam, time);

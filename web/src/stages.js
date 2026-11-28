@@ -42,6 +42,10 @@ import { clamp } from './util.js';
 //           every fourth storey: 'rings' (a roofed wooden gallery round
 //           the tower), 'oriels' (a little turret on an edge, its window
 //           lit when it is dark) or 'both' in turn
+//   gloom   (outside) the stage's middle is the dark wood: no light comes
+//           through the leaves, the prince carries a lantern, and one sees
+//           what has a light of its own (world.js WOOD; for the eye, the
+//           stage is built as ever)
 //   dark    (inside) the lights are out for the whole stage; in the others
 //           they stay on
 //   vault   (inside) a golden door to the treasury stands in it
@@ -56,7 +60,7 @@ export const THEMES = {
   lawn:      { name: 'the forest floor', place: 'outside', at: 0, len: 60, wall: 'foot' },
   roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, growth: 'briar', roses: 0, weather: 'golden' },
   ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, wall: 'timber', growth: 'ivy', weather: 'rain' },
-  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', hung: 'torches', edge: 'gargoyles', weather: 'rain' },
+  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', hung: 'torches', edge: 'gargoyles', weather: 'rain', gloom: true },
   site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended', mark: 'rings', weather: 'snow' },
   crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', hung: 'banners', edge: 'gargoyles', weather: 'storm' },
   sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'slate', hung: 'banners', edge: 'gargoyles', mark: 'both' },

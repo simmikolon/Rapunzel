@@ -127,7 +127,9 @@ which only copies the two folders together). The design document
   other place above the start, in either place;
   `?place=inside&at=50&spawn=vault` puts a golden door to the treasury
   above the start (`vault1` to `vault6` pick the room's first section);
-  `?place=inside&at=200&spawn=dark` puts the lights out above the start.
+  `?place=inside&at=200&spawn=dark` puts the lights out above the start;
+  outside, `?at=150&spawn=dark` puts the dark wood there (no light through the
+  leaves, the prince carries a lantern; `world.js` WOOD, `art/darkwood.js`).
   `?weather=rain|storm|snow|blizzard|golden|clear` sets the weather outside for a
   visit (`web/src/weather.js`), `?season=winter|summer` whether the lawn
   is snowed in as around Christmas, `?storm=8` brings the endless tower's
