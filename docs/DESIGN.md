@@ -3359,3 +3359,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     `stages`, `story`, `settings` and `atlas` pass.
   - Seen in still pictures of a headless browser only, summer and
     winter, on the title and at a round's start.
+- 2026-11-28: The tower's foot on master (`element/tower-foot`,
+  merged). Simon: all of it fits; merge. Nothing was changed after his
+  look. The branch stays. Left open, and on the status page: snow on
+  the tower itself, and the landing page's tower, which has no foot.

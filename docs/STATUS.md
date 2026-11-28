@@ -6,8 +6,8 @@ why of everything is in `docs/DESIGN.md` (the catalogue of elements in
 section 7, the numbers in section 10, the decision log in section 12,
 newest last). Bring this page up to date with every merge into `master`.
 
-As of 2026-11-27, `master` at "Merge element/springalot-rocket" (Lord
-Springalot, a second main character with a rocket).
+As of 2026-11-28, `master` at "Merge element/tower-foot" (the tower's
+foot: a plinth, the witch's gate and her arms, and a foot for each tree).
 
 ## The game
 
@@ -24,6 +24,15 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
 
 ## On master, newest first
 
+- **The tower's foot** (`art/tower.js` drawFoot, `art/trees.js`
+  drawTreeFoot): the tower stands on a plinth of dressed stone, in its
+  middle the witch's gate (a round arch, the portcullis let down, a chain
+  with a padlock: nobody goes in, so he climbs), her arms on a shield to
+  either side (her hat before the full moon), stepping stones across the
+  lawn to its threshold. Each tree has a foot of its own, the trunk
+  widening into roots: the left one with a small door, a lit window and
+  mushrooms, the right one with a fern. Snowed in, the trees stand in the
+  snow. Purely for the eye: nothing in the simulator.
 - **Lord Springalot** (`player.js` FIGURES, `art/lord.js`): a second main
   character with the prince's jump and a master ability of his own, a
   rocket that burns while the boost is held, on the boost's three charges
@@ -55,7 +64,7 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   device in a browser, at every launch in the app.
 - **Performance** (`docs/plans/performance.md`): letters from sheets, the
   picture drawn at one backing pixel per logical pixel, lines as sprites,
-  the atlas at art size (1024 x 1087 now), the sprites' own canvases given
+  the atlas at art size (1024 x 1106 now), the sprites' own canvases given
   back once it is packed. On the iPhone Air frames over 20 ms went from
   6.1 % to 1.8 % of a round; `?perf=1` shows a readout.
 - **The tower in stages** (`stages.js`): thirteen themes with their own
@@ -79,7 +88,7 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   figure leave storms out. To do: switch it on in `web/dev/sim.js`, teach
   the bots to hold against it, measure, and set the baselines anew on
   purpose.
-- **Performance, what is left:** the sprites' own canvases (59 MB) are
+- **Performance, what is left:** the sprites' own canvases (60 MB) are
   given back once the atlas is packed, but are all there while the game
   starts (`tools/checks/atlas.mjs` keeps a budget of 80 MB on that), and
   what the phone gains was not read (Xcode's memory gauge, before and
@@ -88,7 +97,10 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
   300 m and beyond is missing; a storm adds a full-screen pass and some 400 sprites
   (if a phone shows it: paint the rain onto a few scrolling tiles).
 - **Weather:** nothing of it inside the tower (it could show through the
-  windows).
+  windows), and no snow lies on the tower itself (its plinth, sills and
+  string courses: an element of its own).
+- **The landing page's tower** still ends in the lawn as it did: it has
+  no plinth and no gate (its lawn is a CSS strip).
 - **Ideas noted, not asked for:** a life for every 100 suns; a visible
   hint that a tap on Rapunzel tells the story again (the settings' sign has
   WATCH AGAIN); the story's three looks faded in instead of ridden to;
@@ -98,6 +110,9 @@ Simon's iPhone Air from the checkout; nothing is on TestFlight yet.
 
 ## Not tried, or only by eye
 
+- The tower's foot and the trees' feet were seen here in still pictures
+  of a headless browser only (summer and winter, the title, a round's
+  start, the story's end); Simon has seen them and said yes.
 - Only the iPhone Air has been played and measured; no older phone.
 - Lord Springalot's rocket was played by Simon on the phone and found
   good; its numbers are the simulator's, whose bots are poor pilots. The
