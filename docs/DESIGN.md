@@ -822,13 +822,13 @@ is a pool to draw from, not a promise.
   |---|---|---|---|---|---|---|
   | 1 | the forest floor | outside | 0 m | 60 m | plain, the stone foot | the lawn |
   | 2 | the hall | inside | 4 m | 114 m | | golden door |
-  | 3 | the rose wall | outside | 18 m | 95 m | briar, red roses | |
+  | 3 | the rose wall | outside | 18 m | 95 m | briar, red roses; niches; teeth under the courses | |
   | 4 | the guard rooms | inside | 124 m | 100 m | | |
-  | 5 | the deep forest | outside | 128 m | 105 m | old stone, moss; torches, gargoyles | its middle is the dark wood |
+  | 5 | the deep forest | outside | 128 m | 105 m | old stone, moss; torches, gargoyles; a blind arcade | its middle is the dark wood |
   | 6 | the dark rooms | inside | 136 m | 95 m | | the lights are out |
   | 7 | the masons' site | outside | 256 m | 100 m | mended; galleries | |
   | 8 | the library | inside | 254 m | 130 m | | golden door |
-  | 9 | above the trees | outside | 468 m | 105 m | slates; banners, gargoyles; galleries and oriels | |
+  | 9 | above the trees | outside | 468 m | 105 m | slates; banners, gargoyles; glazed tiles; oriels, galleries, stair turrets and clocks in turn | |
   | 10 | the belfry | inside | 404 m | 105 m | | |
 
   After these: the crumbling tower (outside, 262 m, crumbling wall,
@@ -1087,6 +1087,30 @@ is a pool to draw from, not a promise.
   `?wall=both` (or `rings`, `oriels`). Purely for the eye: nothing in
   the simulator. 💡 a half-timbered storey that stands out all round;
   a dormer on the gallery's roof; pigeons on its ridge.
+- ✅ more detail on the wall (`art/cladding.js` friezes, `art/hung.js`,
+  `art/outline.js`; `element/tower-details`): what was the same at
+  every storey gets kinds, and the wall's face and edge get more to
+  look at. Friezes (`course`, a sixth part of the recipe, in runs of 4
+  to 9 storeys): under the string course a blind arcade (round arches
+  on piers with corbels, the wall in shade behind them), teeth, a
+  chequer of light and dark stone, or a band of glazed tiles in the
+  prince's blue and the braid's gold; none where the course is broken
+  or a beam. Niches (`hung: 'niches'`): an arched recess with a figure
+  of stone, a knight, the frog king or an owl, a different one storey
+  by storey. The tower's clock (`mark` 'clock'): a dial on a storey's
+  blind side whose hands show the time it really is, the long one by
+  five minutes (three hand sprites each, turned by quarters, so a hand
+  stays on the grid). A stair turret (`mark` 'turret', above the trees
+  only): the oriel's cone and corbel with a shaft for every storey
+  between, 3 to 5 of them, slits climbing round it with the stair.
+  Doves: on some storeys one to three sit on the string course and fly
+  up and away when somebody climbs to within 4 m; gone for the round
+  then. In stages: the rose wall has niches and teeth, the deep forest
+  an arcade, above the trees tiles and all four landmarks in turn, the
+  night sky a chequer. `?wall=arches+niches+all`. Purely for the eye:
+  nothing in the simulator. No sound (a clock that strikes, wings).
+  💡 more figures (the witch, Rapunzel, a dragon); a clock with a
+  moon's face; doves that come back; swallows' nests under a course.
 - ✅ the dark wood (`world.js` WOOD and drawDarkness, `background.js`
   `wood` and woodLamps, `art/darkwood.js`; `element/dark-wood`; a
   trial): a stretch of the deep forest where no light comes through
@@ -1364,7 +1388,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The weather | rain: 90 / 96 / 30 streaks far, mid, near (a storm half as many again); snow: 200 / 160 / 42 flakes; layers go by at 0.7, 0.95 and 1.25 to 1.3 of the camera's climb; a weather fades out and in over 2.2 s; a storm's gust: 3.5 to 6.5 s calm, 0.9 s in which the curls already show, 1.8 to 2.8 s of blow that carries the prince at up to 230 px/s (200 to 320 px a gust, by its length, if he does not steer against it); a storm takes half the colour out of the picture; lightning every 5 to 14 s, black and white for some 0.2 s; a storm over an outside stage from the third on with a chance of 0.3, drawing up 25 to 50 % into the stage and gone 15 m under its end (some 45 to 50 m of storm); one weather goes over into the next in 3 s, a storm draws up and passes in 5; the endless tower's storms by the clock: first after 35 to 60 s, 18 to 28 s long, 16 to 24 s of sun after, 50 to 100 s calm between; winter: 1 December to 6 January; fronts in the endless tower are 90 m high, the first always clear |
 | The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world; told again at a start: in the app every start, in a browser never (`STORY.again`, hours since it was last told) |
 | Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); sections (`src/towerwall.js`): plain wall for 5–11 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), the first section from tile 10 at the lowest, then a section of one or two areas, each its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times; slates 2, 3–6 times; timber 3, 2–4 times; wisteria 4, 1–3 times), what grows beginning 2 tiles under to 3 above the masonry's first tile; the weights of a recipe by height in `RECIPES` and `PAIRS`; 24 sections and 55 % of the wall in the first 1000 m; in a stage each part in stretches with 2–4 plain tiles between; what goes by storeys (`STOREYS`): runs of 3–7 storeys from storey 4 at the lowest, bare storeys before a run 5–10 on the forest floor down to 2–5 above the trees (lanterns, banners) and 6–12 down to 3–6 (gargoyles, a pair at every second storey of a run); a lantern's plate 96 px and a banner's rod 150 px above the storey's sill; a lantern comes on at a darkness between 0.15 and 0.65 (its own), over 0.12; its halo 76 px at 24 %, its pool 150 px at 20 %; a torch's plate 92 px above the sill, its flame 9 frames a second, its halo 58 px at 10 % by day and 28 % in the dark, its pool 170 px at 24 % (a quarter of that by day), 2 sparks rising 84 px; a spout is 7 drops falling 300 px in 0.62 s; landmarks (`LANDMARKS`): one every 5–9 storeys above 460 m (gallery 2, oriel 3), a gallery every 9–16 below; a gallery is 128 x 30 art px and hangs from the string course's top, an oriel 30 x 67 with 10 art px of its body over the wall, its lower band on the course; its window comes on at a darkness between 0.2 and 0.6; what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar or wisteria, each falling 300 px in 6–10 s; `?wall=stone+ivy` (or one of `stone|worn|mended|slate|timber`, one of `ivy|moss|briar|wisteria`, or `plain`) shows one recipe all the way up (the briar in each of its colours in turn) |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); sections (`src/towerwall.js`): plain wall for 5–11 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), the first section from tile 10 at the lowest, then a section of one or two areas, each its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times; slates 2, 3–6 times; timber 3, 2–4 times; wisteria 4, 1–3 times), what grows beginning 2 tiles under to 3 above the masonry's first tile; the weights of a recipe by height in `RECIPES` and `PAIRS`; 24 sections and 55 % of the wall in the first 1000 m; in a stage each part in stretches with 2–4 plain tiles between; what goes by storeys (`STOREYS`): runs of 3–7 storeys from storey 4 at the lowest, bare storeys before a run 5–10 on the forest floor down to 2–5 above the trees (lanterns, banners) and 6–12 down to 3–6 (gargoyles, a pair at every second storey of a run); a lantern's plate 96 px and a banner's rod 150 px above the storey's sill; a lantern comes on at a darkness between 0.15 and 0.65 (its own), over 0.12; its halo 76 px at 24 %, its pool 150 px at 20 %; a torch's plate 92 px above the sill, its flame 9 frames a second, its halo 58 px at 10 % by day and 28 % in the dark, its pool 170 px at 24 % (a quarter of that by day), 2 sparks rising 84 px; a niche's sill 52 px above the storey's, the clock's middle 156 px (25 art px across); friezes (`STOREYS.course`): runs of 4–9 storeys, 5–10 bare storeys before one below 250 m and 2–6 above, hanging from the course's foot (the arcade 12 art px high, teeth 4, the chequer 6, tiles 7); doves on 16 % of the storeys below the treeline and 34 % above, they fly when somebody is within 420 px under their course, at 150–210 px/s sideways and 210–260 up, seen for 2.6 s; a stair turret 3–5 storeys (3 in a stage), 30 art px wide; a spout is 7 drops falling 300 px in 0.62 s; landmarks (`LANDMARKS`): one every 5–9 storeys above 460 m (gallery 2, oriel 3), a gallery every 9–16 below; a gallery is 128 x 30 art px and hangs from the string course's top, an oriel 30 x 67 with 10 art px of its body over the wall, its lower band on the course; its window comes on at a darkness between 0.2 and 0.6; what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar or wisteria, each falling 300 px in 6–10 s; `?wall=stone+ivy` (or one of `stone|worn|mended|slate|timber`, one of `ivy|moss|briar|wisteria`, or `plain`) shows one recipe all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -3700,3 +3724,32 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   - Cost: 8 small sprites; the dark is the full-screen pass the dark
     rooms have, only while the wood is dark, and some 70 lamps.
   - Seen in still pictures of a headless browser only.
+- 2026-11-28: More detail on the wall (`element/tower-details`, on top
+  of `element/dark-wood`). Simon, of the dark wood: "a little too hard
+  on the eyes, but leave it in the code and in the game for now, it can
+  be used otherwise later"; and of what comes next: "I think much
+  detail is better than effects, so let us go on with that" (the list
+  proposed after the wall's material: friezes, a stair turret, a clock
+  and niches, doves).
+  - The dark wood is left exactly as it was.
+  - Cloud wisps before the wall were on that list and are not built:
+    they are an effect.
+  - The string course was the one thing that is at every storey and
+    always the same, so it gets kinds, as a part of the recipe of its
+    own (`course`). The arcade was first 8 art px high with arches half
+    a brick wide and read as teeth; 12 high and a brick wide now.
+  - The clock shows the real time: a thing one notices once and is
+    glad of. It is a landmark (one, rarely), not a thing that hangs in
+    runs: seven clocks in a row would be a joke.
+  - The stair turret is the oriel's parts with a shaft between, so it
+    cost one new drawing. It only goes where the oriel goes (no tree
+    before it).
+  - Doves are the first thing on the wall that answers to the prince.
+    They sit under the wall's veil like everything on its face, and
+    are not white but grey there, which keeps them from being taken
+    for something to stomp or to collect.
+  - Checks: `identity.sh` same for all five reports, `atlas.mjs`,
+    `flow.mjs`, `stages.mjs`, `story.mjs`, `settings.mjs` pass (see the
+    commit).
+  - Seen in still pictures of a headless browser only; the doves were
+    not seen flying, only in single frames of it.

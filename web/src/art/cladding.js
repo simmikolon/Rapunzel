@@ -39,7 +39,13 @@ const BLOOM = [{ hi: '#efe2ff', base: '#c9aaf2', shade: '#a07cdc', dark: '#7a59b
 // The petals it lets go of (background.js): their two tones.
 export const WISTERIA_PETAL = { hi: '#d8c4f8', base: '#ae90e4' };
 
-// `wall`: { A (the wall's width, art px), E (how far round one sees), brick (a brick's angle), xOf(a), planeAt(a), layWall(t, r) }.
+// And what runs under a string course (`friezes`, each a strip the wall's
+// width that hangs from the course's foot): a row of small round arches on
+// little corbels, a row of teeth, a chequer of light and dark stone, a band
+// of glazed tiles in blue and gold. FRIEZES: their heights, art px.
+export const FRIEZES = { arches: 12, dentils: 4, checker: 6, tiles: 7 };
+// `wall`: { A (the wall's width, art px), E (how far round one sees), brick (a brick's angle), xOf(a), planeAt(a), layWall(t, r),
+// stone (dressed stone by plane of light), glaze: { blue, gold } (each lit, between, in shade), joint }.
 export function claddingDraws(wall) {
   const { A, E, brick, xOf, planeAt, layWall } = wall, H = 48, ROW = 6;
   const angleAt = (x) => Math.asin(Math.max(-1, Math.min(1, ((x + 0.5) / (A / 2) - 1) * Math.sin(E))));
@@ -212,5 +218,50 @@ export function claddingDraws(wall) {
     });
   }
 
-  return { areas: { slate: drawSlate, timber: drawTimber, wisteria: drawWisteria }, bands: { timber: drawTimberBand } };
+  // --- friezes -------------------------------------------------------------------------
+  const STONE = wall.stone;
+  // Whatever is laid round the tower in pieces `da` wide: fn(x0, x1, plane, n) for each, left to right.
+  const round = (da, fn) => { for (let a = -E, n = 0; a < E - 1e-6; a += da, n++) { const a1 = Math.min(a + da, E), x0 = Math.round(xOf(a)), x1 = Math.round(xOf(a1)); if (x1 > x0) fn(x0, x1, planeAt((a + a1) / 2), n); } };
+  // Round arches side by side, a blind arcade: two rows of stone they are cut from, each arch a recess in the wall's
+  // shade with a round head, a pier between two of them, and under every pier a corbel that steps back to the wall.
+  function drawArches(t) {
+    const { p } = t, deep = CAST, dim = 'rgba(16, 26, 31, 0.28)';
+    for (let x = 0; x < A; x++) { const k = planeX[x]; p(x, 0, 1, 1, STONE[k]); p(x, 1, 1, 1, step(STONE, k + 1)); }
+    round(brick * 0.95, (x0, x1, k) => {
+      const w = x1 - x0, pier = w >= 9 ? 3 : w >= 5 ? 2 : 1, in0 = x0 + pier, iw = w - pier, st = STONE[k], sh = step(STONE, k + 1);
+      p(in0, 2, iw, 4, deep); p(in0, 6, iw, 4, dim);                                                  // the recess: the wall behind, in shade
+      if (iw >= 4) { p(in0, 2, 1, 2, st); p(in0 + iw - 1, 2, 1, 2, sh); p(in0 + 1, 2, 1, 1, st); p(in0 + iw - 2, 2, 1, 1, sh); }      // the round of its head
+      p(x0, 2, pier, 8, st); if (pier > 1) p(x0 + pier - 1, 2, 1, 8, sh); if (pier > 2) p(x0, 2, 1, 8, step(STONE, k - 1));
+      p(x0, 10, pier, 1, sh); p(x0, 11, Math.max(1, pier - 1), 1, step(STONE, k + 2));               // its corbel
+    });
+  }
+  // Teeth: small blocks under the course with the dark between them.
+  function drawDentils(t) {
+    const { p } = t;
+    p(0, 0, A, 2, CAST);
+    round(brick * 0.3, (x0, x1, k) => { const w = Math.max(1, Math.ceil((x1 - x0) * 0.6)); p(x0, 0, w, 3, step(STONE, k + 1)); p(x0, 0, w, 1, STONE[k]); p(x0, 3, w, 1, CAST); });
+  }
+  // A chequer: two rows of small squares, light and dark stone in turn.
+  function drawChecker(t) {
+    const { p } = t;
+    round(brick * 0.22, (x0, x1, k, n) => { const w = x1 - x0, a = step(STONE, k - 1), b = step(STONE, k + 2); p(x0, 0, w, 3, n % 2 ? a : b); p(x0, 3, w, 2, n % 2 ? b : a); });
+    p(0, 5, A, 1, CAST);
+  }
+  // Glazed tiles: blue and gold in turn, each with a small flower of the other colour, between two lines of stone.
+  function drawTiles(t) {
+    const { p } = t, G = wall.glaze;
+    for (let x = 0; x < A; x++) { const k = planeX[x]; p(x, 0, 1, 1, step(STONE, k + 1)); p(x, 6, 1, 1, step(STONE, k + 2)); }
+    round(brick * 0.43, (x0, x1, k, n) => {
+      const w = x1 - x0, l = Math.min(2, Math.max(0, k - 1)), own = (n % 2 ? G.gold : G.blue)[l], other = (n % 2 ? G.blue : G.gold)[l], xc = x0 + (w >> 1);
+      p(x0, 1, w, 5, own); p(x0, 1, 1, 5, wall.joint);
+      if (w >= 3) p(xc, 3, 1, 1, other);
+      if (w >= 5) { p(xc - 1, 3, 3, 1, other); p(xc, 2, 1, 3, other); p(xc, 3, 1, 1, (n % 2 ? G.gold : G.blue)[0]); }
+      if (w >= 3) p(x0 + 1, 1, w - 1, 1, (n % 2 ? G.gold : G.blue)[Math.max(0, l - 1)]);
+    });
+  }
+
+  return {
+    areas: { slate: drawSlate, timber: drawTimber, wisteria: drawWisteria }, bands: { timber: drawTimberBand },
+    friezes: { arches: drawArches, dentils: drawDentils, checker: drawChecker, tiles: drawTiles },
+  };
 }

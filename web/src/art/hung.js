@@ -83,6 +83,68 @@ const FLAMES = [
   ['..o....', '.......', '...o...', '..omo..', '.omymo.', '.omyyo.', 'omywymo', 'omywymo', '.omymo.', '..ooo..'],
 ];
 
+// --- the niche --------------------------------------------------------------------------
+// NICHE.w x NICHE.h art px: an arched recess in the wall with a frame and a
+// sill of dressed stone, and in it a little figure of stone: a knight with
+// his shield and his sword, the frog king under his crown, an owl. Lit from
+// the upper left like the windows; the anchor is the middle of its sill's
+// foot.
+export const NICHE = { w: 14, h: 22 };
+const NICHE_ROWS = [
+  '....SSSSSS....', '..SSssssssSx..', '.Ssddddddddsx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.',
+  '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.',
+  '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', 'HSSSSSSSSSSSSs', 'ssssssssssssxx', '.cccccccccccc.',
+];
+const FIGURES = [
+  ['...a....', '..hhh...', '.hhhhh..', '.hkkkh..', '.hhhhh..', '..bbb.i.', '.hhhhbi.', 'hhsssbi.', 'hbsasbi.', 'hbsssbii', '.bbsbb..', '.hb.hb..', '.hb.hb..', '.hb.hb..', 'hhb.hhb.'],
+  ['........', '........', '........', '........', '........', '........', '.a.a.a..', '.aaaaa..', '.hhhhhh.', 'hkhhhkhb', 'hhhhhhhb', 'hbbbbbbb', '.hhhhbb.', 'hh.hh.bb', 'hhh..hbb'],
+  ['........', '........', '........', '........', 'h......h', 'hh....hb', 'hhhhhhhb', 'hkkhhkkb', 'hkkhhkkb', 'hhhaahbb', 'hbhbhbhb', 'hhbhbhbb', 'hbhbhbhb', '.hhhhbb.', '.aa..aa.'],
+];
+function drawNiche(t, figure) {
+  stamp(t, 0, 0, NICHE_ROWS, { S: C.stoneLight, s: C.stone, x: C.stoneDark, H: C.stoneHi, d: C.wallDeep, c: CAST });
+  stamp(t, 3, 4, FIGURES[figure], { h: C.stoneLight, b: C.stone, a: C.stoneHi, i: C.stoneHi, s: C.stoneLight, k: C.wallDeep });
+  t.p(3, 3, 3, 2, '#1f2f36'); t.p(3, 5, 1, 3, '#1f2f36');      // a breath of light in the recess's upper left corner
+}
+
+// --- the clock --------------------------------------------------------------------------
+// The tower's clock, CLOCK.d art px across: a ring of dressed stone, a face
+// of cream plaster with twelve marks, a golden boss. Its hands are sprites
+// of their own (17 x 17 art px, the anchor their middle): the long one and
+// the short one, each drawn for twelve, one and two o'clock and turned by
+// quarters for the other nine places, so that a hand stays on the grid.
+// background.js sets them by the time it really is. The anchor is the
+// dial's middle.
+export const CLOCK = { d: 25 };
+const FACE = { hi: '#f1e6cc', shade: '#cdbfa4', ink: '#2a2230', hand: '#3a2c36', gold: C.braid, goldDark: C.braidShade };
+function drawClock(t) {
+  const { p, disc } = t, c = 12.5;
+  disc(c, c, 12.5, C.stoneDark); disc(c - 0.5, c - 0.5, 12, C.stoneLight); disc(c - 1, c - 1, 11, C.stoneHi); disc(c - 0.5, c - 0.5, 11.5, C.stoneLight);
+  disc(c, c, 10, FACE.shade); disc(c + 0.5, c + 0.5, 9.5, FACE.hi);
+  for (let n = 0; n < 12; n++) {
+    const a = n * Math.PI / 6, x = Math.round(12 + 8 * Math.sin(a)), y = Math.round(12 - 8 * Math.cos(a));
+    p(x, y, 1, 1, FACE.ink);
+    if (n % 3 === 0) p(Math.round(12 + 7 * Math.sin(a)), Math.round(12 - 7 * Math.cos(a)), 1, 1, FACE.ink);
+  }
+}
+function drawHand(t, long, n) {
+  const { p, line } = t, a = n * Math.PI / 6, L = long ? 7 : 4, x = 8 + Math.round(L * Math.sin(a)), y = 8 - Math.round(L * Math.cos(a));
+  line(8, 8, x, y, long ? FACE.hand : FACE.ink);
+  if (!long) { if (n === 0) line(9, 8, x + 1, y, FACE.ink); else line(8, 9, x, y + 1, FACE.ink); }      // the short one is the thicker
+  p(8, 8, 1, 1, long ? FACE.gold : FACE.goldDark);
+}
+
+// --- the doves --------------------------------------------------------------------------
+// White doves that sit on a string course and fly up when somebody climbs
+// past (background.js): one sitting (8 x 7 art px, looking right, the anchor
+// the middle of its feet) and two frames of one flying (10 x 7, the anchor
+// its middle), wings up and wings down.
+const DOVE = { w: '#f4f1e6', s: '#c3c8cc', k: '#111120', e: C.sun3, o: '#d98a5a' };
+const DOVE_SIT = ['...ww...', '..wwke..', '.wwwww..', 'wwwwsw..', 'wwwsss..', '.wsss...', '..o.o...'];
+const DOVE_FLY = [
+  ['..w.......', '..ww......', '..www.....', '.wwwwwke..', 'wwwwwww...', '.sswws....', '..........'],
+  ['..........', '...wwwke..', 'wwwwwww...', '.swwws....', '..sws.....', '..ss......', '..s.......'],
+];
+
 // --- the banner -------------------------------------------------------------------------
 // Cloth on a rod, BANNER.cloth art px wide and BANNER.rows long, in four
 // frames: hanging, stirring, blown, and blown far (a storm's gust). One
@@ -226,6 +288,11 @@ export function buildHung() {
   const lantern = (lit) => makeSprite(LANTERN.w, LANTERN.h, (t) => drawLantern(t, lit), undefined, { axPx: 0, ayPx: 5 * 4 });
   return {
     lantern: lantern(false), lanternLit: lantern(true),
+    niches: FIGURES.map((_, f) => makeSprite(NICHE.w, NICHE.h, (t) => drawNiche(t, f), undefined, { axPx: (NICHE.w / 2) * 4, ayPx: NICHE.h * 4 })),
+    clock: makeSprite(CLOCK.d, CLOCK.d, (t) => drawClock(t), { ax: 0.5, ay: 0.5 }),
+    hands: { long: [0, 1, 2].map((n) => makeSprite(17, 17, (t) => drawHand(t, true, n), { ax: 0.5, ay: 0.5 })), short: [0, 1, 2].map((n) => makeSprite(17, 17, (t) => drawHand(t, false, n), { ax: 0.5, ay: 0.5 })) },
+    dove: makeSprite(8, 7, (t) => stamp(t, 0, 0, DOVE_SIT, DOVE), undefined, { axPx: 3 * 4, ayPx: 7 * 4 }),
+    doveFly: DOVE_FLY.map((rows) => makeSprite(10, 7, (t) => stamp(t, 0, 0, rows, DOVE), { ax: 0.5, ay: 0.5 })),
     torch: makeSprite(TORCH.w, TORCH.h, (t) => drawTorch(t), undefined, { axPx: 0, ayPx: TORCH.at * 4 }),
     flames: FLAMES.map((rows) => makeSprite(7, 10, (t) => stamp(t, 0, 0, rows, FIRE), undefined, { axPx: 3.5 * 4, ayPx: 10 * 4 })),
     banners: BANNERS.map((_, look) => BLOWN.map((_f, frame) => makeSprite(BANNER.w, BANNER.h, (t) => drawBanner(t, look, frame), undefined, { axPx: (BANNER.rod / 2) * 4, ayPx: 0 }))),

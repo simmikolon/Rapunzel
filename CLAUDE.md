@@ -75,8 +75,8 @@ which only copies the two folders together). The design document
   `towerwall.js` (the wall in sections: what it is built of, what grows
   on it, what hangs on it and stands out from it, rolled for every round),
   `art/tower.js` the wall's looks, `art/cladding.js` more of them (slates, timber, wisteria),
-  `art/hung.js` lanterns, torches, banners, gargoyles,
-  `art/outline.js` the gallery round the tower and the oriel.
+  `art/hung.js` lanterns, torches, banners, niches, the clock, doves, gargoyles,
+  `art/outline.js` the gallery round the tower, the oriel and the stair turret.
 - `stages.js` the stages' themes and order; `story.js` the opening story;
   `settings.js` the settings and their sign; `input.js` keys, touch
   (hold, slide), tilt; `hud.js`, `title.js`, `sign.js` what is on screen
@@ -116,8 +116,9 @@ which only copies the two folders together). The design document
   altitude, zone and the wall's recipe, `?fx=off|bloom|lines|full` (the glow, the scan lines, both), `?veil=0.3` sets how strongly the
   tower's wall is set back outside (0 to 0.9), `?wall=stone+ivy+lanterns+gargoyles+both` shows one
   recipe of the tower's wall all the way up (what it is built of, `stone|worn|mended|slate|timber`, what
-  grows on it, `ivy|moss|briar|wisteria`, what hangs on it, `lanterns|banners|torches`, what stands out at its
-  edges, `gargoyles`, its landmarks, `rings|oriels|both`; any of them alone, or `plain`;
+  grows on it, `ivy|moss|briar|wisteria`, what hangs on it, `lanterns|banners|torches|niches`, what runs under its
+  string courses, `arches|dentils|checker|tiles`, what stands out at its
+  edges, `gargoyles`, its landmarks, `rings|oriels|both|clocks|turrets|all`; any of them alone, or `plain`;
   `web/src/towerwall.js`), `?place=inside|outside` picks
   where the round is climbed whatever the title's selector says (inside,
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the

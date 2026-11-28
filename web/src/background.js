@@ -2,9 +2,9 @@ import { W, H, PX, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H, WINDOW_X, windowAt, blockedBy } from './windows.js';
-import { LANTERN, BANNER, GARGOYLE, TORCH } from './art/hung.js';
+import { LANTERN, BANNER, GARGOYLE, TORCH, NICHE } from './art/hung.js';
 import { WISTERIA_PETAL } from './art/cladding.js';
-import { RING, ORIEL } from './art/outline.js';
+import { RING, ORIEL, TURRET } from './art/outline.js';
 import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
 import { TowerPlan, stageWall, stageRecipe, forcedWall } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach, clamp } from './util.js';
@@ -132,6 +132,14 @@ const MARK = { halo: [90, 0.2] };
 // string lights, a lantern and a torch on the wall, a firefly, and the braid's shimmer (one every `braidStep` px).
 const WOOD = { fade: 600, shelves: 0.62, shelf: [120, 0.8], window: [150, 0.7], owl: [64, 0.8], bulb: [130, 0.55], lantern: [210, 0.85], torch: [240, 0.9], firefly: [56, 0.6], braid: [84, 0.2], braidStep: 200 };
 const GLOWS = ['#8ff5dc', '#ffd596', '#ffd34a'];      // the colours of what goes into `glows`: mushrooms, a window, an owl
+// More on the wall's face (art/hung.js): a niche's sill and the clock's middle this far above the storey's sill (layer
+// px). Doves (DOVES): the share of storeys that have some on their string course (below the treeline, above it), how
+// near somebody must climb before they fly up (px under their course), how fast they go (px/s sideways and up), how
+// fast their wings beat (frames a second) and for how long one sees them go (s).
+const FACE = { nicheUp: 52, clockUp: 156 };
+const DOVES = { share: [0.16, 0.34], near: 420, fly: [150, 210], beat: 9, time: 2.6 };
+const QUARTER = Math.PI / 2;
+const FIRST_DOVE = 3;             // the lowest storey doves sit on: above the lawn's picture
 const SIDES = [-1, 1], FLIP = { flip: true }, FLIP_SHADE = { flip: true, tint: '#a6b0b6' }, SOFT_ADD = { soft: true, blend: 'add' }, HALO_GLOW = { glow: 0.5 };      // (the right gargoyle is round the tower from the light)
 
 export class Background {
@@ -146,6 +154,9 @@ export class Background {
     this.fires = [];             // the wall's torches in this frame, three numbers each: where its flame's foot is, and its storey
     this.fireOpt = { flip: false, glow: 0.8 };
     this.fireTime = 0;
+    this.doves = new Map();      // the doves that have flown up in this round: the storey they sat on -> when they went
+    this.handOpt = { rot: 0 };
+    this.clock = { at: -1, long: 0, short: 0 };      // the tower's clock: the second it was last read in, and its two hands' places of twelve
     this.wood = null;            // the dark wood: { from, to } (px), the stretch of the forest where no light comes through the leaves; null: none (setWood)
     this.gloom = 0;              // how dark the wood is where the camera is, 0..1
     this.glows = [];             // what shines in the dark wood in this frame, five numbers each: where, how wide, how strong, which of GLOWS
@@ -189,13 +200,13 @@ export class Background {
   // dev (?dev=1): the wall's recipe `up` px above the picture's lower edge, in words ('stone+ivy+lanterns', 'plain').
   wallName(cam, up) {
     const wall = this.forceWall || this.wall || this.plan, ly = cam.layerY(PARALLAX_TOWER) + up, k = Math.floor(ly / TILE_H), i = Math.round((ly - WINDOW_FIRST) / WINDOW_STOREY);
-    return [wall.skinAt(k), wall.growthAt(k), wall.hungAt(i), wall.edgeAt(i), wall.markAt(i)].filter(Boolean).map((c) => c.kind).join('+') || 'plain';
+    return [wall.skinAt(k), wall.growthAt(k), wall.hungAt(i), wall.edgeAt(i), wall.markAt(i), wall.courseAt && wall.courseAt(i)].filter(Boolean).map((c) => c.kind).join('+') || 'plain';
   }
   get inside() { return !!this.place && this.place.inside; }
   skyColors(cam) { return skyAt(cam.y); }
 
   // A new round reseeds what can touch gameplay (the gusts that swing the braid).
-  reset(rng) { this.atmo.reset(rng); this.lights.reset(); }
+  reset(rng) { this.atmo.reset(rng); this.lights.reset(); this.doves.clear(); }
 
   // Horizontal offset of the braid at world height y (a slow travelling wave).
   braidX(y, time) {
@@ -299,7 +310,11 @@ export class Background {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
       if (ly > camF + H + 30 || (this.top && ly > this.top.ly - 60)) break;
       const a = wall.skinAt(Math.floor((ly - 12) / TILE_H));
-      g.blit((a && t.towerBands[TOWER_AREAS[a.kind].band]) || t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
+      const own = a && t.towerBands[TOWER_AREAS[a.kind].band], sy = H - (ly - camF) + cam.oy;
+      g.blit(own || t.towerBand, W / 2 + cam.ox, sy);
+      // ... and under it, for some storeys running, a frieze (not where the course is a broken one or a beam)
+      const c = !own && wall.courseAt && wall.courseAt(i);
+      if (c) g.blit(t.towerFriezes[c.kind], W / 2 + cam.ox, sy + COURSE - PX);
     }
     // what grows on the wall, over its bricks and its string courses; the windows are cut into it
     for (const [sprite, sy] of grown) g.blit(sprite, W / 2 + cam.ox, sy);
@@ -324,6 +339,7 @@ export class Background {
     this.drawWindows(g, cam, camF, time, world);
     const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony' || p.kind === 'gate') : [];
     this.drawHung(g, cam, camF, time, wall, blockers);
+    this.drawDoves(g, cam, camF, time, wall, blockers, world);
     // the tower's foot (art/tower.js): its plinth, the witch's gate and her arms, over the lowest tiles and the first string course
     if (camF < FOOT.up * PX + 20) g.blit(t.towerFoot, W / 2 + cam.ox, H + camF + cam.oy);
     // petals the roses let go of, and the wisteria: two to a tile of either, each falling a few metres down the wall, turning, and beginning again
@@ -362,10 +378,11 @@ export class Background {
     for (let i = Math.max(0, Math.floor((camF - 180 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY;
       if (ly > camF + H + 40) break;
-      const c = wall.hungAt(i);
+      const m = wall.markAt(i), clock = m && m.kind === 'clock', c = clock ? m : wall.hungAt(i);      // (the tower's clock takes the place of whatever would hang there)
       if (!c || (this.top && ly > this.top.sill - 420)) continue;
       const w = windowAt(i), side = w.side === 'L' ? 'R' : 'L', flip = side === 'R';
       if (blockedBy({ side, ly }, blockers)) continue;
+      if (clock) { this.drawClock(g, W / 2 - w.x + cam.ox, H - (ly - camF) + cam.oy - FACE.clockUp); continue; }
       const skin = wall.skinAt(Math.floor((ly + 60) / TILE_H));
       if (skin && skin.kind === 'mended') continue;
       const x = W / 2 - w.x + cam.ox, base = H - (ly - camF) + cam.oy;
@@ -375,6 +392,10 @@ export class Background {
         if (caps > 0.01) { g.rect(flip ? left : left + 6 * PX, top + 4 * PX, 6 * PX, PX, SNOW_COLOR, caps); g.rect(flip ? left + PX : left + 7 * PX, top + 3 * PX, 4 * PX, PX, SNOW_COLOR, caps); }
         const at = 0.15 + 0.5 * ((hash(i * 13 + 5) % 100) / 100), on = smoothstep(invLerp(at, at + 0.12, dark));
         if (on > 0.01) lamps.push(sx, sy, flip ? 1 : 0, on, on * (0.85 + 0.15 * Math.sin(time * 9 + i * 1.7) * Math.sin(time * 2.3 + i)));
+      } else if (c.kind === 'niches') {
+        const sy = base - FACE.nicheUp;
+        g.blit(A.niches[(i + c.n) % A.niches.length], x, sy, flip ? FLIP : undefined);
+        if (caps > 0.01) g.rect(x - NICHE.w * PX / 2, sy - 3 * PX - PX, NICHE.w * PX, PX, SNOW_COLOR, caps);
       } else if (c.kind === 'torches') {
         const sx = x + (flip ? 1 : -1) * TORCH.w * PX / 2, sy = base - FIRE.up;
         g.blit(A.torch, sx, sy, flip ? FLIP : undefined);
@@ -384,6 +405,43 @@ export class Background {
         const frame = Math.max(0, Math.min(3, Math.floor(wind * 3 - 0.3 + flutter * 1.1)));
         g.blit(A.banners[c.n % A.banners.length][frame], x, sy, slant < -0.02 ? FLIP : undefined);
         if (caps > 0.01) g.rect(x - BANNER.rod * PX / 2, sy - PX, BANNER.rod * PX, PX, SNOW_COLOR, caps);
+      }
+    }
+  }
+  // The tower's clock (towerwall.js `mark` 'clock', art/hung.js): its dial, and its two hands where the time it really
+  // is puts them, the long one by five minutes, the short one by the hour. A hand is one of three sprites turned by
+  // quarters.
+  drawClock(g, x, y) {
+    const A = this.art.hung, c = this.clock, now = Math.floor(Date.now() / 1000);
+    if (c.at !== now) { const d = new Date(); c.at = now; c.long = Math.floor(d.getMinutes() / 5); c.short = d.getHours() % 12; }
+    g.blit(A.clock, x, y);
+    const o = this.handOpt;
+    o.rot = Math.floor(c.short / 3) * QUARTER; g.blit(A.hands.short[c.short % 3], x, y, o);
+    o.rot = Math.floor(c.long / 3) * QUARTER; g.blit(A.hands.long[c.long % 3], x, y, o);
+  }
+  // Doves on the string courses (art/hung.js): on some storeys one to three sit on the course, on the side that has
+  // no window, and fly up and away from the tower when somebody climbs near. Once flown they are gone for the round.
+  // None where a gallery, a balcony or a gate is.
+  drawDoves(g, cam, camF, time, wall, blockers, world) {
+    const A = this.art.hung, pl = world && world.player;
+    for (let i = Math.max(FIRST_DOVE, Math.floor((camF - 80 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+      const sill = WINDOW_FIRST + i * WINDOW_STOREY, ly = sill + STRING_COURSE;
+      if (ly > camF + H + 60 || (this.top && ly > this.top.sill - 520)) break;
+      const h = hash(i * 41 + 7);
+      if ((h % 1000) / 1000 >= DOVES.share[ly / PARALLAX_TOWER < TREELINE_Y ? 0 : 1]) continue;
+      const m = wall.markAt(i), w = windowAt(i), side = w.side === 'L' ? 'R' : 'L', dir = side === 'L' ? -1 : 1;
+      if ((m && m.kind === 'ring') || blockedBy({ side, ly: sill }, blockers)) continue;
+      let t0 = this.doves.get(i);
+      if (t0 === undefined && pl && pl.alive && pl.y + pl.h > ly / PARALLAX_TOWER - DOVES.near) { t0 = time; this.doves.set(i, time); }
+      const t = t0 === undefined ? -1 : time - t0, sy = H - (ly - camF) + cam.oy;
+      if (t > DOVES.time) continue;
+      for (let n = 0, count = 1 + ((h >>> 10) % 3); n < count; n++) {
+        const hn = hash(h + n * 13), x = W / 2 + dir * (62 + n * 44 + (hn % 22)) + cam.ox, left = (hn & 4) > 0;
+        if (t < 0) { g.blit(A.dove, x, sy, left ? FLIP : undefined); continue; }
+        const lag = n * 0.12, u = t - lag;
+        if (u <= 0) { g.blit(A.dove, x, sy, left ? FLIP : undefined); continue; }
+        const fx = x + dir * (DOVES.fly[0] + (hn % 60)) * u, fy = sy - 16 - (DOVES.fly[1] + (hn % 50)) * u + 40 * u * u - Math.abs(Math.sin(u * 7 + n)) * 6;
+        g.blit(A.doveFly[Math.floor(u * DOVES.beat + n) % 2], fx, fy, dir < 0 ? FLIP : undefined);
       }
     }
   }
@@ -428,7 +486,7 @@ export class Background {
   // snow lies on the roofs.
   drawMarks(g, cam, camF, time, wall, blockers) {
     const A = this.art.outline, caps = this.weather.has('caps');
-    for (let i = Math.max(0, Math.floor((camF - 320 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+    for (let i = Math.max(0, Math.floor((camF - 580 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const sill = WINDOW_FIRST + i * WINDOW_STOREY, ly = sill + STRING_COURSE;
       if (ly > camF + H + 160 || (this.top && ly > this.top.sill - 520)) break;
       const m = wall.markAt(i);
@@ -442,7 +500,16 @@ export class Background {
           g.rect(x - TOWER_W / 2 - PX, sy, TOWER_W + 2 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(x - TOWER_W / 2 - 4 * PX, sy + 2 * PX, TOWER_W * 0.56, PX, SNOW_COLOR, caps);
           g.rect(x - RING.w * PX / 2, sy + (RING.roof - 1) * PX, RING.w * PX, PX, SNOW_COLOR, caps * 0.9);
         }
-      } else if (!blockedBy({ side: m.side, ly: sill }, blockers)) {
+      } else if (m.kind === 'turret') {
+        // a stair turret: its foot under the first of its storeys, a shaft for each, its cone over the last
+        const left = m.side === 'L', P = left ? A.turret.L : A.turret.R, x = W / 2 + (left ? -1 : 1) * TOWER_W / 2 + cam.ox, top = sy - WINDOW_STOREY;
+        if (m.j === 0) g.blit(P.foot, x, sy);
+        g.blit(P.shaft, x, sy);
+        if (m.j === m.n - 1) {
+          g.blit(P.cap, x, top);
+          if (caps > 0.01) { const cx = x - P.cap.ax + TURRET.w * PX / 2, y0 = top - P.cap.ay; g.rect(cx - 2 * PX, y0 + 5 * PX, 4 * PX, 3 * PX, SNOW_COLOR, caps); g.rect(cx - 4 * PX, y0 + 8 * PX, 6 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(cx - 7 * PX, y0 + 12 * PX, 5 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(cx - 14 * PX, y0 + 23 * PX, 9 * PX, PX, SNOW_COLOR, caps); }
+        }
+      } else if (m.kind === 'oriel' && !blockedBy({ side: m.side, ly: sill }, blockers)) {
         const left = m.side === 'L', s = left ? A.oriel.L : A.oriel.R, x = W / 2 + (left ? -1 : 1) * TOWER_W / 2 + cam.ox;
         g.blit(s, x, sy);
         const x0 = x - s.ax, y0 = sy - s.ay, px = x0 + ORIEL.pane[0] * PX, py = y0 + ORIEL.pane[1] * PX;
@@ -476,7 +543,9 @@ export class Background {
       const sy = H - (ly - camF) + cam.oy;
       for (const dir of SIDES) {
         const side = dir < 0 ? 'L' : 'R';
-        if ((m && m.side === side) || blockedBy({ side, ly: sill }, blockers)) continue;
+        if ((m && m.side === side && m.kind !== 'clock') || blockedBy({ side, ly: sill }, blockers)) continue;
+        const up = wall.markAt(i - 1);
+        if (up && up.kind === 'turret' && up.side === side) continue;      // (the turret goes on past this course, or its cone stands on it)
         const sx = W / 2 + dir * TOWER_W / 2 + cam.ox;
         g.blit(A, sx, sy, dir < 0 ? undefined : FLIP_SHADE);
         if (caps > 0.01) for (const [x, y, w] of G.snow) g.rect(dir < 0 ? sx - (G.edge - x) * PX : sx + (G.edge - x - w) * PX, sy + (y - G.top - 1) * PX, w * PX, PX, SNOW_COLOR, caps);

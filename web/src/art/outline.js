@@ -127,11 +127,79 @@ function drawOriel(t, right) {
   p(cx - 1, O.band + 14, 2, 1, STONE[3]);
 }
 
+// --- the stair turret ---------------------------------------------------------------------
+// A slim turret that runs up the tower's edge over several storeys, with
+// the winding stair in it: the oriel's cone of slates on top (`cap`), its
+// rings of stone that step in underneath (`foot`), and between them one
+// `shaft` for every storey, TURRET.shaft art px high (a storey's height):
+// the tower's brick with a band of stone at its foot and three slits that
+// climb round it with the stair. As wide as the oriel and hung on the
+// edge like it; drawn for either side, the right one a step darker. The
+// anchors are on the wall's edge: the cap's and a shaft's at their foot,
+// the foot's at its top.
+export const TURRET = { w: 30, cap: 28, shaft: 110, foot: 15, half: 12, in: 10 };
+function turretKit(t, right, seed) {
+  const { p } = t, T = TURRET, cx = T.w / 2, hw = T.half, r = new RNG(seed), dim = right ? 1 : 0;
+  const angle = (x, w) => Math.asin(Math.max(-1, Math.min(1, ((x + 0.5 - cx) / w) * Math.sin(E))));
+  const plane = (x, w) => Math.min(4, planeAt(angle(x, w)) + dim);
+  const X = (a, w) => Math.round(cx + w * Math.sin(a) / Math.sin(E));
+  const band = (y, n) => { for (let x = cx - hw - 1; x < cx + hw + 1; x++) { const k = plane(x, hw + 1); p(x, y, 1, n, STONE[k]); p(x, y, 1, 1, step(STONE, k - 1)); p(x, y + n - 1, 1, 1, step(STONE, k + 1)); } };
+  const bricks = (y0, courses) => {
+    for (let c = 0; c < courses; c++) {
+      const y = y0 + c * 6;
+      for (let x = cx - hw; x < cx + hw; x++) p(x, y, 1, 6, MORTAR);
+      for (let a = -E - (c % 2 ? 0.2 : 0); a < E; a += 0.4) {
+        const x0 = Math.max(cx - hw, X(Math.max(a, -E), hw)), x1 = Math.min(cx + hw, X(Math.min(a + 0.4, E), hw)), k = Math.min(4, planeAt((Math.max(a, -E) + Math.min(a + 0.4, E)) / 2) + dim + (r.chance(0.3) ? 1 : 0));
+        if (x1 - x0 < 2) continue;
+        p(x0 + 1, y, x1 - x0 - 1, 5, step(BRICK, k)); p(x0 + 1, y, x1 - x0 - 1, 1, step(BRICK, k - 1));
+      }
+    }
+  };
+  return { p, cx, hw, r, dim, plane, X, band, bricks };
+}
+function drawTurretCap(t, right) {
+  const { p, cx, r, plane, X, band } = turretKit(t, right, right ? 6500 : 6400);
+  for (let y = 5; y < 25; y++) {
+    const hw = Math.round(1 + ((y - 5) / 19) * 13), line = (y - 5) % 5 === 4;
+    for (let x = cx - hw; x < cx + hw; x++) { const k = plane(x, hw); p(x, y, 1, 1, line ? ROOF_LINE[k] : ROOF[k]); }
+    if ((y - 5) % 5 === 0 && hw > 4) for (let a = -E + r.range(0.1, 0.3); a < E; a += r.range(0.32, 0.5)) { const x = X(a, hw); if (x > cx - hw && x < cx + hw - 1) p(x, y, 1, 4, ROOF_LINE[Math.max(0, plane(x, hw) - 1)]); }
+  }
+  p(cx - 14, 25, 28, 1, EAVE);
+  p(cx - 1, 3, 2, 3, GOLD[2]); p(cx - 2, 0, 4, 3, GOLD[1]); p(cx - 2, 0, 2, 2, GOLD[0]); p(cx - 1, 3, 1, 1, GOLD[1]);
+  band(26, 2);
+}
+function drawTurretShaft(t, right) {
+  const { p, cx, dim, band, bricks } = turretKit(t, right, right ? 6700 : 6600), T = TURRET;
+  bricks(0, 18); band(T.shaft - 2, 2);
+  // the stair's slits, each a little higher and further round than the one before
+  for (const [x, y] of [[cx - 8, 80], [cx - 2, 49], [cx + 4, 18]]) {
+    p(x - 1, y - 1, 4, 10, STONE[Math.min(4, 1 + dim)]); p(x + 2, y - 1, 1, 10, STONE[3]); p(x - 1, y - 1, 4, 1, STONE[dim]);
+    p(x, y, 2, 8, V(C.nightDeep)); p(x - 1, y + 9, 4, 1, STONE[3]);
+  }
+}
+function drawTurretFoot(t, right) {
+  const { p, cx, plane, band } = turretKit(t, right, right ? 6900 : 6800);
+  band(0, 2);
+  for (let s = 0; s < 4; s++) {
+    const w = [10, 7, 4, 2][s], y = 2 + s * 3;
+    for (let x = cx - w; x < cx + w; x++) { const k = plane(x, w); p(x, y, 1, 3, step(STONE, k + 1)); p(x, y, 1, 1, STONE[k]); p(x, y + 2, 1, 1, step(STONE, k + 2)); }
+  }
+  p(cx - 1, 14, 2, 1, STONE[3]);
+}
+
 export function buildOutline() {
   const O = ORIEL, cx = O.w / 2;
   return {
     ring: makeSprite(RING.w, RING.h, (t) => drawRing(t), { ax: 0.5, ay: 0 }),
     // (the left one's wall edge is `in` art px in from its body's right side, the right one's from its left)
+    turret: Object.fromEntries([['L', false], ['R', true]].map(([side, right]) => {
+      const T = TURRET, ax = (right ? T.w / 2 - T.half + T.in : T.w / 2 + T.half - T.in) * 4;
+      return [side, {
+        cap: makeSprite(T.w, T.cap, (t) => drawTurretCap(t, right), undefined, { axPx: ax, ayPx: T.cap * 4 }),
+        shaft: makeSprite(T.w, T.shaft, (t) => drawTurretShaft(t, right), undefined, { axPx: ax, ayPx: T.shaft * 4 }),
+        foot: makeSprite(T.w, T.foot, (t) => drawTurretFoot(t, right), undefined, { axPx: ax, ayPx: 0 }),
+      }];
+    })),
     oriel: { L: makeSprite(O.w, O.h, (t) => drawOriel(t, false), undefined, { axPx: (cx + O.half - O.in) * 4, ayPx: O.band * 4 }), R: makeSprite(O.w, O.h, (t) => drawOriel(t, true), undefined, { axPx: (cx - O.half + O.in) * 4, ayPx: O.band * 4 }) },
   };
 }

@@ -34,14 +34,19 @@ import { clamp } from './util.js';
 //   roses   (with growth 'briar') the roses' colour: 0 red, 1 white, 2 old rose
 //   hung    (outside) what hangs on the wall at every storey, on the side
 //           that has no window: 'lanterns' (lit when it is dark), 'torches'
-//           (which burn all day) or 'banners' (the witch's and the guards',
-//           which blow in the wind)
+//           (which burn all day), 'banners' (the witch's and the guards',
+//           which blow in the wind) or 'niches' (with figures of stone)
+//   course  (outside) what runs under every string course: 'arches' (a
+//           blind arcade), 'dentils' (teeth), 'checker' or 'tiles' (glazed,
+//           blue and gold); none where the course is broken or a beam
 //   edge    (outside) what stands out at the wall's edges: 'gargoyles' (a
 //           pair at every second string course, which spout when it rains)
 //   mark    (outside) landmarks that change the tower's outline, one at
 //           every fourth storey: 'rings' (a roofed wooden gallery round
 //           the tower), 'oriels' (a little turret on an edge, its window
-//           lit when it is dark) or 'both' in turn
+//           lit when it is dark) or 'both' in turn; 'clocks' (the tower's
+//           clock, which shows the time it is), 'turrets' (a stair turret
+//           up an edge over three storeys) or 'all' four in turn
 //   gloom   (outside) the stage's middle is the dark wood: no light comes
 //           through the leaves, the prince carries a lantern, and one sees
 //           what has a light of its own (world.js WOOD; for the eye, the
@@ -58,13 +63,13 @@ import { clamp } from './util.js';
 export const THEMES = {
   // outside
   lawn:      { name: 'the forest floor', place: 'outside', at: 0, len: 60, wall: 'foot' },
-  roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, growth: 'briar', roses: 0, weather: 'golden' },
+  roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, growth: 'briar', roses: 0, hung: 'niches', course: 'dentils', weather: 'golden' },
   ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, wall: 'timber', growth: 'ivy', weather: 'rain' },
-  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', hung: 'torches', edge: 'gargoyles', weather: 'rain', gloom: true },
+  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', hung: 'torches', edge: 'gargoyles', course: 'arches', weather: 'rain', gloom: true },
   site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended', mark: 'rings', weather: 'snow' },
   crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', hung: 'banners', edge: 'gargoyles', weather: 'storm' },
-  sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'slate', hung: 'banners', edge: 'gargoyles', mark: 'both' },
-  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'stone', growth: 'briar', roses: 1, hung: 'lanterns', mark: 'oriels', weather: 'snow' },
+  sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'slate', hung: 'banners', edge: 'gargoyles', mark: 'all', course: 'tiles' },
+  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'stone', growth: 'briar', roses: 1, hung: 'lanterns', mark: 'oriels', course: 'checker', weather: 'snow' },
   // inside
   // (a stage stays inside one band of the tower's floors, 0, 120, 250 and 400 m: the floor is its furniture)
   hall:      { name: 'the hall', place: 'inside', at: 4, len: 114, vault: true },
