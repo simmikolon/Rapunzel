@@ -299,8 +299,7 @@ export class Weather {
     if (y > H + 20) return;
     g.rect(0, y + 4, W, H - y, LAWN.body, k);
     g.rect(0, y + 72, W, H - y, LAWN.far, k);
-    g.rect(0, y - 8, W, 12, SNOW_COLOR, k);
-    for (let x = 0; x < W; x += 32) { const h = hash(x) % 3; if (h) g.rect(x + (hash(x + 5) % 12), y - 8 - h * 4, 12 + (hash(x + 9) % 3) * 8, h * 4, SNOW_COLOR, k); }
+    this.drawEdge(g, y, k);
     for (let i = 0; i < 46; i++) {
       const hx = hash(i * 13 + 1), hy = hash(i * 29 + 7), yy = y + 20 + (hy % 60) * 4;
       if (yy < H) g.rect((hx % 190) * 4, yy, 16 + (hx % 3) * 8, 4, LAWN.hollow, k * (0.45 + 0.1 * (hy % 4)));
@@ -309,6 +308,18 @@ export class Weather {
       const x = (hash(i * 71 + 5) % 186) * 4, yy = y + 12 + (hash(i * 31 + 2) % 9) * 4;
       g.rect(x, yy - 8, 4, 8, LAWN.grass, k); g.rect(x + 8, yy - 12, 4, 12, LAWN.grass, k); g.rect(x + 4, yy - 4, 4, 4, LAWN.grassDark, k);
     }
+  }
+  // The snow's edge along the lawn's line (screen y) from x0 to x1: a strip of it and humps on that.
+  drawEdge(g, y, k, x0 = 0, x1 = W) {
+    g.rect(x0, y - 8, x1 - x0, 12, SNOW_COLOR, k);
+    for (let x = Math.floor(x0 / 32) * 32; x < x1; x += 32) { const h = hash(x) % 3; if (h) g.rect(x + (hash(x + 5) % 12), y - 8 - h * 4, 12 + (hash(x + 9) % 3) * 8, h * 4, SNOW_COLOR, k); }
+  }
+  // The same edge once more over the foot of what stands on the lawn and is drawn after it (the trees' feet,
+  // background.js), so that it stands in the snow and not on it. Returns how much snow lies (0 to 1).
+  drawDrift(g, cam, x0, x1) {
+    const k = this.has('caps');
+    if (k > 0) this.drawEdge(g, Math.round(cam.sy(0)), k, x0, x1);
+    return k;
   }
   // On what one stands on (world.js hands over the platforms in the picture): rain splashing, snow lying.
   drawCaps(g, cam, platforms, time) {

@@ -80,9 +80,9 @@ sprite fit the rule.
 
 ## What a sprite costs
 - Every sprite is drawn four times its art size on a canvas of its own:
-  64 bytes to an art pixel, 59 MB for all of them (2026-11-27). They are
+  64 bytes to an art pixel, 60 MB for all of them (2026-11-27). They are
   all there together while the game starts and are given back once the
-  atlas is packed (kept at art size, 1024 x 1087), so a sprite costs at
+  atlas is packed (kept at art size, 1024 x 1106), so a sprite costs at
   the start, not in a round. `node tools/checks/atlas.mjs` prints both,
   says where the size goes and fails past its budget of 80 MB at the
   start, or if a sprite still holds its canvas afterwards.

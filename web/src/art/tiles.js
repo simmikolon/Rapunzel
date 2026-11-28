@@ -56,6 +56,28 @@ function drawGround(t) {
   for (let i = 0; i < 10; i++) { const x = r.int(0, W - 6), y = r.int(14, H - 4); p(x, y, r.int(3, 8), 2, C.barkDeep); }
 }
 
+// The path to the witch's gate: stepping stones in the lawn, PATH.w x PATH.h
+// art px, the anchor the middle of its upper edge (background.js lays it on
+// the lawn under the gate's threshold). Flat stones seen from in front and a
+// little from above, as the lawn is: each a rounded slab with its top lit,
+// its near edge in shade, bigger and further apart toward the picture's foot,
+// none in line with the next. Grass grows over their edges.
+export const PATH = { w: 44, h: 26 };
+function drawPath(t) {
+  const { p } = t;
+  const r = new RNG(61), mid = PATH.w / 2;
+  // [x from the middle, y, width, height]
+  for (const [dx, y, w, h] of [[-9, 1, 18, 3], [-13, 6, 11, 4], [1, 5, 12, 4], [-9, 12, 13, 5], [7, 11, 11, 5], [-17, 19, 14, 6], [0, 18, 15, 6]]) {
+    const x = mid + dx, face = r.chance(0.5) ? C.stone : C.oldHi;
+    p(x + 1, y, w - 2, 1, C.stoneLight); p(x, y + 1, w, h - 2, face); p(x + 1, y + h - 1, w - 2, 1, C.oldShade);
+    p(x, y + 1, 1, h - 2, C.stoneLight); p(x + w - 1, y + 1, 1, h - 2, C.oldMid); p(x + 1, y + h - 2, w - 2, 1, C.oldMid);
+    if (w > 12) { const cx = x + r.int(4, w - 5); p(cx, y + 1, 1, 2, C.oldDark); p(cx + 1, y + 3, 1, h - 5, C.oldDark); }      // a crack across it
+    if (r.chance(0.6)) p(x + r.int(2, w - 4), y + r.int(1, h - 3), 2, 1, C.oldMid);                                            // worn
+    for (let i = 0; i < 3; i++) { const gx = x + r.int(0, w - 1); p(gx, y + h - 2, 1, 2, r.chance(0.5) ? C.grass : C.grassDark); }   // grass over its near edge
+    if (r.chance(0.5)) { p(x + w - 3, y, 2, 1, C.moss); p(x + w - 2, y + 1, 2, 1, C.mossDark); }
+  }
+}
+
 // Braid segment: 14 x 12 art px, tiled downward along the sway curve.
 function drawBraidSegment(t) {
   const { p, disc, ellipse } = t;
@@ -159,6 +181,7 @@ export function buildTiles() {
   const wall = buildTower(), tower = wall.plain, towerBand = wall.band;
   const forest = [0, 1].map((v) => makeSprite(192, 48, (t) => drawForest(t, v), { ax: 0.5, ay: 1 }));
   const ground = makeSprite(192, 36, (t) => drawGround(t), { ax: 0.5, ay: 0 }, { ayPx: 4 * PX });
+  const path = makeSprite(PATH.w, PATH.h, (t) => drawPath(t), { ax: 0.5, ay: 0 });
   const braid = makeSprite(14, 12, (t) => drawBraidSegment(t), { ax: 0.5, ay: 0 });
   const braidEnd = makeSprite(36, 14, (t) => drawBraidEnd(t), { ax: 0.4, ay: 1 });
   const braidCut = makeSprite(14, 10, (t) => drawBraidCut(t), { ax: 0.5, ay: 0 });
@@ -171,5 +194,5 @@ export function buildTiles() {
   const birdL = birdR.map(flipH);
   const butterflies = [0, 1, 2].map((c) => [0, 1].map((f) => makeSprite(7, 5, (t) => drawButterfly(t, c, f), { ax: 0.5, ay: 0.5 })));
   const acorn = makeSprite(4, 5, (t) => drawAcorn(t), { ax: 0.5, ay: 0.5 });
-  return { tower, towerBand, towerBands: wall.bands, towerAreas: wall.areas, forest, ground, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
+  return { tower, towerBand, towerBands: wall.bands, towerAreas: wall.areas, towerFoot: wall.foot, forest, ground, path, braid, braidEnd, braidCut, clouds, moon, leaves, boughL, boughR, birdR, birdL, butterflies, acorn };
 }

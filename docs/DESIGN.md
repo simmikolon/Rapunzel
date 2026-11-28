@@ -997,6 +997,24 @@ is a pool to draw from, not a promise.
   beside a window it is left out, not moved. The canes and leaves lie
   over the plain tiles like the ivy. Purely for the eye: nothing in
   the simulator.
+- ✅ the tower's foot (`art/tower.js` drawFoot; `element/tower-foot`):
+  where the tower stands on the lawn. A plinth of dressed stone, round
+  as the wall is: a footing in the grass, two courses of smooth blocks
+  a step lighter than the old stones behind them, and a sloping top
+  the wall stands back on. In its middle the witch's gate: a round
+  arch of dressed stone on a worn threshold, set back into the wall
+  (its reveal lit on the right, in shade on the left and under the
+  arch), a door of dark planks with iron bands deep in it (the hall's
+  door, from the other side), a portcullis let down in front, and a
+  chain across that with a brass padlock. The first string course runs
+  into the arch at either side; the keystone stands above it. Left and
+  right of the gate her arms on a shield: her hat before the full
+  moon, on violet (the right one hangs in the wall's shade, with moss
+  on it). The braid hangs down the gate's middle, so everything that
+  says "shut" is at its sides. Stepping stones lead across the lawn to
+  the threshold (`tiles.path`; snowed under in winter). One sprite,
+  under the veil as the windows are. Purely for the eye: nothing in
+  the simulator.
 - ✅ low mist on the lawn at the start.
 - ✅ tower windows left and right of the braid (`src/windows.js`, art in
   `art/windows.js`): 88 × 120 px sprites on the tower layer with the sill
@@ -1020,8 +1038,17 @@ is a pool to draw from, not a promise.
   The bark is ridges between furrows, broken into plates (oak; wider
   and darker on the giants), smooth with dark marks and the eyes where
   branches were (birch), or dead wood with long cracks and bare
-  patches (above the trees). At the lawn a trunk flares out into a
-  buttress root.
+  patches (above the trees). At the lawn a tree has a foot
+  (`art/trees.js` drawTreeFoot; `element/tower-foot`): the whole trunk
+  widens, its planes of light and its furrows swinging out with the
+  flank so that the ridges between them become the roots, which part
+  into toes with dark hollows between; the innermost runs on along the
+  ground. The two trees are not one tree mirrored: the left one has a
+  small plank door between two roots, a window with a light on beside
+  it and mushrooms on the lawn before it (somebody lives there), the
+  right one a fern in the fork and a knee of root further out. Grass
+  stands in front of both; where the lawn is snowed in, the snow's
+  edge does.
 - ✅ branches grow out of the tree (`art/trees.js` limb): a limb swells
   into a collar where it joins the trunk (the collar lies over the
   trunk's bark and casts a little shade on it), its top is flat on the
@@ -3270,3 +3297,69 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     first) carries a model's name in its trailer, against the rule in
     `CLAUDE.md`; mending it would have meant rewriting a pushed branch,
     which was refused. It is in master's history with the merge.
+- 2026-11-27: The tower's foot, and the trees' (`element/tower-foot`).
+  Simon: the foot of the tower does not look like the foot of a tower,
+  it is only one more element; draw it better, perhaps with a barred or
+  guarded gate and the witch's arms or the like; the trees left and
+  right want a better foot too; a free hand.
+  - What was there: the wall of old stones ran into the lawn as it
+    was, and each trunk ended in a wedge, the same one mirrored.
+  - The plinth is what makes it a foot: a footing in the grass, two
+    courses of smooth dressed stone that stand 5 art px proud of the
+    wall, a sloping top. Tried first in the old stones' own ramp (it
+    did not show: the stones behind it are bigger than a plinth's
+    blocks, so only standing out and tone can tell them apart), then
+    in the string course's tones (a white slab). Now a step lighter
+    than the wall behind it in every plane of light, each block one of
+    its plane's two tones.
+  - The gate is in the middle although the braid hangs down in front
+    of it: a tower's gate belongs in the middle of its front, and the
+    braid before a locked door is the tale (nobody goes in, so he
+    climbs). So what says "shut" is at its sides: the portcullis'
+    bars, the padlock left of the braid, the chain's ends, and her
+    arms on the wall to either side and not on the keystone, which
+    the braid hides.
+  - It is taller than the first string course allows: the arch runs
+    through the course, which ends against it, and the keystone stands
+    above. Under the course (an opening of 49 art px beside a prince
+    of 58) it was a hatch. The first window is clear of it: the arch
+    is narrow where it passes the sill.
+  - It is the hall's door from the other side: planks with iron bands,
+    far back in the dark, behind the bars.
+  - Her arms: her hat before the full moon on violet, her own colours
+    (the hat is the sign the masons struck through). Shields, not
+    banners: a shield has a lit rim that shows before the wall, and
+    cloth out of doors for a hundred years would be rags. Stone cats
+    or ravens beside the gate and lanterns on it were thought of and
+    left out: with two shields the flanks are full, and the windows
+    above are the light.
+  - The trees' feet: a foot is the whole trunk widening, not a piece
+    laid against it, so the bark goes on into the roots. Two looks,
+    one a tree: the left tree has a door between two roots and a light
+    in the window (the idea of its own the style guide asks for:
+    somebody lives there), the right one a fern. The mushrooms are
+    the squirrel's orange, not red: red is hearts and what bites.
+  - Drawn after what climbs and hangs on the trunks. A liana used to
+    hang from the right trunk down across the lawn to the picture's
+    foot: lianas end 1.5 m above the lawn now, and vines begin at its
+    line.
+  - Winter (the lawn is snowed in from 1 December): the grass before
+    the trees' feet is a sprite of its own and gives way to the snow's
+    edge, drawn once more over their feet, so that they stand in the
+    snow; the stepping stones are under it. The tower has no snow on
+    it anywhere, its plinth neither: snow on ledges, sills and string
+    courses would be an element of its own.
+  - Not done: the landing page's tower still ends in the lawn as it
+    was (its lawn is a CSS strip); nothing of the gate inside the
+    tower was touched.
+  - Cost: the atlas is 1024 x 1106 (1087 before), 787 sprites, the
+    canvases at the start 60 MB of the 80.
+  - Checks: the five reports on fixed seeds are exactly as they were
+    (`identity.sh`: nothing here is in the simulator); `flow`,
+    `stages`, `story`, `settings` and `atlas` pass.
+  - Seen in still pictures of a headless browser only, summer and
+    winter, on the title and at a round's start.
+- 2026-11-28: The tower's foot on master (`element/tower-foot`,
+  merged). Simon: all of it fits; merge. Nothing was changed after his
+  look. The branch stays. Left open, and on the status page: snow on
+  the tower itself, and the landing page's tower, which has no foot.
