@@ -463,7 +463,7 @@ export class World {
     pl.x = door.x; pl.y = y; pl.prevY = y; pl.maxY = y; pl.landedOn = door;
     this.scoreBase = base; this.scoreFrom = y; this.topY = y;
     this.bg.setWall(st, this.cam);
-    this.setWood();
+    this.setWood(st);      // (the level is still in the stage he leaves)
     this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
     this.bg.weather.want(this.weatherKind(), true);      // the next stage's weather is there when the picture opens
     this.level.generateUpTo(this.cam.top + 900);
@@ -522,8 +522,7 @@ export class World {
   }
   onDark(pl, d) {}                          // and here
   // Where the dark wood is now: in stages the middle of a stage whose theme says so, else this round's own stretch.
-  setWood() {
-    const st = this.route && this.level.stage;
+  setWood(st = this.route && this.level.stage) {
     this.bg.setWood(st ? (st.gloom && st.place === 'outside' ? { from: st.from + WOOD.stage[0], to: st.to - this.route.calmBefore - WOOD.stage[1] } : null) : this.woodSpan);
   }
 

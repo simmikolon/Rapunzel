@@ -27,6 +27,7 @@ const BOARD_DARK = [C.plank, mix(C.plank, C.plankDark, 0.5), C.plankDark, mix(C.
 const STONE = [C.stoneHi, C.stoneLight, C.stone, C.stoneDark, C.stoneShade].map(V);
 const BRICK = [C.brickLight, mix(C.brickLight, C.brickMid, 0.5), C.brickMid, C.brickDark, C.brickShade].map(V);
 const DEEP = V(C.wallDeep), EAVE = V(SLATE.eave), MORTAR = V(C.mortar), GOLD = [C.braidHi, C.braid, C.braidShade].map(V);
+const PANE_SKY = V('#2a2650');      // a hint of the sky in a dark window's panes (as art/windows.js has it)
 const step = (ramp, k) => ramp[Math.max(0, Math.min(ramp.length - 1, k))];
 
 // --- the gallery ----------------------------------------------------------------------
@@ -117,7 +118,7 @@ function drawOriel(t, right) {
   const wx = cx - 4, wy = 31;
   p(wx, wy + 2, 8, 11, STONE[1 + dim]); p(wx + 1, wy + 1, 6, 1, STONE[1 + dim]); p(wx + 2, wy, 4, 1, STONE[dim]); p(wx + 7, wy + 2, 1, 11, STONE[3]);
   p(wx + 1, wy + 3, 6, 9, V(C.nightDeep)); p(wx + 2, wy + 2, 4, 1, V(C.nightDeep)); p(wx + 3, wy + 1, 2, 1, V(C.nightDeep));
-  p(wx + 2, wy + 4, 2, 2, V('#2a2650')); p(wx + 4, wy + 3, 1, 9, STONE[3]);                               // a hint of the sky in its panes, and the mullion
+  p(wx + 2, wy + 4, 2, 2, PANE_SKY); p(wx + 4, wy + 3, 1, 9, STONE[3]);                               // a hint of the sky in its panes, and the mullion
   p(wx - 1, wy + 13, 10, 1, STONE[dim]); p(wx - 1, wy + 14, 10, 1, STONE[3]);
   // under it: rings of stone that step in, each lit along its top, and a drop at the point
   for (let s = 0; s < 4; s++) {

@@ -90,6 +90,7 @@ const FLAMES = [
 // the upper left like the windows; the anchor is the middle of its sill's
 // foot.
 export const NICHE = { w: 14, h: 22 };
+const NICHE_GLINT = '#1f2f36';      // a breath of light in the recess's upper left corner
 const NICHE_ROWS = [
   '....SSSSSS....', '..SSssssssSx..', '.Ssddddddddsx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.',
   '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.', '.sddddddddddx.',
@@ -103,7 +104,7 @@ const FIGURES = [
 function drawNiche(t, figure) {
   stamp(t, 0, 0, NICHE_ROWS, { S: C.stoneLight, s: C.stone, x: C.stoneDark, H: C.stoneHi, d: C.wallDeep, c: CAST });
   stamp(t, 3, 4, FIGURES[figure], { h: C.stoneLight, b: C.stone, a: C.stoneHi, i: C.stoneHi, s: C.stoneLight, k: C.wallDeep });
-  t.p(3, 3, 3, 2, '#1f2f36'); t.p(3, 5, 1, 3, '#1f2f36');      // a breath of light in the recess's upper left corner
+  t.p(3, 3, 3, 2, NICHE_GLINT); t.p(3, 5, 1, 3, NICHE_GLINT);
 }
 
 // --- the clock --------------------------------------------------------------------------

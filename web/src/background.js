@@ -134,12 +134,13 @@ const WOOD = { fade: 600, shelves: 0.62, shelf: [120, 0.8], window: [150, 0.7], 
 const GLOWS = ['#8ff5dc', '#ffd596', '#ffd34a'];      // the colours of what goes into `glows`: mushrooms, a window, an owl
 // More on the wall's face (art/hung.js): a niche's sill and the clock's middle this far above the storey's sill (layer
 // px). Doves (DOVES): the share of storeys that have some on their string course (below the treeline, above it), how
-// near somebody must climb before they fly up (px under their course), how fast they go (px/s sideways and up), how
+// near somebody must climb before they fly up (px under their course in the picture; if he is `past` them by more
+// than that already, they stay), how fast they go (px/s sideways and up), how
 // fast their wings beat (frames a second) and for how long one sees them go (s).
 const FACE = { nicheUp: 52, clockUp: 156 };
-const DOVES = { share: [0.16, 0.34], near: 420, fly: [150, 210], beat: 9, time: 2.6 };
+const DOVES = { share: [0.16, 0.34], near: 420, past: 160, fly: [150, 210], beat: 9, time: 2.6 };
 const QUARTER = Math.PI / 2;
-const FIRST_DOVE = 3;             // the lowest storey doves sit on: above the lawn's picture
+const FIRST_DOVE = 4;             // the lowest storey doves sit on: above the lawn's picture on the tallest screen (as towerwall.js FIRST_STOREY)
 const SIDES = [-1, 1], FLIP = { flip: true }, FLIP_SHADE = { flip: true, tint: '#a6b0b6' }, SOFT_ADD = { soft: true, blend: 'add' }, HALO_GLOW = { glow: 0.5 };      // (the right gargoyle is round the tower from the light)
 
 export class Background {
@@ -186,6 +187,7 @@ export class Background {
   // its theme's recipe, and when the theme comes round again what that leaves open is rolled from the round's seed).
   // setWall(null) gives the tower its own plan back.
   setWall(st, cam) {
+    this.doves.clear();      // (a stage is another piece of the tower, though it may be built at heights he has climbed before)
     if (!st) { this.wall = null; return; }
     const R = stageRecipe(st, this.wallSeed || 0);
     this.wall = stageWall(R, Math.floor(cam.layerY(PARALLAX_TOWER) / TILE_H), st.n, R.roses);
@@ -431,9 +433,13 @@ export class Background {
       if ((h % 1000) / 1000 >= DOVES.share[ly / PARALLAX_TOWER < TREELINE_Y ? 0 : 1]) continue;
       const m = wall.markAt(i), w = windowAt(i), side = w.side === 'L' ? 'R' : 'L', dir = side === 'L' ? -1 : 1;
       if ((m && m.kind === 'ring') || blockedBy({ side, ly: sill }, blockers)) continue;
+      const sy = H - (ly - camF) + cam.oy;
       let t0 = this.doves.get(i);
-      if (t0 === undefined && pl && pl.alive && pl.y + pl.h > ly / PARALLAX_TOWER - DOVES.near) { t0 = time; this.doves.set(i, time); }
-      const t = t0 === undefined ? -1 : time - t0, sy = H - (ly - camF) + cam.oy;
+      if (t0 === undefined && pl && pl.alive) {      // (by where both are in the picture: the wall goes by more slowly than he climbs)
+        const under = cam.sy(pl.y + pl.h) - sy;
+        if (under < DOVES.near && under > -DOVES.past) { t0 = time; this.doves.set(i, time); }
+      }
+      const t = t0 === undefined ? -1 : time - t0;
       if (t > DOVES.time) continue;
       for (let n = 0, count = 1 + ((h >>> 10) % 3); n < count; n++) {
         const hn = hash(h + n * 13), x = W / 2 + dir * (62 + n * 44 + (hn % 22)) + cam.ox, left = (hn & 4) > 0;
@@ -502,10 +508,12 @@ export class Background {
         }
       } else if (m.kind === 'turret') {
         // a stair turret: its foot under the first of its storeys, a shaft for each, its cone over the last
+        // (where a balcony or a gate is in its way it ends under it with a cone and begins again above it: turretOk)
+        if (!this.turretOk(m, i, blockers)) continue;
         const left = m.side === 'L', P = left ? A.turret.L : A.turret.R, x = W / 2 + (left ? -1 : 1) * TOWER_W / 2 + cam.ox, top = sy - WINDOW_STOREY;
-        if (m.j === 0) g.blit(P.foot, x, sy);
+        if (m.j === 0 || !this.turretOk(m, i - 1, blockers)) g.blit(P.foot, x, sy);
         g.blit(P.shaft, x, sy);
-        if (m.j === m.n - 1) {
+        if (m.j === m.n - 1 || !this.turretOk(m, i + 1, blockers)) {
           g.blit(P.cap, x, top);
           if (caps > 0.01) { const cx = x - P.cap.ax + TURRET.w * PX / 2, y0 = top - P.cap.ay; g.rect(cx - 2 * PX, y0 + 5 * PX, 4 * PX, 3 * PX, SNOW_COLOR, caps); g.rect(cx - 4 * PX, y0 + 8 * PX, 6 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(cx - 7 * PX, y0 + 12 * PX, 5 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(cx - 14 * PX, y0 + 23 * PX, 9 * PX, PX, SNOW_COLOR, caps); }
         }
@@ -529,6 +537,19 @@ export class Background {
     }
   }
 
+  // Whether storey i of a stair turret stands: not where a balcony or a gate sits on its side at that storey or at
+  // the one above (its shaft runs up to that one's course, and its cone would stand there), and in the opening story
+  // not so near the tower's top that its cone would reach Rapunzel's window. So a turret keeps clear of them storey
+  // by storey: it ends under a balcony and begins again above it. (Only these two storeys are asked: both are built
+  // by the time the storey comes into the picture, so a turret never changes while one looks at it.)
+  turretOk(m, i, blockers) {
+    for (let k = i; k <= i + 1; k++) {
+      const sill = WINDOW_FIRST + k * WINDOW_STOREY;
+      if ((this.top && sill + TURRET.cap * PX > this.top.sill - 520) || blockedBy({ side: m.side, ly: sill }, blockers)) return false;
+    }
+    return true;
+  }
+
   // What stands out at the wall's edges (towerwall.js `edge`): a pair of gargoyles at the ends of every second
   // storey's string course, none on a side where a balcony or a gate sits. After the wall's veil: they stand out past
   // the wall's edge, and have the veil in their tones. When it rains, the course's water runs out of their mouths;
@@ -543,9 +564,9 @@ export class Background {
       const sy = H - (ly - camF) + cam.oy;
       for (const dir of SIDES) {
         const side = dir < 0 ? 'L' : 'R';
-        if ((m && m.side === side && m.kind !== 'clock') || blockedBy({ side, ly: sill }, blockers)) continue;
-        const up = wall.markAt(i - 1);
-        if (up && up.kind === 'turret' && up.side === side) continue;      // (the turret goes on past this course, or its cone stands on it)
+        if ((m && m.side === side && m.kind === 'oriel') || blockedBy({ side, ly: sill }, blockers)) continue;
+        const up = wall.markAt(i - 1);      // (a turret begins on this course, goes on past it, or its cone stands on it)
+        if ((m && m.kind === 'turret' && m.side === side && this.turretOk(m, i, blockers)) || (up && up.kind === 'turret' && up.side === side && this.turretOk(up, i - 1, blockers))) continue;
         const sx = W / 2 + dir * TOWER_W / 2 + cam.ox;
         g.blit(A, sx, sy, dir < 0 ? undefined : FLIP_SHADE);
         if (caps > 0.01) for (const [x, y, w] of G.snow) g.rect(dir < 0 ? sx - (G.edge - x) * PX : sx + (G.edge - x - w) * PX, sy + (y - G.top - 1) * PX, w * PX, PX, SNOW_COLOR, caps);

@@ -10,7 +10,7 @@
 //   ?spawn=scissors  with ?at: plan a braid cut right above the start (the witch comes at once)
 //   ?spawn=star      that power-up right above the prince (star|cloak|spring|magnet|feather)
 //   ?spawn=bat       a bat under the next healthy branch above the prince
-//   ?spawn=dark      (inside) with ?at: a dark stretch begins five metres above the start
+//   ?spawn=dark      with ?at: inside, a dark stretch begins five metres above the start; outside, the dark wood does (world.js WOOD)
 //   ?spawn=gate      with ?at (below 400 m): a gate to the other place right above the start
 //   ?spawn=vault     (inside) with ?at: a golden door to the treasury right above the start (vault1 to vault6: the room begins with that section)
 //   ?spawn=chimney   (inside) with ?at: a fireplace right above the start, the way into Lord Springalot's chimney (chimney.js)
@@ -22,10 +22,11 @@
 //   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
 //   ?dev=1           show altitude, zone and the wall's recipe (outside) in the corner
 //   ?veil=0.5        how strongly the tower's wall is set back outside (0 not at all, up to 0.9; background.js TOWER_VEIL)
-//   ?wall=ivy        one recipe of the tower's wall all the way up: what it is built of (stone|worn|mended), what grows on it
-//                    (ivy|moss|briar), what hangs on it (lanterns|banners), what stands out at its edges (gargoyles), its
-//                    landmarks (rings|oriels|both), or several (stone+ivy+lanterns+gargoyles+both); plain: none of them
-//                    (towerwall.js)
+//   ?wall=ivy        one recipe of the tower's wall all the way up: what it is built of (stone|worn|mended|slate|timber), what
+//                    grows on it (ivy|moss|briar|wisteria), what hangs on it (lanterns|banners|torches|niches), what runs
+//                    under its string courses (arches|dentils|checker|tiles), what stands out at its edges (gargoyles), its
+//                    landmarks (rings|oriels|both|clocks|turrets|all), or several (stone+ivy+lanterns+gargoyles+both);
+//                    plain: none of them (towerwall.js)
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 //   ?stages=1        the tower in stages for this visit (0: the endless game), whatever the title's choice (stages.js)
 //   ?stage=3         start at the door into that stage (the first is 1)

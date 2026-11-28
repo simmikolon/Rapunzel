@@ -27,9 +27,13 @@ export const STORY = {
   throwAt: 4.1,          // the braid is let down
   // The braid's end on its way down: seconds after the throw, and the height
   // it has reached (m of climb; the first is the sill). Where two heights
-  // lie close together it goes slowly: a look at the roses in the evening
-  // sky, at the ivy between the windows, at the white roses in the deep
-  // forest; the last stretch passes the masons' site and the red roses.
+  // lie close together it goes slowly: a look at the roses on the crumbling
+  // wall in the evening sky, at the ivy between the windows, at the moss on
+  // the old stones in the deep forest. What is there to look at is `wall`:
+  // the story's tower is always the same one (towerwall.js TowerPlan, by this
+  // seed), chosen so that each of the three looks has a section of its own
+  // before it. (Another seed, or other heights: look at the three again.)
+  wall: 2826,
   fall: [[0, null], [0.8, 700], [1.9, 564], [2.7, 551], [3.8, 314], [4.6, 302], [5.5, 214], [6.3, 202], [7.7, 13], [8.6, -3]],
   answer: 0.2,           // after the braid has come down the prince answers ...
   settle: 1.5,           // ... and this long after it has, the title follows
@@ -95,6 +99,8 @@ export class Story {
     show.audio = QUIET;
     show.forceWeather = this.real.weatherKind();      // the weather of the lawn it ends on, all the way down (around Christmas it snows on her tower too)
     show.reset((Math.random() * 0x7fffffff) | 0, 'outside');
+    show.bg.rollWall(STORY.wall);      // the story's own tower, whatever the round's is
+    show.bg.setWood(null);             // and no dark wood on the way down: nobody is there to carry a light
     show.platforms = show.platforms.filter((p) => p.kind === 'ground');
     show.enemies.length = 0; show.pickups.length = 0; show.fields.length = 0;
     const from = Math.max(isFinite(real.level.nextY) ? real.level.nextY : 0, ...real.platforms.map((p) => p.y + 420));
@@ -111,7 +117,7 @@ export class Story {
     const plan = show.bg.plan, plain = (k) => !plan.skinAt(k) && !plan.growthAt(k);
     while (k0 > 0 && !(plain(k0) && plain(k0 - 1))) k0--;
     const roses = stageWall({ growth: 'briar' }, k0, 3, 0);
-    show.bg.wall = { skinAt: (k) => (k >= k0 ? null : plan.skinAt(k)), growthAt: (k) => (k >= k0 ? roses.growthAt(k) : plan.growthAt(k)), hungAt: (i) => plan.hungAt(i), edgeAt: (i) => plan.edgeAt(i), markAt: (i) => plan.markAt(i) };
+    show.bg.wall = { skinAt: (k) => (k >= k0 ? null : plan.skinAt(k)), growthAt: (k) => (k >= k0 ? roses.growthAt(k) : plan.growthAt(k)), hungAt: (i) => plan.hungAt(i), edgeAt: (i) => plan.edgeAt(i), markAt: (i) => plan.markAt(i), courseAt: (i) => plan.courseAt(i) };
   }
 
   // Where the view's lower edge is (the prince's plane, px) with the braid's end at layer height `end`.
