@@ -18,7 +18,7 @@ const open = async (url) => {
 };
 const state = (page) => page.evaluate(() => {
   const w = window.game.world, st = w.level.stage, pl = w.player;
-  return { mode: window.game.mode, place: w.place.name, stage: st ? st.n + 1 : 0, end: !!(st && st.end), cap: w.cam.cap, camY: Math.round(w.cam.y), y: Math.round(pl.y), alive: pl.alive, hearts: pl.hearts, h: w.heightM, retries: w.retries, lives: w.lives, wall: w.level.stage ? w.level.stage.wall || 'plain' : '', key: st ? st.key : '', over: w.over, toast: w.toasts.map((t) => t.text).join('|') };
+  return { mode: window.game.mode, place: w.place.name, stage: st ? st.n + 1 : 0, end: !!(st && st.end), cap: w.cam.cap, camY: Math.round(w.cam.y), y: Math.round(pl.y), alive: pl.alive, hearts: pl.hearts, h: w.heightM, retries: w.retries, lives: w.lives, wall: w.level.stage ? [w.level.stage.wall, w.level.stage.growth].filter(Boolean).join('+') || 'plain' : '', key: st ? st.key : '', over: w.over, toast: w.toasts.map((t) => t.text).join('|') };
 });
 {
   // the title: a fresh save plays the tower in stages; T, O and I pick the climb

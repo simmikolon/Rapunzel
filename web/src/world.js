@@ -98,6 +98,7 @@ export class World {
     this.scoreBase = 0;           // in stages: what he had climbed before the stage he is in (px), and the height that stage began at
     this.scoreFrom = 0;
     this.bg.reset(new RNG(seed == null ? undefined : hash(seed + 3)));
+    this.bg.rollWall(seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 13));      // the tower's wall (towerwall.js): another tower every round
     this.time = 0;
     this.platforms = [new Platform('ground', 0)];
     this.enemies = [];
@@ -109,7 +110,7 @@ export class World {
     this.player.be(this.who);
     this.player.reset(0, 0);
     this.level.reset();
-    if (this.route) { const st = this.level.stage; this.bg.setWall(st.wall, this.cam, st.n, st.roses); } else this.bg.setWall(null);      // a stage has a wall of its own
+    this.bg.setWall(this.route ? this.level.stage : null, this.cam);      // a stage has a wall of its own
     // the weather (weather.js): its fronts in the endless tower and its gusts come from the round's seed
     this.weatherSeed = seed == null ? (Math.random() * 0x7fffffff) | 0 : hash(seed + 10);
     this._winter = null;      // (a round begun on the first of December finds the lawn snowed in)
@@ -450,7 +451,7 @@ export class World {
     this.platforms.push(door);
     pl.x = door.x; pl.y = y; pl.prevY = y; pl.maxY = y; pl.landedOn = door;
     this.scoreBase = base; this.scoreFrom = y; this.topY = y;
-    this.bg.setWall(st.wall, this.cam, st.n, st.roses);
+    this.bg.setWall(st, this.cam);
     this.level.enterStage({ ...st, base }, y, BEAT * 0.9);
     this.bg.weather.want(this.weatherKind(), true);      // the next stage's weather is there when the picture opens
     this.level.generateUpTo(this.cam.top + 900);

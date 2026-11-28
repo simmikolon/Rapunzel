@@ -1,7 +1,7 @@
 import { W, H, SAFE, CAMERA_START_Y, PARALLAX_TOWER, PLAYER_H } from './config.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { World } from './world.js';
-import { towerAreaAt, stageWall } from './towerwall.js';
+import { stageWall } from './towerwall.js';
 import { audio } from './audio.js';
 import { clamp, easeOutBack } from './util.js';
 
@@ -108,9 +108,10 @@ export class Story {
     show.bg.top = { ly: this.topLy, sill: this.sillLy, look: this.look };
     // Roses have climbed to her window: the tower's own wall up to the last plain stretch below it, briar with red roses from there.
     let k0 = STORY.topTile - 12;
-    while (k0 > 0 && (towerAreaAt(k0) || towerAreaAt(k0 - 1))) k0--;
-    const roses = stageWall('briar', k0, 3, 0);
-    show.bg.wall = (k) => (k >= k0 ? roses(k) : towerAreaAt(k));
+    const plan = show.bg.plan, plain = (k) => !plan.skinAt(k) && !plan.growthAt(k);
+    while (k0 > 0 && !(plain(k0) && plain(k0 - 1))) k0--;
+    const roses = stageWall({ growth: 'briar' }, k0, 3, 0);
+    show.bg.wall = { skinAt: (k) => (k >= k0 ? null : plan.skinAt(k)), growthAt: (k) => (k >= k0 ? roses.growthAt(k) : plan.growthAt(k)) };
   }
 
   // Where the view's lower edge is (the prince's plane, px) with the braid's end at layer height `end`.

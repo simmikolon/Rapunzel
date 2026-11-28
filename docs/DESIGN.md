@@ -806,8 +806,9 @@ is a pool to draw from, not a promise.
   its place, the height of the endless tower it is taken from (`at`:
   the zone and its creatures, the trees, the forest behind, the sky
   and the light, the floor of the tower inside all come with that
-  height), how long it is, the look of the tower's wall (one look for
-  the whole stage; the looks no longer mix), whether the lights are
+  height), how long it is, the tower's wall (a recipe for the whole
+  stage: what it is built of and what grows on it, see "the wall in
+  sections" under FX and atmosphere), whether the lights are
   out (inside: the dark is a stage of its own, the other stages stay
   lit) and whether a golden door stands in it. `STAGES.route` is the
   order of a round's first stages and `STAGES.loop` what follows,
@@ -823,7 +824,7 @@ is a pool to draw from, not a promise.
   | 2 | the hall | inside | 4 m | 114 m | | golden door |
   | 3 | the rose wall | outside | 18 m | 95 m | briar, red roses | |
   | 4 | the guard rooms | inside | 124 m | 100 m | | |
-  | 5 | the deep forest | outside | 128 m | 105 m | moss | |
+  | 5 | the deep forest | outside | 128 m | 105 m | old stone, moss | |
   | 6 | the dark rooms | inside | 136 m | 95 m | | the lights are out |
   | 7 | the masons' site | outside | 256 m | 100 m | mended | |
   | 8 | the library | inside | 254 m | 130 m | | golden door |
@@ -832,10 +833,12 @@ is a pool to draw from, not a promise.
 
   After these: the crumbling tower (outside, 262 m, crumbling wall),
   the hall, the deep forest, the dark rooms, the night sky (outside,
-  705 m, briar with white roses), the guard rooms, the ivy wall
-  (outside, 24 m), the library, above the trees, the belfry, the rose
-  wall, the dark rooms, the masons' site, the guard rooms, and round
-  again.
+  705 m, old stone, briar with white roses), the guard rooms, the ivy
+  wall (outside, 24 m), the library, above the trees, the belfry, the
+  rose wall, the dark rooms, the masons' site, the guard rooms, and
+  round again. From here on a theme's wall is not as it was the first
+  time: the part its recipe leaves open is rolled from the round's
+  seed (the ivy wall on old stone, the crumbling tower mossy).
   **Hearts and lives.** The three hearts are the health inside a
   stage. A round has three lives on top (`STAGES.lives`, shown as
   three little princes under the stage's number): a fall or the last
@@ -955,11 +958,10 @@ is a pool to draw from, not a promise.
   broken), old big stones (rough blocks two courses high), and mossy
   (moss in the joints in patches, cushions, water marks). Down in the
   forest it is mostly ivy and moss, higher up crumbling wall and old
-  stone, and above the trees only the roses (below) still grow. The
-  plan is fixed, like
-  the windows: the tower is the same in every round. An area thins out
-  into the plain wall at both ends; ivy and moss lie over the plain
-  tiles, and the windows are cut into them.
+  stone. An area thins out into the plain wall at both ends; ivy and
+  moss lie over the tiles under them, and the windows are cut into
+  them. Which area is where, and which two share a stretch, is rolled
+  for every round (the wall in sections, below).
 - ✅ the masons' site, a fifth look of the wall (`mended`): somebody is
   mending the tower, or was. Holes where the facing has come away with
   boards nailed over them (two crossed, three that are none of them
@@ -997,6 +999,36 @@ is a pool to draw from, not a promise.
   beside a window it is left out, not moved. The canes and leaves lie
   over the plain tiles like the ivy. Purely for the eye: nothing in
   the simulator.
+- ✅ the wall in sections (`src/towerwall.js`; `element/tower-sections`):
+  a stretch of the wall is a section, and a section is a recipe with
+  two parts that know nothing of each other: what the wall is built
+  of there (old big stones, crumbling, the masons' site; or the plain
+  bricks) and what grows on it (ivy, moss, briar roses; or nothing).
+  What grows is laid over what is built, whatever that is, so the six
+  looks are fifteen walls and not a sprite was added: ivy on old
+  stone, moss in a crumbling wall, white roses on old stone, the
+  masons' site overgrown. The two parts do not begin and end
+  together: ivy does not know where the masonry changes. The endless
+  tower rolls its sections from the round's seed, so every round
+  climbs another tower; only its foot is always the same (old stone
+  from the lawn up, and plain wall above it for as far as one sees
+  from the lawn). What a height can have is a table (`RECIPES`: ivy
+  and moss down in the forest, crumbling walls, repairs and old stone
+  higher up; above the trees ivy still climbs, and moss is only where
+  old stone or a crumbling wall holds the damp), how well two parts
+  go together another (`PAIRS`: old walls are what things like to
+  grow on, a site somebody works on is mostly kept clear), and no
+  section has the skin or the growth of the one before it. About
+  half the wall is plain between them. In stages a theme has a recipe
+  (`wall`, `growth` in `THEMES`): the deep forest is old stone with
+  moss, the night sky old stone with white roses, and when a theme
+  comes round again after the last stage the part it leaves open is
+  rolled. `?wall=stone+ivy` shows a recipe all the way up, `?dev=1`
+  names the wall at the prince's height. It is the frame for what
+  comes next, more parts to a recipe: 💡 what hangs on the wall
+  (lanterns, banners, gargoyles), the windows' looks, a landmark, and
+  the weather on the tower itself. Purely for the eye: nothing in the
+  simulator.
 - ✅ the tower's foot (`art/tower.js` drawFoot; `element/tower-foot`):
   where the tower stands on the lawn. A plinth of dressed stone, round
   as the wall is: a footing in the grass, two courses of smooth blocks
@@ -1225,7 +1257,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The weather | rain: 90 / 96 / 30 streaks far, mid, near (a storm half as many again); snow: 200 / 160 / 42 flakes; layers go by at 0.7, 0.95 and 1.25 to 1.3 of the camera's climb; a weather fades out and in over 2.2 s; a storm's gust: 3.5 to 6.5 s calm, 0.9 s in which the curls already show, 1.8 to 2.8 s of blow that carries the prince at up to 230 px/s (200 to 320 px a gust, by its length, if he does not steer against it); a storm takes half the colour out of the picture; lightning every 5 to 14 s, black and white for some 0.2 s; a storm over an outside stage from the third on with a chance of 0.3, drawing up 25 to 50 % into the stage and gone 15 m under its end (some 45 to 50 m of storm); one weather goes over into the next in 3 s, a storm draws up and passes in 5; the endless tower's storms by the clock: first after 35 to 60 s, 18 to 28 s long, 16 to 24 s of sun after, 50 to 100 s calm between; winter: 1 December to 6 January; fronts in the endless tower are 90 m high, the first always clear |
 | The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world; told again at a start: in the app every start, in a browser never (`STORY.again`, hours since it was last told) |
 | Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); areas: plain wall for 6–14 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), then an area of its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times); what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=ivy|worn|stone|moss|mended|briar|plain` shows one look all the way up (the briar in each of its colours in turn) |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); sections (`src/towerwall.js`): plain wall for 5–11 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), the first section from tile 10 at the lowest, then a section of one or two areas, each its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times), what grows beginning 2 tiles under to 3 above the masonry's first tile; the weights of a recipe by height in `RECIPES` and `PAIRS`; 24 sections and 55 % of the wall in the first 1000 m; in a stage each part in stretches with 2–4 plain tiles between; what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=stone+ivy` (or one of `stone|worn|mended`, one of `ivy|moss|briar`, or `plain`) shows one recipe all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -3363,3 +3395,59 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
   merged). Simon: all of it fits; merge. Nothing was changed after his
   look. The branch stays. Left open, and on the status page: snow on
   the tower itself, and the landing page's tower, which has no foot.
+- 2026-11-28: The wall in sections (`element/tower-sections`). Simon:
+  the tower wants more variation outside, most of all in the endless
+  game and for those who get far, from parts that can be put together
+  anew into sections, into stages, and with the weather. A look at
+  what there is found three things. The variety gets less with the
+  height: above the trees ivy and moss ended, four looks were left,
+  no trees, and the tower a straight column before the sky; from
+  700 m on it is night and nothing new comes. The wall could have one
+  look at a time. And everything hangs on the height: a stage chooses
+  a height, one look and a weather. The plan, in this order (Simon:
+  all of it, in steps, for the eye only for now): this frame; things
+  that hang on the wall above the trees and answer to the weather and
+  the time of day (lanterns, banners, gargoyles); the tower's outline
+  (a gallery ring, an oriel); the sky past 700 m. Also noted: more
+  looks for the windows, weather on the tower itself (snow on sills
+  and string courses), the trees (carved hearts, a tree house, a
+  blossom or autumn stretch, a tree growing out of the wall with a
+  branch to land on).
+  - A section is a recipe of two parts, what the wall is built of and
+    what grows on it. What grows was laid over the plain tiles
+    already, so it lies over old stone, a crumbling wall or the
+    masons' site as well: fifteen walls from six looks and no new
+    sprite. Tried first with a hook that was thrown away, then built.
+  - Rolled from the round's seed, from the lawn up: every round climbs
+    another tower. The plan used to be fixed, chosen by looking (roses
+    the first thing one meets, the masons' site the second), so that
+    the tower is a place the youngest get to know; Simon set that
+    aside for now. What is not rolled is the foot and the wall one
+    sees from the lawn, so the title and a round's first picture are
+    the same wall whatever comes above.
+  - The wall's seed is a stream of its own (`hash(seed + 13)`), so the
+    simulator's rounds are what they were.
+  - Above the trees ivy climbs again, and moss is where old stone or a
+    crumbling wall holds the damp. Before, only the roses grew there
+    (the sun is on the wall); but that is where the wall was poorest.
+  - No section has the skin or the growth of the one before it, which
+    is the old rule (never the look of the area before) for two parts.
+  - Plain wall between two sections for 5 to 11 tiles (6 to 14 before):
+    24 sections and 55 % of the wall in the first 1000 m. The plain
+    wall stays about half of it: it is what the sections are seen
+    against.
+  - Stages: a theme says `wall` (what it is built of) and `growth`
+    (what grows). The deep forest is old stone with moss now and the
+    night sky old stone with white roses; the other themes are laid
+    tile for tile as they were. When a theme comes round again after
+    the last stage, the part it leaves open is rolled and never left
+    open, so the loop is not the same wall twice.
+  - The opening story's tower is its own world's rolled wall, with
+    the roses under her window as before.
+  - Nothing new is drawn per frame and no sprite was added: the atlas
+    and the 60 MB at the start are as they were.
+  - Checks: the five reports on fixed seeds are exactly as they were
+    (`identity.sh`: the wall is not in the simulator); `flow`,
+    `stages`, `story`, `settings` and `atlas` pass.
+  - Seen in still pictures of a headless browser only: ten sections of
+    one rolled tower from 95 to 895 m, and ten stages at their doors.

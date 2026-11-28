@@ -20,9 +20,10 @@
 //   ?spawn=web       (inside) a spider's web under the next healthy ledge above the prince (a ledge is made if none is in view)
 //   ?spawn=flock     with ?at: a flock of starlings a dozen metres above the start
 //   ?place=inside    the round is climbed inside the tower (or outside), whatever the title's choice
-//   ?dev=1           show altitude and zone in the corner
+//   ?dev=1           show altitude, zone and the wall's recipe (outside) in the corner
 //   ?veil=0.5        how strongly the tower's wall is set back outside (0 not at all, up to 0.9; background.js TOWER_VEIL)
-//   ?wall=ivy        one look of the tower's wall all the way up (ivy|worn|stone|moss|mended|briar; plain: none of them)
+//   ?wall=ivy        one recipe of the tower's wall all the way up: what it is built of (stone|worn|mended), what grows on it
+//                    (ivy|moss|briar), or both (stone+ivy); plain: neither (towerwall.js)
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 //   ?stages=1        the tower in stages for this visit (0: the endless game), whatever the title's choice (stages.js)
 //   ?stage=3         start at the door into that stage (the first is 1)
@@ -110,7 +111,7 @@ export function startStage(world, n) {
   world.level.beginStage();
   startAt(world, st.from / PX_PER_METER, '', true);
   world.scoreBase = base; world.scoreFrom = st.from; world.topY = st.from;
-  world.bg.setWall(st.wall, world.cam, st.n, st.roses);
+  world.bg.setWall(st, world.cam);
   world.nextMilestone = Math.floor(world.heightM / 100) * 100 + 100;
   // the branch startAt put under him stands in for the door
   const start = world.platforms.find((q) => q.kind !== 'ground' && Math.abs(q.y - (st.from - 10)) < 1);
@@ -184,5 +185,5 @@ export function spawnNear(world, element) {
 
 export function devLabel(world) {
   const st = world.route && world.level.stage;
-  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}${st ? `  stage ${st.n + 1} ${st.key}: at ${Math.round(world.player.maxY / PX_PER_METER)} of ${Math.round(st.from / PX_PER_METER)}-${Math.round(st.to / PX_PER_METER)} m` : ''}`;
+  return `${world.heightM} m  ${world.vault ? 'the treasury' : zoneAt(world.player.maxY, world.level.zones).name}  e${world.enemies.length}${st ? `  stage ${st.n + 1} ${st.key}: at ${Math.round(world.player.maxY / PX_PER_METER)} of ${Math.round(st.from / PX_PER_METER)}-${Math.round(st.to / PX_PER_METER)} m` : ''}${world.place.inside || world.vault ? '' : `  wall ${world.bg.wallName(world.cam, world.player.y - world.cam.y)}`}`;
 }

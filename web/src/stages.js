@@ -20,11 +20,16 @@ import { clamp } from './util.js';
 //           the sky and its light, the floor of the tower inside. A stage is
 //           built at that height in the world; the score is counted apart.
 //   len     how long it is (m)
-//   wall    (outside) the look of the tower's wall for the whole stage: one of
-//           art/tower.js TOWER_AREAS (ivy, worn, stone, moss, mended, briar),
-//           'foot' (plain wall over the tower's foot of old stone) or none
-//           (plain). The looks do not mix: a stage has one.
-//   roses   (with wall 'briar') the roses' colour: 0 red, 1 white, 2 old rose
+//   wall    (outside) what the tower's wall is built of for the whole stage:
+//           'stone' (old big stones), 'worn' (crumbling), 'mended' (the
+//           masons' site), 'foot' (plain wall over the tower's foot of old
+//           stone) or none (the plain bricks)
+//   growth  (outside) what grows on it: 'ivy', 'moss', 'briar' or none.
+//           The two make the stage's recipe (towerwall.js): what grows comes
+//           and goes over what is built. The first time a theme is climbed
+//           it is as written here; when it comes round again (`loop`) the
+//           part it leaves open is rolled from the round's seed.
+//   roses   (with growth 'briar') the roses' colour: 0 red, 1 white, 2 old rose
 //   dark    (inside) the lights are out for the whole stage; in the others
 //           they stay on
 //   vault   (inside) a golden door to the treasury stands in it
@@ -37,13 +42,13 @@ import { clamp } from './util.js';
 export const THEMES = {
   // outside
   lawn:      { name: 'the forest floor', place: 'outside', at: 0, len: 60, wall: 'foot' },
-  roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, wall: 'briar', roses: 0, weather: 'golden' },
-  ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, wall: 'ivy', weather: 'rain' },
-  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'moss', weather: 'rain' },
+  roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, growth: 'briar', roses: 0, weather: 'golden' },
+  ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, growth: 'ivy', weather: 'rain' },
+  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', weather: 'rain' },
   site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended', weather: 'snow' },
   crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', weather: 'storm' },
   sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'stone' },
-  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'briar', roses: 1, weather: 'snow' },
+  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'stone', growth: 'briar', roses: 1, weather: 'snow' },
   // inside
   // (a stage stays inside one band of the tower's floors, 0, 120, 250 and 400 m: the floor is its furniture)
   hall:      { name: 'the hall', place: 'inside', at: 4, len: 114, vault: true },
@@ -69,12 +74,14 @@ export const STAGES = {
   lives: 3,
 };
 
-// Stage n of a route (0 is the first): its theme's fields and { n, key, from,
-// to } with `from` and `to` the heights in the world it is built between.
+// Stage n of a route (0 is the first): its theme's fields and { n, key, lap,
+// from, to } with `from` and `to` the heights in the world it is built
+// between and `lap` 0 for the stages of `route`, 1 the first time round
+// `loop`, 2 the second.
 export function stageAt(route, n) {
-  const key = n < route.route.length ? route.route[n] : route.loop[(n - route.route.length) % route.loop.length];
+  const R = route.route.length, key = n < R ? route.route[n] : route.loop[(n - R) % route.loop.length];
   const T = THEMES[key], from = T.at * 100;
-  return { ...T, n, key, from, to: from + T.len * 100 };
+  return { ...T, n, key, lap: n < R ? 0 : 1 + Math.floor((n - R) / route.loop.length), from, to: from + T.len * 100 };
 }
 
 // The pacing inside a stage (level.js pacingAt gives the endless game's

@@ -3,7 +3,7 @@ import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
 import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
-import { towerAreaAt, towerAreaForced, stageWall } from './towerwall.js';
+import { TowerPlan, stageWall, stageRecipe, forcedWall } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
 import { PAL as C } from './palette.js';
 import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleAt, TREELINE_Y, cloudAmount, lanternAmount } from './altitude.js';
@@ -114,8 +114,9 @@ export class Background {
   constructor(art) {
     this.art = art;
     this.towerVeil = { ...TOWER_VEIL };
-    this.forceWall = null;       // dev (?wall=): one look of the wall all the way up, or 'plain' for none
-    this.wall = null;            // in stages: the wall of the stage he is in, tile by tile (setWall); null: the tower's own plan
+    this.plan = new TowerPlan();   // the endless tower's wall, section by section (towerwall.js): rolled anew for every round (rollWall)
+    this.wall = null;            // in stages: the wall of the stage he is in (setWall); null: the tower's own plan
+    this.forceWall = null;       // dev (?wall=): one recipe all the way up instead of either (forceRecipe)
     this.top = null;             // the opening story (story.js): where the tower ends, { ly: the wall's upper edge, sill: Rapunzel's window, look: { dy, blink } } (layer px); null: it has no end
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
@@ -134,9 +135,23 @@ export class Background {
 
   // Where the round is climbed (places.js): the world says so before every reset.
   setPlace(place) { this.place = place; }
-  // In stages: the look of the tower's wall for the stage that begins with the camera where it is (towerwall.js
-  // stageWall; `kind` undefined is plain wall). setWall(null) gives the tower its own plan back.
-  setWall(kind, cam, seed = 0, n = 0) { this.wall = kind === null ? null : stageWall(kind, Math.floor(cam.layerY(PARALLAX_TOWER) / TILE_H), seed, n); }
+  // The endless tower's wall for a round: another tower from every seed (towerwall.js TowerPlan).
+  rollWall(seed) { this.plan = new TowerPlan(seed); this.wallSeed = seed; }
+  // In stages: the tower's wall for the stage `st` that begins with the camera where it is (towerwall.js stageWall:
+  // its theme's recipe, and when the theme comes round again what that leaves open is rolled from the round's seed).
+  // setWall(null) gives the tower its own plan back.
+  setWall(st, cam) {
+    if (!st) { this.wall = null; return; }
+    const R = stageRecipe(st, this.wallSeed || 0);
+    this.wall = stageWall(R, Math.floor(cam.layerY(PARALLAX_TOWER) / TILE_H), st.n, R.roses);
+  }
+  // dev (?wall=stone+ivy, ?wall=ivy, ?wall=plain): that recipe all the way up.
+  forceRecipe(name) { this.forceWall = name ? forcedWall(name) : null; }
+  // dev (?dev=1): the wall's recipe `up` px above the picture's lower edge, in words ('stone+ivy', 'plain').
+  wallName(cam, up) {
+    const wall = this.forceWall || this.wall || this.plan, k = Math.floor((cam.layerY(PARALLAX_TOWER) + up) / TILE_H), skin = wall.skinAt(k), growth = wall.growthAt(k);
+    return [skin && skin.kind, growth && growth.kind].filter(Boolean).join('+') || 'plain';
+  }
   get inside() { return !!this.place && this.place.inside; }
   skyColors(cam) { return skyAt(cam.y); }
 
@@ -224,26 +239,27 @@ export class Background {
     const camF = cam.layerY(PARALLAX_TOWER);
     const first = Math.max(0, Math.floor(camF / TILE_H)), last = Math.ceil((camF + H) / TILE_H);
     const t = this.art.tiles;
-    // the wall, tile by tile: plain, or the look of the area it is in (towerwall.js); what grows on it is laid over it below
-    const areaAt = (k) => (this.forceWall && TOWER_AREAS[this.forceWall] ? towerAreaForced(this.forceWall, k) : this.forceWall ? null : this.wall ? this.wall(k) : towerAreaAt(k));
+    // the wall, tile by tile (towerwall.js): what it is built of there (the plain bricks, or its section's skin) and what
+    // grows on it, which is laid over that below
+    const wall = this.forceWall || this.wall || this.plan;
     const of = (A, a) => (typeof a.tile === 'number' ? A.loop[a.tile] : A[a.tile]);
     const spriteOf = (a) => of(t.towerAreas[a.kind], a);
     const grown = [], hung = [];
     const topTile = this.top ? Math.floor(this.top.ly / TILE_H) - 1 : Infinity;      // (the story's tower has a top: no wall above it)
     for (let k = Math.max(0, first - 1); k <= Math.min(last + 1, topTile); k++) {      // (a tile more at each end: a thing that hangs on it may reach into the picture)
-      const h = hash(k + 7), a = areaAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
+      const h = hash(k + 7), skin = wall.skinAt(k), growth = wall.growthAt(k), sy = H - (k * TILE_H - camF) + cam.oy;
       let v = 0;
       if (k > 0) { const r = h % 100; v = r < 56 ? 0 : r < 70 ? 1 : r < 82 ? 2 : r < 92 ? 3 : 4; }
-      if (a && !TOWER_AREAS[a.kind].overlay) g.blit(spriteOf(a), W / 2 + cam.ox, sy);
-      else g.blit(t.tower[v], W / 2 + cam.ox, sy);
-      if (a && TOWER_AREAS[a.kind].overlay) grown.push([spriteOf(a), sy]);
-      if (a) for (const f of of(t.towerAreas[a.kind].fix, a)) hung.push([f, k, sy, a]);
+      g.blit(skin ? spriteOf(skin) : t.tower[v], W / 2 + cam.ox, sy);
+      if (growth) grown.push([spriteOf(growth), sy]);
+      if (skin) for (const f of of(t.towerAreas[skin.kind].fix, skin)) hung.push([f, k, sy, skin]);
+      if (growth) for (const f of of(t.towerAreas[growth.kind].fix, growth)) hung.push([f, k, sy, growth]);
     }
     // a string course runs round the tower under every row of windows (broken where the wall is crumbling or being mended)
     for (let i = Math.max(0, Math.floor((camF - STRING_COURSE - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY + STRING_COURSE;
       if (ly > camF + H + 30 || (this.top && ly > this.top.ly - 60)) break;
-      const a = areaAt(Math.floor((ly - 12) / TILE_H));
+      const a = wall.skinAt(Math.floor((ly - 12) / TILE_H));
       g.blit((a && t.towerBands[TOWER_AREAS[a.kind].band]) || t.towerBand, W / 2 + cam.ox, H - (ly - camF) + cam.oy);
     }
     // what grows on the wall, over its bricks and its string courses; the windows are cut into it
@@ -271,7 +287,7 @@ export class Background {
     if (camF < FOOT.up * PX + 20) g.blit(t.towerFoot, W / 2 + cam.ox, H + camF + cam.oy);
     // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again
     for (let k = first; k <= last + 2; k++) {
-      const a = areaAt(k);
+      const a = wall.growthAt(k);
       if (!a || a.kind !== 'briar' || typeof a.tile !== 'number') continue;
       const R = ROSES[a.n % ROSES.length], top = H - ((k + 1) * TILE_H - camF) + cam.oy;
       for (let i = 0; i < PETALS.each; i++) {
