@@ -3,6 +3,7 @@ import { TILE_H } from './art/tiles.js';
 import { TOWER_AREAS } from './art/tower.js';
 import { PARALLAX_TOWER } from './config.js';
 import { RNG } from './util.js';
+import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
 
 // What the tower's wall is like at a height (art/tower.js draws the looks,
 // background.js lays them). A stretch of it is a section, and a section is
@@ -16,12 +17,23 @@ import { RNG } from './util.js';
 // The two parts of a section do not begin and end together: ivy does not
 // know where the masonry changes.
 //
+// Two more parts go by storeys and not by tiles (a storey is a window,
+// windows.js: one every 440 px of the tower's layer, left and right in
+// turn): what hangs on the wall's face on the side that has no window
+// (`hung`: lanterns, banners) and what stands out at its edges (`edge`:
+// gargoyles at the ends of the string courses). Each comes in runs of a few
+// storeys with none for a while between them, and knows nothing of the
+// other parts either (art/hung.js draws them).
+//
 // A wall is anything with `skinAt(k)` and `growthAt(k)` for a tile k (a tile
 // is about 2.1 m of climb): null where that part is none, else { kind, tile,
 // i, n } with `tile` 'enter', 'leave' or the loop's index, `i` the tile's
 // number in its area (0 is `enter`) and `n` which of the areas of its look
 // it is, counted from the foot (the first briar has red roses, the next
-// white ones). There are three kinds of wall:
+// white ones); and with `hungAt(i)` and `edgeAt(i)` for a storey i: null or
+// { kind, j, n } with `j` the storey's number in its run and `n` which run
+// of its kind it is (a run of banners is the witch's, the next the
+// guards'). There are three kinds of wall:
 //   TowerPlan    the endless tower's: rolled from the round's seed, so every
 //                round climbs another tower. Between two sections the wall
 //                is plain for a while (GAP); what a height can have is in
@@ -40,6 +52,25 @@ const OFFSET = [-2, 3];             // where a section has both parts: its growt
 const FOOT_TILES = [0, 1, 2, 'leave'];      // the tower's foot: old stone from the lawn up
 export const SKINS = Object.keys(TOWER_AREAS).filter((k) => !TOWER_AREAS[k].overlay);
 export const GROWTHS = Object.keys(TOWER_AREAS).filter((k) => TOWER_AREAS[k].overlay);
+export const HUNGS = ['lanterns', 'banners'], EDGES = ['gargoyles'];
+// The parts that go by storeys: how many storeys a run is long, and by the height the prince passes it at (px) how
+// many storeys are bare before it and the weights of its kinds. There is more of both the higher one gets: above the
+// trees the wall stands free before the sky, and is seen.
+const STOREYS = {
+  hung: { run: [3, 7], by: [
+    { below: 12000, gap: [5, 10], w: { lanterns: 2, banners: 1 } },
+    { below: 25000, gap: [4, 8], w: { lanterns: 3, banners: 1 } },
+    { below: 40000, gap: [3, 6], w: { lanterns: 2, banners: 2 } },
+    { below: Infinity, gap: [2, 5], w: { lanterns: 3, banners: 3 } },
+  ] },
+  edge: { run: [3, 7], by: [
+    { below: 25000, gap: [6, 12], w: { gargoyles: 1 } },
+    { below: 40000, gap: [4, 9], w: { gargoyles: 1 } },
+    { below: Infinity, gap: [3, 6], w: { gargoyles: 1 } },
+  ] },
+};
+const FIRST_STOREY = Math.ceil((FIRST * TILE_H - WINDOW_FIRST) / WINDOW_STOREY);      // the lowest storey a run may begin at: above the lawn's picture
+const storeyY = (i) => (WINDOW_FIRST + i * WINDOW_STOREY) / PARALLAX_TOWER;           // about the height the prince is at when he passes storey i
 
 // What a section can be, by the height the prince passes it at (px): the
 // weights of its skin and of its growth. A recipe's weight is the two
@@ -91,9 +122,28 @@ function lay(track, kind, from, tiles, n) {
   return from + tiles.length;
 }
 
+// One part that goes by storeys (`spec`: STOREYS.hung or .edge), rolled by the stream `r`: its cell at a storey, or null.
+class Runs {
+  constructor(r, spec) { this.r = r; this.spec = spec; this.cells = []; this.planned = 0; this.count = {}; this.last = null; }
+  at(i) {
+    if (i < 0) return null;
+    while (this.planned <= i) {
+      const r = this.r, from = Math.max(FIRST_STOREY, this.planned + r.int(...this.spec.by.find((z) => storeyY(this.planned) < z.below).gap));
+      const table = Object.entries(this.spec.by.find((z) => storeyY(from) < z.below).w).filter(([kind]) => kind !== this.last || Object.keys(this.spec.by[0].w).length < 2);
+      const kind = r.weighted(table), n = this.count[kind] || 0, len = r.int(this.spec.run[0], this.spec.run[1]);
+      this.count[kind] = n + 1; this.last = kind;
+      for (let j = 0; j < len; j++) this.cells[from + j] = { kind, j, n };
+      this.planned = from + len;
+    }
+    return this.cells[i] || null;
+  }
+}
+
 export class TowerPlan {
-  constructor(seed) {
+  constructor(seed = (Math.random() * 0x7fffffff) | 0) {
     this.r = new RNG(seed);
+    this.hung = new Runs(new RNG(hash(seed + 1)), STOREYS.hung);      // (streams of their own: a seed's sections are the same whatever hangs on them)
+    this.edge = new Runs(new RNG(hash(seed + 2)), STOREYS.edge);
     this.skins = []; this.growths = [];      // the cells of either part, by tile (a hole where it is none)
     this.sections = [];                      // { from, to, skin, growth }: the tiles it begins at and ends under, bottom to top
     this.count = { stone: 1 };               // how many areas of a look there are so far (the foot is the first of old stone)
@@ -118,6 +168,8 @@ export class TowerPlan {
   }
   skinAt(k) { if (k < 0) return null; this.planUpTo(k); return this.skins[k] || null; }
   growthAt(k) { if (k < 0) return null; this.planUpTo(k); return this.growths[k] || null; }
+  hungAt(i) { return this.hung.at(i); }
+  edgeAt(i) { return this.edge.at(i); }
   // The section tile k is in, or null where the wall is plain.
   sectionAt(k) { this.planUpTo(k); for (let i = this.sections.length - 1; i >= 0; i--) { const s = this.sections[i]; if (k >= s.from) return k < s.to ? s : null; } return null; }
 }
@@ -141,32 +193,53 @@ function stretches(kind, k0, seed, n) {
 }
 const footAt = (k) => (k >= 0 && k < FOOT_TILES.length ? FOOT_CELLS[k] : null);
 const FOOT_CELLS = FOOT_TILES.map((tile, i) => ({ kind: 'stone', tile, i, n: 0 }));
-// The wall of one stage (stages.js): its recipe from tile k0 up, each part
-// in stretches of its own, so that what grows comes and goes over what is
-// built. `skin` 'foot' is the plain wall over the tower's foot of old
-// stone; any other name that is no look is plain wall. `n`: the roses'
-// colour.
-export function stageWall({ skin, growth }, k0, seed, n = 0) {
-  const both = TOWER_AREAS[skin] && TOWER_AREAS[growth];
-  return { skinAt: skin === 'foot' ? footAt : stretches(skin, k0, seed, n), growthAt: stretches(growth, k0, both ? seed + 101 : seed, n) };
+// A part that goes by storeys, the same kind at every storey from i0 up (a stage's): its cell at a storey, or null.
+function everyStorey(kind, i0, n) {
+  if (!kind) return () => null;
+  const cells = [];
+  return (i) => (i < i0 ? null : cells[i - i0] || (cells[i - i0] = { kind, j: i - i0, n }));
 }
-// A stage's recipe (stages.js THEMES: `wall`, `growth`, `roses`): as it is
-// written down the first time a theme is climbed. When a theme comes round
-// again (`lap` 1 and up: the stages go round and round after the last one),
-// the part it leaves open is rolled from what its height can have, by the
-// round's seed, and it is never left open then: the ivy wall is on old
-// stone, or on a crumbling wall, or the masons have been at it.
+// The wall of one stage (stages.js): its recipe from tile k0 up, the two
+// parts of the wall itself in stretches of their own, so that what grows
+// comes and goes over what is built, and what hangs on it and stands out
+// from it at every storey. `skin` 'foot' is the plain wall over the tower's
+// foot of old stone; any other name that is no look is plain wall. `n`: the
+// roses' colour; the banners are the witch's and the guards' in turn, stage
+// by stage.
+export function stageWall({ skin, growth, hung, edge }, k0, seed, n = 0) {
+  const both = TOWER_AREAS[skin] && TOWER_AREAS[growth], i0 = Math.ceil((k0 * TILE_H - WINDOW_FIRST) / WINDOW_STOREY) + 1;
+  return {
+    skinAt: skin === 'foot' ? footAt : stretches(skin, k0, seed, n), growthAt: stretches(growth, k0, both ? seed + 101 : seed, n),
+    hungAt: everyStorey(HUNGS.includes(hung) && hung, i0, seed), edgeAt: everyStorey(EDGES.includes(edge) && edge, i0, seed),
+  };
+}
+// A stage's recipe (stages.js THEMES: `wall`, `growth`, `roses`, `hung`,
+// `edge`): as it is written down the first time a theme is climbed. When a
+// theme comes round again (`lap` 1 and up: the stages go round and round
+// after the last one), what it leaves open is rolled from what its height
+// can have, by the round's seed: of the wall's two parts the open one is
+// never left open then (the ivy wall is on old stone, or on a crumbling
+// wall, or the masons have been at it), and something hangs on it or
+// stands out from it in two stages of three.
 export function stageRecipe(st, seed) {
-  const R = { skin: st.wall || null, growth: st.growth || null, roses: st.roses || 0 };
-  if (!st.lap || R.skin === 'foot' || (R.skin && R.growth)) return R;
+  const R = { skin: st.wall || null, growth: st.growth || null, roses: st.roses || 0, hung: st.hung || null, edge: st.edge || null };
+  if (!st.lap || R.skin === 'foot') return R;
   const r = new RNG(hash(seed + st.n * 577 + 9));
-  const got = roll(r, st.from, null, R.skin ? { skin: R.skin } : R.growth ? { growth: R.growth } : {}, true);
-  if (got.growth === 'briar' && R.growth !== 'briar') R.roses = r.int(0, 2);
-  return { ...R, ...got };
+  if (!(R.skin && R.growth)) {
+    const got = roll(r, st.from, null, R.skin ? { skin: R.skin } : R.growth ? { growth: R.growth } : {}, true);
+    if (got.growth === 'briar' && R.growth !== 'briar') R.roses = r.int(0, 2);
+    R.skin = got.skin; R.growth = got.growth;
+  }
+  const open = (part, kind) => kind || (r.chance(0.65) ? r.weighted(Object.entries(STOREYS[part].by.find((z) => st.from < z.below).w)) : null);
+  R.hung = open('hung', R.hung); R.edge = open('edge', R.edge);
+  return R;
 }
-// One recipe all the way up (dev: ?wall=ivy, ?wall=stone+ivy; any other name: plain wall): the loops' tiles in turn.
+// One recipe all the way up (dev: ?wall=ivy, ?wall=stone+ivy+lanterns+gargoyles; any other name: plain wall): the
+// loops' tiles in turn, and what goes by storeys at every storey (the banners the witch's and the guards' by fives).
 const forced = (kind) => (k) => ({ kind, tile: ((k % TOWER_AREAS[kind].loop) + TOWER_AREAS[kind].loop) % TOWER_AREAS[kind].loop, i: k + 1, n: Math.max(0, Math.floor(k / TOWER_AREAS[kind].loop)) });
+const forcedStorey = (kind) => (i) => ({ kind, j: i, n: Math.floor(i / 5) });
 export function forcedWall(name) {
-  const kinds = String(name).split(/[+ ]/), skin = kinds.find((k) => SKINS.includes(k)), growth = kinds.find((k) => GROWTHS.includes(k));
-  return { skinAt: skin ? forced(skin) : () => null, growthAt: growth ? forced(growth) : () => null };
+  const kinds = String(name).split(/[+ ]/), one = (list) => kinds.find((k) => list.includes(k));
+  const skin = one(SKINS), growth = one(GROWTHS), hung = one(HUNGS), edge = one(EDGES);
+  return { skinAt: skin ? forced(skin) : () => null, growthAt: growth ? forced(growth) : () => null, hungAt: hung ? forcedStorey(hung) : () => null, edgeAt: edge ? forcedStorey(edge) : () => null };
 }

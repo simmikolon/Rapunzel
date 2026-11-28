@@ -72,8 +72,9 @@ which only copies the two folders together). The design document
 - `background.js` sky, tower, forest, trees and the drawing order;
   `atmosphere.js` fog, leaves, forest life; `weather.js` rain, snow,
   storm, golden hour; `interior.js` the inside of the tower;
-  `towerwall.js` (the wall in sections: what it is built of and what grows
-  on it, rolled for every round) and `art/tower.js` the wall's looks.
+  `towerwall.js` (the wall in sections: what it is built of, what grows
+  on it, what hangs on it and stands out from it, rolled for every round),
+  `art/tower.js` the wall's looks, `art/hung.js` lanterns, banners, gargoyles.
 - `stages.js` the stages' themes and order; `story.js` the opening story;
   `settings.js` the settings and their sign; `input.js` keys, touch
   (hold, slide), tilt; `hud.js`, `title.js`, `sign.js` what is on screen
@@ -111,9 +112,10 @@ which only copies the two folders together). The design document
   flock of starlings a dozen metres above the start,
   `?len=stub|short|long` makes every branch that class, `?dev=1` shows
   altitude, zone and the wall's recipe, `?fx=off|bloom|lines|full` (the glow, the scan lines, both), `?veil=0.3` sets how strongly the
-  tower's wall is set back outside (0 to 0.9), `?wall=stone+ivy` shows one recipe of the
-  tower's wall all the way up (what it is built of, `stone|worn|mended`, what grows on it,
-  `ivy|moss|briar`, either alone, or `plain`; `web/src/towerwall.js`), `?place=inside|outside` picks
+  tower's wall is set back outside (0 to 0.9), `?wall=stone+ivy+lanterns+gargoyles` shows one
+  recipe of the tower's wall all the way up (what it is built of, `stone|worn|mended`, what
+  grows on it, `ivy|moss|briar`, what hangs on it, `lanterns|banners`, what stands out at its
+  edges, `gargoyles`; any of them alone, or `plain`; `web/src/towerwall.js`), `?place=inside|outside` picks
   where the round is climbed whatever the title's selector says (inside,
   `?spawn=guard` stands on the next gallery, `?spawn=grabber` in the
   nearest hatch of a pillar, `?spawn=bat` hangs under the next ledge,

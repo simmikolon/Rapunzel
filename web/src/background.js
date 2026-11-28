@@ -1,7 +1,8 @@
 import { W, H, PX, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config.js';
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
-import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H } from './windows.js';
+import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H, WINDOW_X, windowAt, blockedBy } from './windows.js';
+import { LANTERN, BANNER, GARGOYLE } from './art/hung.js';
 import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
 import { TowerPlan, stageWall, stageRecipe, forcedWall } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
@@ -10,7 +11,7 @@ import { forestAlpha, cloudAlpha, nightAlpha, deepForestAmount, hash, treeStyleA
 import { TRUNK_W } from './art/tiles.js';
 import { TREE_FOOT } from './art/trees.js';
 import { Atmosphere } from './atmosphere.js';
-import { Weather, WEATHER } from './weather.js';
+import { Weather, WEATHER, RAIN_COLOR, SNOW_COLOR } from './weather.js';
 import { StringLights } from './lights.js';
 import { Interior } from './interior.js';
 import { windowsBetween } from './windows.js';
@@ -109,6 +110,15 @@ const HUNG_CLEAR = 8, HUNG_BELOW = 32;
 const PETALS = { each: 2, fall: 300, time: [6, 10] };
 // A liana's lower end keeps this far above the lawn (px): clear of the trees' feet.
 const LIANA_CLEAR = 150;
+// What hangs on the wall storey by storey (towerwall.js `hung`, art/hung.js), on the side that has no window: how far
+// above the storey's sill a lantern's plate is fixed and a banner's rod hangs (layer px); a lantern's light (its halo,
+// and the pool it throws on the wall once the time of day has darkened the picture); how hard the wind must blow for
+// a banner's four frames, and how fast it flaps (per second, calm .. storm).
+const HUNG = { lanternUp: 96, bannerUp: 150, halo: [76, 0.24], pool: [150, 0.2, '#ffb65c'], flap: [1.1, 7] };
+// What stands out at the wall's edges (`edge`): a pair of gargoyles at every second storey's string course. When it
+// rains the course's water runs out of them: so many drops in the air, falling this far (px) in this long (s).
+const SPOUT = { drops: 7, fall: 300, time: 0.62 };
+const SIDES = [-1, 1], FLIP = { flip: true }, FLIP_SHADE = { flip: true, tint: '#a6b0b6' }, SOFT_ADD = { soft: true, blend: 'add' }, HALO_GLOW = { glow: 0.5 };      // (the right gargoyle is round the tower from the light)
 
 export class Background {
   constructor(art) {
@@ -117,6 +127,8 @@ export class Background {
     this.plan = new TowerPlan();   // the endless tower's wall, section by section (towerwall.js): rolled anew for every round (rollWall)
     this.wall = null;            // in stages: the wall of the stage he is in (setWall); null: the tower's own plan
     this.forceWall = null;       // dev (?wall=): one recipe all the way up instead of either (forceRecipe)
+    this.lamps = [];             // the wall's lanterns that are lit in this frame, five numbers each: where its sprite is, mirrored or not, how far it is on, how bright it is now
+    this.litOpt = { flip: false, alpha: 1, glow: 0.7 };
     this.top = null;             // the opening story (story.js): where the tower ends, { ly: the wall's upper edge, sill: Rapunzel's window, look: { dy, blink } } (layer px); null: it has no end
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
@@ -145,12 +157,12 @@ export class Background {
     const R = stageRecipe(st, this.wallSeed || 0);
     this.wall = stageWall(R, Math.floor(cam.layerY(PARALLAX_TOWER) / TILE_H), st.n, R.roses);
   }
-  // dev (?wall=stone+ivy, ?wall=ivy, ?wall=plain): that recipe all the way up.
+  // dev (?wall=stone+ivy+lanterns+gargoyles, ?wall=ivy, ?wall=plain): that recipe all the way up.
   forceRecipe(name) { this.forceWall = name ? forcedWall(name) : null; }
-  // dev (?dev=1): the wall's recipe `up` px above the picture's lower edge, in words ('stone+ivy', 'plain').
+  // dev (?dev=1): the wall's recipe `up` px above the picture's lower edge, in words ('stone+ivy+lanterns', 'plain').
   wallName(cam, up) {
-    const wall = this.forceWall || this.wall || this.plan, k = Math.floor((cam.layerY(PARALLAX_TOWER) + up) / TILE_H), skin = wall.skinAt(k), growth = wall.growthAt(k);
-    return [skin && skin.kind, growth && growth.kind].filter(Boolean).join('+') || 'plain';
+    const wall = this.forceWall || this.wall || this.plan, ly = cam.layerY(PARALLAX_TOWER) + up, k = Math.floor(ly / TILE_H), i = Math.round((ly - WINDOW_FIRST) / WINDOW_STOREY);
+    return [wall.skinAt(k), wall.growthAt(k), wall.hungAt(i), wall.edgeAt(i)].filter(Boolean).map((c) => c.kind).join('+') || 'plain';
   }
   get inside() { return !!this.place && this.place.inside; }
   skyColors(cam) { return skyAt(cam.y); }
@@ -283,6 +295,8 @@ export class Background {
       g.blit(s, W / 2 + f.dx + cam.ox, sy - f.dy - up, o);
     }
     this.drawWindows(g, cam, camF, time, world);
+    const blockers = world ? world.platforms.filter((p) => p.kind === 'balcony' || p.kind === 'gate') : [];
+    this.drawHung(g, cam, camF, time, wall, blockers);
     // the tower's foot (art/tower.js): its plinth, the witch's gate and her arms, over the lowest tiles and the first string course
     if (camF < FOOT.up * PX + 20) g.blit(t.towerFoot, W / 2 + cam.ox, H + camF + cam.oy);
     // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again
@@ -300,7 +314,90 @@ export class Background {
     // set the wall back (TOWER_VEIL): what is played on is drawn after this and keeps its colours
     const wallTop = this.top ? Math.max(0, H - (this.top.ly - camF) + cam.oy) : 0;
     if (this.towerVeil.alpha > 0 && wallTop < H) g.rect(W / 2 - TOWER_W / 2 + cam.ox, wallTop, TOWER_W, H - wallTop, this.towerVeil.color, this.towerVeil.alpha);
+    this.drawHungLights(g);
+    this.drawEdge(g, cam, camF, time, wall, blockers);
     this.drawTowerTop(g, cam, time);
+  }
+
+  // What hangs on the wall storey by storey (towerwall.js `hung`, art/hung.js): a lantern on its arm or a banner on
+  // its rod, on the side of a storey that has no window; none where a balcony or a gate sits, where the masons are at
+  // work, or beside Rapunzel's own window. Under the wall's veil, as the windows are. A lantern is lit when it gets
+  // dark (toward sunset and at night, in the deep forest's shade, under a storm), each at its own moment, and its
+  // light is drawn after the veil (drawHungLights). A banner blows in whatever wind there is: the rain's breeze, the
+  // forest's gusts, a storm's blow. Where it snows, snow lies on a lantern's roof and on a banner's rod.
+  drawHung(g, cam, camF, time, wall, blockers) {
+    const A = this.art.hung, lamps = this.lamps, weather = this.weather;
+    lamps.length = 0;
+    const dark = Math.max(lanternAmount(cam.y), deepForestAmount(cam.y), Math.min(1, weather.num('grey') * 2));
+    const slant = weather.slant, wind = Math.min(1, Math.abs(slant) * 1.5 + this.atmo.gustEnv() * 0.55 + 0.1), caps = weather.has('caps');
+    for (let i = Math.max(0, Math.floor((camF - 180 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+      const ly = WINDOW_FIRST + i * WINDOW_STOREY;
+      if (ly > camF + H + 40) break;
+      const c = wall.hungAt(i);
+      if (!c || (this.top && ly > this.top.sill - 420)) continue;
+      const w = windowAt(i), side = w.side === 'L' ? 'R' : 'L', flip = side === 'R';
+      if (blockedBy({ side, ly }, blockers)) continue;
+      const skin = wall.skinAt(Math.floor((ly + 60) / TILE_H));
+      if (skin && skin.kind === 'mended') continue;
+      const x = W / 2 - w.x + cam.ox, base = H - (ly - camF) + cam.oy;
+      if (c.kind === 'lanterns') {
+        const sx = x + (flip ? 1 : -1) * LANTERN.w * PX / 2, sy = base - HUNG.lanternUp, left = flip ? sx - LANTERN.w * PX : sx, top = sy - 5 * PX;
+        g.blit(A.lantern, sx, sy, flip ? FLIP : undefined);
+        if (caps > 0.01) { g.rect(flip ? left : left + 6 * PX, top + 4 * PX, 6 * PX, PX, SNOW_COLOR, caps); g.rect(flip ? left + PX : left + 7 * PX, top + 3 * PX, 4 * PX, PX, SNOW_COLOR, caps); }
+        const at = 0.15 + 0.5 * ((hash(i * 13 + 5) % 100) / 100), on = smoothstep(invLerp(at, at + 0.12, dark));
+        if (on > 0.01) lamps.push(sx, sy, flip ? 1 : 0, on, on * (0.85 + 0.15 * Math.sin(time * 9 + i * 1.7) * Math.sin(time * 2.3 + i)));
+      } else if (c.kind === 'banners') {
+        const sy = base - HUNG.bannerUp, flutter = 0.5 + 0.5 * Math.sin(time * lerp(HUNG.flap[0], HUNG.flap[1], Math.min(1, wind * 1.2)) + i * 2.1) * Math.sin(time * 1.7 + i);
+        const frame = Math.max(0, Math.min(3, Math.floor(wind * 3 - 0.3 + flutter * 1.1)));
+        g.blit(A.banners[c.n % A.banners.length][frame], x, sy, slant < -0.02 ? FLIP : undefined);
+        if (caps > 0.01) g.rect(x - BANNER.rod * PX / 2, sy - PX, BANNER.rod * PX, PX, SNOW_COLOR, caps);
+      }
+    }
+  }
+  // The light of the lanterns that are lit, over the wall's veil: the lit lantern faded in over the dark one, and a halo.
+  drawHungLights(g) {
+    const A = this.art.hung, L = this.lamps, o = this.litOpt;
+    for (let n = 0; n < L.length; n += 5) {
+      const flip = L[n + 2] > 0, px = L[n] + (flip ? -1 : 1) * LANTERN.pane[0] * PX, py = L[n + 1] + (LANTERN.pane[1] - 5) * PX;
+      o.flip = flip; o.alpha = L[n + 3];
+      g.blit(A.lanternLit, L[n], L[n + 1], o);
+      g.halo(px, py, HUNG.halo[0], '#ffb347', HUNG.halo[1] * L[n + 4], HALO_GLOW);
+    }
+  }
+  // ... and the pool each throws on the wall, the braid and whoever passes, in the light layer (after the time of day
+  // has darkened the picture, as the string lights' is).
+  drawHungGlow(g) {
+    const L = this.lamps, [r, a, color] = HUNG.pool;
+    for (let n = 0; n < L.length; n += 5) g.puff(L[n] + (L[n + 2] > 0 ? -1 : 1) * LANTERN.pane[0] * PX, L[n + 1] + (LANTERN.pane[1] - 5) * PX, r, r, color, a * L[n + 4], SOFT_ADD);
+  }
+
+  // What stands out at the wall's edges (towerwall.js `edge`): a pair of gargoyles at the ends of every second
+  // storey's string course, none on a side where a balcony or a gate sits. After the wall's veil: they stand out past
+  // the wall's edge, and have the veil in their tones. When it rains, the course's water runs out of their mouths;
+  // where it snows, snow lies on their heads and backs.
+  drawEdge(g, cam, camF, time, wall, blockers) {
+    const A = this.art.hung.gargoyle, G = GARGOYLE, rain = Math.min(1, this.weather.num('rain')), caps = this.weather.has('caps');
+    for (let i = Math.max(0, Math.floor((camF - 80 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+      const sill = WINDOW_FIRST + i * WINDOW_STOREY, ly = sill + STRING_COURSE;
+      if (ly > camF + H + 60 || (this.top && ly > this.top.ly - 60)) break;
+      const c = wall.edgeAt(i);
+      if (!c || c.j % 2) continue;
+      const sy = H - (ly - camF) + cam.oy;
+      for (const dir of SIDES) {
+        if (blockedBy({ side: dir < 0 ? 'L' : 'R', ly: sill }, blockers)) continue;
+        const sx = W / 2 + dir * TOWER_W / 2 + cam.ox;
+        g.blit(A, sx, sy, dir < 0 ? undefined : FLIP_SHADE);
+        if (caps > 0.01) for (const [x, y, w] of G.snow) g.rect(dir < 0 ? sx - (G.edge - x) * PX : sx + (G.edge - x - w) * PX, sy + (y - G.top - 1) * PX, w * PX, PX, SNOW_COLOR, caps);
+        if (rain > 0.05) {
+          const mx = sx + dir * ((G.edge - G.mouth[0]) * PX - 2), my = sy + (G.mouth[1] - G.top) * PX;
+          g.rect(mx - 2, my, 4, 12, RAIN_COLOR, 0.75 * rain);
+          for (let n = 0; n < SPOUT.drops; n++) {
+            const f = (time / SPOUT.time + n / SPOUT.drops + i * 0.37) % 1;
+            g.rect(Math.round(mx + dir * (4 + 14 * f)) - 2, my + 10 + f * f * SPOUT.fall, 4, 10 + 16 * f, RAIN_COLOR, 0.7 * rain * (1 - f));
+          }
+        }
+      }
+    }
   }
 
   // The tower's top (the opening story sets `top`): the cornice and the roof
@@ -671,6 +768,7 @@ export class Background {
     if (l.alpha > 0.001) g.lighting(l.color, l.alpha);
     this.weather.drawLight(g);
     this.lights.drawGlow(g);      // lamps shine through the time of day
+    this.drawHungGlow(g);
   }
 
   drawVignette(g) { g.vignette(); }

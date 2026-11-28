@@ -30,6 +30,11 @@ import { clamp } from './util.js';
 //           it is as written here; when it comes round again (`loop`) the
 //           part it leaves open is rolled from the round's seed.
 //   roses   (with growth 'briar') the roses' colour: 0 red, 1 white, 2 old rose
+//   hung    (outside) what hangs on the wall at every storey, on the side
+//           that has no window: 'lanterns' (lit when it is dark) or
+//           'banners' (the witch's and the guards', which blow in the wind)
+//   edge    (outside) what stands out at the wall's edges: 'gargoyles' (a
+//           pair at every second string course, which spout when it rains)
 //   dark    (inside) the lights are out for the whole stage; in the others
 //           they stay on
 //   vault   (inside) a golden door to the treasury stands in it
@@ -44,11 +49,11 @@ export const THEMES = {
   lawn:      { name: 'the forest floor', place: 'outside', at: 0, len: 60, wall: 'foot' },
   roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, growth: 'briar', roses: 0, weather: 'golden' },
   ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, growth: 'ivy', weather: 'rain' },
-  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', weather: 'rain' },
+  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', edge: 'gargoyles', weather: 'rain' },
   site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended', weather: 'snow' },
-  crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', weather: 'storm' },
-  sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'stone' },
-  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'stone', growth: 'briar', roses: 1, weather: 'snow' },
+  crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', hung: 'banners', edge: 'gargoyles', weather: 'storm' },
+  sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'stone', hung: 'banners', edge: 'gargoyles' },
+  night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'stone', growth: 'briar', roses: 1, hung: 'lanterns', weather: 'snow' },
   // inside
   // (a stage stays inside one band of the tower's floors, 0, 120, 250 and 400 m: the floor is its furniture)
   hall:      { name: 'the hall', place: 'inside', at: 4, len: 114, vault: true },

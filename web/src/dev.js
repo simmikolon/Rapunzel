@@ -23,7 +23,8 @@
 //   ?dev=1           show altitude, zone and the wall's recipe (outside) in the corner
 //   ?veil=0.5        how strongly the tower's wall is set back outside (0 not at all, up to 0.9; background.js TOWER_VEIL)
 //   ?wall=ivy        one recipe of the tower's wall all the way up: what it is built of (stone|worn|mended), what grows on it
-//                    (ivy|moss|briar), or both (stone+ivy); plain: neither (towerwall.js)
+//                    (ivy|moss|briar), what hangs on it (lanterns|banners), what stands out at its edges (gargoyles), or
+//                    several (stone+ivy+lanterns+gargoyles); plain: none of them (towerwall.js)
 //   ?len=stub        every branch gets that length class (stub|short|normal|long)
 //   ?stages=1        the tower in stages for this visit (0: the endless game), whatever the title's choice (stages.js)
 //   ?stage=3         start at the door into that stage (the first is 1)

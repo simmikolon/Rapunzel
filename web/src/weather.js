@@ -55,7 +55,8 @@ const SNOW = [
 ];
 const MOTES = { n: 56, v: [10, 26], a: 0.9 };
 const CURLS = { n: 8, v: [520, 760] };
-const RAIN_COLOR = '#c9dcf2', SNOW_COLOR = '#f4f8ff', SNOW_SHADE = '#cddbee', GOLD = '#ffe9a8';
+export const RAIN_COLOR = '#c9dcf2', SNOW_COLOR = '#f4f8ff';
+const SNOW_SHADE = '#cddbee', GOLD = '#ffe9a8';
 // The lawn under snow: its body, the hollows in it, and the grass that still shows.
 const LAWN = { body: '#e7eef9', far: '#d6e2f2', hollow: '#bccde3', grass: '#3f8a3a', grassDark: '#2c6a33' };
 const SUN = { x: 0.8, y: 0.3 };

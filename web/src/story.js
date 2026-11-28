@@ -111,7 +111,7 @@ export class Story {
     const plan = show.bg.plan, plain = (k) => !plan.skinAt(k) && !plan.growthAt(k);
     while (k0 > 0 && !(plain(k0) && plain(k0 - 1))) k0--;
     const roses = stageWall({ growth: 'briar' }, k0, 3, 0);
-    show.bg.wall = { skinAt: (k) => (k >= k0 ? null : plan.skinAt(k)), growthAt: (k) => (k >= k0 ? roses.growthAt(k) : plan.growthAt(k)) };
+    show.bg.wall = { skinAt: (k) => (k >= k0 ? null : plan.skinAt(k)), growthAt: (k) => (k >= k0 ? roses.growthAt(k) : plan.growthAt(k)), hungAt: (i) => plan.hungAt(i), edgeAt: (i) => plan.edgeAt(i) };
   }
 
   // Where the view's lower edge is (the prince's plane, px) with the braid's end at layer height `end`.
