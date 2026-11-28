@@ -4,9 +4,10 @@ import { mixHex } from '../util.js';
 
 // What hangs on the tower's wall storey by storey, and what stands out at
 // its edges (towerwall.js says where, background.js draws it): a lantern
-// on an iron arm, a banner on a rod, a gargoyle at the end of a string
-// course. All for the eye; each answers to the hour or the weather (the
-// lantern is lit when it gets dark, the banner blows in the wind, the
+// on an iron arm, a torch in a ring, a banner on a rod, a gargoyle at the
+// end of a string course. All for the eye; each answers to the hour or the
+// weather (the lantern is lit when it gets dark, the torch burns all day and
+// lights the wall once it is dark, the banner blows in the wind, the
 // gargoyle spouts when it rains: background.js).
 
 const IRON = { hi: '#b4bec2', base: '#737e86', dark: '#444d55', deep: '#2b3138' };
@@ -47,6 +48,40 @@ function drawLantern(t, lit) {
   // its foot and the drop under it
   p(6, 13, 6, 1, I.base); p(6, 13, 1, 1, I.hi); p(7, 14, 4, 1, I.dark); p(8, 15, 2, 1, I.deep);
 }
+
+// --- the torch --------------------------------------------------------------------------
+// TORCH.w x TORCH.h art px, for the left half of the wall (mirrored on the
+// right): a plate on the wall, two iron arms from it, and in their rings a
+// wooden torch with an iron cup at its top, the cloth in it charred. It burns: the flame is a sprite of its own in three frames (7 x 10
+// art px, the anchor the middle of its foot), drawn after the wall's veil
+// where the torch's head is (`fire`, from the sprite's upper left corner),
+// and it goes into the glow. The anchor is the plate's middle (`at`: its row).
+export const TORCH = { w: 11, h: 13, at: 8, fire: [7, 1] };
+const WOOD = { hi: C.plankHi, base: C.plank, dark: C.plankDark };
+const CHAR = '#2a2226';
+const FIRE = { o: '#e2532a', m: '#ffa23a', y: '#ffe07a', w: '#fff6d2' };
+function drawTorch(t) {
+  stamp(t, 0, 0, [
+    '.....kkkk..',
+    '....kkkkkk.',
+    '....dIiIId.',
+    '.....dIId..',
+    '.....wWd...',
+    '.....wWd...',
+    'IiIIIwWd...',
+    'Id..dwWd...',
+    'Id...wWd...',
+    'IiIIIwWd...',
+    'Ic...wWd...',
+    '.c...wd....',
+    '.....w.....',
+  ], { I: IRON.base, i: IRON.hi, d: IRON.dark, w: WOOD.base, W: WOOD.hi, k: CHAR, c: CAST });
+}
+const FLAMES = [
+  ['...o...', '..oo...', '..omo..', '.oomo..', '.omyo..', 'oomymo.', 'omyymo.', 'omywmo.', '.omymo.', '..ooo..'],
+  ['....o..', '...oo..', '...mo..', '..omoo.', '.oomyo.', '.omymo.', 'oomyymo', 'omywymo', '.omymo.', '..ooo..'],
+  ['..o....', '.......', '...o...', '..omo..', '.omymo.', '.omyyo.', 'omywymo', 'omywymo', '.omymo.', '..ooo..'],
+];
 
 // --- the banner -------------------------------------------------------------------------
 // Cloth on a rod, BANNER.cloth art px wide and BANNER.rows long, in four
@@ -191,6 +226,8 @@ export function buildHung() {
   const lantern = (lit) => makeSprite(LANTERN.w, LANTERN.h, (t) => drawLantern(t, lit), undefined, { axPx: 0, ayPx: 5 * 4 });
   return {
     lantern: lantern(false), lanternLit: lantern(true),
+    torch: makeSprite(TORCH.w, TORCH.h, (t) => drawTorch(t), undefined, { axPx: 0, ayPx: TORCH.at * 4 }),
+    flames: FLAMES.map((rows) => makeSprite(7, 10, (t) => stamp(t, 0, 0, rows, FIRE), undefined, { axPx: 3.5 * 4, ayPx: 10 * 4 })),
     banners: BANNERS.map((_, look) => BLOWN.map((_f, frame) => makeSprite(BANNER.w, BANNER.h, (t) => drawBanner(t, look, frame), undefined, { axPx: (BANNER.rod / 2) * 4, ayPx: 0 }))),
     gargoyle: makeSprite(GARGOYLE.w, GARGOYLE.h, (t) => drawGargoyle(t), undefined, { axPx: GARGOYLE.edge * 4, ayPx: GARGOYLE.top * 4 }),
   };

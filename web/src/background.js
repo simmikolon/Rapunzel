@@ -2,7 +2,8 @@ import { W, H, PX, PARALLAX_FAR, PARALLAX_TOWER, CAMERA_START_Y } from './config
 import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H, WINDOW_X, windowAt, blockedBy } from './windows.js';
-import { LANTERN, BANNER, GARGOYLE } from './art/hung.js';
+import { LANTERN, BANNER, GARGOYLE, TORCH } from './art/hung.js';
+import { WISTERIA_PETAL } from './art/cladding.js';
 import { RING, ORIEL } from './art/outline.js';
 import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
 import { TowerPlan, stageWall, stageRecipe, forcedWall } from './towerwall.js';
@@ -116,6 +117,10 @@ const LIANA_CLEAR = 150;
 // and the pool it throws on the wall once the time of day has darkened the picture); how hard the wind must blow for
 // a banner's four frames, and how fast it flaps (per second, calm .. storm).
 const HUNG = { lanternUp: 96, bannerUp: 150, halo: [76, 0.24], pool: [150, 0.2, '#ffb65c'], flap: [1.1, 7] };
+// A torch (`hung: 'torches'`): how far above the sill its plate is, how fast its flame goes through its frames (per
+// second), its halo (how wide, how strong by day and what the dark adds), its pool on the wall (how wide, how strong
+// once it is dark, and the share of that it has by day), and the sparks that rise from it (how many, how far, px).
+const FIRE = { up: 92, fps: 9, halo: [58, 0.1, 0.18], pool: [170, 0.24, 0.25, '#ffa24c'], sparks: [2, 84] };
 // What stands out at the wall's edges (`edge`): a pair of gargoyles at every second storey's string course. When it
 // rains the course's water runs out of them: so many drops in the air, falling this far (px) in this long (s).
 const SPOUT = { drops: 7, fall: 300, time: 0.62 };
@@ -132,6 +137,9 @@ export class Background {
     this.forceWall = null;       // dev (?wall=): one recipe all the way up instead of either (forceRecipe)
     this.lamps = [];             // the wall's lanterns that are lit in this frame, five numbers each: where its sprite is, mirrored or not, how far it is on, how bright it is now
     this.litOpt = { flip: false, alpha: 1, glow: 0.7 };
+    this.fires = [];             // the wall's torches in this frame, three numbers each: where its flame's foot is, and its storey
+    this.fireOpt = { flip: false, glow: 0.8 };
+    this.fireTime = 0;
     this.dark = 0;               // how dark it is where the camera is, 0..1: lanterns and an oriel's window are lit by it (drawHung works it out)
     this.top = null;             // the opening story (story.js): where the tower ends, { ly: the wall's upper edge, sill: Rapunzel's window, look: { dy, blink } } (layer px); null: it has no end
     const r = new RNG(42);
@@ -303,11 +311,11 @@ export class Background {
     this.drawHung(g, cam, camF, time, wall, blockers);
     // the tower's foot (art/tower.js): its plinth, the witch's gate and her arms, over the lowest tiles and the first string course
     if (camF < FOOT.up * PX + 20) g.blit(t.towerFoot, W / 2 + cam.ox, H + camF + cam.oy);
-    // petals the roses let go of: two to a tile of briar, each falling a few metres down the wall, turning, and beginning again
+    // petals the roses let go of, and the wisteria: two to a tile of either, each falling a few metres down the wall, turning, and beginning again
     for (let k = first; k <= last + 2; k++) {
       const a = wall.growthAt(k);
-      if (!a || a.kind !== 'briar' || typeof a.tile !== 'number') continue;
-      const R = ROSES[a.n % ROSES.length], top = H - ((k + 1) * TILE_H - camF) + cam.oy;
+      if (!a || (a.kind !== 'briar' && a.kind !== 'wisteria') || typeof a.tile !== 'number') continue;
+      const R = a.kind === 'briar' ? ROSES[a.n % ROSES.length] : WISTERIA_PETAL, top = H - ((k + 1) * TILE_H - camF) + cam.oy;
       for (let i = 0; i < PETALS.each; i++) {
         const h = hash(k * 7 + i * 3 + 1), period = PETALS.time[0] + (h % 1000) / 1000 * (PETALS.time[1] - PETALS.time[0]);
         const f = ((time + ((h >>> 10) % 1000) / 1000 * period) % period) / period;                           // 0 as it lets go .. 1 where it is gone
@@ -319,6 +327,7 @@ export class Background {
     const wallTop = this.top ? Math.max(0, H - (this.top.ly - camF) + cam.oy) : 0;
     if (this.towerVeil.alpha > 0 && wallTop < H) g.rect(W / 2 - TOWER_W / 2 + cam.ox, wallTop, TOWER_W, H - wallTop, this.towerVeil.color, this.towerVeil.alpha);
     this.drawHungLights(g);
+    this.fireTime = time; this.drawFires(g, time);
     this.drawMarks(g, cam, camF, time, wall, blockers);
     this.drawEdge(g, cam, camF, time, wall, blockers);
     this.drawTowerTop(g, cam, time);
@@ -332,7 +341,7 @@ export class Background {
   // forest's gusts, a storm's blow. Where it snows, snow lies on a lantern's roof and on a banner's rod.
   drawHung(g, cam, camF, time, wall, blockers) {
     const A = this.art.hung, lamps = this.lamps, weather = this.weather;
-    lamps.length = 0;
+    lamps.length = 0; this.fires.length = 0;
     const dark = this.dark = Math.max(lanternAmount(cam.y), deepForestAmount(cam.y), Math.min(1, weather.num('grey') * 2));
     const slant = weather.slant, wind = Math.min(1, Math.abs(slant) * 1.5 + this.atmo.gustEnv() * 0.55 + 0.1), caps = weather.has('caps');
     for (let i = Math.max(0, Math.floor((camF - 180 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
@@ -351,6 +360,10 @@ export class Background {
         if (caps > 0.01) { g.rect(flip ? left : left + 6 * PX, top + 4 * PX, 6 * PX, PX, SNOW_COLOR, caps); g.rect(flip ? left + PX : left + 7 * PX, top + 3 * PX, 4 * PX, PX, SNOW_COLOR, caps); }
         const at = 0.15 + 0.5 * ((hash(i * 13 + 5) % 100) / 100), on = smoothstep(invLerp(at, at + 0.12, dark));
         if (on > 0.01) lamps.push(sx, sy, flip ? 1 : 0, on, on * (0.85 + 0.15 * Math.sin(time * 9 + i * 1.7) * Math.sin(time * 2.3 + i)));
+      } else if (c.kind === 'torches') {
+        const sx = x + (flip ? 1 : -1) * TORCH.w * PX / 2, sy = base - FIRE.up;
+        g.blit(A.torch, sx, sy, flip ? FLIP : undefined);
+        this.fires.push(sx + (flip ? -1 : 1) * TORCH.fire[0] * PX, sy + (TORCH.fire[1] - TORCH.at) * PX, i);
       } else if (c.kind === 'banners') {
         const sy = base - HUNG.bannerUp, flutter = 0.5 + 0.5 * Math.sin(time * lerp(HUNG.flap[0], HUNG.flap[1], Math.min(1, wind * 1.2)) + i * 2.1) * Math.sin(time * 1.7 + i);
         const frame = Math.max(0, Math.min(3, Math.floor(wind * 3 - 0.3 + flutter * 1.1)));
@@ -369,9 +382,26 @@ export class Background {
       g.halo(px, py, HUNG.halo[0], '#ffb347', HUNG.halo[1] * L[n + 4], HALO_GLOW);
     }
   }
+  // The torches' flames, over the veil too: each in its own frame of three, turned about now and then, a halo round
+  // it and a spark or two rising from it.
+  drawFires(g, time) {
+    const A = this.art.hung, F = this.fires, o = this.fireOpt, dark = this.dark;
+    for (let n = 0; n < F.length; n += 3) {
+      const x = F[n], y = F[n + 1], i = F[n + 2], beat = Math.floor(time * FIRE.fps + i * 1.7), h = hash(beat + i * 31);
+      o.flip = (h & 8) > 0;
+      g.blit(A.flames[h % A.flames.length], x, y, o);
+      g.halo(x, y - 18, FIRE.halo[0] + (h % 3) * 4, '#ffb347', FIRE.halo[1] + FIRE.halo[2] * dark, HALO_GLOW);
+      for (let k = 0; k < FIRE.sparks[0]; k++) {
+        const hk = hash(i * 7 + k * 13), f = (time * (0.55 + (hk % 100) / 260) + (hk % 1000) / 1000) % 1;
+        g.rect(x - 2 + Math.sin(time * 2.3 + hk) * 9 + f * 10, y - 34 - f * FIRE.sparks[1], 4, 4, f < 0.5 ? '#ffe07a' : '#ffa23a', Math.min(1, (1 - f) * 1.6), HALO_GLOW);
+      }
+    }
+  }
   // ... and the pool each throws on the wall, the braid and whoever passes, in the light layer (after the time of day
   // has darkened the picture, as the string lights' is).
   drawHungGlow(g) {
+    const F = this.fires, [fr, fa, day, fc] = FIRE.pool, lit = fa * (day + (1 - day) * this.dark);
+    for (let n = 0; n < F.length; n += 3) g.puff(F[n], F[n + 1] - 14, fr, fr, fc, lit * (0.88 + 0.12 * Math.sin(this.fireTime * 11 + F[n + 2] * 2.1)), SOFT_ADD);
     const L = this.lamps, [r, a, color] = HUNG.pool;
     for (let n = 0; n < L.length; n += 5) g.puff(L[n] + (L[n + 2] > 0 ? -1 : 1) * LANTERN.pane[0] * PX, L[n + 1] + (LANTERN.pane[1] - 5) * PX, r, r, color, a * L[n + 4], SOFT_ADD);
   }

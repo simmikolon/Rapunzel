@@ -22,17 +22,20 @@ import { clamp } from './util.js';
 //   len     how long it is (m)
 //   wall    (outside) what the tower's wall is built of for the whole stage:
 //           'stone' (old big stones), 'worn' (crumbling), 'mended' (the
-//           masons' site), 'foot' (plain wall over the tower's foot of old
-//           stone) or none (the plain bricks)
-//   growth  (outside) what grows on it: 'ivy', 'moss', 'briar' or none.
+//           masons' site), 'slate' (hung with slates), 'timber' (built in
+//           timber, its fields plastered), 'foot' (plain wall over the
+//           tower's foot of old stone) or none (the plain bricks)
+//   growth  (outside) what grows on it: 'ivy', 'moss', 'briar', 'wisteria'
+//           or none.
 //           The two make the stage's recipe (towerwall.js): what grows comes
 //           and goes over what is built. The first time a theme is climbed
 //           it is as written here; when it comes round again (`loop`) the
 //           part it leaves open is rolled from the round's seed.
 //   roses   (with growth 'briar') the roses' colour: 0 red, 1 white, 2 old rose
 //   hung    (outside) what hangs on the wall at every storey, on the side
-//           that has no window: 'lanterns' (lit when it is dark) or
-//           'banners' (the witch's and the guards', which blow in the wind)
+//           that has no window: 'lanterns' (lit when it is dark), 'torches'
+//           (which burn all day) or 'banners' (the witch's and the guards',
+//           which blow in the wind)
 //   edge    (outside) what stands out at the wall's edges: 'gargoyles' (a
 //           pair at every second string course, which spout when it rains)
 //   mark    (outside) landmarks that change the tower's outline, one at
@@ -52,11 +55,11 @@ export const THEMES = {
   // outside
   lawn:      { name: 'the forest floor', place: 'outside', at: 0, len: 60, wall: 'foot' },
   roses:     { name: 'the rose wall', place: 'outside', at: 18, len: 95, growth: 'briar', roses: 0, weather: 'golden' },
-  ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, growth: 'ivy', weather: 'rain' },
-  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', edge: 'gargoyles', weather: 'rain' },
+  ivy:       { name: 'the ivy wall', place: 'outside', at: 24, len: 95, wall: 'timber', growth: 'ivy', weather: 'rain' },
+  deep:      { name: 'the deep forest', place: 'outside', at: 128, len: 105, wall: 'stone', growth: 'moss', hung: 'torches', edge: 'gargoyles', weather: 'rain' },
   site:      { name: "the masons' site", place: 'outside', at: 256, len: 100, wall: 'mended', mark: 'rings', weather: 'snow' },
   crumbling: { name: 'the crumbling tower', place: 'outside', at: 262, len: 100, wall: 'worn', hung: 'banners', edge: 'gargoyles', weather: 'storm' },
-  sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'stone', hung: 'banners', edge: 'gargoyles', mark: 'both' },
+  sky:       { name: 'above the trees', place: 'outside', at: 468, len: 105, wall: 'slate', hung: 'banners', edge: 'gargoyles', mark: 'both' },
   night:     { name: 'the night sky', place: 'outside', at: 705, len: 105, wall: 'stone', growth: 'briar', roses: 1, hung: 'lanterns', mark: 'oriels', weather: 'snow' },
   // inside
   // (a stage stays inside one band of the tower's floors, 0, 120, 250 and 400 m: the floor is its furniture)

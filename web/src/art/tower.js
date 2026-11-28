@@ -2,6 +2,7 @@ import { makeSprite } from './sprite.js';
 import { PAL as C } from '../palette.js';
 import { PX } from '../config.js';
 import { RNG, mixHex } from '../util.js';
+import { CLADDING_AREAS, claddingDraws } from './cladding.js';
 
 // The tower's wall, outside: its plain tiles, the string course, and the
 // areas that take turns with the plain wall on the way up (overgrown with
@@ -151,6 +152,7 @@ export const TOWER_AREAS = {
   moss: { loop: 3, overlay: true },
   mended: { loop: 4, overlay: false, band: 'worn' },
   briar: { loop: 5, overlay: true },
+  ...CLADDING_AREAS,      // slate, timber, wisteria (art/cladding.js)
 };
 const DEEP = 'wallDeep';                // an opening into the wall, a crack: darker than any joint
 const OLD = ['oldHi', 'oldLight', 'oldMid', 'oldDark', 'oldShade'];        // the old stones' ramp, by plane as STONE_PLANES
@@ -890,7 +892,8 @@ function drawFoot(t) {
   }
 }
 
-const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss, mended: drawMended, briar: drawBriar };
+const CLAD = claddingDraws({ A: TOWER_A, E: ROUND.edge, brick: BRICK_ANGLE, xOf, planeAt, layWall });
+const AREA_DRAW = { ivy: drawIvy, worn: drawWorn, stone: drawStone, moss: drawMoss, mended: drawMended, briar: drawBriar, ...CLAD.areas };
 
 // The wall's sprites: its plain tiles, the string courses (`bands`: the
 // plain one and the others by name), and every area's tiles with what hangs
@@ -907,6 +910,7 @@ export function buildTower() {
   const plain = [0, 1, 2, 3, 4].map((v) => tile((t) => drawTower(t, v)));
   const band = makeSprite(TOWER_A, 6, (t) => drawTowerBand(t), { ax: 0.5, ay: 0 });
   const bandWorn = makeSprite(TOWER_A, 6, (t) => drawTowerBandWorn(t), { ax: 0.5, ay: 0 });
+  const bandTimber = makeSprite(TOWER_A, 6, (t) => CLAD.bands.timber(t), { ax: 0.5, ay: 0 });
   const things = buildThings();
   const hung = (f) => {
     const s = f.what === 'sign' || f.what === 'rose' ? null : things.boards[f.what] || things[f.what];
@@ -926,5 +930,5 @@ export function buildTower() {
     free.forEach((f, n) => { f.slot = n; f.slots = free.length; });
   }
   const foot = makeSprite(FOOT_W, FOOT_H, (t) => drawFoot(t), { ax: 0.5, ay: 0 }, { ayPx: FOOT.up * PX });
-  return { plain, band, bandWorn, bands: { worn: bandWorn }, areas, foot };
+  return { plain, band, bandWorn, bands: { worn: bandWorn, timber: bandTimber }, areas, foot };
 }

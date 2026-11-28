@@ -8,19 +8,20 @@ import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
 // What the tower's wall is like at a height (art/tower.js draws the looks,
 // background.js lays them). A stretch of it is a section, and a section is
 // a recipe with two parts that know nothing of each other: what the wall is
-// built of there (its `skin`: old big stones, crumbling, under repair; none:
-// the plain bricks) and what grows on it (its `growth`: ivy, moss, briar
-// roses; none). Each part is an area as art/tower.js has them (its `enter`
-// tile, its loop once or more, its `leave` tile), and what grows is laid
-// over what is built, whatever that is. So the six looks are fifteen walls:
-// ivy on old stone, moss in a crumbling wall, roses over the masons' site.
+// built of there (its `skin`: old big stones, crumbling, under repair, hung
+// with slates, built in timber; none: the plain bricks) and what grows on
+// it (its `growth`: ivy, moss, briar roses, wisteria; none). Each part is an
+// area as art/tower.js has them (its `enter` tile, its loop once or more,
+// its `leave` tile), and what grows is laid over what is built, whatever
+// that is. So the ten looks are twenty-nine walls: ivy on old stone, moss
+// in a crumbling wall, roses over the masons' site, wisteria on plaster.
 // The two parts of a section do not begin and end together: ivy does not
 // know where the masonry changes.
 //
 // Two more parts go by storeys and not by tiles (a storey is a window,
 // windows.js: one every 440 px of the tower's layer, left and right in
 // turn): what hangs on the wall's face on the side that has no window
-// (`hung`: lanterns, banners) and what stands out at its edges (`edge`:
+// (`hung`: lanterns, banners, torches) and what stands out at its edges (`edge`:
 // gargoyles at the ends of the string courses). Each comes in runs of a few
 // storeys with none for a while between them, and knows nothing of the
 // other parts either (art/hung.js draws them). And now and then a storey
@@ -52,21 +53,21 @@ import { WINDOW_FIRST, WINDOW_STOREY } from './windows.js';
 // a round's first picture show the same wall whatever comes above.
 const GAP = [5, 11];                // tiles of plain wall between two sections
 const FIRST = 10;                   // the lowest tile a section may begin at: above the lawn's picture on the tallest screen
-const LOOPS = { ivy: [1, 2], worn: [2, 3], stone: [2, 4], moss: [2, 4], mended: [1, 2], briar: [1, 2] };   // how often an area's loop is laid, at the least and at the most
+const LOOPS = { ivy: [1, 2], worn: [2, 3], stone: [2, 4], moss: [2, 4], mended: [1, 2], briar: [1, 2], slate: [3, 6], timber: [2, 4], wisteria: [1, 3] };   // how often an area's loop is laid, at the least and at the most
 const OFFSET = [-2, 3];             // where a section has both parts: its growth begins this many tiles above its skin's first one (from .. to)
 const FOOT_TILES = [0, 1, 2, 'leave'];      // the tower's foot: old stone from the lawn up
 export const SKINS = Object.keys(TOWER_AREAS).filter((k) => !TOWER_AREAS[k].overlay);
 export const GROWTHS = Object.keys(TOWER_AREAS).filter((k) => TOWER_AREAS[k].overlay);
-export const HUNGS = ['lanterns', 'banners'], EDGES = ['gargoyles'];
+export const HUNGS = ['lanterns', 'banners', 'torches'], EDGES = ['gargoyles'];
 // The parts that go by storeys: how many storeys a run is long, and by the height the prince passes it at (px) how
 // many storeys are bare before it and the weights of its kinds. There is more of both the higher one gets: above the
 // trees the wall stands free before the sky, and is seen.
 const STOREYS = {
   hung: { run: [3, 7], by: [
-    { below: 12000, gap: [5, 10], w: { lanterns: 2, banners: 1 } },
-    { below: 25000, gap: [4, 8], w: { lanterns: 3, banners: 1 } },
-    { below: 40000, gap: [3, 6], w: { lanterns: 2, banners: 2 } },
-    { below: Infinity, gap: [2, 5], w: { lanterns: 3, banners: 3 } },
+    { below: 12000, gap: [5, 10], w: { lanterns: 2, banners: 1, torches: 1 } },
+    { below: 25000, gap: [4, 8], w: { lanterns: 3, banners: 1, torches: 3 } },
+    { below: 40000, gap: [3, 6], w: { lanterns: 2, banners: 2, torches: 2 } },
+    { below: Infinity, gap: [2, 5], w: { lanterns: 3, banners: 3, torches: 3 } },
   ] },
   edge: { run: [3, 7], by: [
     { below: 25000, gap: [6, 12], w: { gargoyles: 1 } },
@@ -89,14 +90,18 @@ const storeyY = (i) => (WINDOW_FIRST + i * WINDOW_STOREY) / PARALLAX_TOWER;     
 // multiplied, times how well the pair goes together (PAIRS, and a band's
 // own `pairs` before those; 1 where nothing is said).
 const RECIPES = [
-  { below: 12000, skin: { plain: 6, stone: 2, worn: 1, mended: 2 }, growth: { none: 2, ivy: 5, moss: 3, briar: 5 } },      // the forest floor
-  { below: 25000, skin: { plain: 5, stone: 2, worn: 2, mended: 2 }, growth: { none: 2, ivy: 5, moss: 4, briar: 4 } },      // the deep forest
-  { below: 40000, skin: { plain: 3, stone: 3, worn: 3, mended: 3 }, growth: { none: 4, ivy: 3, moss: 2, briar: 3 } },      // the windows
+  { below: 12000, skin: { plain: 6, stone: 2, worn: 1, mended: 2, timber: 3 }, growth: { none: 2, ivy: 5, moss: 3, briar: 5, wisteria: 4 } },      // the forest floor
+  { below: 25000, skin: { plain: 5, stone: 2, worn: 2, mended: 2, timber: 2, slate: 1 }, growth: { none: 2, ivy: 5, moss: 4, briar: 4, wisteria: 2 } },      // the deep forest
+  { below: 40000, skin: { plain: 3, stone: 3, worn: 3, mended: 3, timber: 3, slate: 2 }, growth: { none: 4, ivy: 3, moss: 2, briar: 3, wisteria: 3 } },      // the windows
   // above the trees: the sun is on the wall, so moss is only where old stone or a crumbling wall holds the damp
-  { below: Infinity, skin: { plain: 2, stone: 3, worn: 4, mended: 3 }, growth: { none: 5, ivy: 2, moss: 2, briar: 3 }, pairs: { 'plain+moss': 0 } },
+  { below: Infinity, skin: { plain: 2, stone: 3, worn: 4, mended: 3, timber: 3, slate: 4 }, growth: { none: 5, ivy: 2, moss: 2, briar: 3, wisteria: 3 }, pairs: { 'plain+moss': 0 } },
 ];
 // Old walls are what things like to grow on; a site somebody works on is kept clear of them, mostly.
-const PAIRS = { 'stone+ivy': 1.3, 'stone+moss': 1.4, 'stone+briar': 1.2, 'worn+ivy': 1.3, 'worn+moss': 1.4, 'mended+ivy': 0.7, 'mended+moss': 0.5, 'mended+briar': 0.4 };
+// Plaster is what flowers show best on, and violet wisteria is lost on violet slates.
+const PAIRS = {
+  'stone+ivy': 1.3, 'stone+moss': 1.4, 'stone+briar': 1.2, 'worn+ivy': 1.3, 'worn+moss': 1.4, 'mended+ivy': 0.7, 'mended+moss': 0.5, 'mended+briar': 0.4,
+  'mended+wisteria': 0.4, 'timber+wisteria': 1.6, 'timber+briar': 1.3, 'timber+ivy': 1.2, 'timber+moss': 0.3, 'slate+wisteria': 0.2, 'slate+briar': 0.5, 'slate+ivy': 0.7,
+};
 
 // A recipe for a section at height y: { skin, growth } (null where that part is none), never both none, by the
 // stream `r`. `last`: the recipe before it, whose skin and whose growth it does not have again. `keep`: parts that are
