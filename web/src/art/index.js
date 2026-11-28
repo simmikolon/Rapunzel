@@ -23,6 +23,7 @@ import { buildStory } from './story.js';
 import { buildWeather } from './weather.js';
 import { buildHud } from './hud.js';
 import { buildHung } from './hung.js';
+import { buildOutline } from './outline.js';
 
 // A life in the HUD (the tower in stages): the prince's head with its crown, cut from his standing sprite.
 function lifeIcon(prince) {
@@ -60,5 +61,6 @@ export function buildAllArt() {
     weather: buildWeather(),
     hud: buildHud(),
     hung: buildHung(),
+    outline: buildOutline(),
   };
 }

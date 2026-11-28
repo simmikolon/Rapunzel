@@ -3,6 +3,7 @@ import { BACKDROP } from './art/backdrop.js';
 import { TILE_H, TOWER_W } from './art/tiles.js';
 import { WINDOW_FIRST, WINDOW_STOREY, WINDOW_W, WINDOW_H, WINDOW_X, windowAt, blockedBy } from './windows.js';
 import { LANTERN, BANNER, GARGOYLE } from './art/hung.js';
+import { RING, ORIEL } from './art/outline.js';
 import { TOWER_AREAS, ROSES, COURSE, FOOT } from './art/tower.js';
 import { TowerPlan, stageWall, stageRecipe, forcedWall } from './towerwall.js';
 import { RNG, invLerp, smoothstep, lerp, mixHex, TAU, approach } from './util.js';
@@ -118,6 +119,8 @@ const HUNG = { lanternUp: 96, bannerUp: 150, halo: [76, 0.24], pool: [150, 0.2, 
 // What stands out at the wall's edges (`edge`): a pair of gargoyles at every second storey's string course. When it
 // rains the course's water runs out of them: so many drops in the air, falling this far (px) in this long (s).
 const SPOUT = { drops: 7, fall: 300, time: 0.62 };
+// A landmark (`mark`, art/outline.js): the light in an oriel's window once it is dark (its halo: how wide, how strong).
+const MARK = { halo: [90, 0.2] };
 const SIDES = [-1, 1], FLIP = { flip: true }, FLIP_SHADE = { flip: true, tint: '#a6b0b6' }, SOFT_ADD = { soft: true, blend: 'add' }, HALO_GLOW = { glow: 0.5 };      // (the right gargoyle is round the tower from the light)
 
 export class Background {
@@ -129,6 +132,7 @@ export class Background {
     this.forceWall = null;       // dev (?wall=): one recipe all the way up instead of either (forceRecipe)
     this.lamps = [];             // the wall's lanterns that are lit in this frame, five numbers each: where its sprite is, mirrored or not, how far it is on, how bright it is now
     this.litOpt = { flip: false, alpha: 1, glow: 0.7 };
+    this.dark = 0;               // how dark it is where the camera is, 0..1: lanterns and an oriel's window are lit by it (drawHung works it out)
     this.top = null;             // the opening story (story.js): where the tower ends, { ly: the wall's upper edge, sill: Rapunzel's window, look: { dy, blink } } (layer px); null: it has no end
     const r = new RNG(42);
     this.stars = Array.from({ length: 90 }, () => ({ x: r.range(0, W), y: r.range(0, H), s: r.chance(0.2) ? 6 : 4, ph: r.range(0, TAU) }));
@@ -162,7 +166,7 @@ export class Background {
   // dev (?dev=1): the wall's recipe `up` px above the picture's lower edge, in words ('stone+ivy+lanterns', 'plain').
   wallName(cam, up) {
     const wall = this.forceWall || this.wall || this.plan, ly = cam.layerY(PARALLAX_TOWER) + up, k = Math.floor(ly / TILE_H), i = Math.round((ly - WINDOW_FIRST) / WINDOW_STOREY);
-    return [wall.skinAt(k), wall.growthAt(k), wall.hungAt(i), wall.edgeAt(i)].filter(Boolean).map((c) => c.kind).join('+') || 'plain';
+    return [wall.skinAt(k), wall.growthAt(k), wall.hungAt(i), wall.edgeAt(i), wall.markAt(i)].filter(Boolean).map((c) => c.kind).join('+') || 'plain';
   }
   get inside() { return !!this.place && this.place.inside; }
   skyColors(cam) { return skyAt(cam.y); }
@@ -315,6 +319,7 @@ export class Background {
     const wallTop = this.top ? Math.max(0, H - (this.top.ly - camF) + cam.oy) : 0;
     if (this.towerVeil.alpha > 0 && wallTop < H) g.rect(W / 2 - TOWER_W / 2 + cam.ox, wallTop, TOWER_W, H - wallTop, this.towerVeil.color, this.towerVeil.alpha);
     this.drawHungLights(g);
+    this.drawMarks(g, cam, camF, time, wall, blockers);
     this.drawEdge(g, cam, camF, time, wall, blockers);
     this.drawTowerTop(g, cam, time);
   }
@@ -328,7 +333,7 @@ export class Background {
   drawHung(g, cam, camF, time, wall, blockers) {
     const A = this.art.hung, lamps = this.lamps, weather = this.weather;
     lamps.length = 0;
-    const dark = Math.max(lanternAmount(cam.y), deepForestAmount(cam.y), Math.min(1, weather.num('grey') * 2));
+    const dark = this.dark = Math.max(lanternAmount(cam.y), deepForestAmount(cam.y), Math.min(1, weather.num('grey') * 2));
     const slant = weather.slant, wind = Math.min(1, Math.abs(slant) * 1.5 + this.atmo.gustEnv() * 0.55 + 0.1), caps = weather.has('caps');
     for (let i = Math.max(0, Math.floor((camF - 180 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const ly = WINDOW_FIRST + i * WINDOW_STOREY;
@@ -371,6 +376,47 @@ export class Background {
     for (let n = 0; n < L.length; n += 5) g.puff(L[n] + (L[n + 2] > 0 ? -1 : 1) * LANTERN.pane[0] * PX, L[n + 1] + (LANTERN.pane[1] - 5) * PX, r, r, color, a * L[n + 4], SOFT_ADD);
   }
 
+  // The landmarks (towerwall.js `mark`, art/outline.js), which change the tower's outline: a roofed gallery round it,
+  // hung under a storey's sill where the string course was, or an oriel on one edge, standing on the course. After
+  // the wall's veil (they stand out past the wall and have the veil in their tones). None where a balcony or a gate
+  // sits on that side (a gallery: on either). Once it is dark there is a light in the oriel's window; where it snows,
+  // snow lies on the roofs.
+  drawMarks(g, cam, camF, time, wall, blockers) {
+    const A = this.art.outline, caps = this.weather.has('caps');
+    for (let i = Math.max(0, Math.floor((camF - 320 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
+      const sill = WINDOW_FIRST + i * WINDOW_STOREY, ly = sill + STRING_COURSE;
+      if (ly > camF + H + 160 || (this.top && ly > this.top.sill - 520)) break;
+      const m = wall.markAt(i);
+      if (!m) continue;
+      const sy = H - (ly - camF) + cam.oy;
+      if (m.kind === 'ring') {
+        if (blockedBy({ side: 'L', ly: sill }, blockers) || blockedBy({ side: 'R', ly: sill }, blockers)) continue;
+        const x = W / 2 + cam.ox;
+        g.blit(A.ring, x, sy);
+        if (caps > 0.01) {      // snow on the slates: thick where the roof meets the wall, a line along the eaves
+          g.rect(x - TOWER_W / 2 - PX, sy, TOWER_W + 2 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(x - TOWER_W / 2 - 4 * PX, sy + 2 * PX, TOWER_W * 0.56, PX, SNOW_COLOR, caps);
+          g.rect(x - RING.w * PX / 2, sy + (RING.roof - 1) * PX, RING.w * PX, PX, SNOW_COLOR, caps * 0.9);
+        }
+      } else if (!blockedBy({ side: m.side, ly: sill }, blockers)) {
+        const left = m.side === 'L', s = left ? A.oriel.L : A.oriel.R, x = W / 2 + (left ? -1 : 1) * TOWER_W / 2 + cam.ox;
+        g.blit(s, x, sy);
+        const x0 = x - s.ax, y0 = sy - s.ay, px = x0 + ORIEL.pane[0] * PX, py = y0 + ORIEL.pane[1] * PX;
+        const at = 0.2 + 0.4 * ((hash(i * 17 + 3) % 100) / 100), on = smoothstep(invLerp(at, at + 0.12, this.dark));
+        if (on > 0.01) {
+          const b = on * (0.85 + 0.15 * Math.sin(time * 8 + i * 1.3) * Math.sin(time * 2.1 + i));
+          g.rect(px - 3 * PX, py - 3 * PX, 3 * PX, 8 * PX, C.lanternGlow, b, HALO_GLOW); g.rect(px + PX, py - 3 * PX, 2 * PX, 8 * PX, C.lanternGlow, b, HALO_GLOW);
+          g.rect(px - 2 * PX, py + PX, 2 * PX, 3 * PX, C.sun1, b);
+          g.halo(px, py, MARK.halo[0], '#ffb347', MARK.halo[1] * b, HALO_GLOW);
+        }
+        if (caps > 0.01) {      // snow on its cone: a cap, and down the side the weather comes from
+          const cx = x0 + ORIEL.w * PX / 2;
+          g.rect(cx - 2 * PX, y0 + 5 * PX, 4 * PX, 3 * PX, SNOW_COLOR, caps); g.rect(cx - 4 * PX, y0 + 8 * PX, 6 * PX, 2 * PX, SNOW_COLOR, caps);
+          g.rect(cx - 7 * PX, y0 + 12 * PX, 5 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(cx - 10 * PX, y0 + 17 * PX, 5 * PX, 2 * PX, SNOW_COLOR, caps); g.rect(cx - 14 * PX, y0 + 23 * PX, 9 * PX, PX, SNOW_COLOR, caps);
+        }
+      }
+    }
+  }
+
   // What stands out at the wall's edges (towerwall.js `edge`): a pair of gargoyles at the ends of every second
   // storey's string course, none on a side where a balcony or a gate sits. After the wall's veil: they stand out past
   // the wall's edge, and have the veil in their tones. When it rains, the course's water runs out of their mouths;
@@ -380,11 +426,12 @@ export class Background {
     for (let i = Math.max(0, Math.floor((camF - 80 - WINDOW_FIRST) / WINDOW_STOREY)); ; i++) {
       const sill = WINDOW_FIRST + i * WINDOW_STOREY, ly = sill + STRING_COURSE;
       if (ly > camF + H + 60 || (this.top && ly > this.top.ly - 60)) break;
-      const c = wall.edgeAt(i);
-      if (!c || c.j % 2) continue;
+      const c = wall.edgeAt(i), m = wall.markAt(i);
+      if (!c || c.j % 2 || (m && m.kind === 'ring')) continue;      // (a gallery has taken the course's place)
       const sy = H - (ly - camF) + cam.oy;
       for (const dir of SIDES) {
-        if (blockedBy({ side: dir < 0 ? 'L' : 'R', ly: sill }, blockers)) continue;
+        const side = dir < 0 ? 'L' : 'R';
+        if ((m && m.side === side) || blockedBy({ side, ly: sill }, blockers)) continue;
         const sx = W / 2 + dir * TOWER_W / 2 + cam.ox;
         g.blit(A, sx, sy, dir < 0 ? undefined : FLIP_SHADE);
         if (caps > 0.01) for (const [x, y, w] of G.snow) g.rect(dir < 0 ? sx - (G.edge - x) * PX : sx + (G.edge - x - w) * PX, sy + (y - G.top - 1) * PX, w * PX, PX, SNOW_COLOR, caps);

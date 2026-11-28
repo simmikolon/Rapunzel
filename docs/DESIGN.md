@@ -826,15 +826,15 @@ is a pool to draw from, not a promise.
   | 4 | the guard rooms | inside | 124 m | 100 m | | |
   | 5 | the deep forest | outside | 128 m | 105 m | old stone, moss; gargoyles | |
   | 6 | the dark rooms | inside | 136 m | 95 m | | the lights are out |
-  | 7 | the masons' site | outside | 256 m | 100 m | mended | |
+  | 7 | the masons' site | outside | 256 m | 100 m | mended; galleries | |
   | 8 | the library | inside | 254 m | 130 m | | golden door |
-  | 9 | above the trees | outside | 468 m | 105 m | old stone; banners, gargoyles | |
+  | 9 | above the trees | outside | 468 m | 105 m | old stone; banners, gargoyles; galleries and oriels | |
   | 10 | the belfry | inside | 404 m | 105 m | | |
 
   After these: the crumbling tower (outside, 262 m, crumbling wall,
   banners, gargoyles), the hall, the deep forest, the dark rooms, the
   night sky (outside, 705 m, old stone, briar with white roses,
-  lanterns), the guard rooms, the ivy
+  lanterns, oriels), the guard rooms, the ivy
   wall (outside, 24 m), the library, above the trees, the belfry, the
   rose wall, the dark rooms, the masons' site, the guard rooms, and
   round again. From here on a theme's wall is not as it was the first
@@ -1061,6 +1061,32 @@ is a pool to draw from, not a promise.
   the eye: nothing in the simulator. 💡 more for these two parts:
   shields, a clock, a washing line, nests; a flagpole, a hoist;
   icicles, and dripping in a thaw.
+- ✅ landmarks that change the tower's outline (`art/outline.js`,
+  `src/towerwall.js` `mark`, `background.js` drawMarks;
+  `element/tower-outline`): above the trees the tower stands before
+  the sky and its edge is what one sees of it, a straight line until
+  now. Two things break it, each at a single storey with many storeys
+  between. A gallery round the tower (a ring): a skirt of slates,
+  violet like the tower's own roof, that leans against the wall under
+  a storey's sill where the string course was, under its eaves a wall
+  of upright boards with small hatches, the beam its floor lies on
+  and the brackets that carry it; it stands 8 art px proud of the
+  wall at either side. And an oriel: a turret of its own that hangs
+  on one edge, a cone of slates with a golden ball on its tip, a
+  round body of the tower's brick between two bands of dressed stone
+  with a small arched window, and rings of stone under it that step
+  in to a point; once it is dark there is a light in its window.
+  Where it snows, snow lies on both roofs. Both end in a roof and not
+  in a floor: nothing here is to be stood on. Above the trees a
+  landmark every 5 to 9 storeys (25 to 45 m), three oriels to two
+  galleries; among the trees a gallery every 9 to 16 storeys and no
+  oriel (it would hang behind a trunk). None where a balcony or a
+  gate sits. In stages a theme names them (`mark`: rings, oriels or
+  both in turn, one at every fourth storey): galleries on the masons'
+  site, both above the trees, oriels in the night sky.
+  `?wall=both` (or `rings`, `oriels`). Purely for the eye: nothing in
+  the simulator. 💡 a half-timbered storey that stands out all round;
+  a dormer on the gallery's roof; pigeons on its ridge.
 - ✅ the tower's foot (`art/tower.js` drawFoot; `element/tower-foot`):
   where the tower stands on the lawn. A plinth of dressed stone, round
   as the wall is: a footing in the grass, two courses of smooth blocks
@@ -1289,7 +1315,7 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
 | The weather | rain: 90 / 96 / 30 streaks far, mid, near (a storm half as many again); snow: 200 / 160 / 42 flakes; layers go by at 0.7, 0.95 and 1.25 to 1.3 of the camera's climb; a weather fades out and in over 2.2 s; a storm's gust: 3.5 to 6.5 s calm, 0.9 s in which the curls already show, 1.8 to 2.8 s of blow that carries the prince at up to 230 px/s (200 to 320 px a gust, by its length, if he does not steer against it); a storm takes half the colour out of the picture; lightning every 5 to 14 s, black and white for some 0.2 s; a storm over an outside stage from the third on with a chance of 0.3, drawing up 25 to 50 % into the stage and gone 15 m under its end (some 45 to 50 m of storm); one weather goes over into the next in 3 s, a storm draws up and passes in 5; the endless tower's storms by the clock: first after 35 to 60 s, 18 to 28 s long, 16 to 24 s of sun after, 50 to 100 s calm between; winter: 1 December to 6 January; fronts in the endless tower are 90 m high, the first always clear |
 | The opening story | the tower ends 342 tiles up (about 730 m), Rapunzel's sill 432 px below; the witch circles from 0.4 to 3.7 s, "Rescue me!" from 1.5 to 3.9 s, the braid is let down at 4.1 s; its end is at 700 m after 0.8 s, 564 to 551 m from 1.9 to 2.7 s, 314 to 302 m from 3.8 to 4.6 s, 214 to 202 m from 5.5 to 6.3 s, 13 m at 7.7 s and down at 8.6 s, kept 62 % down the picture; the prince answers 0.2 s later, the title follows 1.5 s after the braid is down (14.2 s in all); the last 10 m are the round's own world; told again at a start: in the app every start, in a browser never (`STORY.again`, hours since it was last told) |
 | Stages (trial) | themes, route and loop in `src/stages.js` (the table in section 7); a stage's end is the first row from its length on that no flock or braid cut has a claim to, and neither begins in its last 15 m; the door 270 px above the last floor; the camera stops with that floor 110 px above the picture's lower edge; calm 5 m behind a door and 12 m before the next; a golden door (themes with `vault`) from 6 m into a stage up to where its treasury (41 m) lets him out 18 m below the stage's end; a dark stage is dark from 3 m in to 12 m before its end; a braid cut in 50 % and a flock in 35 % of the stages whose zone has them; 3 lives (`?lives=5`, `?lives=inf`; `?stage=3` starts there, `?stages=0\|1` picks the mode) |
-| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); sections (`src/towerwall.js`): plain wall for 5–11 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), the first section from tile 10 at the lowest, then a section of one or two areas, each its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times), what grows beginning 2 tiles under to 3 above the masonry's first tile; the weights of a recipe by height in `RECIPES` and `PAIRS`; 24 sections and 55 % of the wall in the first 1000 m; in a stage each part in stretches with 2–4 plain tiles between; what goes by storeys (`STOREYS`): runs of 3–7 storeys from storey 4 at the lowest, bare storeys before a run 5–10 on the forest floor down to 2–5 above the trees (lanterns, banners) and 6–12 down to 3–6 (gargoyles, a pair at every second storey of a run); a lantern's plate 96 px and a banner's rod 150 px above the storey's sill; a lantern comes on at a darkness between 0.15 and 0.65 (its own), over 0.12; its halo 76 px at 24 %, its pool 150 px at 20 %; a spout is 7 drops falling 300 px in 0.62 s; what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=stone+ivy` (or one of `stone|worn|mended`, one of `ivy|moss|briar`, or `plain`) shows one recipe all the way up (the briar in each of its colours in turn) |
+| The tower's wall | 440 px (110 art px) on the tower layer; one sees 72° round it to each side, the light stands 36° to the left; bricks 14 art px facing us, 6 high; five planes at 0.93, 0.74, 0.44 and 0.14 of facing the light; a string course 24 px high under every storey's sill (440 layer px apart); a veil of `#14242b` at 30 % over the wall (`?veil=` tries another strength); sections (`src/towerwall.js`): plain wall for 5–11 tiles (a tile is 192 px on the tower's layer, about 2.1 m of climb), the first section from tile 10 at the lowest, then a section of one or two areas, each its two end tiles and its loop once or more (ivy 6 tiles, 1–2 times; crumbling 4, 2–3 times; old stone and moss 3, 2–4 times; the masons' site 4, 1–2 times; briar 5, 1–2 times), what grows beginning 2 tiles under to 3 above the masonry's first tile; the weights of a recipe by height in `RECIPES` and `PAIRS`; 24 sections and 55 % of the wall in the first 1000 m; in a stage each part in stretches with 2–4 plain tiles between; what goes by storeys (`STOREYS`): runs of 3–7 storeys from storey 4 at the lowest, bare storeys before a run 5–10 on the forest floor down to 2–5 above the trees (lanterns, banners) and 6–12 down to 3–6 (gargoyles, a pair at every second storey of a run); a lantern's plate 96 px and a banner's rod 150 px above the storey's sill; a lantern comes on at a darkness between 0.15 and 0.65 (its own), over 0.12; its halo 76 px at 24 %, its pool 150 px at 20 %; a spout is 7 drops falling 300 px in 0.62 s; landmarks (`LANDMARKS`): one every 5–9 storeys above 460 m (gallery 2, oriel 3), a gallery every 9–16 below; a gallery is 128 x 30 art px and hangs from the string course's top, an oriel 30 x 67 with 10 art px of its body over the wall, its lower band on the course; its window comes on at a darkness between 0.2 and 0.6; what hangs on the wall keeps 8 px from a window's frame and 32 px below its sill (clear of the string course), and gets there by whole courses of 24 px; petals: 2 to a tile of briar, each falling 300 px in 6–10 s; `?wall=stone+ivy` (or one of `stone|worn|mended`, one of `ivy|moss|briar`, or `plain`) shows one recipe all the way up (the briar in each of its colours in turn) |
 | The forest behind | two layers at 0.42 and 0.62 of the prince's speed, tiles 384 px high; strips 96 px wide from 80 px in from the picture's edge; the far roof in the middle of the picture when he is at 475 m, the near one at 465 m, four tiles of leaves under each; the air between the layers 34 % on the forest floor, 25 % in the deep forest, none above |
 | Zone bands | forest floor 0 m, deep forest 120 m, windows 250 m, above the trees 400 m |
 | Sky / light keyframes | floor 0, deep forest 120, dawn at the windows 250, open sky 400, sunset 550, night 700 m |
@@ -3528,4 +3554,38 @@ From `web/src/config.js` and `web/src/level.js` as of Phase 1.
     storm, dusk, night and snow, and the stages that have them). How
     the banners move, how the lanterns come on one after another and
     how the water falls was not seen moving.
+- 2026-11-28: The tower's outline (`element/tower-outline`, on top of
+  `element/tower-fixtures`): the third step. A gallery round the tower
+  and an oriel on its edge.
+  - Landmarks are single storeys with many between, not runs: a thing
+    one notices and remembers ("the turret with the light on") wants to
+    be rare. A fifth part of the recipe (`mark`), on a stream of its
+    own.
+  - Both end in a roof. A band that stands out round the tower with a
+    flat top would be taken for something to land on, and so would a
+    turret with a platform: slates say no. The gallery's wood is the
+    plank swing's with the wall's veil in it, duller than anything one
+    stands on. Whether a gallery is still taken for a platform is to
+    be watched when it is played: it is the widest thing on the wall.
+  - The slates are the story's roof's (`SLATE`, violet): the tower has
+    little roofs like its big one.
+  - The oriel is drawn for either side with the light where it is, not
+    mirrored (a body that size shows which side is lit), the right one
+    a step darker; the gargoyle, a quarter its size, is mirrored and
+    tinted.
+  - The gallery hangs under the sill where the string course was, so
+    the storey's window sits on its roof and nothing has to move.
+    Gargoyles leave that course out, and an oriel's side.
+  - A mistake found by looking: bricks and boards came out black,
+    because `mixHex` gives an `rgb()` string and cannot mix what it
+    has mixed; `art/outline.js` has a mix of its own that stays hex.
+  - Cost: 3 sprites, the atlas 1024 x 1119, the canvases at the start
+    61 MB of the 80.
+  - Checks: the five reports on fixed seeds are exactly as they were
+    (`identity.sh`); `stages`, `story`, `settings` and `atlas` pass.
+    `flow` failed once at `inside spawn=bat` (three random rounds
+    inside with no ledge that suits a bat, no error in the page:
+    nothing this branch touches) and passed when it was run again.
+  - Seen in still pictures of a headless browser only: by day, at
+    dusk, at night in snow, and a gallery among the birches in rain.
 

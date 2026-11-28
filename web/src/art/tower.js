@@ -28,7 +28,7 @@ const rng = new RNG(1337);
 // border. Nothing is graded and nothing is dithered.
 export const TOWER_W = 440;   // the tower spans x = -220 .. 220
 const TOWER_A = TOWER_W / PX;
-const ROUND = { edge: 72 * Math.PI / 180, light: -36 * Math.PI / 180, brick: 14 };
+export const ROUND = { edge: 72 * Math.PI / 180, light: -36 * Math.PI / 180, brick: 14 };
 const xOf = (a) => TOWER_A / 2 * (1 + Math.sin(a) / Math.sin(ROUND.edge));
 const BRICK_ANGLE = ROUND.brick * Math.sin(ROUND.edge) / (TOWER_A / 2);        // a brick's angle, so that one facing us is ROUND.brick wide
 // The planes, from the lit one to the one in shade: how squarely a brick
@@ -44,7 +44,7 @@ const PLANES = [
 ];
 // The same planes for dressed stone (the string course).
 const STONE_PLANES = ['stoneHi', 'stoneLight', 'stone', 'stoneDark', 'stoneShade'];
-const planeAt = (a) => { const l = Math.cos(a - ROUND.light); return PLANES.findIndex((q) => l >= q.from); };
+export const planeAt = (a) => { const l = Math.cos(a - ROUND.light); return PLANES.findIndex((q) => l >= q.from); };
 // The upright joints of a course: where they stand and which plane the brick to the right of each is in.
 function joints(odd) {
   const out = [], n = Math.ceil(ROUND.edge / BRICK_ANGLE) + 1;

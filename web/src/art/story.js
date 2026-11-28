@@ -8,7 +8,7 @@ import { RNG } from '../util.js';
 // (art/sign.js); here are only the things around her.
 // The roof is a material of its own: slate, violet in the night it is seen
 // in, lit from the upper left like everything on the tower.
-const SLATE = { hi: '#9a8fca', base: '#7166a6', shade: '#4f457e', dark: '#342c58', eave: '#221c3c' };
+export const SLATE = { hi: '#9a8fca', base: '#7166a6', shade: '#4f457e', dark: '#342c58', eave: '#221c3c' };
 
 // The roof: a cone 124 x 80 art px, anchor the middle of its foot. Courses of
 // slates, each course's joints off the one above it; three planes of light.
